@@ -79,6 +79,8 @@ export interface Expense {
   category: "utilities" | "repairs" | "supplies" | "other";
   split_method: "EQUAL" | "CUSTOM" | "BY_BRANCH";
   paid_by_member_id: string | null;
+  description: string | null;
+  date: string | null;
   created_at: string;
 }
 

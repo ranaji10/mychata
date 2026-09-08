@@ -39,17 +39,24 @@ function ApprovalsPage() {
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "CONFIRMED" | "REJECTED" }) => {
-      const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
-      if (error) throw error;
+  const decide = useMutation({
+    mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
+      if (approve) {
+        const { error } = await supabase.from("bookings").update({ status: "CONFIRMED" }).eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("bookings").delete().eq("id", id);
+        if (error) throw error;
+      }
     },
     onSuccess: (_d, v) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(v.status === "CONFIRMED" ? "Rezervace schválena." : "Rezervace zamítnuta.");
+      toast.success(v.approve ? "Rezervace schválena." : "Rezervace zamítnuta.");
     },
     onError: () => toast.error("Akce se nepodařila."),
   });
+
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
 
   return (
     <AppShell>
@@ -73,18 +80,12 @@ function ApprovalsPage() {
                 </div>
               </div>
               {b.note && <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{b.note}“</p>}
-              {currentMember?.is_admin || b.member_id !== currentMember?.id ? (
+              {isAdmin ? (
                 <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => mutation.mutate({ id: b.id, status: "CONFIRMED" })}
-                    className="btn-primary flex-1"
-                  >
+                  <button onClick={() => decide.mutate({ id: b.id, approve: true })} className="btn-primary flex-1">
                     Schválit
                   </button>
-                  <button
-                    onClick={() => mutation.mutate({ id: b.id, status: "REJECTED" })}
-                    className="btn-danger flex-1"
-                  >
+                  <button onClick={() => decide.mutate({ id: b.id, approve: false })} className="btn-danger flex-1">
                     Zamítnout
                   </button>
                 </div>

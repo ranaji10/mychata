@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-export function PageHeader({ title, back, action }: { title: string; back?: string; action?: ReactNode }) {
+export function PageHeader({ title, subtitle, back, action }: { title: string; subtitle?: string; back?: string; action?: ReactNode }) {
   return (
     <div className="mb-4 mt-2 flex items-center gap-3">
       {back && (
@@ -14,7 +14,10 @@ export function PageHeader({ title, back, action }: { title: string; back?: stri
           <ArrowLeft className="size-5" />
         </Link>
       )}
-      <h2 className="flex-1 text-2xl font-bold leading-tight">{title}</h2>
+      <div className="flex-1">
+        <h2 className="text-2xl font-bold leading-tight">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-[14px] text-muted-foreground">{subtitle}</p>}
+      </div>
       {action}
     </div>
   );

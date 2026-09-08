@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Users } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { PillMuted, PillOk, PillWarn, Skeleton } from "@/components/bits";
+import { PillNeutral, PillOk, PillWarn, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, fmtDateTime, type Booking } from "@/lib/data";
@@ -35,17 +35,32 @@ function BookingDetail() {
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: async (status: "CONFIRMED" | "CANCELLED" | "REJECTED") => {
-      const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["booking", id] });
+    queryClient.invalidateQueries({ queryKey: ["bookings"] });
+  };
+
+  const confirm = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("bookings").update({ status: "CONFIRMED" }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_d, status) => {
-      queryClient.invalidateQueries({ queryKey: ["booking", id] });
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(
-        status === "CONFIRMED" ? "Pobyt schválen." : status === "CANCELLED" ? "Pobyt zrušen." : "Rezervace zamítnuta.",
-      );
+    onSuccess: () => {
+      invalidate();
+      toast.success("Pobyt schválen.");
+      navigate({ to: "/kalendar" });
+    },
+    onError: () => toast.error("Akce se nepodařila."),
+  });
+
+  const remove = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("bookings").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success("Rezervace byla odstraněna.");
       navigate({ to: "/kalendar" });
     },
     onError: () => toast.error("Akce se nepodařila."),
@@ -60,12 +75,8 @@ function BookingDetail() {
     );
   }
 
-  const canApprove = currentMember?.is_admin || account?.type === "INSTITUTIONAL";
-  const statusPill =
-    booking.status === "CONFIRMED" ? <PillOk>Potvrzeno</PillOk>
-    : booking.status === "PENDING" ? <PillWarn>Čeká na schválení</PillWarn>
-    : booking.status === "CANCELLED" ? <PillMuted>Zrušeno</PillMuted>
-    : <PillMuted>Zamítnuto</PillMuted>;
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER" || account?.type === "INSTITUTIONAL";
+  const pending = booking.status === "PENDING";
 
   return (
     <AppShell>
@@ -79,7 +90,7 @@ function BookingDetail() {
       <section className="card mt-4 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">{booking.requester_name}</h2>
-          {statusPill}
+          {pending ? <PillWarn>Čeká na schválení</PillWarn> : <PillOk>Potvrzeno</PillOk>}
         </div>
 
         <div className="mt-3 space-y-3">
@@ -95,7 +106,9 @@ function BookingDetail() {
             <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-muted-foreground">
               <Users className="size-5" />
             </div>
-            <p className="text-[16px] font-semibold">{booking.guests} {booking.guests === 1 ? "host" : booking.guests < 5 ? "hosté" : "hostů"}</p>
+            <p className="text-[16px] font-semibold">
+              {booking.guests} {booking.guests === 1 ? "host" : booking.guests < 5 ? "hosté" : "hostů"}
+            </p>
           </div>
         </div>
 
@@ -108,17 +121,23 @@ function BookingDetail() {
         </p>
       </section>
 
-      {booking.status === "PENDING" && canApprove && (
+      {pending && isAdmin && (
         <div className="mt-4 flex gap-2">
-          <button onClick={() => mutation.mutate("CONFIRMED")} className="btn-primary flex-1">Schválit</button>
-          <button onClick={() => mutation.mutate("REJECTED")} className="btn-danger flex-1">Zamítnout</button>
+          <button onClick={() => confirm.mutate()} className="btn-primary flex-1">Schválit</button>
+          <button onClick={() => remove.mutate()} className="btn-danger flex-1">Zamítnout</button>
         </div>
       )}
 
-      {booking.status === "CONFIRMED" && (
-        <button onClick={() => mutation.mutate("CANCELLED")} className="btn-danger mt-4 w-full">
+      {!pending && (
+        <button onClick={() => remove.mutate()} className="btn-danger mt-4 w-full">
           Zrušit pobyt
         </button>
+      )}
+
+      {pending && !isAdmin && (
+        <p className="mt-4 text-center text-[14px] font-semibold text-muted-foreground">
+          <PillNeutral>Schválit může pouze správce.</PillNeutral>
+        </p>
       )}
     </AppShell>
   );

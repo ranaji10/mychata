@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, rangesOverlap, todayISO, type Booking } from "@/lib/data";
+import { findConflicts, fmtDate, todayISO, type Booking } from "@/lib/data";
 
 export const Route = createFileRoute("/rezervace/nova")({
   head: () => ({
@@ -35,22 +35,23 @@ function NewBooking() {
     queryKey: ["bookings", property?.id],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase.from("bookings").select("*").eq("property_id", property!.id).neq("status", "CANCELLED").neq("status", "REJECTED");
+      const { data, error } = await supabase.from("bookings").select("*").eq("property_id", property!.id);
       if (error) throw error;
       return data as Booking[];
     },
   });
 
-  const conflict = bookings?.find((b) => rangesOverlap(start, end, b.start_date, b.end_date));
-  const sameDay = !conflict && bookings?.find((b) => b.end_date === start);
+  const conflicts = findConflicts(start, end, bookings ?? []);
+  const hard = conflicts.find((c) => c.kind === "hard");
+  const sameDay = conflicts.find((c) => c.kind === "same-day");
   const invalid = end < start;
 
   const save = async () => {
-    if (!property || !currentMember || invalid || conflict) return;
+    if (!property || !currentMember || invalid || hard) return;
     setSaving(true);
     const { error } = await supabase.from("bookings").insert({
       property_id: property.id,
-      member_id: currentMember.id,
+      requester_member_id: currentMember.id,
       requester_name: currentMember.name,
       start_date: start,
       end_date: end,
@@ -113,21 +114,21 @@ function NewBooking() {
           </p>
         )}
 
-        {conflict && (
+        {hard && (
           <p className="rounded-2xl bg-danger-soft p-3 text-[14px] font-semibold text-danger">
-            Termín se překrývá s pobytem: {conflict.requester_name} ({fmtDate(conflict.start_date)} – {fmtDate(conflict.end_date)}).
+            Termín se překrývá s pobytem: {hard.other.name} ({fmtDate(hard.other.start)} – {fmtDate(hard.other.end)}).
           </p>
         )}
 
-        {sameDay && (
+        {!hard && sameDay && (
           <p className="flex gap-2 rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
             <AlertTriangle className="mt-0.5 size-5 shrink-0" />
-            Ve stejný den odjíždí {sameDay.requester_name}. Předání proběhne v den výměny.
+            Ve stejný den odjíždí {sameDay.other.name}. Předání proběhne v den výměny.
           </p>
         )}
       </section>
 
-      <button onClick={save} disabled={saving || invalid || !!conflict} className="btn-primary mt-4 w-full disabled:opacity-40">
+      <button onClick={save} disabled={saving || invalid || !!hard} className="btn-primary mt-4 w-full disabled:opacity-40">
         {saving ? "Ukládám…" : "Odeslat ke schválení"}
       </button>
       <p className="mt-2 text-center text-[13px] text-muted-foreground">

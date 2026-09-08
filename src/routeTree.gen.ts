@@ -10,33 +10,140 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DomuRouteImport } from './routes/domu'
+import { Route as KalendarRouteImport } from './routes/kalendar'
+import { Route as PredaniRouteImport } from './routes/predani'
+import { Route as SchvalovaniRouteImport } from './routes/schvalovani'
+import { Route as UkolyRouteImport } from './routes/ukoly'
+import { Route as RezervaceIdRouteImport } from './routes/rezervace.$id'
+import { Route as RezervaceNovaRouteImport } from './routes/rezervace.nova'
+import { Route as UkolyIdRouteImport } from './routes/ukoly.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DomuRoute = DomuRouteImport.update({
+  id: '/domu',
+  path: '/domu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KalendarRoute = KalendarRouteImport.update({
+  id: '/kalendar',
+  path: '/kalendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PredaniRoute = PredaniRouteImport.update({
+  id: '/predani',
+  path: '/predani',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchvalovaniRoute = SchvalovaniRouteImport.update({
+  id: '/schvalovani',
+  path: '/schvalovani',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UkolyRoute = UkolyRouteImport.update({
+  id: '/ukoly',
+  path: '/ukoly',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RezervaceIdRoute = RezervaceIdRouteImport.update({
+  id: '/rezervace/$id',
+  path: '/rezervace/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RezervaceNovaRoute = RezervaceNovaRouteImport.update({
+  id: '/rezervace/nova',
+  path: '/rezervace/nova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UkolyIdRoute = UkolyIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => UkolyRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/domu': typeof DomuRoute
+  '/kalendar': typeof KalendarRoute
+  '/predani': typeof PredaniRoute
+  '/schvalovani': typeof SchvalovaniRoute
+  '/ukoly': typeof UkolyRouteWithChildren
+  '/rezervace/$id': typeof RezervaceIdRoute
+  '/rezervace/nova': typeof RezervaceNovaRoute
+  '/ukoly/$id': typeof UkolyIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/domu': typeof DomuRoute
+  '/kalendar': typeof KalendarRoute
+  '/predani': typeof PredaniRoute
+  '/schvalovani': typeof SchvalovaniRoute
+  '/ukoly': typeof UkolyRouteWithChildren
+  '/rezervace/$id': typeof RezervaceIdRoute
+  '/rezervace/nova': typeof RezervaceNovaRoute
+  '/ukoly/$id': typeof UkolyIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/domu': typeof DomuRoute
+  '/kalendar': typeof KalendarRoute
+  '/predani': typeof PredaniRoute
+  '/schvalovani': typeof SchvalovaniRoute
+  '/ukoly': typeof UkolyRouteWithChildren
+  '/rezervace/$id': typeof RezervaceIdRoute
+  '/rezervace/nova': typeof RezervaceNovaRoute
+  '/ukoly/$id': typeof UkolyIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/domu'
+    | '/kalendar'
+    | '/predani'
+    | '/schvalovani'
+    | '/ukoly'
+    | '/rezervace/$id'
+    | '/rezervace/nova'
+    | '/ukoly/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/domu'
+    | '/kalendar'
+    | '/predani'
+    | '/schvalovani'
+    | '/ukoly'
+    | '/rezervace/$id'
+    | '/rezervace/nova'
+    | '/ukoly/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/domu'
+    | '/kalendar'
+    | '/predani'
+    | '/schvalovani'
+    | '/ukoly'
+    | '/rezervace/$id'
+    | '/rezervace/nova'
+    | '/ukoly/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DomuRoute: typeof DomuRoute
+  KalendarRoute: typeof KalendarRoute
+  PredaniRoute: typeof PredaniRoute
+  SchvalovaniRoute: typeof SchvalovaniRoute
+  UkolyRoute: typeof UkolyRouteWithChildren
+  RezervaceIdRoute: typeof RezervaceIdRoute
+  RezervaceNovaRoute: typeof RezervaceNovaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +155,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/domu': {
+      id: '/domu'
+      path: '/domu'
+      fullPath: '/domu'
+      preLoaderRoute: typeof DomuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kalendar': {
+      id: '/kalendar'
+      path: '/kalendar'
+      fullPath: '/kalendar'
+      preLoaderRoute: typeof KalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/predani': {
+      id: '/predani'
+      path: '/predani'
+      fullPath: '/predani'
+      preLoaderRoute: typeof PredaniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schvalovani': {
+      id: '/schvalovani'
+      path: '/schvalovani'
+      fullPath: '/schvalovani'
+      preLoaderRoute: typeof SchvalovaniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ukoly': {
+      id: '/ukoly'
+      path: '/ukoly'
+      fullPath: '/ukoly'
+      preLoaderRoute: typeof UkolyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rezervace/$id': {
+      id: '/rezervace/$id'
+      path: '/rezervace/$id'
+      fullPath: '/rezervace/$id'
+      preLoaderRoute: typeof RezervaceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rezervace/nova': {
+      id: '/rezervace/nova'
+      path: '/rezervace/nova'
+      fullPath: '/rezervace/nova'
+      preLoaderRoute: typeof RezervaceNovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ukoly/$id': {
+      id: '/ukoly/$id'
+      path: '/$id'
+      fullPath: '/ukoly/$id'
+      preLoaderRoute: typeof UkolyIdRouteImport
+      parentRoute: typeof UkolyRoute
+    }
   }
 }
 
+interface UkolyRouteChildren {
+  UkolyIdRoute: typeof UkolyIdRoute
+}
+
+const UkolyRouteChildren: UkolyRouteChildren = {
+  UkolyIdRoute: UkolyIdRoute,
+}
+
+const UkolyRouteWithChildren = UkolyRoute._addFileChildren(UkolyRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DomuRoute: DomuRoute,
+  KalendarRoute: KalendarRoute,
+  PredaniRoute: PredaniRoute,
+  SchvalovaniRoute: SchvalovaniRoute,
+  UkolyRoute: UkolyRouteWithChildren,
+  RezervaceIdRoute: RezervaceIdRoute,
+  RezervaceNovaRoute: RezervaceNovaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

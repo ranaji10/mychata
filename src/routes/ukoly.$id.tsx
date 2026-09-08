@@ -3,10 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, User } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { PillDanger, PillMuted, PillOk, Skeleton } from "@/components/bits";
+import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { CATEGORY_LABELS, fmtDate, todayISO, type Task } from "@/lib/data";
+import { fmtDate, TASK_CATEGORY, todayISO, URGENCY, type Task } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
   head: () => ({
@@ -41,7 +41,7 @@ function TaskDetail() {
   };
 
   const update = useMutation({
-    mutationFn: async (patch: Partial<Task>) => {
+    mutationFn: async (patch: Record<string, unknown>) => {
       const { error } = await supabase.from("tasks").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -72,10 +72,12 @@ function TaskDetail() {
       <section className="card mt-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-xl font-bold leading-snug">{task.title}</h2>
-          {done ? <PillOk>Hotovo</PillOk> : overdue ? <PillDanger>Po termínu</PillDanger> : <PillMuted>Otevřené</PillMuted>}
+          {done ? <PillOk>Hotovo</PillOk> : overdue ? <PillDanger>Po termínu</PillDanger> : <PillNeutral>Otevřené</PillNeutral>}
         </div>
 
-        <p className="mt-1 text-[14px] font-semibold text-muted-foreground">{CATEGORY_LABELS[task.category]}</p>
+        <p className="mt-1 text-[14px] font-semibold text-muted-foreground">
+          {TASK_CATEGORY[task.category]} · Priorita: {URGENCY[task.urgency]}
+        </p>
 
         <div className="mt-4 space-y-3">
           <div className="flex items-center gap-3">
@@ -85,8 +87,8 @@ function TaskDetail() {
             <div className="flex-1">
               <p className="text-[13px] font-semibold text-muted-foreground">Odpovědná osoba</p>
               <select
-                value={task.assigned_to ?? ""}
-                onChange={(e) => update.mutate({ assigned_to: e.target.value || null })}
+                value={task.assignee_member_id ?? ""}
+                onChange={(e) => update.mutate({ assignee_member_id: e.target.value || null })}
                 className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 text-[15px] font-semibold"
                 aria-label="Přiřadit osobu"
               >
@@ -114,10 +116,14 @@ function TaskDetail() {
             </div>
           </div>
         </div>
+
+        {task.done_note && (
+          <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">Poznámka: „{task.done_note}“</p>
+        )}
       </section>
 
       <button
-        onClick={() => update.mutate({ status: done ? "OPEN" : "DONE", completed_at: done ? null : new Date().toISOString() })}
+        onClick={() => update.mutate({ status: done ? "OPEN" : "DONE" })}
         className={`mt-4 w-full ${done ? "btn-secondary" : "btn-primary"}`}
       >
         {done ? "Znovu otevřít" : "Označit jako hotové"}

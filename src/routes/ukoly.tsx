@@ -4,10 +4,10 @@ import { CheckCircle2, Circle, Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, LoadingCards, PageHeader, PillDanger, PillMuted } from "@/components/bits";
+import { EmptyState, LoadingCards, PageHeader, PillDanger, PillNeutral } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { CHECKLISTS, fmtDate, todayISO, type Task } from "@/lib/data";
+import { fmtDate, SEASONAL_TEMPLATES, TASK_CATEGORY, todayISO, type Task } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly")({
   head: () => ({
@@ -59,7 +59,7 @@ function TasksPage() {
     mutationFn: async (t: Task) => {
       const { error } = await supabase
         .from("tasks")
-        .update({ status: t.status === "DONE" ? "OPEN" : "DONE", completed_at: t.status === "DONE" ? null : new Date().toISOString() })
+        .update({ status: t.status === "DONE" ? "OPEN" : "DONE" })
         .eq("id", t.id);
       if (error) throw error;
     },
@@ -68,14 +68,16 @@ function TasksPage() {
   });
 
   const addTask = async () => {
-    if (!property || !title.trim()) return;
+    if (!property || !currentMember || !title.trim()) return;
     const { error } = await supabase.from("tasks").insert({
       property_id: property.id,
       title: title.trim(),
-      category: "GENERAL",
-      assigned_to: assignee || null,
+      category: "other",
+      urgency: "LOW",
+      assignee_member_id: assignee || null,
       due_date: due,
       status: "OPEN",
+      created_by: currentMember.name,
     });
     if (error) {
       toast.error("Úkol se nepodařilo přidat.");
@@ -87,31 +89,33 @@ function TasksPage() {
     invalidate();
   };
 
-  const addChecklist = async (season: "summer" | "winter") => {
-    if (!property) return;
-    const items = CHECKLISTS[season];
+  const addChecklist = async (templateId: string) => {
+    if (!property || !currentMember) return;
+    const template = SEASONAL_TEMPLATES.find((t) => t.id === templateId);
+    if (!template) return;
     const { error } = await supabase.from("tasks").insert(
-      items.map((t) => ({
+      template.tasks.map((title) => ({
         property_id: property.id,
-        title: t.title,
-        category: "SEASONAL",
-        season,
-        status: "OPEN",
+        title,
+        category: "seasonal" as const,
+        urgency: "LOW" as const,
+        status: "OPEN" as const,
+        created_by: currentMember.name,
       })),
     );
     if (error) {
       toast.error("Seznam se nepodařilo přidat.");
       return;
     }
-    toast.success(`Přidán ${season === "summer" ? "letní" : "zimní"} seznam (${items.length} úkolů).`);
+    toast.success(`Přidán seznam „${template.title}“ (${template.tasks.length} úkolů).`);
     invalidate();
   };
 
   const today = todayISO();
   const filtered = (tasks ?? []).filter((t) => {
-    if (filter === "mine") return t.assigned_to === currentMember?.id;
+    if (filter === "mine") return t.assignee_member_id === currentMember?.id;
     if (filter === "overdue") return t.status !== "DONE" && t.due_date && t.due_date < today;
-    if (filter === "seasonal") return t.category === "SEASONAL";
+    if (filter === "seasonal") return t.category === "seasonal";
     return true;
   });
 
@@ -165,11 +169,11 @@ function TasksPage() {
                     {t.title}
                   </p>
                   <p className="text-[13px] text-muted-foreground">
-                    {memberName(t.assigned_to) ?? "Nepřiřazeno"}
-                    {t.due_date ? ` · ${fmtDate(t.due_date)}` : ""}
+                    {memberName(t.assignee_member_id) ?? "Nepřiřazeno"}
+                    {t.due_date ? ` · ${fmtDate(t.due_date)}` : ""} · {TASK_CATEGORY[t.category]}
                   </p>
                 </Link>
-                {t.status === "DONE" ? <PillMuted>Hotovo</PillMuted> : overdue ? <PillDanger>Po termínu</PillDanger> : null}
+                {t.status === "DONE" ? <PillNeutral>Hotovo</PillNeutral> : overdue ? <PillDanger>Po termínu</PillDanger> : null}
               </div>
             );
           })}
@@ -215,9 +219,12 @@ function TasksPage() {
           <h3 className="text-lg font-bold">Sezónní seznamy</h3>
         </div>
         <p className="mt-1 text-[14px] text-muted-foreground">Připravené kontrolní seznamy podle ročního období.</p>
-        <div className="mt-3 flex gap-2">
-          <button onClick={() => addChecklist("summer")} className="btn-secondary flex-1">Letní seznam</button>
-          <button onClick={() => addChecklist("winter")} className="btn-secondary flex-1">Zimní seznam</button>
+        <div className="mt-3 space-y-2">
+          {SEASONAL_TEMPLATES.map((t) => (
+            <button key={t.id} onClick={() => addChecklist(t.id)} className="btn-secondary w-full">
+              {t.title} ({t.tasks.length})
+            </button>
+          ))}
         </div>
       </section>
     </AppShell>

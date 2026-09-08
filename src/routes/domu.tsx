@@ -6,21 +6,23 @@ import { LoadingCards, PillDanger, PillOk, PillWarn, StatCard } from "@/componen
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, fmtKc, todayISO, type Booking, type Expense, type ExpenseSplit, type InstitutionalRequest, type Task } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 
 export const Route = createFileRoute("/domu")({
   head: () => ({
     meta: [
-      { title: "Domů — My Chata" },
-      { name: "description", content: "Přehled chaty: nejbližší pobyt, úkoly, výdaje a žádosti." },
-      { property: "og:title", content: "Domů — My Chata" },
-      { property: "og:description", content: "Přehled chaty: nejbližší pobyt, úkoly, výdaje a žádosti." },
+      { title: "Home — My Chata" },
+      { name: "description", content: "Cottage overview: upcoming stay, tasks, expenses and requests." },
+      { property: "og:title", content: "Home — My Chata" },
+      { property: "og:description", content: "Cottage overview: upcoming stay, tasks, expenses and requests." },
     ],
   }),
   component: HomePage,
 });
 
 function HomePage() {
+  const { t, lang } = useLang();
   const { account, property, currentMember, loading } = useAccount();
 
   const { data: bookings, isLoading: lb } = useQuery({
@@ -103,28 +105,33 @@ function HomePage() {
   const pendingRequests = requests?.filter((r) => r.status === "PENDING") ?? [];
   const conflictRequests = pendingRequests.filter((r) => r.has_conflict);
 
+  const guestsLabel = (n: number) => {
+    if (lang === "en") return n === 1 ? "guest" : "guests";
+    return n === 1 ? "host" : n < 5 ? "hosté" : "hostů";
+  };
+
   return (
     <AppShell>
       {/* Property hero */}
       <section>
         <div className="relative overflow-hidden rounded-3xl">
-          <img src={chataImg} alt={property?.name ?? "Chata"} className="aspect-[16/10] w-full object-cover" width={1024} height={640} />
+          <img src={chataImg} alt={property?.name ?? t("Chata", "Cottage")} className="aspect-[16/10] w-full object-cover" width={1024} height={640} />
           <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 ring-1 ring-black/5">
             <span className="size-2 rounded-full bg-ok" />
-            <span className="text-[13px] font-bold">{nextBooking ? "Připravená" : "Volná"}</span>
+            <span className="text-[13px] font-bold">{nextBooking ? t("Připravená", "Ready") : t("Volná", "Free")}</span>
           </div>
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-2xl bg-card/95 px-4 py-3 ring-1 ring-black/5">
             <div>
-              <p className="text-[12px] font-semibold text-muted-foreground">Nejbližší pobyt</p>
+              <p className="text-[12px] font-semibold text-muted-foreground">{t("Nejbližší pobyt", "Next stay")}</p>
               {nextBooking ? (
                 <p className="text-base font-bold leading-tight">
                   {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
                 </p>
               ) : (
-                <p className="text-base font-bold leading-tight">Zatím žádný</p>
+                <p className="text-base font-bold leading-tight">{t("Zatím žádný", "None yet")}</p>
               )}
             </div>
-            <Link to="/kalendar" className="grid size-11 place-items-center rounded-2xl bg-secondary text-foreground" aria-label="Otevřít kalendář">
+            <Link to="/kalendar" className="grid size-11 place-items-center rounded-2xl bg-secondary text-foreground" aria-label={t("Otevřít kalendář", "Open calendar")}>
               <CalendarDays className="size-5" />
             </Link>
           </div>
@@ -133,7 +140,7 @@ function HomePage() {
 
       {/* Greeting */}
       <p className="mt-4 text-[15px] font-semibold text-muted-foreground">
-        Dobrý den, {currentMember?.name?.split(" ")[0] ?? ""}
+        {t("Dobrý den", "Hello")}, {currentMember?.name?.split(" ")[0] ?? ""}
       </p>
 
       {/* Stats */}
@@ -141,27 +148,27 @@ function HomePage() {
         {isFamily ? (
           <>
             <Link to="/schvalovani">
-              <StatCard label="Ke schválení" value={pendingBookings.length} hint={pendingBookings.length ? "rezervace čekají" : "nic nečeká"} />
+              <StatCard label={t("Ke schválení", "To approve")} value={pendingBookings.length} hint={pendingBookings.length ? t("rezervace čekají", "bookings waiting") : t("nic nečeká", "nothing waiting")} />
             </Link>
             <Link to="/vydaje/vyrovnani">
-              <StatCard label="Nevyrovnané" value={fmtKc(unsettled)} hint="ve výdajích" tone={unsettled > 0 ? "danger" : undefined} />
+              <StatCard label={t("Nevyrovnané", "Unsettled")} value={fmtKc(unsettled)} hint={t("ve výdajích", "in expenses")} tone={unsettled > 0 ? "danger" : undefined} />
             </Link>
           </>
         ) : (
           <>
             <Link to="/zadosti">
-              <StatCard label="Čekající žádosti" value={pendingRequests.length} hint="ke zpracování" tone={pendingRequests.length ? "danger" : undefined} />
+              <StatCard label={t("Čekající žádosti", "Pending requests")} value={pendingRequests.length} hint={t("ke zpracování", "to process")} tone={pendingRequests.length ? "danger" : undefined} />
             </Link>
             <Link to="/zadosti">
-              <StatCard label="Kolize" value={conflictRequests.length} hint="vyžadují pozornost" tone={conflictRequests.length ? "danger" : undefined} />
+              <StatCard label={t("Kolize", "Conflicts")} value={conflictRequests.length} hint={t("vyžadují pozornost", "need attention")} tone={conflictRequests.length ? "danger" : undefined} />
             </Link>
           </>
         )}
         <Link to="/ukoly">
-          <StatCard label="Po termínu" value={overdueTasks.length} hint={overdueTasks.length ? "úkoly po termínu" : "vše v pořádku"} tone={overdueTasks.length ? "danger" : undefined} />
+          <StatCard label={t("Po termínu", "Overdue")} value={overdueTasks.length} hint={overdueTasks.length ? t("úkoly po termínu", "overdue tasks") : t("vše v pořádku", "all good")} tone={overdueTasks.length ? "danger" : undefined} />
         </Link>
         <Link to="/kalendar">
-          <StatCard label="Nadcházející" value={upcoming.length} hint="potvrzené pobyty" />
+          <StatCard label={t("Nadcházející", "Upcoming")} value={upcoming.length} hint={t("potvrzené pobyty", "confirmed stays")} />
         </Link>
       </section>
 
@@ -172,9 +179,9 @@ function HomePage() {
             <Inbox className="size-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold leading-tight">Zpracovat žádosti</p>
+            <p className="text-base font-bold leading-tight">{t("Zpracovat žádosti", "Process requests")}</p>
             <p className="text-[13px] text-muted-foreground">
-              {pendingRequests.length} čeká · {conflictRequests.length} v kolizi
+              {pendingRequests.length} {t("čeká", "waiting")} · {conflictRequests.length} {t("v kolizi", "in conflict")}
             </p>
           </div>
           <ArrowRight className="size-5 text-muted-foreground" />
@@ -184,15 +191,15 @@ function HomePage() {
       {/* Overdue task highlight */}
       {overdueTasks.length > 0 && (
         <section className="card mt-4 p-4">
-          <h3 className="text-lg font-bold">Úkoly po termínu</h3>
+          <h3 className="text-lg font-bold">{t("Úkoly po termínu", "Overdue tasks")}</h3>
           <div className="mt-2 space-y-2.5">
-            {overdueTasks.map((t) => (
-              <Link key={t.id} to="/ukoly/$id" params={{ id: t.id }} className="flex items-center gap-3 rounded-2xl bg-background p-3 active:scale-[0.99]">
+            {overdueTasks.map((t2) => (
+              <Link key={t2.id} to="/ukoly/$id" params={{ id: t2.id }} className="flex items-center gap-3 rounded-2xl bg-background p-3 active:scale-[0.99]">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-bold">{t.title}</p>
-                  <p className="text-[13px] text-muted-foreground">Termín: {fmtDate(t.due_date)}</p>
+                  <p className="truncate text-[15px] font-bold">{t2.title}</p>
+                  <p className="text-[13px] text-muted-foreground">{t("Termín", "Due")}: {fmtDate(t2.due_date)}</p>
                 </div>
-                <PillDanger>Zpožděno</PillDanger>
+                <PillDanger>{t("Zpožděno", "Overdue")}</PillDanger>
               </Link>
             ))}
           </div>
@@ -203,21 +210,21 @@ function HomePage() {
       {nextBooking && (
         <section className="card mt-4 p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">Nejbližší pobyt</h3>
-            <PillOk>Potvrzeno</PillOk>
+            <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
+            <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
           </div>
           <p className="mt-1 text-xl font-bold">
             {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
           </p>
           <p className="mt-1 text-[15px] text-muted-foreground">
-            {nextBooking.requester_name} · {nextBooking.guests} {nextBooking.guests === 1 ? "host" : nextBooking.guests < 5 ? "hosté" : "hostů"}
+            {nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}
           </p>
           <div className="mt-3 flex gap-2">
             <Link to="/rezervace/$id" params={{ id: nextBooking.id }} className="btn-primary flex-1">
-              Detail pobytu
+              {t("Detail pobytu", "Stay details")}
             </Link>
             <Link to="/predani" className="btn-secondary flex-1">
-              Předání chaty
+              {t("Předání chaty", "Cottage handover")}
             </Link>
           </div>
         </section>
@@ -225,8 +232,8 @@ function HomePage() {
 
       {openTasks.length === 0 && overdueTasks.length === 0 && (
         <div className="card mt-4 p-4 text-center">
-          <PillWarn>Tip</PillWarn>
-          <p className="mt-2 text-[15px] font-semibold">Všechny úkoly jsou hotové. Chatu máte pod kontrolou.</p>
+          <PillWarn>{t("Tip", "Tip")}</PillWarn>
+          <p className="mt-2 text-[15px] font-semibold">{t("Všechny úkoly jsou hotové. Chatu máte pod kontrolou.", "All tasks are done. You have the cottage under control.")}</p>
         </div>
       )}
     </AppShell>

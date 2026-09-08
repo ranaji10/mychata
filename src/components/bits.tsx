@@ -1,19 +1,22 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { useLang } from "@/lib/i18n";
 
 export function PageHeader({ title, subtitle, back, action }: { title: string; subtitle?: string | undefined; back?: string; action?: ReactNode }) {
+  const { t } = useLang();
   return (
     <div className="mb-4 mt-2 flex items-center gap-3">
       {back && (
         <Link
           to={back}
-          aria-label="Zpět"
+          aria-label={t("Zpět", "Back")}
           className="grid size-11 shrink-0 place-items-center rounded-2xl bg-card text-foreground shadow-sm ring-1 ring-black/5"
         >
           <ArrowLeft className="size-5" />
         </Link>
       )}
+
       <div className="flex-1">
         <h2 className="text-2xl font-bold leading-tight">{title}</h2>
         {subtitle && <p className="mt-0.5 text-[14px] text-muted-foreground">{subtitle}</p>}

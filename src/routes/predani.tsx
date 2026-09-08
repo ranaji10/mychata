@@ -7,32 +7,33 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillOk } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
+import { useLang } from "@/lib/i18n";
 import { fmtDateTime, type Handover } from "@/lib/data";
 
 export const Route = createFileRoute("/predani")({
   head: () => ({
     meta: [
-      { title: "Předání chaty — My Chata" },
-      { name: "description", content: "Checklist předání chaty a historie předání." },
-      { property: "og:title", content: "Předání chaty — My Chata" },
-      { property: "og:description", content: "Checklist předání chaty a historie předání." },
+      { title: "Handover — My Chata" },
+      { name: "description", content: "Cottage handover checklist and handover history." },
+      { property: "og:title", content: "Handover — My Chata" },
+      { property: "og:description", content: "Cottage handover checklist and handover history." },
     ],
   }),
   component: HandoverPage,
 });
 
-const DEFAULT_CHECKLIST = [
-  "Uklidit a vynést odpadky",
-  "Zkontrolovat uzavření oken a dveří",
-  "Vypnout spotřebiče a topení",
-  "Uzavřít vodu a plyn",
-  "Zamknout chatu a vrátit klíče",
-];
-
 function HandoverPage() {
   const { property, currentMember, members } = useAccount();
+  const { t } = useLang();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const DEFAULT_CHECKLIST = [
+    t("Uklidit a vynést odpadky", "Clean up and take out the rubbish"),
+    t("Zkontrolovat uzavření oken a dveří", "Check that windows and doors are closed"),
+    t("Vypnout spotřebiče a topení", "Turn off appliances and heating"),
+    t("Uzavřít vodu a plyn", "Turn off water and gas"),
+    t("Zamknout chatu a vrátit klíče", "Lock the cottage and return the keys"),
+  ];
   const items = property?.handover_items?.length ? property.handover_items : DEFAULT_CHECKLIST;
   const [checked, setChecked] = useState<boolean[]>(items.map(() => false));
   const [note, setNote] = useState("");
@@ -66,22 +67,22 @@ function HandoverPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Předání chaty zaznamenáno.");
+      toast.success(t("Předání chaty zaznamenáno.", "Handover recorded."));
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });
     },
-    onError: () => toast.error("Předání se nepodařilo uložit."),
+    onError: () => toast.error(t("Předání se nepodařilo uložit.", "Could not save the handover.")),
   });
 
-  const memberName = (id: string | null) => members.find((m) => m.id === id)?.name ?? "Neznámý";
+  const memberName = (id: string | null) => members.find((m) => m.id === id)?.name ?? t("Neznámý", "Unknown");
 
   return (
     <AppShell>
-      <PageHeader title="Předání chaty" subtitle="Zkontrolujte vše před odjezdem." />
+      <PageHeader title={t("Předání chaty", "Cottage handover")} subtitle={t("Zkontrolujte vše před odjezdem.", "Check everything before you leave.")} />
 
       <section className="card p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold">Checklist</h3>
+          <h3 className="text-lg font-bold">{t("Checklist", "Checklist")}</h3>
           <span className="text-[14px] font-bold text-muted-foreground">
             {doneCount}/{items.length}
           </span>
@@ -108,38 +109,38 @@ function HandoverPage() {
         </div>
 
         <div className="mt-3">
-          <label htmlFor="handover-note" className="mb-1 block text-[13px] font-bold">Poznámka (nepovinné)</label>
+          <label htmlFor="handover-note" className="mb-1 block text-[13px] font-bold">{t("Poznámka (nepovinné)", "Note (optional)")}</label>
           <textarea
             id="handover-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}
-            placeholder="Např. kapka vody pod dřezem…"
+            placeholder={t("Např. kapka vody pod dřezem…", "E.g. a drip of water under the sink…")}
             className="field resize-none"
           />
         </div>
 
         <button onClick={() => save.mutate()} disabled={!allDone} className="btn-primary mt-4 w-full disabled:opacity-40">
-          {allDone ? "Dokončit předání" : `Zbývá ${items.length - doneCount} bodů`}
+          {allDone ? t("Dokončit předání", "Complete handover") : t(`Zbývá ${items.length - doneCount} bodů`, `${items.length - doneCount} items left`)}
         </button>
       </section>
 
       <section className="mt-4">
         <div className="mb-2 flex items-center gap-2">
           <History className="size-5 text-muted-foreground" />
-          <h3 className="text-lg font-bold">Historie předání</h3>
+          <h3 className="text-lg font-bold">{t("Historie předání", "Handover history")}</h3>
         </div>
         {isLoading ? (
           <LoadingCards />
         ) : !history?.length ? (
-          <EmptyState icon={ClipboardCheck} title="Zatím žádná předání." hint="Po dokončení checklistu se zobrazí zde." />
+          <EmptyState icon={ClipboardCheck} title={t("Zatím žádná předání.", "No handovers yet.")} hint={t("Po dokončení checklistu se zobrazí zde.", "They will appear here once you complete a checklist.")} />
         ) : (
           <div className="space-y-2.5">
             {history.map((h) => (
               <div key={h.id} className="card p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-[15px] font-bold">{memberName(h.member_id)}</p>
-                  <PillOk>Dokončeno</PillOk>
+                  <PillOk>{t("Dokončeno", "Completed")}</PillOk>
                 </div>
                 <p className="text-[13px] text-muted-foreground">{fmtDateTime(h.submitted_at)}</p>
                 {h.note && <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{h.note}“</p>}

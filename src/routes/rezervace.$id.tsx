@@ -7,14 +7,15 @@ import { PillNeutral, PillOk, PillWarn, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, fmtDateTime, type Booking } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/rezervace/$id")({
   head: () => ({
     meta: [
-      { title: "Detail pobytu — My Chata" },
-      { name: "description", content: "Detail rezervace pobytu na chatě." },
-      { property: "og:title", content: "Detail pobytu — My Chata" },
-      { property: "og:description", content: "Detail rezervace pobytu na chatě." },
+      { title: "Stay detail — My Chata" },
+      { name: "description", content: "Details of a cottage stay booking." },
+      { property: "og:title", content: "Stay detail — My Chata" },
+      { property: "og:description", content: "Details of a cottage stay booking." },
     ],
   }),
   component: BookingDetail,
@@ -25,6 +26,7 @@ function BookingDetail() {
   const { account, currentMember } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t, lang } = useLang();
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ["booking", id],
@@ -47,10 +49,10 @@ function BookingDetail() {
     },
     onSuccess: () => {
       invalidate();
-      toast.success("Pobyt schválen.");
+      toast.success(t("Pobyt schválen.", "Stay approved."));
       navigate({ to: "/kalendar" });
     },
-    onError: () => toast.error("Akce se nepodařila."),
+    onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
   });
 
   const remove = useMutation({
@@ -60,10 +62,10 @@ function BookingDetail() {
     },
     onSuccess: () => {
       invalidate();
-      toast.success("Rezervace byla odstraněna.");
+      toast.success(t("Rezervace byla odstraněna.", "The booking has been removed."));
       navigate({ to: "/kalendar" });
     },
-    onError: () => toast.error("Akce se nepodařila."),
+    onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
   });
 
   if (isLoading || !booking) {
@@ -78,19 +80,24 @@ function BookingDetail() {
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER" || account?.type === "INSTITUTIONAL";
   const pending = booking.status === "PENDING";
 
+  const guestsLabel =
+    lang === "en"
+      ? `${booking.guests} ${booking.guests === 1 ? "guest" : "guests"}`
+      : `${booking.guests} ${booking.guests === 1 ? "host" : booking.guests < 5 ? "hosté" : "hostů"}`;
+
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate({ to: "/kalendar" })} aria-label="Zpět" className="grid size-11 place-items-center rounded-xl bg-secondary">
+        <button onClick={() => navigate({ to: "/kalendar" })} aria-label={t("Zpět", "Back")} className="grid size-11 place-items-center rounded-xl bg-secondary">
           <ArrowLeft className="size-5" />
         </button>
-        <h1 className="text-2xl font-bold">Detail pobytu</h1>
+        <h1 className="text-2xl font-bold">{t("Detail pobytu", "Stay detail")}</h1>
       </div>
 
       <section className="card mt-4 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">{booking.requester_name}</h2>
-          {pending ? <PillWarn>Čeká na schválení</PillWarn> : <PillOk>Potvrzeno</PillOk>}
+          {pending ? <PillWarn>{t("Čeká na schválení", "Awaiting approval")}</PillWarn> : <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>}
         </div>
 
         <div className="mt-3 space-y-3">
@@ -106,9 +113,7 @@ function BookingDetail() {
             <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-muted-foreground">
               <Users className="size-5" />
             </div>
-            <p className="text-[16px] font-semibold">
-              {booking.guests} {booking.guests === 1 ? "host" : booking.guests < 5 ? "hosté" : "hostů"}
-            </p>
+            <p className="text-[16px] font-semibold">{guestsLabel}</p>
           </div>
         </div>
 
@@ -117,26 +122,26 @@ function BookingDetail() {
         )}
 
         <p className="mt-3 text-[12px] text-muted-foreground">
-          Vytvořeno {fmtDateTime(booking.created_at)}
+          {t("Vytvořeno", "Created")} {fmtDateTime(booking.created_at)}
         </p>
       </section>
 
       {pending && isAdmin && (
         <div className="mt-4 flex gap-2">
-          <button onClick={() => confirm.mutate()} className="btn-primary flex-1">Schválit</button>
-          <button onClick={() => remove.mutate()} className="btn-danger flex-1">Zamítnout</button>
+          <button onClick={() => confirm.mutate()} className="btn-primary flex-1">{t("Schválit", "Approve")}</button>
+          <button onClick={() => remove.mutate()} className="btn-danger flex-1">{t("Zamítnout", "Decline")}</button>
         </div>
       )}
 
       {!pending && (
         <button onClick={() => remove.mutate()} className="btn-danger mt-4 w-full">
-          Zrušit pobyt
+          {t("Zrušit pobyt", "Cancel stay")}
         </button>
       )}
 
       {pending && !isAdmin && (
         <p className="mt-4 text-center text-[14px] font-semibold text-muted-foreground">
-          <PillNeutral>Schválit může pouze správce.</PillNeutral>
+          <PillNeutral>{t("Schválit může pouze správce.", "Only an admin can approve.")}</PillNeutral>
         </p>
       )}
     </AppShell>

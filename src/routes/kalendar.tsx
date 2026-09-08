@@ -8,17 +8,18 @@ import { EmptyState, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
-  branchColor, CZ_DAYS, CZ_MONTHS, fmtDate, monthGrid, todayISO,
+  branchColor, dayNames, monthNames, fmtDate, monthGrid, todayISO,
   type Booking,
 } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/kalendar")({
   head: () => ({
     meta: [
-      { title: "Kalendář — My Chata" },
-      { name: "description", content: "Sdílený kalendář pobytů chaty s přehledem obsazenosti." },
-      { property: "og:title", content: "Kalendář — My Chata" },
-      { property: "og:description", content: "Sdílený kalendář pobytů chaty s přehledem obsazenosti." },
+      { title: "Calendar — My Chata" },
+      { name: "description", content: "Shared cottage stay calendar with an overview of availability." },
+      { property: "og:title", content: "Calendar — My Chata" },
+      { property: "og:description", content: "Shared cottage stay calendar with an overview of availability." },
     ],
   }),
   component: CalendarPage,
@@ -32,13 +33,14 @@ export function CalendarMonth({
   bookings: Booking[];
   branches: string[];
 }) {
+  const { lang } = useLang();
   const days = monthGrid(year, month);
   const today = todayISO();
 
   return (
     <div>
       <div className="grid grid-cols-7 gap-1 text-center">
-        {CZ_DAYS.map((d) => (
+        {dayNames(lang).map((d) => (
           <span key={d} className="py-1 text-[12px] font-bold text-muted-foreground">{d}</span>
         ))}
       </div>
@@ -72,6 +74,7 @@ export function CalendarMonth({
 }
 
 function CalendarPage() {
+  const { t, lang } = useLang();
   const { account, property, members } = useAccount();
   const now = new Date();
   const [ym, setYm] = useState({ year: now.getFullYear(), month: now.getMonth() });
@@ -104,7 +107,7 @@ function CalendarPage() {
     const url = `${window.location.origin}/verejne/kalendar/${property!.id}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Odkaz na veřejný kalendář zkopírován.");
+      toast.success(t("Odkaz na veřejný kalendář zkopírován.", "Public calendar link copied."));
     } catch {
       toast.info(url);
     }
@@ -117,13 +120,13 @@ function CalendarPage() {
       <section className="card mt-2 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">
-            {CZ_MONTHS[ym.month]} {ym.year}
+            {monthNames(lang)[ym.month]} {ym.year}
           </h2>
           <div className="flex gap-1">
-            <button onClick={prev} aria-label="Předchozí měsíc" className="grid size-11 place-items-center rounded-xl bg-secondary">
+            <button onClick={prev} aria-label={t("Předchozí měsíc", "Previous month")} className="grid size-11 place-items-center rounded-xl bg-secondary">
               <ChevronLeft className="size-5" />
             </button>
-            <button onClick={next} aria-label="Další měsíc" className="grid size-11 place-items-center rounded-xl bg-secondary">
+            <button onClick={next} aria-label={t("Další měsíc", "Next month")} className="grid size-11 place-items-center rounded-xl bg-secondary">
               <ChevronRight className="size-5" />
             </button>
           </div>
@@ -138,27 +141,27 @@ function CalendarPage() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary" />Potvrzeno</span>
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary/30" />Čeká na schválení</span>
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary" />{t("Potvrzeno", "Confirmed")}</span>
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary/30" />{t("Čeká na schválení", "Awaiting approval")}</span>
         </div>
 
         {isFamily && (
           <Link to="/rezervace/nova" className="btn-primary mt-4 w-full">
-            Rezervovat termín
+            {t("Rezervovat termín", "Book a date")}
           </Link>
         )}
       </section>
 
       <section className="mt-4">
-        <h3 className="mb-2 text-lg font-bold">Nadcházející pobyty</h3>
+        <h3 className="mb-2 text-lg font-bold">{t("Nadcházející pobyty", "Upcoming stays")}</h3>
         {isLoading ? (
           <Skeleton className="h-24" />
         ) : upcoming.length === 0 ? (
           <EmptyState
             icon={CalendarDays}
-            title="Zatím žádné rezervace."
-            hint={isFamily ? "Buďte první, kdo naplánuje pobyt." : "Schválené žádosti se zde zobrazí."}
-            action={isFamily ? <Link to="/rezervace/nova" className="btn-primary w-full">Rezervovat termín</Link> : undefined}
+            title={t("Zatím žádné rezervace.", "No bookings yet.")}
+            hint={isFamily ? t("Buďte první, kdo naplánuje pobyt.", "Be the first to plan a stay.") : t("Schválené žádosti se zde zobrazí.", "Approved requests will appear here.")}
+            action={isFamily ? <Link to="/rezervace/nova" className="btn-primary w-full">{t("Rezervovat termín", "Book a date")}</Link> : undefined}
           />
         ) : (
           <div className="space-y-2.5">
@@ -173,10 +176,10 @@ function CalendarPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-bold">{b.requester_name}</p>
                   <p className="text-[13px] text-muted-foreground">
-                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests} hostů
+                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests} {t("hostů", "guests")}
                   </p>
                 </div>
-                {b.status === "PENDING" && <span className="pill bg-warn-soft text-warn">Čeká</span>}
+                {b.status === "PENDING" && <span className="pill bg-warn-soft text-warn">{t("Čeká", "Waiting")}</span>}
               </Link>
             ))}
           </div>
@@ -189,8 +192,8 @@ function CalendarPage() {
             <Link2 className="size-5" />
           </div>
           <div className="flex-1">
-            <p className="text-[15px] font-bold">Veřejný odkaz na kalendář</p>
-            <p className="text-[13px] text-muted-foreground">Pro členy bez aplikace — pouze ke čtení</p>
+            <p className="text-[15px] font-bold">{t("Veřejný odkaz na kalendář", "Public calendar link")}</p>
+            <p className="text-[13px] text-muted-foreground">{t("Pro členy bez aplikace — pouze ke čtení", "For members without the app — read only")}</p>
           </div>
         </button>
       )}

@@ -7,15 +7,16 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillDanger, PillNeutral } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, SEASONAL_TEMPLATES, TASK_CATEGORY, todayISO, type Task } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
+import { fmtDate, seasonalTemplates, taskCategoryLabel, todayISO, type Task } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly")({
   head: () => ({
     meta: [
-      { title: "Úkoly — My Chata" },
-      { name: "description", content: "Úkoly a sezónní kontrolní seznamy pro chatu." },
-      { property: "og:title", content: "Úkoly — My Chata" },
-      { property: "og:description", content: "Úkoly a sezónní kontrolní seznamy pro chatu." },
+      { title: "Tasks — My Chata" },
+      { name: "description", content: "Tasks and seasonal checklists for your cottage." },
+      { property: "og:title", content: "Tasks — My Chata" },
+      { property: "og:description", content: "Tasks and seasonal checklists for your cottage." },
     ],
   }),
   component: TasksPage,
@@ -23,21 +24,22 @@ export const Route = createFileRoute("/ukoly")({
 
 type Filter = "all" | "mine" | "overdue" | "seasonal";
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all", label: "Vše" },
-  { key: "mine", label: "Moje" },
-  { key: "overdue", label: "Po termínu" },
-  { key: "seasonal", label: "Sezónní" },
-];
-
 function TasksPage() {
   const { property, currentMember, members } = useAccount();
+  const { t, lang } = useLang();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>("all");
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState<string>("");
   const [due, setDue] = useState(todayISO());
   const [showForm, setShowForm] = useState(false);
+
+  const FILTERS: { key: Filter; label: string }[] = [
+    { key: "all", label: t("Vše", "All") },
+    { key: "mine", label: t("Moje", "Mine") },
+    { key: "overdue", label: t("Po termínu", "Overdue") },
+    { key: "seasonal", label: t("Sezónní", "Seasonal") },
+  ];
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["tasks", property?.id],
@@ -64,7 +66,7 @@ function TasksPage() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: () => toast.error("Úkol se nepodařilo změnit."),
+    onError: () => toast.error(t("Úkol se nepodařilo změnit.", "Could not update the task.")),
   });
 
   const addTask = async () => {
@@ -80,10 +82,10 @@ function TasksPage() {
       created_by: currentMember.name,
     });
     if (error) {
-      toast.error("Úkol se nepodařilo přidat.");
+      toast.error(t("Úkol se nepodařilo přidat.", "Could not add the task."));
       return;
     }
-    toast.success("Úkol přidán.");
+    toast.success(t("Úkol přidán.", "Task added."));
     setTitle("");
     setShowForm(false);
     invalidate();
@@ -91,7 +93,7 @@ function TasksPage() {
 
   const addChecklist = async (templateId: string) => {
     if (!property || !currentMember) return;
-    const template = SEASONAL_TEMPLATES.find((t) => t.id === templateId);
+    const template = seasonalTemplates(lang).find((tpl) => tpl.id === templateId);
     if (!template) return;
     const { error } = await supabase.from("tasks").insert(
       template.tasks.map((title) => ({
@@ -104,10 +106,15 @@ function TasksPage() {
       })),
     );
     if (error) {
-      toast.error("Seznam se nepodařilo přidat.");
+      toast.error(t("Seznam se nepodařilo přidat.", "Could not add the checklist."));
       return;
     }
-    toast.success(`Přidán seznam „${template.title}“ (${template.tasks.length} úkolů).`);
+    toast.success(
+      t(
+        `Přidán seznam „${template.title}“ (${template.tasks.length} úkolů).`,
+        `Added checklist "${template.title}" (${template.tasks.length} tasks).`,
+      ),
+    );
     invalidate();
   };
 
@@ -123,7 +130,7 @@ function TasksPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Úkoly" subtitle="Co je potřeba na chatě udělat." />
+      <PageHeader title={t("Úkoly", "Tasks")} subtitle={t("Co je potřeba na chatě udělat.", "What needs doing at the cottage.")} />
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
@@ -144,85 +151,90 @@ function TasksPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={CheckCircle2}
-          title="Žádné úkoly v tomto filtru."
-          hint="Přidejte nový úkol nebo sezónní seznam."
+          title={t("Žádné úkoly v tomto filtru.", "No tasks in this filter.")}
+          hint={t("Přidejte nový úkol nebo sezónní seznam.", "Add a new task or a seasonal checklist.")}
         />
       ) : (
         <div className="mt-2 space-y-2.5">
-          {filtered.map((t) => {
-            const overdue = t.status !== "DONE" && t.due_date && t.due_date < today;
+          {filtered.map((task) => {
+            const overdue = task.status !== "DONE" && task.due_date && task.due_date < today;
             return (
-              <div key={t.id} className="card flex items-center gap-3 p-3">
+              <div key={task.id} className="card flex items-center gap-3 p-3">
                 <button
-                  onClick={() => toggle.mutate(t)}
-                  aria-label={t.status === "DONE" ? "Označit jako nesplněné" : "Označit jako hotové"}
+                  onClick={() => toggle.mutate(task)}
+                  aria-label={task.status === "DONE" ? t("Označit jako nesplněné", "Mark as not done") : t("Označit jako hotové", "Mark as done")}
                   className="grid size-11 shrink-0 place-items-center"
                 >
-                  {t.status === "DONE" ? (
+                  {task.status === "DONE" ? (
                     <CheckCircle2 className="size-7 text-ok" />
                   ) : (
                     <Circle className="size-7 text-muted-foreground" />
                   )}
                 </button>
-                <Link to="/ukoly/$id" params={{ id: t.id }} className="min-w-0 flex-1">
-                  <p className={`truncate text-[15px] font-bold ${t.status === "DONE" ? "text-muted-foreground line-through" : ""}`}>
-                    {t.title}
+                <Link to="/ukoly/$id" params={{ id: task.id }} className="min-w-0 flex-1">
+                  <p className={`truncate text-[15px] font-bold ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}>
+                    {task.title}
                   </p>
                   <p className="text-[13px] text-muted-foreground">
-                    {memberName(t.assignee_member_id) ?? "Nepřiřazeno"}
-                    {t.due_date ? ` · ${fmtDate(t.due_date)}` : ""} · {TASK_CATEGORY[t.category]}
+                    {memberName(task.assignee_member_id) ?? t("Nepřiřazeno", "Unassigned")}
+                    {task.due_date ? ` · ${fmtDate(task.due_date)}` : ""} · {taskCategoryLabel(task.category, lang)}
                   </p>
                 </Link>
-                {t.status === "DONE" ? <PillNeutral>Hotovo</PillNeutral> : overdue ? <PillDanger>Po termínu</PillDanger> : null}
+                {task.status === "DONE" ? (
+                  <PillNeutral>{t("Hotovo", "Done")}</PillNeutral>
+                ) : overdue ? (
+                  <PillDanger>{t("Po termínu", "Overdue")}</PillDanger>
+                ) : null}
               </div>
             );
           })}
+
         </div>
       )}
 
       {showForm ? (
         <section className="card mt-4 space-y-3 p-4">
-          <h3 className="text-lg font-bold">Nový úkol</h3>
+          <h3 className="text-lg font-bold">{t("Nový úkol", "New task")}</h3>
           <div>
-            <label htmlFor="task-title" className="mb-1 block text-[13px] font-bold">Název</label>
-            <input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Např. Koupit plyn" className="field" />
+            <label htmlFor="task-title" className="mb-1 block text-[13px] font-bold">{t("Název", "Title")}</label>
+            <input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("Např. Koupit plyn", "E.g. Buy gas")} className="field" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="task-assignee" className="mb-1 block text-[13px] font-bold">Odpovědná osoba</label>
+              <label htmlFor="task-assignee" className="mb-1 block text-[13px] font-bold">{t("Odpovědná osoba", "Assignee")}</label>
               <select id="task-assignee" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="field">
-                <option value="">Nikdo</option>
+                <option value="">{t("Nikdo", "Nobody")}</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label htmlFor="task-due" className="mb-1 block text-[13px] font-bold">Termín</label>
+              <label htmlFor="task-due" className="mb-1 block text-[13px] font-bold">{t("Termín", "Due date")}</label>
               <input id="task-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} className="field" />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={addTask} disabled={!title.trim()} className="btn-primary flex-1 disabled:opacity-40">Přidat úkol</button>
-            <button onClick={() => setShowForm(false)} className="btn-secondary">Zrušit</button>
+            <button onClick={addTask} disabled={!title.trim()} className="btn-primary flex-1 disabled:opacity-40">{t("Přidat úkol", "Add task")}</button>
+            <button onClick={() => setShowForm(false)} className="btn-secondary">{t("Zrušit", "Cancel")}</button>
           </div>
         </section>
       ) : (
         <button onClick={() => setShowForm(true)} className="btn-primary mt-4 w-full">
-          <Plus className="size-5" /> Přidat úkol
+          <Plus className="size-5" /> {t("Přidat úkol", "Add task")}
         </button>
       )}
 
       <section className="card mt-4 p-4">
         <div className="flex items-center gap-2">
           <Sparkles className="size-5 text-primary" />
-          <h3 className="text-lg font-bold">Sezónní seznamy</h3>
+          <h3 className="text-lg font-bold">{t("Sezónní seznamy", "Seasonal checklists")}</h3>
         </div>
-        <p className="mt-1 text-[14px] text-muted-foreground">Připravené kontrolní seznamy podle ročního období.</p>
+        <p className="mt-1 text-[14px] text-muted-foreground">{t("Připravené kontrolní seznamy podle ročního období.", "Ready-made checklists for the season.")}</p>
         <div className="mt-3 space-y-2">
-          {SEASONAL_TEMPLATES.map((t) => (
-            <button key={t.id} onClick={() => addChecklist(t.id)} className="btn-secondary w-full">
-              {t.title} ({t.tasks.length})
+          {seasonalTemplates(lang).map((tpl) => (
+            <button key={tpl.id} onClick={() => addChecklist(tpl.id)} className="btn-secondary w-full">
+              {tpl.title} ({tpl.tasks.length})
             </button>
           ))}
         </div>

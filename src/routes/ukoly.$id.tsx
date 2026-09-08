@@ -6,15 +6,16 @@ import { AppShell } from "@/components/AppShell";
 import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, TASK_CATEGORY, todayISO, URGENCY, type Task } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
+import { fmtDate, taskCategoryLabel, todayISO, urgencyLabel, type Task } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
   head: () => ({
     meta: [
-      { title: "Detail úkolu — My Chata" },
-      { name: "description", content: "Detail úkolu na chatě." },
-      { property: "og:title", content: "Detail úkolu — My Chata" },
-      { property: "og:description", content: "Detail úkolu na chatě." },
+      { title: "Task detail — My Chata" },
+      { name: "description", content: "Details of a cottage task." },
+      { property: "og:title", content: "Task detail — My Chata" },
+      { property: "og:description", content: "Details of a cottage task." },
     ],
   }),
   component: TaskDetail,
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/ukoly/$id")({
 function TaskDetail() {
   const { id } = Route.useParams();
   const { property, members } = useAccount();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -46,7 +48,7 @@ function TaskDetail() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: () => toast.error("Změnu se nepodařilo uložit."),
+    onError: () => toast.error(t("Změnu se nepodařilo uložit.", "Could not save the change.")),
   });
 
   if (isLoading || !task) {
@@ -63,20 +65,26 @@ function TaskDetail() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate({ to: "/ukoly" })} aria-label="Zpět" className="grid size-11 place-items-center rounded-xl bg-secondary">
+        <button onClick={() => navigate({ to: "/ukoly" })} aria-label={t("Zpět", "Back")} className="grid size-11 place-items-center rounded-xl bg-secondary">
           <ArrowLeft className="size-5" />
         </button>
-        <h1 className="text-2xl font-bold">Detail úkolu</h1>
+        <h1 className="text-2xl font-bold">{t("Detail úkolu", "Task detail")}</h1>
       </div>
 
       <section className="card mt-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-xl font-bold leading-snug">{task.title}</h2>
-          {done ? <PillOk>Hotovo</PillOk> : overdue ? <PillDanger>Po termínu</PillDanger> : <PillNeutral>Otevřené</PillNeutral>}
+          {done ? (
+            <PillOk>{t("Hotovo", "Done")}</PillOk>
+          ) : overdue ? (
+            <PillDanger>{t("Po termínu", "Overdue")}</PillDanger>
+          ) : (
+            <PillNeutral>{t("Otevřené", "Open")}</PillNeutral>
+          )}
         </div>
 
         <p className="mt-1 text-[14px] font-semibold text-muted-foreground">
-          {TASK_CATEGORY[task.category]} · Priorita: {URGENCY[task.urgency]}
+          {taskCategoryLabel(task.category, lang)} · {t("Priorita", "Priority")}: {urgencyLabel(task.urgency, lang)}
         </p>
 
         <div className="mt-4 space-y-3">
@@ -85,14 +93,14 @@ function TaskDetail() {
               <User className="size-5" />
             </div>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-muted-foreground">Odpovědná osoba</p>
+              <p className="text-[13px] font-semibold text-muted-foreground">{t("Odpovědná osoba", "Assignee")}</p>
               <select
                 value={task.assignee_member_id ?? ""}
                 onChange={(e) => update.mutate({ assignee_member_id: e.target.value || null })}
                 className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 text-[15px] font-semibold"
-                aria-label="Přiřadit osobu"
+                aria-label={t("Přiřadit osobu", "Assign person")}
               >
-                <option value="">Nikdo</option>
+                <option value="">{t("Nikdo", "Nobody")}</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
@@ -105,20 +113,20 @@ function TaskDetail() {
               <CalendarDays className="size-5" />
             </div>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-muted-foreground">Termín</p>
+              <p className="text-[13px] font-semibold text-muted-foreground">{t("Termín", "Due date")}</p>
               <input
                 type="date"
                 value={task.due_date ?? ""}
                 onChange={(e) => update.mutate({ due_date: e.target.value || null })}
                 className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 text-[15px] font-semibold"
-                aria-label="Termín"
+                aria-label={t("Termín", "Due date")}
               />
             </div>
           </div>
         </div>
 
         {task.done_note && (
-          <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">Poznámka: „{task.done_note}“</p>
+          <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">{t("Poznámka", "Note")}: „{task.done_note}“</p>
         )}
       </section>
 
@@ -126,7 +134,7 @@ function TaskDetail() {
         onClick={() => update.mutate({ status: done ? "OPEN" : "DONE" })}
         className={`mt-4 w-full ${done ? "btn-secondary" : "btn-primary"}`}
       >
-        {done ? "Znovu otevřít" : "Označit jako hotové"}
+        {done ? t("Znovu otevřít", "Reopen") : t("Označit jako hotové", "Mark as done")}
       </button>
     </AppShell>
   );

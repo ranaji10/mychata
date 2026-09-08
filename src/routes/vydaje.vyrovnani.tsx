@@ -8,20 +8,22 @@ import { Avatar, EmptyState, LoadingCards } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtKc, type Expense, type ExpenseSplit } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vydaje/vyrovnani")({
   head: () => ({
     meta: [
-      { title: "Vyrovnání — My Chata" },
-      { name: "description", content: "Návrhy vyrovnání sdílených výdajů mezi členy." },
-      { property: "og:title", content: "Vyrovnání — My Chata" },
-      { property: "og:description", content: "Návrhy vyrovnání sdílených výdajů mezi členy." },
+      { title: "Settlement — My Chata" },
+      { name: "description", content: "Settlement suggestions for shared expenses between members." },
+      { property: "og:title", content: "Settlement — My Chata" },
+      { property: "og:description", content: "Settlement suggestions for shared expenses between members." },
     ],
   }),
   component: SettlementPage,
 });
 
 function SettlementPage() {
+  const { t } = useLang();
   const { property, members } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -89,26 +91,26 @@ function SettlementPage() {
       .eq("member_id", from);
     setSettling(null);
     if (error) {
-      toast.error("Vyrovnání se nepodařilo uložit.");
+      toast.error(t("Vyrovnání se nepodařilo uložit.", "The settlement could not be saved."));
       return;
     }
-    toast.success(`${name(from)} a ${name(to)} jsou vyrovnáni.`);
+    toast.success(t(`${name(from)} a ${name(to)} jsou vyrovnáni.`, `${name(from)} and ${name(to)} are now settled.`));
     queryClient.invalidateQueries({ queryKey: ["splits", property?.id] });
   };
 
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate({ to: "/vydaje" })} aria-label="Zpět" className="grid size-11 place-items-center rounded-xl bg-secondary">
+        <button onClick={() => navigate({ to: "/vydaje" })} aria-label={t("Zpět", "Back")} className="grid size-11 place-items-center rounded-xl bg-secondary">
           <ArrowLeft className="size-5" />
         </button>
-        <h1 className="text-2xl font-bold">Vyrovnat dluhy</h1>
+        <h1 className="text-2xl font-bold">{t("Vyrovnat dluhy", "Settle debts")}</h1>
       </div>
 
       {le || ls ? (
         <LoadingCards />
       ) : suggestions.length === 0 ? (
-        <EmptyState icon={HandCoins} title="Všechno je vyrovnané." hint="Nikdo nikomu nedluží." />
+        <EmptyState icon={HandCoins} title={t("Všechno je vyrovnané.", "Everything is settled.")} hint={t("Nikdo nikomu nedluží.", "No one owes anyone.")} />
       ) : (
         <div className="mt-4 space-y-3">
           {suggestions.map((s) => (
@@ -119,7 +121,7 @@ function SettlementPage() {
                   <p className="text-[15px] font-bold">
                     {name(s.from)} → {name(s.to)}
                   </p>
-                  <p className="text-[13px] text-muted-foreground">dluží</p>
+                  <p className="text-[13px] text-muted-foreground">{t("dluží", "owes")}</p>
                 </div>
                 <p className="text-xl font-bold">{fmtKc(s.amount)}</p>
               </div>
@@ -128,7 +130,7 @@ function SettlementPage() {
                 disabled={settling === `${s.from}->${s.to}`}
                 className="btn-primary mt-3 w-full disabled:opacity-40"
               >
-                {settling === `${s.from}->${s.to}` ? "Ukládám…" : "Označit jako vyrovnané"}
+                {settling === `${s.from}->${s.to}` ? t("Ukládám…", "Saving…") : t("Označit jako vyrovnané", "Mark as settled")}
               </button>
             </div>
           ))}

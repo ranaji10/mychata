@@ -172,6 +172,18 @@ export const CZ_MONTHS = [
   "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
 ];
 export const CZ_DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+export const EN_MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+export const EN_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export function monthNames(lang: "cs" | "en") {
+  return lang === "en" ? EN_MONTHS : CZ_MONTHS;
+}
+export function dayNames(lang: "cs" | "en") {
+  return lang === "en" ? EN_DAYS : CZ_DAYS;
+}
+
 
 export interface CalendarDay {
   iso: string;
@@ -225,6 +237,48 @@ export const DECLINE_REASONS = [
   "Jiný důvod",
 ];
 
+// ---------- English label maps ----------
+
+export const TASK_CATEGORY_EN: Record<Task["category"], string> = {
+  repair: "Repair",
+  seasonal: "Seasonal",
+  cleaning: "Cleaning",
+  other: "Other",
+};
+
+export const URGENCY_EN: Record<Task["urgency"], string> = {
+  LOW: "Low",
+  HIGH: "High",
+  URGENT: "Urgent",
+};
+
+export const EXPENSE_CATEGORY_EN: Record<Expense["category"], string> = {
+  utilities: "Utilities & fees",
+  repairs: "Repairs",
+  supplies: "Supplies",
+  other: "Other",
+};
+
+export const DECLINE_REASONS_EN = [
+  "Dates are not available",
+  "Does not meet stay conditions",
+  "Other reason",
+];
+
+export function taskCategoryLabel(c: Task["category"], lang: "cs" | "en") {
+  return (lang === "en" ? TASK_CATEGORY_EN : TASK_CATEGORY)[c];
+}
+export function urgencyLabel(u: Task["urgency"], lang: "cs" | "en") {
+  return (lang === "en" ? URGENCY_EN : URGENCY)[u];
+}
+export function expenseCategoryLabel(c: Expense["category"], lang: "cs" | "en") {
+  return (lang === "en" ? EXPENSE_CATEGORY_EN : EXPENSE_CATEGORY)[c];
+}
+export function declineReasons(lang: "cs" | "en") {
+  return lang === "en" ? DECLINE_REASONS_EN : DECLINE_REASONS;
+}
+
+
 // Family branch colors for the calendar legend.
 export const BRANCH_COLORS = ["#FF5A5F", "#2E6FB0", "#16A34A", "#B45309", "#7C5CBF"];
 export function branchColor(branch: string, branches: string[]): string {
@@ -271,3 +325,46 @@ export const SEASONAL_TEMPLATES: { id: string; title: string; description: strin
     ],
   },
 ];
+
+export const SEASONAL_TEMPLATES_EN: { id: string; title: string; description: string; tasks: string[] }[] = [
+  {
+    id: "winter",
+    title: "Winterising the cottage",
+    description: "Getting ready for winter — water, heating, security.",
+    tasks: [
+      "Drain water pipes and the boiler",
+      "Check and replace window seals",
+      "Stock up on firewood and fuel",
+      "Check roof and gutters before snowfall",
+      "Secure the garden furniture",
+    ],
+  },
+  {
+    id: "spring",
+    title: "Spring opening",
+    description: "Bringing the cottage back into use after winter.",
+    tasks: [
+      "Turn the water back on and check for leaks",
+      "Clean the gutters and around the house",
+      "Check the electrics and breakers",
+      "Air out and tidy the interior",
+      "Have the fireplace and chimney inspected",
+    ],
+  },
+  {
+    id: "summer",
+    title: "Summer prep",
+    description: "Peak season — garden and supplies.",
+    tasks: [
+      "Mow the lawn and tidy the garden",
+      "Check the grill and cookware",
+      "Restock supplies (toilet paper, salt, cloths)",
+      "Check insect repellent and first aid kit",
+      "Clean the terrace and outdoor seating",
+    ],
+  },
+];
+
+export function seasonalTemplates(lang: "cs" | "en") {
+  return lang === "en" ? SEASONAL_TEMPLATES_EN : SEASONAL_TEMPLATES;
+}

@@ -7,15 +7,16 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillWarn } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { EXPENSE_CATEGORY, fmtDate, fmtKc, type Expense } from "@/lib/data";
+import { EXPENSE_CATEGORY, expenseCategoryLabel, fmtDate, fmtKc, type Expense } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vydaje")({
   head: () => ({
     meta: [
-      { title: "Výdaje — My Chata" },
-      { name: "description", content: "Sdílené výdaje za chatu a jejich rozdělení mezi členy." },
-      { property: "og:title", content: "Výdaje — My Chata" },
-      { property: "og:description", content: "Sdílené výdaje za chatu a jejich rozdělení mezi členy." },
+      { title: "Expenses — My Chata" },
+      { name: "description", content: "Shared cottage expenses and their split between members." },
+      { property: "og:title", content: "Expenses — My Chata" },
+      { property: "og:description", content: "Shared cottage expenses and their split between members." },
     ],
   }),
   component: ExpensesPage,
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/vydaje")({
 const CATEGORY_KEYS = Object.keys(EXPENSE_CATEGORY) as (keyof typeof EXPENSE_CATEGORY)[];
 
 function ExpensesPage() {
+  const { t, lang } = useLang();
   const { property, currentMember, members } = useAccount();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -89,7 +91,7 @@ function ExpensesPage() {
 
     if (error || !expense) {
       setSaving(false);
-      toast.error("Výdaj se nepodařilo uložit.");
+      toast.error(t("Výdaj se nepodařilo uložit.", "The expense could not be saved."));
       return;
     }
 
@@ -107,10 +109,10 @@ function ExpensesPage() {
 
     setSaving(false);
     if (splitError) {
-      toast.error("Rozdělení se nepodařilo uložit.");
+      toast.error(t("Rozdělení se nepodařilo uložit.", "The split could not be saved."));
       return;
     }
-    toast.success("Výdaj přidán a rozdělen.");
+    toast.success(t("Výdaj přidán a rozdělen.", "Expense added and split."));
     setDesc("");
     setAmount("");
     setSelected([]);
@@ -123,10 +125,10 @@ function ExpensesPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Výdaje" subtitle={`Celkem: ${fmtKc(total)}`} />
+      <PageHeader title={t("Výdaje", "Expenses")} subtitle={`${t("Celkem", "Total")}: ${fmtKc(total)}`} />
 
       <Link to="/vydaje/vyrovnani" className="btn-secondary mb-3 w-full">
-        Vyrovnat dluhy
+        {t("Vyrovnat dluhy", "Settle debts")}
       </Link>
 
       {isLoading ? (
@@ -134,10 +136,10 @@ function ExpensesPage() {
       ) : !expenses?.length ? (
         <EmptyState
           icon={ReceiptText}
-          title="Zatím žádné výdaje."
-          hint="Přidejte první výdaj a rozdělte ho mezi členy."
+          title={t("Zatím žádné výdaje.", "No expenses yet.")}
+          hint={t("Přidejte první výdaj a rozdělte ho mezi členy.", "Add the first expense and split it between members.")}
           action={
-            <button onClick={() => setShowForm(true)} className="btn-primary w-full">Přidat výdaj</button>
+            <button onClick={() => setShowForm(true)} className="btn-primary w-full">{t("Přidat výdaj", "Add expense")}</button>
           }
         />
       ) : (
@@ -145,17 +147,17 @@ function ExpensesPage() {
           {expenses.map((e) => (
             <div key={e.id} className="card flex items-center gap-3 p-4">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-bold">{e.description ?? EXPENSE_CATEGORY[e.category]}</p>
+                <p className="truncate text-[15px] font-bold">{e.description ?? expenseCategoryLabel(e.category, lang)}</p>
                 <p className="text-[13px] text-muted-foreground">
-                  {payerName(e.paid_by_member_id)} · {fmtDate(e.date ?? e.created_at)} · {EXPENSE_CATEGORY[e.category]}
+                  {payerName(e.paid_by_member_id)} · {fmtDate(e.date ?? e.created_at)} · {expenseCategoryLabel(e.category, lang)}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-[16px] font-bold">{fmtKc(Number(e.amount))}</p>
                 {unsettledByExpense.has(e.id) ? (
-                  <PillWarn>Nevyrovnané</PillWarn>
+                  <PillWarn>{t("Nevyrovnané", "Unsettled")}</PillWarn>
                 ) : (
-                  <PillNeutral>Vyrovnané</PillNeutral>
+                  <PillNeutral>{t("Vyrovnané", "Settled")}</PillNeutral>
                 )}
               </div>
             </div>
@@ -165,25 +167,25 @@ function ExpensesPage() {
 
       {showForm ? (
         <section className="card mt-4 space-y-3 p-4">
-          <h3 className="text-lg font-bold">Nový výdaj</h3>
+          <h3 className="text-lg font-bold">{t("Nový výdaj", "New expense")}</h3>
           <div>
-            <label htmlFor="exp-desc" className="mb-1 block text-[13px] font-bold">Popis</label>
-            <input id="exp-desc" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Např. Dřevo na zimu" className="field" />
+            <label htmlFor="exp-desc" className="mb-1 block text-[13px] font-bold">{t("Popis", "Description")}</label>
+            <input id="exp-desc" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t("Např. Dřevo na zimu", "E.g. Firewood for winter")} className="field" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="exp-amount" className="mb-1 block text-[13px] font-bold">Částka (Kč)</label>
+              <label htmlFor="exp-amount" className="mb-1 block text-[13px] font-bold">{t("Částka (Kč)", "Amount (Kč)")}</label>
               <input id="exp-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" className="field" />
             </div>
             <div>
-              <label htmlFor="exp-cat" className="mb-1 block text-[13px] font-bold">Kategorie</label>
+              <label htmlFor="exp-cat" className="mb-1 block text-[13px] font-bold">{t("Kategorie", "Category")}</label>
               <select id="exp-cat" value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="field">
-                {CATEGORY_KEYS.map((c) => <option key={c} value={c}>{EXPENSE_CATEGORY[c]}</option>)}
+                {CATEGORY_KEYS.map((c) => <option key={c} value={c}>{expenseCategoryLabel(c, lang)}</option>)}
               </select>
             </div>
           </div>
           <div>
-            <span className="mb-1 block text-[13px] font-bold">Rozdělit mezi</span>
+            <span className="mb-1 block text-[13px] font-bold">{t("Rozdělit mezi", "Split between")}</span>
             <div className="flex flex-wrap gap-2">
               {members.map((m) => (
                 <button
@@ -197,7 +199,7 @@ function ExpensesPage() {
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-[12px] text-muted-foreground">Částka se rozdělí rovným dílem.</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">{t("Částka se rozdělí rovným dílem.", "The amount will be split equally.")}</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -205,14 +207,14 @@ function ExpensesPage() {
               disabled={saving || !desc.trim() || !amount || selected.length === 0}
               className="btn-primary flex-1 disabled:opacity-40"
             >
-              {saving ? "Ukládám…" : "Přidat výdaj"}
+              {saving ? t("Ukládám…", "Saving…") : t("Přidat výdaj", "Add expense")}
             </button>
-            <button onClick={() => setShowForm(false)} className="btn-secondary">Zrušit</button>
+            <button onClick={() => setShowForm(false)} className="btn-secondary">{t("Zrušit", "Cancel")}</button>
           </div>
         </section>
       ) : (
         <button onClick={() => setShowForm(true)} className="btn-primary mt-4 w-full">
-          <Plus className="size-5" /> Přidat výdaj
+          <Plus className="size-5" /> {t("Přidat výdaj", "Add expense")}
         </button>
       )}
     </AppShell>

@@ -2,26 +2,29 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { CalendarDays, ClipboardList, Home, Inbox, Menu, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 import { useAccount } from "@/lib/account";
-
-const FAMILY_TABS = [
-  { to: "/domu", label: "Domů", icon: Home },
-  { to: "/kalendar", label: "Kalendář", icon: CalendarDays },
-  { to: "/ukoly", label: "Úkoly", icon: ClipboardList },
-  { to: "/vydaje", label: "Výdaje", icon: Wallet },
-  { to: "/vice", label: "Více", icon: Menu },
-] as const;
-
-const INST_TABS = [
-  { to: "/domu", label: "Domů", icon: Home },
-  { to: "/zadosti", label: "Žádosti", icon: Inbox },
-  { to: "/kalendar", label: "Kalendář", icon: CalendarDays },
-  { to: "/ukoly", label: "Úkoly", icon: ClipboardList },
-  { to: "/vice", label: "Více", icon: Menu },
-] as const;
+import { LanguageToggle, useLang } from "@/lib/i18n";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { account, property } = useAccount();
+  const { t } = useLang();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const FAMILY_TABS = [
+    { to: "/domu", label: t("Domů", "Home"), icon: Home },
+    { to: "/kalendar", label: t("Kalendář", "Calendar"), icon: CalendarDays },
+    { to: "/ukoly", label: t("Úkoly", "Tasks"), icon: ClipboardList },
+    { to: "/vydaje", label: t("Výdaje", "Expenses"), icon: Wallet },
+    { to: "/vice", label: t("Více", "More"), icon: Menu },
+  ] as const;
+
+  const INST_TABS = [
+    { to: "/domu", label: t("Domů", "Home"), icon: Home },
+    { to: "/zadosti", label: t("Žádosti", "Requests"), icon: Inbox },
+    { to: "/kalendar", label: t("Kalendář", "Calendar"), icon: CalendarDays },
+    { to: "/ukoly", label: t("Úkoly", "Tasks"), icon: ClipboardList },
+    { to: "/vice", label: t("Více", "More"), icon: Menu },
+  ] as const;
+
   const tabs = account?.type === "INSTITUTIONAL" ? INST_TABS : FAMILY_TABS;
 
   return (
@@ -36,6 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </p>
           <h1 className="truncate text-xl font-bold leading-tight">{property?.name ?? "My Chata"}</h1>
         </div>
+        <LanguageToggle />
       </header>
 
       <main className="px-4 pb-32">{children}</main>

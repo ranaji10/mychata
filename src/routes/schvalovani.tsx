@@ -7,14 +7,15 @@ import { Avatar, EmptyState, LoadingCards, PageHeader } from "@/components/bits"
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, type Booking } from "@/lib/data";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/schvalovani")({
   head: () => ({
     meta: [
-      { title: "Ke schválení — My Chata" },
-      { name: "description", content: "Přehled rezervací čekajících na schválení." },
-      { property: "og:title", content: "Ke schválení — My Chata" },
-      { property: "og:description", content: "Přehled rezervací čekajících na schválení." },
+      { title: "Approvals — My Chata" },
+      { name: "description", content: "Overview of bookings awaiting approval." },
+      { property: "og:title", content: "Approvals — My Chata" },
+      { property: "og:description", content: "Overview of bookings awaiting approval." },
     ],
   }),
   component: ApprovalsPage,
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/schvalovani")({
 function ApprovalsPage() {
   const { property, currentMember } = useAccount();
   const queryClient = useQueryClient();
+  const { t, lang } = useLang();
 
   const { data: pending, isLoading } = useQuery({
     queryKey: ["bookings", property?.id],
@@ -51,21 +53,28 @@ function ApprovalsPage() {
     },
     onSuccess: (_d, v) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(v.approve ? "Rezervace schválena." : "Rezervace zamítnuta.");
+      toast.success(v.approve ? t("Rezervace schválena.", "Booking approved.") : t("Rezervace zamítnuta.", "Booking declined."));
     },
-    onError: () => toast.error("Akce se nepodařila."),
+    onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
   });
 
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
 
   return (
     <AppShell>
-      <PageHeader title="Ke schválení" subtitle="Rodinné rezervace čekající na vaše rozhodnutí." />
+      <PageHeader
+        title={t("Ke schválení", "Approvals")}
+        subtitle={t("Rodinné rezervace čekající na vaše rozhodnutí.", "Family bookings awaiting your decision.")}
+      />
 
       {isLoading ? (
         <LoadingCards />
       ) : !pending?.length ? (
-        <EmptyState icon={Inbox} title="Žádné rezervace ke schválení." hint="Všechny žádosti jsou vyřízené." />
+        <EmptyState
+          icon={Inbox}
+          title={t("Žádné rezervace ke schválení.", "No bookings awaiting approval.")}
+          hint={t("Všechny žádosti jsou vyřízené.", "All requests have been handled.")}
+        />
       ) : (
         <div className="space-y-3">
           {pending.map((b) => (
@@ -75,7 +84,7 @@ function ApprovalsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-bold">{b.requester_name}</p>
                   <p className="text-[14px] text-muted-foreground">
-                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests} hostů
+                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests} {lang === "en" ? "guests" : "hostů"}
                   </p>
                 </div>
               </div>
@@ -83,15 +92,15 @@ function ApprovalsPage() {
               {isAdmin ? (
                 <div className="mt-3 flex gap-2">
                   <button onClick={() => decide.mutate({ id: b.id, approve: true })} className="btn-primary flex-1">
-                    Schválit
+                    {t("Schválit", "Approve")}
                   </button>
                   <button onClick={() => decide.mutate({ id: b.id, approve: false })} className="btn-danger flex-1">
-                    Zamítnout
+                    {t("Zamítnout", "Decline")}
                   </button>
                 </div>
               ) : (
                 <p className="mt-3 text-[13px] font-semibold text-muted-foreground">
-                  Schválit může správce rodiny.
+                  {t("Schválit může správce rodiny.", "Only the family admin can approve.")}
                 </p>
               )}
             </article>

@@ -143,6 +143,8 @@ export type Database = {
           amount: number
           category: string
           created_at: string
+          date: string | null
+          description: string | null
           id: string
           paid_by_member_id: string | null
           property_id: string
@@ -153,6 +155,8 @@ export type Database = {
           amount: number
           category?: string
           created_at?: string
+          date?: string | null
+          description?: string | null
           id?: string
           paid_by_member_id?: string | null
           property_id: string
@@ -163,6 +167,8 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
+          date?: string | null
+          description?: string | null
           id?: string
           paid_by_member_id?: string | null
           property_id?: string

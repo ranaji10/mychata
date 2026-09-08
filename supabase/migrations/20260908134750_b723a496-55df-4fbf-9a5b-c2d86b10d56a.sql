@@ -1,0 +1,3 @@
+ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS description text, ADD COLUMN IF NOT EXISTS date date DEFAULT CURRENT_DATE;
+UPDATE public.expenses SET date = created_at::date WHERE date IS NULL;
+UPDATE public.expenses SET description = CASE category WHEN 'utilities' THEN 'Energie a poplatky' WHEN 'repairs' THEN 'Oprava' WHEN 'supplies' THEN 'Nákup zásob' ELSE 'Výdaj' END WHERE description IS NULL;

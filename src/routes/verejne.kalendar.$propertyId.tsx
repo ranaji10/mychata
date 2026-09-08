@@ -84,8 +84,8 @@ function PublicCalendar() {
           )}
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary" />{t("Potvrzeno", "Confirmed")}</span>
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary/30" />{t("Čeká na schválení", "Awaiting approval")}</span>
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-ok" />{t("Potvrzeno", "Confirmed")}</span>
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-warn" />{t("Čeká na schválení", "Awaiting approval")}</span>
         </div>
       </section>
 
@@ -94,7 +94,10 @@ function PublicCalendar() {
         <div className="space-y-2.5">
           {upcoming.map((b) => (
             <div key={b.id} className="card flex items-center gap-3 p-3">
-              <span className="size-3 shrink-0 rounded-full bg-primary" />
+              <span
+                className="size-3 shrink-0 rounded-full"
+                style={{ backgroundColor: b.status === "PENDING" ? "var(--color-warn)" : "var(--color-ok)" }}
+              />
               <p className="text-[15px] font-semibold">
                 {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
               </p>

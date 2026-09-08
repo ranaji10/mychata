@@ -73,8 +73,8 @@
   --fog: oklch(0.93 0.012 76);
   --ok: oklch(0.62 0.17 152); /* #16A34A */
   --ok-soft: oklch(0.972 0.022 152); /* #ECFDF3 */
-  --warn: oklch(0.52 0.12 55); /* #B45309 */
-  --warn-soft: oklch(0.968 0.024 82); /* #FFF4E5 */
+  --warn: oklch(0.70 0.17 78); /* warm yellow/amber */
+  --warn-soft: oklch(0.97 0.03 82); /* soft yellow */
 }
 
 @layer base {

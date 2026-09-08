@@ -8,7 +8,7 @@ import { EmptyState, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
-  branchColor, dayNames, monthNames, fmtDate, monthGrid, todayISO,
+  dayNames, monthNames, fmtDate, monthGrid, todayISO,
   type Booking,
 } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
@@ -47,21 +47,21 @@ export function CalendarMonth({
       <div className="grid grid-cols-7 gap-1 text-center">
         {days.map((d) => {
           const booking = bookings.find((b) => d.iso >= b.start_date && d.iso <= b.end_date);
-          const color = booking ? branchColor(booking.requester_name, branches) : undefined;
           const isToday = d.iso === today;
+          const isPending = booking?.status === "PENDING";
+          const isConfirmed = booking?.status === "CONFIRMED";
           return (
             <div
               key={d.iso}
               className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold"
               style={
-                booking
-                  ? {
-                      backgroundColor: booking.status === "PENDING" ? color + "33" : color,
-                      color: booking.status === "PENDING" ? color : "#fff",
-                    }
-                  : isToday
-                    ? { boxShadow: "inset 0 0 0 2px var(--color-primary)" }
-                    : undefined
+                isConfirmed
+                  ? { backgroundColor: "var(--color-ok)", color: "#fff" }
+                  : isPending
+                    ? { backgroundColor: "var(--color-warn-soft)", color: "var(--color-warn)" }
+                    : isToday
+                      ? { boxShadow: "inset 0 0 0 2px var(--color-primary)" }
+                      : undefined
               }
             >
               <span className={!booking && !d.inMonth ? "text-muted-foreground/50" : ""}>{d.day}</span>
@@ -141,8 +141,8 @@ function CalendarPage() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary" />{t("Potvrzeno", "Confirmed")}</span>
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-primary/30" />{t("Čeká na schválení", "Awaiting approval")}</span>
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-ok" />{t("Potvrzeno", "Confirmed")}</span>
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-warn" />{t("Čeká na schválení", "Awaiting approval")}</span>
         </div>
 
         {isFamily && (
@@ -172,7 +172,10 @@ function CalendarPage() {
                 params={{ id: b.id }}
                 className="card flex items-center gap-3 p-3 active:scale-[0.99]"
               >
-                <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: branchColor(b.requester_name, branches) }} />
+                <span
+                  className="size-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: b.status === "PENDING" ? "var(--color-warn)" : "var(--color-ok)" }}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-bold">{b.requester_name}</p>
                   <p className="text-[13px] text-muted-foreground">

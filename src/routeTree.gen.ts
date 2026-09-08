@@ -21,7 +21,9 @@ import { Route as ZadostiRouteImport } from './routes/zadosti'
 import { Route as RezervaceIdRouteImport } from './routes/rezervace.$id'
 import { Route as RezervaceNovaRouteImport } from './routes/rezervace.nova'
 import { Route as UkolyIdRouteImport } from './routes/ukoly.$id'
+import { Route as VerejneZadostRouteImport } from './routes/verejne.zadost'
 import { Route as VydajeVyrovnaniRouteImport } from './routes/vydaje.vyrovnani'
+import { Route as VerejneKalendarPropertyIdRouteImport } from './routes/verejne.kalendar.$propertyId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -83,11 +85,22 @@ const UkolyIdRoute = UkolyIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => UkolyRoute,
 } as any)
+const VerejneZadostRoute = VerejneZadostRouteImport.update({
+  id: '/verejne/zadost',
+  path: '/verejne/zadost',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VydajeVyrovnaniRoute = VydajeVyrovnaniRouteImport.update({
   id: '/vyrovnani',
   path: '/vyrovnani',
   getParentRoute: () => VydajeRoute,
 } as any)
+const VerejneKalendarPropertyIdRoute =
+  VerejneKalendarPropertyIdRouteImport.update({
+    id: '/verejne/kalendar/$propertyId',
+    path: '/verejne/kalendar/$propertyId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -102,7 +115,9 @@ export interface FileRoutesByFullPath {
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
+  '/verejne/zadost': typeof VerejneZadostRoute
   '/vydaje/vyrovnani': typeof VydajeVyrovnaniRoute
+  '/verejne/kalendar/$propertyId': typeof VerejneKalendarPropertyIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -117,7 +132,9 @@ export interface FileRoutesByTo {
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
+  '/verejne/zadost': typeof VerejneZadostRoute
   '/vydaje/vyrovnani': typeof VydajeVyrovnaniRoute
+  '/verejne/kalendar/$propertyId': typeof VerejneKalendarPropertyIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,7 +150,9 @@ export interface FileRoutesById {
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
+  '/verejne/zadost': typeof VerejneZadostRoute
   '/vydaje/vyrovnani': typeof VydajeVyrovnaniRoute
+  '/verejne/kalendar/$propertyId': typeof VerejneKalendarPropertyIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,7 +169,9 @@ export interface FileRouteTypes {
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
+    | '/verejne/zadost'
     | '/vydaje/vyrovnani'
+    | '/verejne/kalendar/$propertyId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -165,7 +186,9 @@ export interface FileRouteTypes {
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
+    | '/verejne/zadost'
     | '/vydaje/vyrovnani'
+    | '/verejne/kalendar/$propertyId'
   id:
     | '__root__'
     | '/'
@@ -180,7 +203,9 @@ export interface FileRouteTypes {
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
+    | '/verejne/zadost'
     | '/vydaje/vyrovnani'
+    | '/verejne/kalendar/$propertyId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -195,6 +220,8 @@ export interface RootRouteChildren {
   ZadostiRoute: typeof ZadostiRoute
   RezervaceIdRoute: typeof RezervaceIdRoute
   RezervaceNovaRoute: typeof RezervaceNovaRoute
+  VerejneZadostRoute: typeof VerejneZadostRoute
+  VerejneKalendarPropertyIdRoute: typeof VerejneKalendarPropertyIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -283,12 +310,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UkolyIdRouteImport
       parentRoute: typeof UkolyRoute
     }
+    '/verejne/zadost': {
+      id: '/verejne/zadost'
+      path: '/verejne/zadost'
+      fullPath: '/verejne/zadost'
+      preLoaderRoute: typeof VerejneZadostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vydaje/vyrovnani': {
       id: '/vydaje/vyrovnani'
       path: '/vyrovnani'
       fullPath: '/vydaje/vyrovnani'
       preLoaderRoute: typeof VydajeVyrovnaniRouteImport
       parentRoute: typeof VydajeRoute
+    }
+    '/verejne/kalendar/$propertyId': {
+      id: '/verejne/kalendar/$propertyId'
+      path: '/verejne/kalendar/$propertyId'
+      fullPath: '/verejne/kalendar/$propertyId'
+      preLoaderRoute: typeof VerejneKalendarPropertyIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -326,6 +367,8 @@ const rootRouteChildren: RootRouteChildren = {
   ZadostiRoute: ZadostiRoute,
   RezervaceIdRoute: RezervaceIdRoute,
   RezervaceNovaRoute: RezervaceNovaRoute,
+  VerejneZadostRoute: VerejneZadostRoute,
+  VerejneKalendarPropertyIdRoute: VerejneKalendarPropertyIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

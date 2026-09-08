@@ -4,10 +4,10 @@ import { Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, LoadingCards, PageHeader, PillMuted, PillWarn } from "@/components/bits";
+import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillWarn } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, fmtKc, type Expense } from "@/lib/data";
+import { EXPENSE_CATEGORY, fmtDate, fmtKc, type Expense } from "@/lib/data";
 
 export const Route = createFileRoute("/vydaje")({
   head: () => ({
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/vydaje")({
   component: ExpensesPage,
 });
 
-const CATEGORIES = ["Potraviny", "Palivo", "Oprava", "Energie", "Ostatní"];
+const CATEGORY_KEYS = Object.keys(EXPENSE_CATEGORY) as (keyof typeof EXPENSE_CATEGORY)[];
 
 function ExpensesPage() {
   const { property, currentMember, members } = useAccount();
@@ -29,7 +29,7 @@ function ExpensesPage() {
   const [showForm, setShowForm] = useState(false);
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState<(typeof CATEGORY_KEYS)[number]>("supplies");
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -41,7 +41,7 @@ function ExpensesPage() {
         .from("expenses")
         .select("*")
         .eq("property_id", property!.id)
-        .order("date", { ascending: false });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Expense[];
     },
@@ -63,7 +63,7 @@ function ExpensesPage() {
     (splits ?? []).filter((s) => !s.paid_back).map((s) => s.expense_id),
   );
 
-  const payerName = (id: string) => members.find((m) => m.id === id)?.name ?? "—";
+  const payerName = (id: string | null) => members.find((m) => m.id === id)?.name ?? "—";
 
   const toggleMember = (id: string) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -77,10 +77,11 @@ function ExpensesPage() {
       .from("expenses")
       .insert({
         property_id: property.id,
-        paid_by: currentMember.id,
+        paid_by_member_id: currentMember.id,
         amount: amountCzk,
         description: desc.trim(),
         category,
+        split_method: "EQUAL",
         date: new Date().toISOString().slice(0, 10),
       })
       .select()
@@ -122,7 +123,7 @@ function ExpensesPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Výdaje" subtitle={`Celkem letos: ${fmtKc(total)}`} />
+      <PageHeader title="Výdaje" subtitle={`Celkem: ${fmtKc(total)}`} />
 
       <Link to="/vydaje/vyrovnani" className="btn-secondary mb-3 w-full">
         Vyrovnat dluhy
@@ -144,9 +145,9 @@ function ExpensesPage() {
           {expenses.map((e) => (
             <div key={e.id} className="card flex items-center gap-3 p-4">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-bold">{e.description}</p>
+                <p className="truncate text-[15px] font-bold">{e.description ?? EXPENSE_CATEGORY[e.category]}</p>
                 <p className="text-[13px] text-muted-foreground">
-                  {payerName(e.paid_by)} · {fmtDate(e.date)} · {e.category}
+                  {payerName(e.paid_by_member_id)} · {fmtDate(e.date ?? e.created_at)} · {EXPENSE_CATEGORY[e.category]}
                 </p>
               </div>
               <div className="text-right">
@@ -154,7 +155,7 @@ function ExpensesPage() {
                 {unsettledByExpense.has(e.id) ? (
                   <PillWarn>Nevyrovnané</PillWarn>
                 ) : (
-                  <PillMuted>Vyrovnané</PillMuted>
+                  <PillNeutral>Vyrovnané</PillNeutral>
                 )}
               </div>
             </div>
@@ -176,8 +177,8 @@ function ExpensesPage() {
             </div>
             <div>
               <label htmlFor="exp-cat" className="mb-1 block text-[13px] font-bold">Kategorie</label>
-              <select id="exp-cat" value={category} onChange={(e) => setCategory(e.target.value)} className="field">
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              <select id="exp-cat" value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="field">
+                {CATEGORY_KEYS.map((c) => <option key={c} value={c}>{EXPENSE_CATEGORY[c]}</option>)}
               </select>
             </div>
           </div>

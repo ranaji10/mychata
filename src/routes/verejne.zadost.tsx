@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtDate, rangesOverlap, todayISO, type Booking, type Property } from "@/lib/data";
+import { findConflicts, fmtDate, todayISO, type Booking, type Property } from "@/lib/data";
 import chataImg from "@/assets/chata.jpg";
 
 export const Route = createFileRoute("/verejne/zadost")({
@@ -18,20 +18,21 @@ export const Route = createFileRoute("/verejne/zadost")({
   component: PublicRequest,
 });
 
-const REASONS = [
-  { value: "RECREATION", label: "Rekreace" },
-  { value: "TEAMBUILDING", label: "Teambuilding" },
-  { value: "OTHER", label: "Jiné" },
-];
-
 function PublicRequest() {
   const { data: property } = useQuery({
     queryKey: ["institutional-property"],
     queryFn: async () => {
+      const { data: accounts, error: aErr } = await supabase
+        .from("accounts")
+        .select("id")
+        .eq("type", "INSTITUTIONAL")
+        .limit(1)
+        .single();
+      if (aErr) throw aErr;
       const { data, error } = await supabase
         .from("properties")
-        .select("*, accounts!inner(type)")
-        .eq("accounts.type", "INSTITUTIONAL")
+        .select("*")
+        .eq("account_id", accounts.id)
         .limit(1)
         .single();
       if (error) throw error;
@@ -46,8 +47,7 @@ function PublicRequest() {
       const { data, error } = await supabase
         .from("bookings")
         .select("*")
-        .eq("property_id", property!.id)
-        .in("status", ["CONFIRMED", "PENDING"]);
+        .eq("property_id", property!.id);
       if (error) throw error;
       return data as Booking[];
     },
@@ -55,32 +55,37 @@ function PublicRequest() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [affiliation, setAffiliation] = useState("");
   const [start, setStart] = useState(todayISO());
   const [end, setEnd] = useState(todayISO());
   const [guests, setGuests] = useState(2);
-  const [reason, setReason] = useState(REASONS[0].value);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const conflict = bookings?.find((b) => rangesOverlap(start, end, b.start_date, b.end_date));
+  const conflicts = findConflicts(start, end, bookings ?? []);
+  const hasConflict = conflicts.length > 0;
   const invalid = end < start;
   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 
   const submit = async () => {
-    if (!property || !name.trim() || !emailOk || invalid) return;
+    const prop = property;
+    if (!prop || !name.trim() || !emailOk || invalid) return;
     setSaving(true);
     const { error } = await supabase.from("institutional_requests").insert({
-      property_id: property.id,
+      property_id: prop.id,
       requester_name: name.trim(),
-      email: email.trim(),
+      requester_email: email.trim(),
+      affiliation: affiliation.trim() || null,
       start_date: start,
       end_date: end,
       guests,
-      reason,
       note: note || null,
       status: "PENDING",
-      has_conflict: !!conflict,
+      has_conflict: hasConflict,
+      conflict_note: hasConflict
+        ? conflicts.map((c) => `${c.other.name} (${c.other.start}–${c.other.end})`).join(", ")
+        : null,
     });
     setSaving(false);
     if (error) return;
@@ -121,6 +126,11 @@ function PublicRequest() {
             {email && !emailOk && <p className="mt-1 text-[13px] font-semibold text-danger">Zadejte platný e-mail.</p>}
           </div>
 
+          <div>
+            <label htmlFor="req-aff" className="mb-1 block text-[13px] font-bold">Oddělení (nepovinné)</label>
+            <input id="req-aff" value={affiliation} onChange={(e) => setAffiliation(e.target.value)} placeholder="Např. Katedra botaniky" className="field" />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="req-start" className="mb-1 block text-[13px] font-bold">Příjezd</label>
@@ -146,23 +156,6 @@ function PublicRequest() {
           </div>
 
           <div>
-            <span className="mb-1 block text-[13px] font-bold">Důvod pobytu</span>
-            <div className="flex flex-wrap gap-2">
-              {REASONS.map((r) => (
-                <button
-                  key={r.value}
-                  onClick={() => setReason(r.value)}
-                  className={`h-11 rounded-full px-4 text-[14px] font-bold ${
-                    reason === r.value ? "bg-primary text-primary-foreground" : "bg-card ring-1 ring-black/10"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
             <label htmlFor="req-note" className="mb-1 block text-[13px] font-bold">Poznámka (nepovinné)</label>
             <textarea id="req-note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="field resize-none" />
           </div>
@@ -170,7 +163,7 @@ function PublicRequest() {
           {invalid && (
             <p className="rounded-2xl bg-danger-soft p-3 text-[14px] font-semibold text-danger">Odjezd musí být po příjezdu.</p>
           )}
-          {conflict && (
+          {hasConflict && !invalid && (
             <p className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
               Tento termín je již částečně obsazený. Žádost odešlete, správce posoudí kolizi.
             </p>
@@ -178,7 +171,7 @@ function PublicRequest() {
 
           <button
             onClick={submit}
-            disabled={saving || !name.trim() || !emailOk || invalid}
+            disabled={saving || !name.trim() || !emailOk || invalid || !property}
             className="btn-primary w-full disabled:opacity-40"
           >
             {saving ? "Odesílám…" : "Odeslat žádost"}

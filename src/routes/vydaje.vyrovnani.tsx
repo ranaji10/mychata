@@ -14,7 +14,7 @@ export const Route = createFileRoute("/vydaje/vyrovnani")({
     meta: [
       { title: "Vyrovnání — My Chata" },
       { name: "description", content: "Návrhy vyrovnání sdílených výdajů mezi členy." },
-      { property: "og:title", content: "Vyrovnat — My Chata" },
+      { property: "og:title", content: "Vyrovnání — My Chata" },
       { property: "og:description", content: "Návrhy vyrovnání sdílených výdajů mezi členy." },
     ],
   }),
@@ -51,7 +51,7 @@ function SettlementPage() {
 
   const suggestions = useMemo(() => {
     if (!splits || !expenses) return [];
-    const payerOf = new Map(expenses.map((e) => [e.id, e.paid_by]));
+    const payerOf = new Map(expenses.map((e) => [e.id, e.paid_by_member_id]));
     const owes = new Map<string, number>(); // "debtor->payer" => amount
     for (const s of splits) {
       if (s.paid_back) continue;
@@ -60,12 +60,11 @@ function SettlementPage() {
       const key = `${s.member_id}->${payer}`;
       owes.set(key, (owes.get(key) ?? 0) + Number(s.amount_owed));
     }
-    // Net mutual debts
     const result: { from: string; to: string; amount: number }[] = [];
     const seen = new Set<string>();
     for (const [key, amount] of owes) {
       if (seen.has(key)) continue;
-      const [from, to] = key.split("->");
+      const [from = "", to = ""] = key.split("->");
       const reverseKey = `${to}->${from}`;
       const reverse = owes.get(reverseKey) ?? 0;
       seen.add(key);
@@ -82,7 +81,7 @@ function SettlementPage() {
   const settle = async (from: string, to: string) => {
     if (!expenses) return;
     setSettling(`${from}->${to}`);
-    const expenseIds = expenses.filter((e) => e.paid_by === to).map((e) => e.id);
+    const expenseIds = expenses.filter((e) => e.paid_by_member_id === to).map((e) => e.id);
     const { error } = await supabase
       .from("expense_splits")
       .update({ paid_back: true })
@@ -90,7 +89,7 @@ function SettlementPage() {
       .eq("member_id", from);
     setSettling(null);
     if (error) {
-      toast.error("Vyrovnaní se nepodařilo uložit.");
+      toast.error("Vyrovnání se nepodařilo uložit.");
       return;
     }
     toast.success(`${name(from)} a ${name(to)} jsou vyrovnáni.`);

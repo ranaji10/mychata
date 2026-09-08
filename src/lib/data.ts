@@ -150,12 +150,12 @@ export function isSameDayChangeover(aStart: string, aEnd: string, bStart: string
 export function findConflicts(
   start: string,
   end: string,
-  others: { name: string; start_date: string; end_date: string }[],
+  others: { requester_name: string; start_date: string; end_date: string }[],
 ): Conflict[] {
   const out: Conflict[] = [];
   for (const o of others) {
     if (!rangesOverlap(start, end, o.start_date, o.end_date)) continue;
-    const base = { name: o.name, start: o.start_date, end: o.end_date };
+    const base = { name: o.requester_name, start: o.start_date, end: o.end_date };
     if (isSameDayChangeover(start, end, o.start_date, o.end_date) && start !== o.start_date && end !== o.end_date) {
       out.push({ kind: "same-day", other: base });
     } else {
@@ -191,7 +191,7 @@ export function monthGrid(year: number, month: number): CalendarDay[] {
     days.push({ iso, day: d.getDate(), inMonth: d.getMonth() === month });
   }
   // trim trailing row if fully outside month
-  while (days.length > 35 && !days[days.length - 7].inMonth && !days[days.length - 1].inMonth && days.slice(-7).every((d) => !d.inMonth)) {
+  while (days.length > 35 && days.slice(-7).every((d) => !d.inMonth)) {
     days.splice(-7);
   }
   return days;
@@ -229,7 +229,7 @@ export const DECLINE_REASONS = [
 export const BRANCH_COLORS = ["#FF5A5F", "#2E6FB0", "#16A34A", "#B45309", "#7C5CBF"];
 export function branchColor(branch: string, branches: string[]): string {
   const i = Math.max(0, branches.indexOf(branch));
-  return BRANCH_COLORS[i % BRANCH_COLORS.length];
+  return BRANCH_COLORS[i % BRANCH_COLORS.length] ?? "#FF5A5F";
 }
 
 // Seasonal checklist templates (J2)

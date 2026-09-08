@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { CZ_MONTHS, fmtDate, REASON_LABELS, type InstitutionalRequest } from "@/lib/data";
+import { CZ_MONTHS, fmtDate, type InstitutionalRequest } from "@/lib/data";
 
 export const Route = createFileRoute("/export")({
   head: () => ({
@@ -40,23 +40,23 @@ function ExportPage() {
     },
   });
 
-  const [y, m] = month.split("-").map(Number);
+  const [y = now.getFullYear(), m = now.getMonth() + 1] = month.split("-").map(Number);
   const monthStart = `${month}-01`;
   const monthEnd = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
 
   const inMonth = (requests ?? []).filter((r) => r.start_date <= monthEnd && r.end_date >= monthStart);
 
   const download = () => {
-    const header = "Jméno;E-mail;Od;Do;Hostů;Důvod;Stav;Odesláno";
+    const header = "Jméno;E-mail;Od;Do;Hostů;Oddělení;Stav;Odesláno";
     const rows = inMonth.map((r) =>
       [
         r.requester_name,
-        r.email,
+        r.requester_email,
         fmtDate(r.start_date),
         fmtDate(r.end_date),
         r.guests,
-        REASON_LABELS[r.reason],
-        r.status === "APPROVED" ? "Schváleno" : r.status === "REJECTED" ? "Zamítnuto" : "Čeká",
+        r.affiliation ?? "",
+        r.status === "APPROVED" ? "Schváleno" : r.status === "DECLINED" ? "Zamítnuto" : "Čeká",
         fmtDate(r.created_at.slice(0, 10)),
       ].join(";"),
     );
@@ -73,7 +73,7 @@ function ExportPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Export využití" subtitle="Souhrn žádostí pro mzdovou a evidenci." />
+      <PageHeader title="Export využití" subtitle="Souhrn žádostí pro evidenci." />
 
       <section className="card mt-2 space-y-4 p-4">
         <div>
@@ -83,7 +83,7 @@ function ExportPage() {
 
         <div className="rounded-2xl bg-background p-4">
           <p className="text-[13px] font-semibold text-muted-foreground">
-            {CZ_MONTHS[m - 1]} {y}
+            {CZ_MONTHS[(m || 1) - 1]} {y}
           </p>
           {isLoading ? (
             <Skeleton className="mt-2 h-8" />

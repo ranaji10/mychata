@@ -41,7 +41,7 @@ function TaskDetail() {
   };
 
   const update = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
+    mutationFn: async (patch: { assignee_member_id?: string | null; due_date?: string | null; status?: "OPEN" | "DONE" }) => {
       const { error } = await supabase.from("tasks").update(patch).eq("id", id);
       if (error) throw error;
     },

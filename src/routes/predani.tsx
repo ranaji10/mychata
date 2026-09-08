@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillOk } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDateTime, HANDOVER_CHECKLIST, type Handover } from "@/lib/data";
+import { fmtDateTime, type Handover } from "@/lib/data";
 
 export const Route = createFileRoute("/predani")({
   head: () => ({
@@ -21,11 +21,20 @@ export const Route = createFileRoute("/predani")({
   component: HandoverPage,
 });
 
+const DEFAULT_CHECKLIST = [
+  "Uklidit a vynést odpadky",
+  "Zkontrolovat uzavření oken a dveří",
+  "Vypnout spotřebiče a topení",
+  "Uzavřít vodu a plyn",
+  "Zamknout chatu a vrátit klíče",
+];
+
 function HandoverPage() {
-  const { property, currentMember } = useAccount();
+  const { property, currentMember, members } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [checked, setChecked] = useState<boolean[]>(HANDOVER_CHECKLIST.map(() => false));
+  const items = property?.handover_items?.length ? property.handover_items : DEFAULT_CHECKLIST;
+  const [checked, setChecked] = useState<boolean[]>(items.map(() => false));
   const [note, setNote] = useState("");
 
   const { data: history, isLoading } = useQuery({
@@ -36,7 +45,7 @@ function HandoverPage() {
         .from("handovers")
         .select("*")
         .eq("property_id", property!.id)
-        .order("created_at", { ascending: false })
+        .order("submitted_at", { ascending: false })
         .limit(10);
       if (error) throw error;
       return data as Handover[];
@@ -44,14 +53,14 @@ function HandoverPage() {
   });
 
   const doneCount = checked.filter(Boolean).length;
-  const allDone = doneCount === HANDOVER_CHECKLIST.length;
+  const allDone = doneCount === items.length;
 
   const save = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("handovers").insert({
         property_id: property!.id,
-        performed_by: currentMember?.name ?? "Neznámý",
-        checklist: HANDOVER_CHECKLIST.map((item, i) => ({ item, done: checked[i] })),
+        member_id: currentMember?.id ?? null,
+        checklist_state: Object.fromEntries(items.map((item, i) => [item, { state: checked[i] ? "checked" : "na" }])),
         note: note || null,
       });
       if (error) throw error;
@@ -64,6 +73,8 @@ function HandoverPage() {
     onError: () => toast.error("Předání se nepodařilo uložit."),
   });
 
+  const memberName = (id: string | null) => members.find((m) => m.id === id)?.name ?? "Neznámý";
+
   return (
     <AppShell>
       <PageHeader title="Předání chaty" subtitle="Zkontrolujte vše před odjezdem." />
@@ -72,15 +83,15 @@ function HandoverPage() {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold">Checklist</h3>
           <span className="text-[14px] font-bold text-muted-foreground">
-            {doneCount}/{HANDOVER_CHECKLIST.length}
+            {doneCount}/{items.length}
           </span>
         </div>
         <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(doneCount / HANDOVER_CHECKLIST.length) * 100}%` }} />
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(doneCount / items.length) * 100}%` }} />
         </div>
 
         <div className="mt-3 space-y-1">
-          {HANDOVER_CHECKLIST.map((item, i) => (
+          {items.map((item, i) => (
             <button
               key={item}
               onClick={() => setChecked((c) => c.map((v, j) => (j === i ? !v : v)))}
@@ -109,7 +120,7 @@ function HandoverPage() {
         </div>
 
         <button onClick={() => save.mutate()} disabled={!allDone} className="btn-primary mt-4 w-full disabled:opacity-40">
-          {allDone ? "Dokončit předání" : `Zbývá ${HANDOVER_CHECKLIST.length - doneCount} bodů`}
+          {allDone ? "Dokončit předání" : `Zbývá ${items.length - doneCount} bodů`}
         </button>
       </section>
 
@@ -127,10 +138,10 @@ function HandoverPage() {
             {history.map((h) => (
               <div key={h.id} className="card p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-[15px] font-bold">{h.performed_by}</p>
+                  <p className="text-[15px] font-bold">{memberName(h.member_id)}</p>
                   <PillOk>Dokončeno</PillOk>
                 </div>
-                <p className="text-[13px] text-muted-foreground">{fmtDateTime(h.created_at)}</p>
+                <p className="text-[13px] text-muted-foreground">{fmtDateTime(h.submitted_at)}</p>
                 {h.note && <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{h.note}“</p>}
               </div>
             ))}

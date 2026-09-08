@@ -16,6 +16,7 @@ import { Route as KalendarRouteImport } from './routes/kalendar'
 import { Route as PredaniRouteImport } from './routes/predani'
 import { Route as SchvalovaniRouteImport } from './routes/schvalovani'
 import { Route as UkolyRouteImport } from './routes/ukoly'
+import { Route as ViceRouteImport } from './routes/vice'
 import { Route as VydajeRouteImport } from './routes/vydaje'
 import { Route as ZadostiRouteImport } from './routes/zadosti'
 import { Route as RezervaceIdRouteImport } from './routes/rezervace.$id'
@@ -58,6 +59,11 @@ const SchvalovaniRoute = SchvalovaniRouteImport.update({
 const UkolyRoute = UkolyRouteImport.update({
   id: '/ukoly',
   path: '/ukoly',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ViceRoute = ViceRouteImport.update({
+  id: '/vice',
+  path: '/vice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VydajeRoute = VydajeRouteImport.update({
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/ukoly': typeof UkolyRouteWithChildren
+  '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
   '/rezervace/$id': typeof RezervaceIdRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/ukoly': typeof UkolyRouteWithChildren
+  '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
   '/rezervace/$id': typeof RezervaceIdRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/ukoly': typeof UkolyRouteWithChildren
+  '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
   '/rezervace/$id': typeof RezervaceIdRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/predani'
     | '/schvalovani'
     | '/ukoly'
+    | '/vice'
     | '/vydaje'
     | '/zadosti'
     | '/rezervace/$id'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/predani'
     | '/schvalovani'
     | '/ukoly'
+    | '/vice'
     | '/vydaje'
     | '/zadosti'
     | '/rezervace/$id'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/predani'
     | '/schvalovani'
     | '/ukoly'
+    | '/vice'
     | '/vydaje'
     | '/zadosti'
     | '/rezervace/$id'
@@ -216,6 +228,7 @@ export interface RootRouteChildren {
   PredaniRoute: typeof PredaniRoute
   SchvalovaniRoute: typeof SchvalovaniRoute
   UkolyRoute: typeof UkolyRouteWithChildren
+  ViceRoute: typeof ViceRoute
   VydajeRoute: typeof VydajeRouteWithChildren
   ZadostiRoute: typeof ZadostiRoute
   RezervaceIdRoute: typeof RezervaceIdRoute
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/ukoly'
       fullPath: '/ukoly'
       preLoaderRoute: typeof UkolyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vice': {
+      id: '/vice'
+      path: '/vice'
+      fullPath: '/vice'
+      preLoaderRoute: typeof ViceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vydaje': {
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   PredaniRoute: PredaniRoute,
   SchvalovaniRoute: SchvalovaniRoute,
   UkolyRoute: UkolyRouteWithChildren,
+  ViceRoute: ViceRoute,
   VydajeRoute: VydajeRouteWithChildren,
   ZadostiRoute: ZadostiRoute,
   RezervaceIdRoute: RezervaceIdRoute,

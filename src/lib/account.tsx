@@ -79,17 +79,18 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const currentMember = useMemo(() => {
+  const currentMember = useMemo((): Member | null => {
     if (!members?.length) return null;
     const found = members.find((m) => m.id === memberId);
     if (found) return found;
-    return members.find((m) => m.role === "ADMIN") ?? members[0];
+    return members.find((m) => m.role === "ADMIN") ?? members[0] ?? null;
   }, [members, memberId]);
 
   // Auto-select first account if none chosen yet
   useEffect(() => {
-    if (!accountId && accounts?.length) {
-      setAccountId(accounts[0].id);
+    const first = accounts?.[0];
+    if (!accountId && first) {
+      setAccountId(first.id);
     }
   }, [accounts, accountId]);
 

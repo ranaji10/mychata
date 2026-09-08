@@ -3,10 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Inbox } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, LoadingCards, PageHeader, PillMuted, PillOk, PillWarn } from "@/components/bits";
+import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillOk, PillWarn } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, fmtDateTime, REASON_LABELS, type InstitutionalRequest } from "@/lib/data";
+import { fmtDate, fmtDateTime, type InstitutionalRequest } from "@/lib/data";
 
 export const Route = createFileRoute("/zadosti")({
   head: () => ({
@@ -39,18 +39,21 @@ function RequestsPage() {
   });
 
   const decide = useMutation({
-    mutationFn: async ({ req, status }: { req: InstitutionalRequest; status: "APPROVED" | "REJECTED" }) => {
-      const { error } = await supabase.from("institutional_requests").update({ status }).eq("id", req.id);
+    mutationFn: async ({ req, approve }: { req: InstitutionalRequest; approve: boolean }) => {
+      const { error } = await supabase
+        .from("institutional_requests")
+        .update({ status: approve ? "APPROVED" : "DECLINED" })
+        .eq("id", req.id);
       if (error) throw error;
-      if (status === "APPROVED") {
+      if (approve) {
         const { error: bErr } = await supabase.from("bookings").insert({
           property_id: req.property_id,
           requester_name: req.requester_name,
           start_date: req.start_date,
           end_date: req.end_date,
           guests: req.guests,
+          note: req.note,
           status: "CONFIRMED",
-          source: "REQUEST",
         });
         if (bErr) throw bErr;
       }
@@ -58,7 +61,7 @@ function RequestsPage() {
     onSuccess: (_d, v) => {
       queryClient.invalidateQueries({ queryKey: ["requests", property?.id] });
       queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] });
-      toast.success(v.status === "APPROVED" ? "Žádost schválena a pobyt zapsán do kalendáře." : "Žádost zamítnuta.");
+      toast.success(v.approve ? "Žádost schválena a pobyt zapsán do kalendáře." : "Žádost zamítnuta.");
     },
     onError: () => toast.error("Akce se nepodařila."),
   });
@@ -85,7 +88,7 @@ function RequestsPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-lg font-bold">{r.requester_name}</p>
-                        <p className="text-[13px] text-muted-foreground">{r.email}</p>
+                        <p className="text-[13px] text-muted-foreground">{r.requester_email}</p>
                       </div>
                       {r.has_conflict && (
                         <span className="pill bg-warn-soft text-warn">
@@ -96,7 +99,8 @@ function RequestsPage() {
                     <div className="mt-2 space-y-1 text-[14px]">
                       <p><span className="font-bold">Termín:</span> {fmtDate(r.start_date)} – {fmtDate(r.end_date)}</p>
                       <p><span className="font-bold">Hostů:</span> {r.guests}</p>
-                      <p><span className="font-bold">Důvod:</span> {REASON_LABELS[r.reason]}</p>
+                      {r.affiliation && <p><span className="font-bold">Oddělení:</span> {r.affiliation}</p>}
+                      {r.note && <p className="rounded-2xl bg-background p-2.5">„{r.note}“</p>}
                       <p className="text-[12px] text-muted-foreground">Odesláno {fmtDateTime(r.created_at)}</p>
                     </div>
                     {r.has_conflict && (
@@ -105,10 +109,10 @@ function RequestsPage() {
                       </p>
                     )}
                     <div className="mt-3 flex gap-2">
-                      <button onClick={() => decide.mutate({ req: r, status: "APPROVED" })} className="btn-primary flex-1">
+                      <button onClick={() => decide.mutate({ req: r, approve: true })} className="btn-primary flex-1">
                         Schválit
                       </button>
-                      <button onClick={() => decide.mutate({ req: r, status: "REJECTED" })} className="btn-danger flex-1">
+                      <button onClick={() => decide.mutate({ req: r, approve: false })} className="btn-danger flex-1">
                         Zamítnout
                       </button>
                     </div>
@@ -130,7 +134,7 @@ function RequestsPage() {
                         {fmtDate(r.start_date)} – {fmtDate(r.end_date)}
                       </p>
                     </div>
-                    {r.status === "APPROVED" ? <PillOk>Schváleno</PillOk> : <PillMuted>Zamítnuto</PillMuted>}
+                    {r.status === "APPROVED" ? <PillOk>Schváleno</PillOk> : <PillNeutral>Zamítnuto</PillNeutral>}
                   </div>
                 ))}
               </div>

@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-export function PageHeader({ title, subtitle, back, action }: { title: string; subtitle?: string; back?: string; action?: ReactNode }) {
+export function PageHeader({ title, subtitle, back, action }: { title: string; subtitle?: string | undefined; back?: string; action?: ReactNode }) {
   return (
     <div className="mb-4 mt-2 flex items-center gap-3">
       {back && (
@@ -23,7 +23,7 @@ export function PageHeader({ title, subtitle, back, action }: { title: string; s
   );
 }
 
-export function StatCard({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: "danger" | "ok" }) {
+export function StatCard({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: "danger" | "ok" | undefined }) {
   return (
     <div className="card p-4">
       <p className="text-[13px] font-semibold text-muted-foreground">{label}</p>

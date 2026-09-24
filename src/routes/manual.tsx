@@ -41,7 +41,7 @@ function ManualPage() {
       return data;
     },
   });
-  const { data: feedback } = useQuery({ queryKey: ["manual-feedback", property?.id], enabled: !!property && isAdmin, queryFn: async () => {
+  const { data: feedback } = useQuery({ queryKey: ["manual-feedback", property?.id, sections?.length], enabled: !!property && isAdmin && !!sections, queryFn: async () => {
     const ids = (sections ?? []).map((section) => section.id); if (!ids.length) return [];
     const { data, error } = await supabase.from("manual_feedback").select("*").in("section_id", ids).eq("status", "OPEN").order("created_at"); if (error) throw error; return data;
   }});

@@ -11,7 +11,7 @@ import { fmtDate, todayISO } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/dokumenty")({
-  validateSearch: (search: Record<string, unknown>) => ({ task: typeof search.task === "string" ? search.task : "" }),
+  validateSearch: (search: Record<string, unknown>) => ({ task: typeof search["task"] === "string" ? search["task"] : "" }),
   head: () => ({ meta: [
     { title: "Document Vault — My Chata" }, { name: "description", content: "Private cottage documents, warranties, and expiry reminders." },
     { property: "og:title", content: "Document Vault — My Chata" }, { property: "og:description", content: "Private cottage documents, warranties, and expiry reminders." },
@@ -24,7 +24,7 @@ const categories = ["INSURANCE", "OWNERSHIP", "UTILITIES", "SERVICE_RECORDS", "W
 function DocumentsPage() {
   const { task: linkedTaskId } = Route.useSearch();
   const { property, currentMember } = useAccount(); const { t } = useLang(); const queryClient = useQueryClient();
-  const [query, setQuery] = useState(""); const [category, setCategory] = useState("ALL"); const [adding, setAdding] = useState(false);
+  const [query, setQuery] = useState(""); const [category, setCategory] = useState("ALL"); const [adding, setAdding] = useState(!!linkedTaskId);
   const [form, setForm] = useState({ title: "", category: linkedTaskId ? "WARRANTIES" : "OTHER", notes: "", issueDate: "", expiryDate: "", visibility: "ALL_MEMBERS" });
   const [file, setFile] = useState<File | null>(null); const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const { data: documents, isLoading } = useQuery({ queryKey: ["documents", property?.id], enabled: !!property, queryFn: async () => { const { data, error } = await supabase.from("documents").select("*").eq("property_id", property?.id ?? "").order("created_at", { ascending: false }); if (error) throw error; return data; } });

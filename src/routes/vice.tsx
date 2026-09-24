@@ -60,7 +60,7 @@ function MorePage() {
           <BookOpen className="size-5 text-muted-foreground" />
           <span className="flex-1 text-[15px] font-bold">{t("Manuál chaty", "House Manual")}</span><ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <Link to="/dokumenty" className="flex items-center gap-3 p-4 active:bg-secondary">
+        <Link to="/dokumenty" search={{ task: "" }} className="flex items-center gap-3 p-4 active:bg-secondary">
           <FileText className="size-5 text-muted-foreground" />
           <span className="flex-1 text-[15px] font-bold">{t("Dokumenty", "Document Vault")}</span><ChevronRight className="size-5 text-muted-foreground" />
         </Link>

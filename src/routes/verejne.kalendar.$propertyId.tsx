@@ -9,6 +9,7 @@ import { monthNames, fmtDate, todayISO, type Booking, type Property } from "@/li
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/verejne/kalendar/$propertyId")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Public calendar — My Chata" },

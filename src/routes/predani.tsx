@@ -12,6 +12,7 @@ import { useLang } from "@/lib/i18n";
 import { fmtDateTime, todayISO, type Booking, type Handover } from "@/lib/data";
 
 export const Route = createFileRoute("/predani")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Handover — My Chata" },

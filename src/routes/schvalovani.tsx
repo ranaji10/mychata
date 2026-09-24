@@ -11,6 +11,7 @@ import { fmtDate, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/schvalovani")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Approvals — My Chata" },

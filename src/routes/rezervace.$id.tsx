@@ -10,6 +10,7 @@ import { fmtDate, fmtDateTime, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/rezervace/$id")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Stay detail — My Chata" },

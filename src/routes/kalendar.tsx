@@ -14,6 +14,7 @@ import {
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/kalendar")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Calendar — My Chata" },

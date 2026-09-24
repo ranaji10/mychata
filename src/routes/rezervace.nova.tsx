@@ -10,6 +10,7 @@ import { findConflicts, fmtDate, todayISO, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/rezervace/nova")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "New booking — My Chata" },

@@ -18,6 +18,7 @@ import { Route as KalendarRouteImport } from './routes/kalendar'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as PredaniRouteImport } from './routes/predani'
 import { Route as SchvalovaniRouteImport } from './routes/schvalovani'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as UkolyRouteImport } from './routes/ukoly'
 import { Route as ViceRouteImport } from './routes/vice'
 import { Route as VydajeRouteImport } from './routes/vydaje'
@@ -73,6 +74,11 @@ const PredaniRoute = PredaniRouteImport.update({
 const SchvalovaniRoute = SchvalovaniRouteImport.update({
   id: '/schvalovani',
   path: '/schvalovani',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UkolyRoute = UkolyRouteImport.update({
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/manual': typeof ManualRoute
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/manual': typeof ManualRoute
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/manual': typeof ManualRoute
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/manual'
     | '/predani'
     | '/schvalovani'
+    | '/sitemap.xml'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
     | '/manual'
     | '/predani'
     | '/schvalovani'
+    | '/sitemap.xml'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
@@ -255,6 +266,7 @@ export interface FileRouteTypes {
     | '/manual'
     | '/predani'
     | '/schvalovani'
+    | '/sitemap.xml'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
@@ -278,6 +290,7 @@ export interface RootRouteChildren {
   ManualRoute: typeof ManualRoute
   PredaniRoute: typeof PredaniRoute
   SchvalovaniRoute: typeof SchvalovaniRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UkolyRoute: typeof UkolyRouteWithChildren
   ViceRoute: typeof ViceRoute
   VydajeRoute: typeof VydajeRouteWithChildren
@@ -352,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/schvalovani'
       fullPath: '/schvalovani'
       preLoaderRoute: typeof SchvalovaniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ukoly': {
@@ -465,6 +485,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManualRoute: ManualRoute,
   PredaniRoute: PredaniRoute,
   SchvalovaniRoute: SchvalovaniRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   UkolyRoute: UkolyRouteWithChildren,
   ViceRoute: ViceRoute,
   VydajeRoute: VydajeRouteWithChildren,

@@ -33,6 +33,8 @@ function ExpensesPage() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<(typeof CATEGORY_KEYS)[number]>("supplies");
   const [selected, setSelected] = useState<string[]>([]);
+  const [splitMethod, setSplitMethod] = useState<"EQUAL" | "CUSTOM" | "BY_BRANCH">("EQUAL");
+  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const { data: expenses, isLoading } = useQuery({
@@ -75,6 +77,24 @@ function ExpensesPage() {
     if (!property || !currentMember || !desc.trim() || !amountCzk || selected.length === 0) return;
     setSaving(true);
 
+    const selectedMembers = members.filter((member) => selected.includes(member.id));
+    const branchNames = [...new Set(selectedMembers.map((member) => member.branch || member.name))];
+    const shares = selectedMembers.map((member) => {
+      if (splitMethod === "CUSTOM") return Number((customAmounts[member.id] ?? "0").replace(",", "."));
+      if (splitMethod === "BY_BRANCH") {
+        const branch = member.branch || member.name;
+        const branchMembers = selectedMembers.filter((candidate) => (candidate.branch || candidate.name) === branch).length;
+        return amountCzk / branchNames.length / branchMembers;
+      }
+      return amountCzk / selectedMembers.length;
+    });
+    const shareTotal = Math.round(shares.reduce((sum, share) => sum + share, 0) * 100) / 100;
+    if (splitMethod === "CUSTOM" && Math.abs(shareTotal - amountCzk) > 0.01) {
+      toast.error(t("Vlastní částky musí dát dohromady celkový výdaj.", "Custom amounts must add up to the total expense."));
+      setSaving(false);
+      return;
+    }
+
     const { data: expense, error } = await supabase
       .from("expenses")
       .insert({
@@ -83,7 +103,7 @@ function ExpensesPage() {
         amount: amountCzk,
         description: desc.trim(),
         category,
-        split_method: "EQUAL",
+        split_method: splitMethod,
         date: new Date().toISOString().slice(0, 10),
       })
       .select()
@@ -95,14 +115,14 @@ function ExpensesPage() {
       return;
     }
 
-    const perPerson = Math.round((amountCzk / selected.length) * 100) / 100;
     const { error: splitError } = await supabase.from("expense_splits").insert(
-      selected
-        .filter((mid) => mid !== currentMember.id)
-        .map((mid) => ({
+      selectedMembers
+        .map((member, index) => ({ member, amount: Math.round((shares[index] ?? 0) * 100) / 100 }))
+        .filter(({ member }) => member.id !== currentMember.id)
+        .map(({ member, amount: owed }) => ({
           expense_id: expense.id,
-          member_id: mid,
-          amount_owed: perPerson,
+          member_id: member.id,
+          amount_owed: owed,
           paid_back: false,
         })),
     );
@@ -116,6 +136,7 @@ function ExpensesPage() {
     setDesc("");
     setAmount("");
     setSelected([]);
+    setCustomAmounts({});
     setShowForm(false);
     queryClient.invalidateQueries({ queryKey: ["expenses", property.id] });
     queryClient.invalidateQueries({ queryKey: ["splits", property.id] });
@@ -185,6 +206,18 @@ function ExpensesPage() {
             </div>
           </div>
           <div>
+            <span className="mb-1 block text-[13px] font-bold">{t("Způsob rozdělení", "Split method")}</span>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                ["EQUAL", t("Rovným dílem", "Equal")],
+                ["CUSTOM", t("Vlastní", "Custom")],
+                ["BY_BRANCH", t("Podle větví", "By branch")],
+              ] as const).map(([method, label]) => (
+                <button key={method} onClick={() => setSplitMethod(method)} className={splitMethod === method ? "btn-primary px-2 text-[13px]" : "btn-secondary px-2 text-[13px]"}>{label}</button>
+              ))}
+            </div>
+          </div>
+          <div>
             <span className="mb-1 block text-[13px] font-bold">{t("Rozdělit mezi", "Split between")}</span>
             <div className="flex flex-wrap gap-2">
               {members.map((m) => (
@@ -201,6 +234,23 @@ function ExpensesPage() {
             </div>
             <p className="mt-1 text-[12px] text-muted-foreground">{t("Částka se rozdělí rovným dílem.", "The amount will be split equally.")}</p>
           </div>
+          {splitMethod === "CUSTOM" && selected.length > 0 && (
+            <div className="space-y-2">
+              {members.filter((member) => selected.includes(member.id)).map((member) => (
+                <label key={member.id} className="flex items-center gap-3 text-[14px] font-semibold">
+                  <span className="min-w-0 flex-1 truncate">{member.name}</span>
+                  <input
+                    inputMode="decimal"
+                    value={customAmounts[member.id] ?? ""}
+                    onChange={(event) => setCustomAmounts((values) => ({ ...values, [member.id]: event.target.value }))}
+                    className="field max-w-32"
+                    aria-label={`${member.name} Kč`}
+                    placeholder="0"
+                  />
+                </label>
+              ))}
+            </div>
+          )}
           <div className="flex gap-2">
             <button
               onClick={save}

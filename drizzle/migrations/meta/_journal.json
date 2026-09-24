@@ -15,6 +15,13 @@
       "when": 1790259626724,
       "tag": "0001_add_manual_documents_and_handover_issues",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790259651784,
+      "tag": "0002_add_file_storage_policies",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,4 @@
+CREATE POLICY "Authenticated users can upload My Chata files" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'my-chata-files');
+CREATE POLICY "Authenticated users can read My Chata files" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'my-chata-files');
+CREATE POLICY "Authenticated users can update My Chata files" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'my-chata-files') WITH CHECK (bucket_id = 'my-chata-files');
+CREATE POLICY "Authenticated users can delete My Chata files" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'my-chata-files');

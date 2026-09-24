@@ -46,12 +46,9 @@ function PublicRequest() {
     queryKey: ["public-bookings", property?.id],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("property_id", property!.id);
+      const { data, error } = await supabase.rpc("public_booking_availability", { _property_id: property?.id ?? "" });
       if (error) throw error;
-      return data as Booking[];
+      return (data ?? []).map((booking) => ({ ...booking, requester_name: t("Jiný pobyt", "Another stay"), requester_member_id: null, guests: 0, note: null, created_at: "", updated_at: "" })) as Booking[];
     },
   });
 

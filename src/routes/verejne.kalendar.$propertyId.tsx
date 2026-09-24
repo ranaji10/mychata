@@ -39,18 +39,13 @@ function PublicCalendar() {
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["public-cal-bookings", propertyId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("property_id", propertyId)
-        .in("status", ["CONFIRMED", "PENDING"])
-        .order("start_date");
+      const { data, error } = await supabase.rpc("public_booking_availability", { _property_id: propertyId });
       if (error) throw error;
-      return data as Booking[];
+      return (data ?? []).map((booking) => ({ ...booking, requester_name: "", requester_member_id: null, guests: 0, note: null, created_at: "", updated_at: "" })) as Booking[];
     },
   });
 
-  const branches = useMemo(() => [...new Set((bookings ?? []).map((b) => b.requester_name))], [bookings]);
+  const branches = useMemo(() => [] as string[], []);
 
   const prev = () => setYm(({ year, month }) => (month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 }));
   const next = () => setYm(({ year, month }) => (month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 }));

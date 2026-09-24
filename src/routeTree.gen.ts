@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DokumentyRouteImport } from './routes/dokumenty'
 import { Route as DomuRouteImport } from './routes/domu'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as KalendarRouteImport } from './routes/kalendar'
@@ -31,6 +32,11 @@ import { Route as VerejneManualPropertyIdRouteImport } from './routes/verejne.ma
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DokumentyRoute = DokumentyRouteImport.update({
+  id: '/dokumenty',
+  path: '/dokumenty',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DomuRoute = DomuRouteImport.update({
@@ -122,6 +128,7 @@ const VerejneManualPropertyIdRoute = VerejneManualPropertyIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
   '/kalendar': typeof KalendarRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
   '/kalendar': typeof KalendarRoute
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
   '/kalendar': typeof KalendarRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dokumenty'
     | '/domu'
     | '/export'
     | '/kalendar'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dokumenty'
     | '/domu'
     | '/export'
     | '/kalendar'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/dokumenty'
     | '/domu'
     | '/export'
     | '/kalendar'
@@ -246,6 +258,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DokumentyRoute: typeof DokumentyRoute
   DomuRoute: typeof DomuRoute
   ExportRoute: typeof ExportRoute
   KalendarRoute: typeof KalendarRoute
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dokumenty': {
+      id: '/dokumenty'
+      path: '/dokumenty'
+      fullPath: '/dokumenty'
+      preLoaderRoute: typeof DokumentyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/domu': {
@@ -417,6 +437,7 @@ const VydajeRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DokumentyRoute: DokumentyRoute,
   DomuRoute: DomuRoute,
   ExportRoute: ExportRoute,
   KalendarRoute: KalendarRoute,

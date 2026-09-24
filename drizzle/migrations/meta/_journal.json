@@ -8,6 +8,13 @@
       "when": 1790259440813,
       "tag": "0000_add_bilingual_task_content",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790259626724,
+      "tag": "0001_add_manual_documents_and_handover_issues",
+      "breakpoints": true
     }
   ]
 }

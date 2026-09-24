@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, CheckCircle2, Circle, ClipboardCheck, History, Wrench } from "lucide-react";
 import { useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillOk } from "@/components/bits";
@@ -39,6 +40,20 @@ function HandoverPage() {
   const [note, setNote] = useState("");
   const [issue, setIssue] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  useEffect(() => {
+    if (!property) return;
+    try {
+      const saved = localStorage.getItem(`mychata.handover.${property.id}`);
+      if (!saved) return;
+      const draft = JSON.parse(saved) as { checked?: boolean[]; note?: string; issue?: string };
+      if (draft.checked?.length === items.length) setChecked(draft.checked);
+      setNote(draft.note ?? ""); setIssue(draft.issue ?? "");
+    } catch { /* ignore invalid local draft */ }
+  }, [property?.id, items.length]);
+  useEffect(() => {
+    if (!property) return;
+    localStorage.setItem(`mychata.handover.${property.id}`, JSON.stringify({ checked, note, issue }));
+  }, [property?.id, checked, note, issue]);
 
   const { data: activeBooking } = useQuery({
     queryKey: ["handover-booking", property?.id, currentMember?.id], enabled: !!property && !!currentMember,
@@ -90,6 +105,7 @@ function HandoverPage() {
       }
     },
     onSuccess: () => {
+      if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
       toast.success(t("Předání chaty zaznamenáno.", "Handover recorded."));
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });

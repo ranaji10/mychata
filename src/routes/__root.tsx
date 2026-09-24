@@ -1,4 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
   Outlet,
   Link,
@@ -134,8 +136,9 @@ function RootComponent() {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);
 
+  const persister = typeof window === "undefined" ? undefined : createSyncStoragePersister({ storage: window.localStorage, key: "mychata.offline-cache" });
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: persister ?? { persistClient: async () => undefined, restoreClient: async () => undefined, removeClient: async () => undefined }, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
       <LanguageProvider>
         <AccountProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
@@ -143,7 +146,7 @@ function RootComponent() {
           <Toaster position="top-center" richColors />
         </AccountProvider>
       </LanguageProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
 

@@ -49,7 +49,10 @@ function HandoverPage() {
         .order("submitted_at", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return data as Handover[];
+      return data.map((handover) => ({
+        ...handover,
+        checklist_state: handover.checklist_state as Handover["checklist_state"],
+      }));
     },
   });
 

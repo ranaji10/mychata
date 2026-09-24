@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { LoadingCards, PillDanger, PillOk, PillWarn, StatCard } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, fmtKc, todayISO, type Booking, type Expense, type ExpenseSplit, type InstitutionalRequest, type Task } from "@/lib/data";
+import { fmtDate, fmtKc, taskTitle, todayISO, type Booking, type Expense, type ExpenseSplit, type InstitutionalRequest, type Task } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 
@@ -143,13 +143,35 @@ function HomePage() {
         {t("Dobrý den", "Hello")}, {currentMember?.name?.split(" ")[0] ?? ""}
       </p>
 
+      {/* Family: next stay is the first actionable card */}
+      {isFamily && (
+        <section className="card mt-3 p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
+            {nextBooking && <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>}
+          </div>
+          {nextBooking ? (
+            <>
+              <p className="mt-1 text-xl font-bold">{fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}</p>
+              <p className="mt-1 text-[15px] text-muted-foreground">{nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}</p>
+              <div className="mt-3 flex gap-2">
+                <Link to="/rezervace/$id" params={{ id: nextBooking.id }} className="btn-primary flex-1">{t("Detail pobytu", "Stay details")}</Link>
+                <Link to="/predani" className="btn-secondary flex-1">{t("Předání", "Handover")}</Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-[15px] text-muted-foreground">{t("Zatím není naplánovaný žádný pobyt.", "No stay is planned yet.")}</p>
+              <Link to="/rezervace/nova" className="btn-primary mt-3 w-full">{t("Rezervovat termín", "Book a date")}</Link>
+            </>
+          )}
+        </section>
+      )}
+
       {/* Stats */}
       <section className="mt-3 grid grid-cols-2 gap-3">
         {isFamily ? (
           <>
-            <Link to="/schvalovani">
-              <StatCard label={t("Ke schválení", "To approve")} value={pendingBookings.length} hint={pendingBookings.length ? t("rezervace čekají", "bookings waiting") : t("nic nečeká", "nothing waiting")} />
-            </Link>
             <Link to="/vydaje/vyrovnani">
               <StatCard label={t("Nevyrovnané", "Unsettled")} value={fmtKc(unsettled)} hint={t("ve výdajích", "in expenses")} tone={unsettled > 0 ? "danger" : undefined} />
             </Link>
@@ -164,9 +186,7 @@ function HomePage() {
             </Link>
           </>
         )}
-        <Link to="/ukoly">
-          <StatCard label={t("Po termínu", "Overdue")} value={overdueTasks.length} hint={overdueTasks.length ? t("úkoly po termínu", "overdue tasks") : t("vše v pořádku", "all good")} tone={overdueTasks.length ? "danger" : undefined} />
-        </Link>
+        {!isFamily && <Link to="/ukoly"><StatCard label={t("Po termínu", "Overdue")} value={overdueTasks.length} hint={overdueTasks.length ? t("úkoly po termínu", "overdue tasks") : t("vše v pořádku", "all good")} tone={overdueTasks.length ? "danger" : undefined} /></Link>}
         <Link to="/kalendar">
           <StatCard label={t("Nadcházející", "Upcoming")} value={upcoming.length} hint={t("potvrzené pobyty", "confirmed stays")} />
         </Link>
@@ -196,7 +216,7 @@ function HomePage() {
             {overdueTasks.map((t2) => (
               <Link key={t2.id} to="/ukoly/$id" params={{ id: t2.id }} className="flex items-center gap-3 rounded-2xl bg-background p-3 active:scale-[0.99]">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-bold">{t2.title}</p>
+                  <p className="truncate text-[15px] font-bold">{taskTitle(t2, lang)}</p>
                   <p className="text-[13px] text-muted-foreground">{t("Termín", "Due")}: {fmtDate(t2.due_date)}</p>
                 </div>
                 <PillDanger>{t("Zpožděno", "Overdue")}</PillDanger>
@@ -207,7 +227,7 @@ function HomePage() {
       )}
 
       {/* Next booking card */}
-      {nextBooking && (
+      {!isFamily && nextBooking && (
         <section className="card mt-4 p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>

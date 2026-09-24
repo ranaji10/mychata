@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Circle, Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
@@ -8,7 +9,8 @@ import { EmptyState, LoadingCards, PageHeader, PillDanger, PillNeutral } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtDate, seasonalTemplates, taskCategoryLabel, todayISO, type Task } from "@/lib/data";
+import { fmtDate, seasonalTemplates, taskCategoryLabel, taskTitle, todayISO, type Task } from "@/lib/data";
+import { translateTaskText } from "@/lib/task-translation.functions";
 
 export const Route = createFileRoute("/ukoly")({
   head: () => ({
@@ -33,6 +35,7 @@ function TasksPage() {
   const [assignee, setAssignee] = useState<string>("");
   const [due, setDue] = useState(todayISO());
   const [showForm, setShowForm] = useState(false);
+  const translate = useServerFn(translateTaskText);
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: "all", label: t("Vše", "All") },
@@ -71,9 +74,13 @@ function TasksPage() {
 
   const addTask = async () => {
     if (!property || !currentMember || !title.trim()) return;
+    const translated = await translate({ data: { text: title.trim(), sourceLanguage: lang } }).catch(() => ({ translation: title.trim() }));
     const { error } = await supabase.from("tasks").insert({
       property_id: property.id,
       title: title.trim(),
+      source_language: lang,
+      title_cs: lang === "cs" ? title.trim() : translated.translation,
+      title_en: lang === "en" ? title.trim() : translated.translation,
       category: "other",
       urgency: "LOW",
       assignee_member_id: assignee || null,
@@ -94,11 +101,16 @@ function TasksPage() {
   const addChecklist = async (templateId: string) => {
     if (!property || !currentMember) return;
     const template = seasonalTemplates(lang).find((tpl) => tpl.id === templateId);
-    if (!template) return;
+    const csTemplate = seasonalTemplates("cs").find((tpl) => tpl.id === templateId);
+    const enTemplate = seasonalTemplates("en").find((tpl) => tpl.id === templateId);
+    if (!template || !csTemplate || !enTemplate) return;
     const { error } = await supabase.from("tasks").insert(
-      template.tasks.map((title) => ({
+      template.tasks.map((title, index) => ({
         property_id: property.id,
         title,
+        source_language: lang,
+        title_cs: csTemplate.tasks[index] ?? title,
+        title_en: enTemplate.tasks[index] ?? title,
         category: "seasonal" as const,
         urgency: "LOW" as const,
         status: "OPEN" as const,
@@ -173,7 +185,7 @@ function TasksPage() {
                 </button>
                 <Link to="/ukoly/$id" params={{ id: task.id }} className="min-w-0 flex-1">
                   <p className={`truncate text-[15px] font-bold ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}>
-                    {task.title}
+                    {taskTitle(task, lang)}
                   </p>
                   <p className="text-[13px] text-muted-foreground">
                     {memberName(task.assignee_member_id) ?? t("Nepřiřazeno", "Unassigned")}

@@ -7,7 +7,7 @@ import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtDate, taskCategoryLabel, todayISO, urgencyLabel, type Task } from "@/lib/data";
+import { fmtDate, taskCategoryLabel, taskTitle, todayISO, urgencyLabel, type Task } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
   head: () => ({
@@ -73,7 +73,7 @@ function TaskDetail() {
 
       <section className="card mt-4 p-4">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-xl font-bold leading-snug">{task.title}</h2>
+          <h2 className="text-xl font-bold leading-snug">{taskTitle(task, lang)}</h2>
           {done ? (
             <PillOk>{t("Hotovo", "Done")}</PillOk>
           ) : overdue ? (

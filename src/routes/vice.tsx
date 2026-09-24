@@ -6,6 +6,7 @@ import { Avatar, PageHeader } from "@/components/bits";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/vice")({
   head: () => ({
@@ -23,6 +24,7 @@ function MorePage() {
   const { account, property, members, currentMemberId } = useAccount();
   const { t } = useLang();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isFamily = account?.type === "FAMILY";
 
   const copyPublicLink = async () => {
@@ -83,7 +85,13 @@ function MorePage() {
         )}
         <button
           onClick={() => {
-            supabase.auth.signOut().then(() => navigate({ to: "/auth", replace: true }));
+            supabase.auth.signOut().then(() => {
+              queryClient.clear();
+              localStorage.removeItem("mychata.offline-cache");
+              localStorage.removeItem("mychata.account");
+              localStorage.removeItem("mychata.member");
+              navigate({ to: "/auth", replace: true });
+            });
           }}
           className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
         >

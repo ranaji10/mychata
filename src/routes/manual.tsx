@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, ChevronRight, Copy, Flag, Plus } from "lucide-react";
+import { BookOpen, Check, Copy, Flag, Plus } from "lucide-react";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -41,6 +41,11 @@ function ManualPage() {
       return data;
     },
   });
+  const { data: feedback } = useQuery({ queryKey: ["manual-feedback", property?.id], enabled: !!property && isAdmin, queryFn: async () => {
+    const ids = (sections ?? []).map((section) => section.id); if (!ids.length) return [];
+    const { data, error } = await supabase.from("manual_feedback").select("*").in("section_id", ids).eq("status", "OPEN").order("created_at"); if (error) throw error; return data;
+  }});
+  const resolveFeedback = useMutation({ mutationFn: async (id: string) => { const { error } = await supabase.from("manual_feedback").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", id); if (error) throw error; }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["manual-feedback", property?.id] }); toast.success(t("Upozornění vyřešeno.", "Report resolved.")); } });
 
   const addSection = useMutation({
     mutationFn: async () => {
@@ -64,6 +69,7 @@ function ManualPage() {
       <div className="min-w-0 flex-1"><p className="font-bold">{t("Veřejný manuál", "Public manual")}</p><p className="text-[13px] text-muted-foreground">{t("Hosté jej otevřou bez přihlášení.", "Guests can open it without signing in.")}</p></div>
       <button onClick={async () => { await navigator.clipboard.writeText(publicUrl); toast.success(t("Odkaz zkopírován.", "Link copied.")); }} aria-label={t("Kopírovat odkaz", "Copy link")} className="grid size-11 place-items-center rounded-xl bg-secondary"><Copy className="size-5" /></button>
     </section>}
+    {isAdmin && !!feedback?.length && <section className="mb-4 rounded-2xl bg-warn-soft p-4"><div className="flex items-center gap-2"><Flag className="size-5 text-warn" /><h2 className="font-bold">{t("Nahlášené neaktuální informace", "Outdated information reports")}</h2></div><div className="mt-3 space-y-2">{feedback.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-xl bg-card p-3"><p className="flex-1 text-[14px] font-semibold">{sections?.find((section) => section.id === item.section_id)?.[lang === "en" ? "title_en" : "title_cs"]}</p><button onClick={() => resolveFeedback.mutate(item.id)} className="grid size-11 place-items-center rounded-xl bg-ok-soft text-ok" aria-label={t("Označit jako vyřešené", "Mark resolved")}><Check className="size-5" /></button></div>)}</div></section>}
 
     {isLoading ? <LoadingCards /> : !sections?.length ? <EmptyState icon={BookOpen} title={t("Manuál je zatím prázdný.", "The manual is empty.")} /> : <div className="space-y-3">{sections.map((section) => <article key={section.id} className="card p-4">
       <div className="flex items-start justify-between gap-3"><div><p className="text-[13px] font-bold uppercase text-muted-foreground">{section.category}</p><h2 className="text-lg font-bold">{lang === "en" ? section.title_en : section.title_cs}</h2></div><PillNeutral>{section.visibility === "PUBLIC" ? t("Veřejné", "Public") : t("Jen členové", "Members only")}</PillNeutral></div>

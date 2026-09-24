@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { Avatar, PageHeader } from "@/components/bits";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/vice")({
   head: () => ({

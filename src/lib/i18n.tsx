@@ -63,7 +63,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
             lang === l ? "bg-card text-foreground shadow-sm ring-1 ring-black/5" : "text-muted-foreground"
           }`}
         >
-          {l === "cs" ? "ČJ" : "EN"}
+          {l === "cs" ? "CZ" : "EN"}
         </button>
       ))}
     </div>

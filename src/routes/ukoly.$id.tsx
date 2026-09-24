@@ -7,7 +7,7 @@ import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtDate, taskCategoryLabel, todayISO, urgencyLabel, type Task } from "@/lib/data";
+import { fmtDate, taskCategoryLabel, taskTitle, todayISO, urgencyLabel, type Task } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
   head: () => ({
@@ -43,7 +43,7 @@ function TaskDetail() {
   };
 
   const update = useMutation({
-    mutationFn: async (patch: { assignee_member_id?: string | null; due_date?: string | null; status?: "OPEN" | "DONE" }) => {
+    mutationFn: async (patch: { assignee_member_id?: string | null; due_date?: string | null; status?: "OPEN" | "IN_PROGRESS" | "DONE" }) => {
       const { error } = await supabase.from("tasks").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -60,6 +60,7 @@ function TaskDetail() {
   }
 
   const done = task.status === "DONE";
+  const inProgress = task.status === "IN_PROGRESS";
   const overdue = !done && task.due_date && task.due_date < todayISO();
 
   return (
@@ -73,11 +74,13 @@ function TaskDetail() {
 
       <section className="card mt-4 p-4">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-xl font-bold leading-snug">{task.title}</h2>
+          <h2 className="text-xl font-bold leading-snug">{taskTitle(task, lang)}</h2>
           {done ? (
             <PillOk>{t("Hotovo", "Done")}</PillOk>
           ) : overdue ? (
             <PillDanger>{t("Po termínu", "Overdue")}</PillDanger>
+          ) : inProgress ? (
+            <PillNeutral>{t("Probíhá", "In progress")}</PillNeutral>
           ) : (
             <PillNeutral>{t("Otevřené", "Open")}</PillNeutral>
           )}
@@ -130,12 +133,17 @@ function TaskDetail() {
         )}
       </section>
 
-      <button
-        onClick={() => update.mutate({ status: done ? "OPEN" : "DONE" })}
-        className={`mt-4 w-full ${done ? "btn-secondary" : "btn-primary"}`}
-      >
-        {done ? t("Znovu otevřít", "Reopen") : t("Označit jako hotové", "Mark as done")}
-      </button>
+      <div className="mt-4 grid grid-cols-3 gap-2" role="group" aria-label={t("Stav úkolu", "Task status")}>
+        {([
+          ["OPEN", t("Otevřené", "Open")],
+          ["IN_PROGRESS", t("Probíhá", "In progress")],
+          ["DONE", t("Hotovo", "Done")],
+        ] as const).map(([status, label]) => (
+          <button key={status} onClick={() => update.mutate({ status })} className={task.status === status ? "btn-primary px-2" : "btn-secondary px-2"}>
+            {label}
+          </button>
+        ))}
+      </div>
     </AppShell>
   );
 }

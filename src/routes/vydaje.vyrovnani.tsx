@@ -24,7 +24,7 @@ export const Route = createFileRoute("/vydaje/vyrovnani")({
 
 function SettlementPage() {
   const { t } = useLang();
-  const { property, members } = useAccount();
+  const { property, members, currentMember } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [settling, setSettling] = useState<string | null>(null);
@@ -86,7 +86,7 @@ function SettlementPage() {
     const expenseIds = expenses.filter((e) => e.paid_by_member_id === to).map((e) => e.id);
     const { error } = await supabase
       .from("expense_splits")
-      .update({ paid_back: true })
+      .update({ paid_back: true, paid_back_confirmed_by: currentMember?.id ?? null })
       .in("expense_id", expenseIds)
       .eq("member_id", from);
     setSettling(null);
@@ -125,13 +125,19 @@ function SettlementPage() {
                 </div>
                 <p className="text-xl font-bold">{fmtKc(s.amount)}</p>
               </div>
-              <button
-                onClick={() => settle(s.from, s.to)}
-                disabled={settling === `${s.from}->${s.to}`}
-                className="btn-primary mt-3 w-full disabled:opacity-40"
-              >
-                {settling === `${s.from}->${s.to}` ? t("Ukládám…", "Saving…") : t("Označit jako vyrovnané", "Mark as settled")}
-              </button>
+               {currentMember?.id === s.to ? (
+                 <button
+                   onClick={() => settle(s.from, s.to)}
+                   disabled={settling === `${s.from}->${s.to}`}
+                   className="btn-primary mt-3 w-full disabled:opacity-40"
+                 >
+                   {settling === `${s.from}->${s.to}` ? t("Ukládám…", "Saving…") : t("Potvrdit přijetí platby", "Confirm payment received")}
+                 </button>
+               ) : (
+                 <p className="mt-3 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
+                   {t(`Přijetí platby potvrzuje ${name(s.to)}.`, `${name(s.to)} confirms receipt of payment.`)}
+                 </p>
+               )}
             </div>
           ))}
         </div>

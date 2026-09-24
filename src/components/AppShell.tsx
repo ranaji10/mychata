@@ -1,13 +1,20 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { CalendarDays, ClipboardList, Home, Inbox, Menu, Wallet } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
+import { useConnectivity } from "@/hooks/use-connectivity";
+import { useIsMutating } from "@tanstack/react-query";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { account, property } = useAccount();
+  const { account, property, user, loading } = useAccount();
+  const navigate = useNavigate();
   const { t } = useLang();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const online = useConnectivity();
+  const mutating = useIsMutating();
+  useEffect(() => { if (!loading && !user) navigate({ to: "/auth", replace: true }); }, [loading, user, navigate]);
+  if (loading || !user) return <div className="mx-auto min-h-screen max-w-[420px] bg-background" />;
 
   const FAMILY_TABS = [
     { to: "/domu", label: t("Domů", "Home"), icon: Home },
@@ -28,14 +35,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabs = account?.type === "INSTITUTIONAL" ? INST_TABS : FAMILY_TABS;
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background text-foreground">
+    <div className={`mx-auto min-h-screen w-full max-w-[420px] bg-background text-foreground ${account?.type === "INSTITUTIONAL" ? "institutional-theme" : ""}`}>
+      {!online && <div className="sticky top-0 z-40 bg-warn px-4 py-2 text-center text-[14px] font-bold text-foreground">{t("Jste offline. Zobrazená data mohou být starší.", "You are offline. Displayed data may be out of date.")}</div>}
+      {online && mutating > 0 && <div className="sticky top-0 z-40 bg-ok-soft px-4 py-2 text-center text-[14px] font-bold text-ok">{t("Synchronizuji změny…", "Syncing changes…")}</div>}
       <header className="sticky top-0 z-20 flex items-center gap-3 bg-background/95 px-4 pb-3 pt-4 backdrop-blur">
         <Link to="/domu" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-lg font-extrabold text-primary-foreground shadow-lg shadow-primary/30">
           M
         </Link>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-semibold text-muted-foreground">
-            {account?.name ?? "My Chata"}
+            {account?.type === "INSTITUTIONAL" ? t("Organizační správa", "Organisation workspace") : account?.name ?? "My Chata"}
           </p>
           <h1 className="truncate text-xl font-bold leading-tight">{property?.name ?? "My Chata"}</h1>
         </div>

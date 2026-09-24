@@ -47,6 +47,7 @@ export type Database = {
           requester_name: string
           start_date: string
           status: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -59,6 +60,7 @@ export type Database = {
           requester_name: string
           start_date: string
           status?: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -71,6 +73,7 @@ export type Database = {
           requester_name?: string
           start_date?: string
           status?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -85,6 +88,66 @@ export type Database = {
             columns: ["requester_member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          category: string
+          created_at: string
+          expiry_date: string | null
+          file_url: string | null
+          id: string
+          issue_date: string | null
+          linked_task_id: string | null
+          notes: string | null
+          property_id: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          expiry_date?: string | null
+          file_url?: string | null
+          id?: string
+          issue_date?: string | null
+          linked_task_id?: string | null
+          notes?: string | null
+          property_id: string
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          expiry_date?: string | null
+          file_url?: string | null
+          id?: string
+          issue_date?: string | null
+          linked_task_id?: string | null
+          notes?: string | null
+          property_id?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_linked_task_id_fkey"
+            columns: ["linked_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -192,6 +255,58 @@ export type Database = {
           },
         ]
       }
+      handover_issues: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string
+          handover_id: string | null
+          id: string
+          property_id: string
+          task_id: string | null
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string
+          handover_id?: string | null
+          id?: string
+          property_id: string
+          task_id?: string | null
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string
+          handover_id?: string | null
+          id?: string
+          property_id?: string
+          task_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handover_issues_handover_id_fkey"
+            columns: ["handover_id"]
+            isOneToOne: false
+            referencedRelation: "handovers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handover_issues_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handover_issues_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       handovers: {
         Row: {
           booking_id: string | null
@@ -202,6 +317,7 @@ export type Database = {
           photo_url: string | null
           property_id: string
           submitted_at: string
+          updated_at: string
         }
         Insert: {
           booking_id?: string | null
@@ -212,6 +328,7 @@ export type Database = {
           photo_url?: string | null
           property_id: string
           submitted_at?: string
+          updated_at?: string
         }
         Update: {
           booking_id?: string | null
@@ -222,6 +339,7 @@ export type Database = {
           photo_url?: string | null
           property_id?: string
           submitted_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -309,6 +427,94 @@ export type Database = {
           },
         ]
       }
+      manual_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          resolved_at: string | null
+          section_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          resolved_at?: string | null
+          section_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          resolved_at?: string | null
+          section_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_feedback_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "manual_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manual_sections: {
+        Row: {
+          category: string
+          content_cs: string
+          content_en: string
+          created_at: string
+          display_order: number
+          id: string
+          photo_url: string | null
+          property_id: string
+          title_cs: string
+          title_en: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          category?: string
+          content_cs?: string
+          content_en?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          photo_url?: string | null
+          property_id: string
+          title_cs: string
+          title_en: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          category?: string
+          content_cs?: string
+          content_en?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          photo_url?: string | null
+          property_id?: string
+          title_cs?: string
+          title_en?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_sections_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           account_id: string
@@ -319,6 +525,7 @@ export type Database = {
           name: string
           phone: string | null
           role: string
+          user_id: string | null
         }
         Insert: {
           account_id: string
@@ -329,6 +536,7 @@ export type Database = {
           name: string
           phone?: string | null
           role?: string
+          user_id?: string | null
         }
         Update: {
           account_id?: string
@@ -339,6 +547,7 @@ export type Database = {
           name?: string
           phone?: string | null
           role?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -346,6 +555,32 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          member_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          member_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          member_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
         ]
@@ -400,13 +635,19 @@ export type Database = {
           category: string
           created_at: string
           created_by: string
+          description_cs: string | null
+          description_en: string | null
           done_note: string | null
           due_date: string | null
           id: string
           photo_url: string | null
           property_id: string
+          source_language: string
           status: string
           title: string
+          title_cs: string | null
+          title_en: string | null
+          updated_at: string
           urgency: string
         }
         Insert: {
@@ -414,13 +655,19 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string
+          description_cs?: string | null
+          description_en?: string | null
           done_note?: string | null
           due_date?: string | null
           id?: string
           photo_url?: string | null
           property_id: string
+          source_language?: string
           status?: string
           title: string
+          title_cs?: string | null
+          title_en?: string | null
+          updated_at?: string
           urgency?: string
         }
         Update: {
@@ -428,13 +675,19 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string
+          description_cs?: string | null
+          description_en?: string | null
           done_note?: string | null
           due_date?: string | null
           id?: string
           photo_url?: string | null
           property_id?: string
+          source_language?: string
           status?: string
           title?: string
+          title_cs?: string | null
+          title_en?: string | null
+          updated_at?: string
           urgency?: string
         }
         Relationships: [
@@ -454,15 +707,41 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_initial_membership: { Args: never; Returns: string }
+      current_account_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -589,6 +868,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "member"],
+    },
   },
 } as const

@@ -44,12 +44,12 @@ function NewBooking() {
   });
 
   const conflicts = findConflicts(start, end, bookings ?? []);
-  const hard = conflicts.find((c) => c.kind === "hard");
-  const sameDay = conflicts.find((c) => c.kind === "same-day");
+  const overlaps = conflicts.filter((c) => c.kind === "hard");
+  const changeovers = conflicts.filter((c) => c.kind === "same-day");
   const invalid = end < start;
 
   const save = async () => {
-    if (!property || !currentMember || invalid || hard) return;
+    if (!property || !currentMember || invalid) return;
     setSaving(true);
     const { error } = await supabase.from("bookings").insert({
       property_id: property.id,
@@ -59,7 +59,7 @@ function NewBooking() {
       end_date: end,
       guests,
       note: note || null,
-      status: "PENDING",
+      status: "CONFIRMED",
     });
     setSaving(false);
     if (error) {
@@ -67,7 +67,7 @@ function NewBooking() {
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["bookings", property.id] });
-    toast.success(t("Rezervace odeslána ke schválení.", "Booking sent for approval."));
+    toast.success(t("Rezervace byla potvrzena.", "Booking confirmed."));
     navigate({ to: "/kalendar" });
   };
 
@@ -116,25 +116,33 @@ function NewBooking() {
           </p>
         )}
 
-        {hard && (
-          <p className="rounded-2xl bg-danger-soft p-3 text-[14px] font-semibold text-danger">
-            {t("Termín se překrývá s pobytem:", "This date overlaps with a stay:")} {hard.other.name} ({fmtDate(hard.other.start)} – {fmtDate(hard.other.end)}).
-          </p>
+        {overlaps.length > 0 && (
+          <div className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+            <p>{t("V tomto termínu už pobývá:", "Already staying on these dates:")}</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              {overlaps.map((conflict) => (
+                <li key={`${conflict.other.name}-${conflict.other.start}`}>
+                  {conflict.other.name} ({fmtDate(conflict.other.start)} – {fmtDate(conflict.other.end)})
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2">{t("Překryv je v rodinném účtu povolen.", "Overlapping family stays are allowed.")}</p>
+          </div>
         )}
 
-        {!hard && sameDay && (
-          <p className="flex gap-2 rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+        {changeovers.length > 0 && (
+          <div className="flex gap-2 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
             <AlertTriangle className="mt-0.5 size-5 shrink-0" />
-            {t("Ve stejný den odjíždí", "On the same day, departing:")} {sameDay.other.name}. {t("Předání proběhne v den výměny.", "Handover will take place on the changeover day.")}
-          </p>
+            <p>{t("Ve stejný den odjíždí", "On the same day, departing:")} {changeovers.map((conflict) => conflict.other.name).join(", ")}. {t("Domluvte si předání chaty.", "Coordinate the cottage handover.")}</p>
+          </div>
         )}
       </section>
 
-      <button onClick={save} disabled={saving || invalid || !!hard} className="btn-primary mt-4 w-full disabled:opacity-40">
-        {saving ? t("Ukládám…", "Saving…") : t("Odeslat ke schválení", "Send for approval")}
+      <button onClick={save} disabled={saving || invalid} className="btn-primary mt-4 w-full disabled:opacity-40">
+        {saving ? t("Ukládám…", "Saving…") : t("Potvrdit rezervaci", "Confirm booking")}
       </button>
       <p className="mt-2 text-center text-[13px] text-muted-foreground">
-        {t("Rezervaci schvaluje správce rodiny.", "The family admin approves the booking.")}
+        {t("Rezervace se ihned zapíše do rodinného kalendáře.", "The booking is added to the family calendar immediately.")}
       </p>
     </AppShell>
   );

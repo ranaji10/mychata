@@ -77,6 +77,14 @@
   --warn-soft: oklch(0.97 0.03 82); /* soft yellow */
 }
 
+.institutional-theme {
+  --primary: oklch(0.56 0.105 202); /* #087F8C teal */
+  --primary-soft: oklch(0.955 0.024 196); /* #E8F5F6 pale teal */
+  --ring: oklch(0.56 0.105 202);
+  --secondary: oklch(0.955 0.024 196);
+  --accent: oklch(0.955 0.024 196);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

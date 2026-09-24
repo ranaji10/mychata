@@ -1,14 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Circle, ClipboardCheck, History } from "lucide-react";
+import { Camera, CheckCircle2, Circle, ClipboardCheck, History, Wrench } from "lucide-react";
 import { useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillOk } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtDateTime, type Handover } from "@/lib/data";
+import { fmtDateTime, todayISO, type Booking, type Handover } from "@/lib/data";
 
 export const Route = createFileRoute("/predani")({
   head: () => ({
@@ -37,6 +38,30 @@ function HandoverPage() {
   const items = property?.handover_items?.length ? property.handover_items : DEFAULT_CHECKLIST;
   const [checked, setChecked] = useState<boolean[]>(items.map(() => false));
   const [note, setNote] = useState("");
+  const [issue, setIssue] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  useEffect(() => {
+    if (!property) return;
+    try {
+      const saved = localStorage.getItem(`mychata.handover.${property.id}`);
+      if (!saved) return;
+      const draft = JSON.parse(saved) as { checked?: boolean[]; note?: string; issue?: string };
+      if (draft.checked?.length === items.length) setChecked(draft.checked);
+      setNote(draft.note ?? ""); setIssue(draft.issue ?? "");
+    } catch { /* ignore invalid local draft */ }
+  }, [property?.id, items.length]);
+  useEffect(() => {
+    if (!property) return;
+    localStorage.setItem(`mychata.handover.${property.id}`, JSON.stringify({ checked, note, issue }));
+  }, [property?.id, checked, note, issue]);
+
+  const { data: activeBooking } = useQuery({
+    queryKey: ["handover-booking", property?.id, currentMember?.id], enabled: !!property && !!currentMember,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("bookings").select("*").eq("property_id", property?.id ?? "").eq("requester_member_id", currentMember?.id ?? "").lte("start_date", todayISO()).gte("end_date", todayISO()).order("start_date").limit(1).maybeSingle();
+      if (error) throw error; return data as Booking | null;
+    },
+  });
 
   const { data: history, isLoading } = useQuery({
     queryKey: ["handovers", property?.id],
@@ -49,7 +74,10 @@ function HandoverPage() {
         .order("submitted_at", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return data as Handover[];
+      return data.map((handover) => ({
+        ...handover,
+        checklist_state: handover.checklist_state as Handover["checklist_state"],
+      }));
     },
   });
 
@@ -58,15 +86,26 @@ function HandoverPage() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("handovers").insert({
+      let photoUrl: string | null = null;
+      if (photo && property) { const path = `${property.id}/handovers/${crypto.randomUUID()}-${photo.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`; const { error } = await supabase.storage.from("my-chata-files").upload(path, photo); if (error) throw error; photoUrl = path; }
+      const { data: handover, error } = await supabase.from("handovers").insert({
         property_id: property!.id,
+        booking_id: activeBooking?.id ?? null,
         member_id: currentMember?.id ?? null,
         checklist_state: Object.fromEntries(items.map((item, i) => [item, { state: checked[i] ? "checked" : "na" }])),
         note: note || null,
-      });
+        photo_url: photoUrl,
+      }).select("id").single();
       if (error) throw error;
+      if (issue && property && handover) {
+        const { data: task, error: taskError } = await supabase.from("tasks").insert({ property_id: property.id, title: issue, title_cs: issue, title_en: issue, source_language: "cs", category: "repair", urgency: "HIGH", created_by: currentMember?.name ?? "" }).select("id").single();
+        if (taskError) throw taskError;
+        const { error: issueError } = await supabase.from("handover_issues").insert({ handover_id: handover.id, property_id: property.id, task_id: task.id, title: issue });
+        if (issueError) throw issueError;
+      }
     },
     onSuccess: () => {
+      if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
       toast.success(t("Předání chaty zaznamenáno.", "Handover recorded."));
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });
@@ -119,6 +158,12 @@ function HandoverPage() {
             className="field resize-none"
           />
         </div>
+
+        <div className="mt-3">
+          <label htmlFor="handover-issue" className="mb-1 flex items-center gap-2 text-[13px] font-bold"><Wrench className="size-4" />{t("Nahlásit závadu (nepovinné)", "Report an issue (optional)")}</label>
+          <input id="handover-issue" value={issue} onChange={(e) => setIssue(e.target.value)} className="field" placeholder={t("Např. protékající kohoutek", "E.g. leaking tap")} />
+        </div>
+        <label className="btn-secondary mt-3 w-full cursor-pointer"><Camera className="size-5" />{photo ? photo.name : t("Přidat kontrolní fotografii", "Add inspection photo")}<input type="file" accept="image/jpeg,image/png" className="sr-only" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} /></label>
 
         <button onClick={() => save.mutate()} disabled={!allDone} className="btn-primary mt-4 w-full disabled:opacity-40">
           {allDone ? t("Dokončit předání", "Complete handover") : t(`Zbývá ${items.length - doneCount} bodů`, `${items.length - doneCount} items left`)}

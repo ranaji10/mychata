@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Inbox } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillOk, PillWarn } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, fmtDateTime, type InstitutionalRequest } from "@/lib/data";
+import { declineReasons, fmtDate, fmtDateTime, type InstitutionalRequest } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/zadosti")({
@@ -22,9 +23,12 @@ export const Route = createFileRoute("/zadosti")({
 });
 
 function RequestsPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { property } = useAccount();
   const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<string[]>([]);
+  const [declining, setDeclining] = useState<InstitutionalRequest[]>([]);
+  const [declineReason, setDeclineReason] = useState("");
 
   const { data: requests, isLoading } = useQuery({
     queryKey: ["requests", property?.id],
@@ -41,28 +45,33 @@ function RequestsPage() {
   });
 
   const decide = useMutation({
-    mutationFn: async ({ req, approve }: { req: InstitutionalRequest; approve: boolean }) => {
-      const { error } = await supabase
-        .from("institutional_requests")
-        .update({ status: approve ? "APPROVED" : "DECLINED" })
-        .eq("id", req.id);
-      if (error) throw error;
-      if (approve) {
-        const { error: bErr } = await supabase.from("bookings").insert({
-          property_id: req.property_id,
-          requester_name: req.requester_name,
-          start_date: req.start_date,
-          end_date: req.end_date,
-          guests: req.guests,
-          note: req.note,
-          status: "CONFIRMED",
-        });
-        if (bErr) throw bErr;
+    mutationFn: async ({ requests, approve, reason }: { requests: InstitutionalRequest[]; approve: boolean; reason?: string }) => {
+      for (const req of requests) {
+        const { error } = await supabase
+          .from("institutional_requests")
+          .update({ status: approve ? "APPROVED" : "DECLINED", decline_reason: approve ? null : (reason ?? null) })
+          .eq("id", req.id);
+        if (error) throw error;
+        if (approve) {
+          const { error: bErr } = await supabase.from("bookings").insert({
+            property_id: req.property_id,
+            requester_name: req.requester_name,
+            start_date: req.start_date,
+            end_date: req.end_date,
+            guests: req.guests,
+            note: req.note,
+            status: "CONFIRMED",
+          });
+          if (bErr) throw bErr;
+        }
       }
     },
     onSuccess: (_d, v) => {
       queryClient.invalidateQueries({ queryKey: ["requests", property?.id] });
       queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] });
+      setSelected([]);
+      setDeclining([]);
+      setDeclineReason("");
       toast.success(v.approve ? t("Žádost schválena a pobyt zapsán do kalendáře.", "Request approved and the stay added to the calendar.") : t("Žádost zamítnuta.", "Request declined."));
     },
     onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
@@ -83,15 +92,29 @@ function RequestsPage() {
         <>
           {pending.length > 0 && (
             <section>
-              <h3 className="mb-2 text-lg font-bold">{t("Čekající", "Pending")} ({pending.length})</h3>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h3 className="text-lg font-bold">{t("Čekající", "Pending")} ({pending.length})</h3>
+                <button onClick={() => setSelected(selected.length === pending.length ? [] : pending.map((request) => request.id))} className="min-h-11 text-[14px] font-bold text-primary">
+                  {selected.length === pending.length ? t("Zrušit výběr", "Clear") : t("Vybrat vše", "Select all")}
+                </button>
+              </div>
+              {selected.length > 0 && (
+                <div className="card mb-3 grid grid-cols-2 gap-2 p-3">
+                  <button onClick={() => decide.mutate({ requests: pending.filter((request) => selected.includes(request.id)), approve: true })} className="btn-primary">{t("Schválit vybrané", "Approve selected")}</button>
+                  <button onClick={() => setDeclining(pending.filter((request) => selected.includes(request.id)))} className="btn-danger">{t("Zamítnout vybrané", "Decline selected")}</button>
+                </div>
+              )}
               <div className="space-y-3">
                 {pending.map((r) => (
                   <article key={r.id} className="card p-4">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                      <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3">
+                        <input type="checkbox" checked={selected.includes(r.id)} onChange={() => setSelected((ids) => ids.includes(r.id) ? ids.filter((id) => id !== r.id) : [...ids, r.id])} className="mt-1 size-5 accent-primary" />
+                        <div className="min-w-0">
                         <p className="truncate text-lg font-bold">{r.requester_name}</p>
                         <p className="text-[13px] text-muted-foreground">{r.requester_email}</p>
-                      </div>
+                        </div>
+                      </label>
                       {r.has_conflict && (
                         <span className="pill bg-warn-soft text-warn">
                           <AlertTriangle className="size-3.5" /> {t("Kolize", "Conflict")}
@@ -106,15 +129,16 @@ function RequestsPage() {
                       <p className="text-[12px] text-muted-foreground">{t("Odesláno", "Sent")} {fmtDateTime(r.created_at)}</p>
                     </div>
                     {r.has_conflict && (
-                      <p className="mt-2 rounded-2xl bg-warn-soft p-3 text-[13px] font-semibold text-warn">
-                        {t("Termín se překrývá s jiným pobytem. Schválením vznikne kolize v kalendáři.", "These dates overlap with another stay. Approving will create a conflict in the calendar.")}
-                      </p>
+                      <div className="mt-2 rounded-2xl bg-warn-soft p-3 text-[13px] font-semibold text-warn">
+                        <p>{t("Termín se překrývá s jiným pobytem:", "These dates overlap with another stay:")}</p>
+                        {r.conflict_note && <p className="mt-1">{r.conflict_note}</p>}
+                      </div>
                     )}
                     <div className="mt-3 flex gap-2">
-                      <button onClick={() => decide.mutate({ req: r, approve: true })} className="btn-primary flex-1">
+                      <button onClick={() => decide.mutate({ requests: [r], approve: true })} className="btn-primary flex-1">
                         {t("Schválit", "Approve")}
                       </button>
-                      <button onClick={() => decide.mutate({ req: r, approve: false })} className="btn-danger flex-1">
+                      <button onClick={() => setDeclining([r])} className="btn-danger flex-1">
                         {t("Zamítnout", "Decline")}
                       </button>
                     </div>
@@ -149,6 +173,23 @@ function RequestsPage() {
         {t("Export využití", "Usage export")}
         <PillWarn>CSV</PillWarn>
       </Link>
+
+      {declining.length > 0 && (
+        <div className="fixed inset-0 z-50 grid place-items-end bg-foreground/35 p-4 sm:place-items-center">
+          <section className="card w-full max-w-[400px] p-4" role="dialog" aria-modal="true" aria-labelledby="decline-title">
+            <h2 id="decline-title" className="text-xl font-bold">{t("Důvod zamítnutí", "Decline reason")}</h2>
+            <p className="mt-1 text-[14px] text-muted-foreground">{declining.length} {t("žádostí bude zamítnuto.", "request(s) will be declined.")}</p>
+            <select value={declineReason} onChange={(event) => setDeclineReason(event.target.value)} className="field mt-4">
+              <option value="">{t("Vyberte důvod", "Choose a reason")}</option>
+              {declineReasons(lang).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+            </select>
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => decide.mutate({ requests: declining, approve: false, reason: declineReason })} disabled={!declineReason} className="btn-danger flex-1 disabled:opacity-40">{t("Potvrdit zamítnutí", "Confirm decline")}</button>
+              <button onClick={() => { setDeclining([]); setDeclineReason(""); }} className="btn-secondary">{t("Zrušit", "Cancel")}</button>
+            </div>
+          </section>
+        </div>
+      )}
     </AppShell>
   );
 }

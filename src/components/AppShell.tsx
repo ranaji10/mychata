@@ -3,11 +3,15 @@ import { CalendarDays, ClipboardList, Home, Inbox, Menu, Wallet } from "lucide-r
 import type { ReactNode } from "react";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
+import { useConnectivity } from "@/hooks/use-connectivity";
+import { useIsMutating } from "@tanstack/react-query";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { account, property } = useAccount();
   const { t } = useLang();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const online = useConnectivity();
+  const mutating = useIsMutating();
 
   const FAMILY_TABS = [
     { to: "/domu", label: t("Domů", "Home"), icon: Home },
@@ -29,6 +33,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className={`mx-auto min-h-screen w-full max-w-[420px] bg-background text-foreground ${account?.type === "INSTITUTIONAL" ? "institutional-theme" : ""}`}>
+      {!online && <div className="sticky top-0 z-40 bg-warn px-4 py-2 text-center text-[14px] font-bold text-foreground">{t("Jste offline. Zobrazená data mohou být starší.", "You are offline. Displayed data may be out of date.")}</div>}
+      {online && mutating > 0 && <div className="sticky top-0 z-40 bg-ok-soft px-4 py-2 text-center text-[14px] font-bold text-ok">{t("Synchronizuji změny…", "Syncing changes…")}</div>}
       <header className="sticky top-0 z-20 flex items-center gap-3 bg-background/95 px-4 pb-3 pt-4 backdrop-blur">
         <Link to="/domu" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-lg font-extrabold text-primary-foreground shadow-lg shadow-primary/30">
           M

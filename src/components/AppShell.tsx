@@ -1,17 +1,20 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { CalendarDays, ClipboardList, Home, Inbox, Menu, Wallet } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { useIsMutating } from "@tanstack/react-query";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { account, property } = useAccount();
+  const { account, property, user, loading } = useAccount();
+  const navigate = useNavigate();
   const { t } = useLang();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const online = useConnectivity();
   const mutating = useIsMutating();
+  useEffect(() => { if (!loading && !user) navigate({ to: "/auth", replace: true }); }, [loading, user, navigate]);
+  if (loading || !user) return <div className="mx-auto min-h-screen max-w-[420px] bg-background" />;
 
   const FAMILY_TABS = [
     { to: "/domu", label: t("Domů", "Home"), icon: Home },

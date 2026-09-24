@@ -400,13 +400,18 @@ export type Database = {
           category: string
           created_at: string
           created_by: string
+          description_cs: string | null
+          description_en: string | null
           done_note: string | null
           due_date: string | null
           id: string
           photo_url: string | null
           property_id: string
+          source_language: string
           status: string
           title: string
+          title_cs: string | null
+          title_en: string | null
           urgency: string
         }
         Insert: {
@@ -414,13 +419,18 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string
+          description_cs?: string | null
+          description_en?: string | null
           done_note?: string | null
           due_date?: string | null
           id?: string
           photo_url?: string | null
           property_id: string
+          source_language?: string
           status?: string
           title: string
+          title_cs?: string | null
+          title_en?: string | null
           urgency?: string
         }
         Update: {
@@ -428,13 +438,18 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string
+          description_cs?: string | null
+          description_en?: string | null
           done_note?: string | null
           due_date?: string | null
           id?: string
           photo_url?: string | null
           property_id?: string
+          source_language?: string
           status?: string
           title?: string
+          title_cs?: string | null
+          title_en?: string | null
           urgency?: string
         }
         Relationships: [

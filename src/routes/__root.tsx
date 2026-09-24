@@ -79,6 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
+      { name: "google-site-verification", content: "hWHZFgtJQ226BHwT__LZOK4_EErIe_jdWwb21NqiElk" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "My Chata — správa sdílené chaty" },
       {

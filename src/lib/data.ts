@@ -61,6 +61,11 @@ export interface Task {
   id: string;
   property_id: string;
   title: string;
+  title_cs: string | null;
+  title_en: string | null;
+  description_cs: string | null;
+  description_en: string | null;
+  source_language: "cs" | "en";
   category: "repair" | "seasonal" | "cleaning" | "other";
   photo_url: string | null;
   urgency: "LOW" | "HIGH" | "URGENT";
@@ -70,6 +75,14 @@ export interface Task {
   done_note: string | null;
   created_by: string;
   created_at: string;
+}
+
+export function taskTitle(task: Task, lang: "cs" | "en"): string {
+  return (lang === "en" ? task.title_en : task.title_cs) || task.title;
+}
+
+export function taskDescription(task: Task, lang: "cs" | "en"): string | null {
+  return (lang === "en" ? task.description_en : task.description_cs) ?? null;
 }
 
 export interface Expense {

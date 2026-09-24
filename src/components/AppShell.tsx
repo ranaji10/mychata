@@ -28,14 +28,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabs = account?.type === "INSTITUTIONAL" ? INST_TABS : FAMILY_TABS;
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background text-foreground">
+    <div className={`mx-auto min-h-screen w-full max-w-[420px] bg-background text-foreground ${account?.type === "INSTITUTIONAL" ? "institutional-theme" : ""}`}>
       <header className="sticky top-0 z-20 flex items-center gap-3 bg-background/95 px-4 pb-3 pt-4 backdrop-blur">
         <Link to="/domu" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-lg font-extrabold text-primary-foreground shadow-lg shadow-primary/30">
           M
         </Link>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-semibold text-muted-foreground">
-            {account?.name ?? "My Chata"}
+            {account?.type === "INSTITUTIONAL" ? t("Organizační správa", "Organisation workspace") : account?.name ?? "My Chata"}
           </p>
           <h1 className="truncate text-xl font-bold leading-tight">{property?.name ?? "My Chata"}</h1>
         </div>

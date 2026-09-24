@@ -98,7 +98,6 @@ function HomePage() {
   const today = todayISO();
   const upcoming = bookings?.filter((b) => b.end_date >= today && b.status === "CONFIRMED") ?? [];
   const nextBooking = upcoming[0];
-  const pendingBookings = bookings?.filter((b) => b.status === "PENDING") ?? [];
   const overdueTasks = tasks?.filter((t) => t.status !== "DONE" && t.due_date && t.due_date < today) ?? [];
   const openTasks = tasks?.filter((t) => t.status !== "DONE") ?? [];
   const unsettled = splits?.filter((s) => !s.paid_back).reduce((sum, s) => sum + Number(s.amount_owed), 0) ?? 0;

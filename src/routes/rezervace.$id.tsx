@@ -77,7 +77,7 @@ function BookingDetail() {
     );
   }
 
-  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER" || account?.type === "INSTITUTIONAL";
+  const isAdmin = account?.type === "INSTITUTIONAL" && (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
   const pending = booking.status === "PENDING";
 
   const guestsLabel =

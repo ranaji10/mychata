@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Avatar, EmptyState, LoadingCards, PageHeader } from "@/components/bits";
@@ -22,9 +23,16 @@ export const Route = createFileRoute("/schvalovani")({
 });
 
 function ApprovalsPage() {
-  const { property, currentMember } = useAccount();
+  const { account, property, currentMember } = useAccount();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, lang } = useLang();
+
+  useEffect(() => {
+    if (account?.type === "FAMILY") navigate({ to: "/kalendar", replace: true });
+  }, [account?.type, navigate]);
+
+  if (account?.type === "FAMILY") return null;
 
   const { data: pending, isLoading } = useQuery({
     queryKey: ["bookings", property?.id],

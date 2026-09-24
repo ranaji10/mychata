@@ -49,7 +49,7 @@ function RequestsPage() {
       for (const req of requests) {
         const { error } = await supabase
           .from("institutional_requests")
-          .update({ status: approve ? "APPROVED" : "DECLINED", decline_reason: approve ? null : reason })
+          .update({ status: approve ? "APPROVED" : "DECLINED", decline_reason: approve ? null : (reason ?? null) })
           .eq("id", req.id);
         if (error) throw error;
         if (approve) {

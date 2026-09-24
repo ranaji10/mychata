@@ -9,29 +9,17 @@ interface AccountState {
   property: Property | null;
   members: Member[];
   loading: boolean;
-  selectAccount: (id: string | null) => void;
-  /** The "current user" for this demo build — defaults to the first ADMIN/OWNER member. */
+  /** The member record securely linked to the signed-in user. */
   currentMember: Member | null;
   currentMemberId: string | null;
-  setCurrentMemberId: (id: string) => void;
   user: User | null;
 }
 
 const AccountContext = createContext<AccountState | null>(null);
 
-const LS_KEY = "mychata.account";
-const LS_MEMBER = "mychata.member";
-
 export function AccountProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [accountId, setAccountId] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(LS_KEY);
-    } catch {
-      return null;
-    }
-  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => { setUser(data.user); setAuthLoading(false); });
@@ -48,14 +36,6 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       return data as Member;
     },
   });
-  const [memberId, setMemberId] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(LS_MEMBER);
-    } catch {
-      return null;
-    }
-  });
-
   const { data: accounts, isLoading: loadingAccounts } = useQuery({
     queryKey: ["accounts", user?.id],
     enabled: !!identityMember,
@@ -67,8 +47,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   });
 
   const account = useMemo(
-    () => accounts?.find((a) => a.id === accountId) ?? null,
-    [accounts, accountId],
+    () => accounts?.find((a) => a.id === identityMember?.account_id) ?? null,
+    [accounts, identityMember?.account_id],
   );
 
   const { data: property, isLoading: loadingProperty } = useQuery({
@@ -100,51 +80,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const currentMember = useMemo((): Member | null => {
-    if (!members?.length) return null;
-    const found = members.find((m) => m.id === memberId);
-    if (found) return found;
-    return members.find((m) => m.role === "ADMIN") ?? members[0] ?? null;
-  }, [members, memberId]);
-
-  // Auto-select first account if none chosen yet
-  useEffect(() => {
-    if (identityMember && accountId !== identityMember.account_id) setAccountId(identityMember.account_id);
-  }, [identityMember, accountId]);
-
-  useEffect(() => {
-    const first = accounts?.[0];
-    if (!identityMember && !accountId && first) {
-      setAccountId(first.id);
-    }
-  }, [accounts, accountId, identityMember]);
-
   const value: AccountState = {
     account,
     property: property ?? null,
     members: members ?? [],
     loading: authLoading || (!!user && loadingIdentity) || loadingAccounts || (!!account && (loadingProperty || loadingMembers)),
-    selectAccount: (id) => {
-      setAccountId(id);
-      setMemberId(null);
-      try {
-        if (id) localStorage.setItem(LS_KEY, id);
-        else localStorage.removeItem(LS_KEY);
-        localStorage.removeItem(LS_MEMBER);
-      } catch {
-        /* ignore */
-      }
-    },
-    currentMember: identityMember ?? currentMember,
-    currentMemberId: currentMember?.id ?? null,
-    setCurrentMemberId: (id) => {
-      setMemberId(id);
-      try {
-        localStorage.setItem(LS_MEMBER, id);
-      } catch {
-        /* ignore */
-      }
-    },
+    currentMember: identityMember ?? null,
+    currentMemberId: identityMember?.id ?? null,
     user,
   };
 

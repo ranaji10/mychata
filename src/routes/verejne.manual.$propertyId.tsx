@@ -18,7 +18,7 @@ function PublicManual() {
   const { propertyId } = Route.useParams(); const { t, lang } = useLang();
   const { data, isLoading } = useQuery({ queryKey: ["public-manual", propertyId], queryFn: async () => {
     const [{ data: property }, { data: sections, error }] = await Promise.all([
-      supabase.from("properties").select("name,address").eq("id", propertyId).single(),
+      supabase.rpc("public_property_details", { _property_id: propertyId }).single(),
       supabase.from("manual_sections").select("*").eq("property_id", propertyId).eq("visibility", "PUBLIC").order("display_order"),
     ]); if (error) throw error; return { property, sections };
   }});

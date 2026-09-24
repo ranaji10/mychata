@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, User } from "lucide-react";
+import { ArrowLeft, CalendarDays, FileBadge, User } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
@@ -144,6 +144,7 @@ function TaskDetail() {
           </button>
         ))}
       </div>
+      {done && <Link to="/dokumenty" search={{ task: task.id }} className="btn-secondary mt-3 w-full"><FileBadge className="size-5" />{t("Uložit záruku k úkolu", "File a warranty for this task")}</Link>}
     </AppShell>
   );
 }

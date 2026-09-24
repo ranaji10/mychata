@@ -24,21 +24,9 @@ function PublicRequest() {
   const { data: property } = useQuery({
     queryKey: ["institutional-property"],
     queryFn: async () => {
-      const { data: accounts, error: aErr } = await supabase
-        .from("accounts")
-        .select("id")
-        .eq("type", "INSTITUTIONAL")
-        .limit(1)
-        .single();
-      if (aErr) throw aErr;
-      const { data, error } = await supabase
-        .from("properties")
-        .select("*")
-        .eq("account_id", accounts.id)
-        .limit(1)
-        .single();
+      const { data, error } = await supabase.rpc("public_institutional_property").single();
       if (error) throw error;
-      return data as Property;
+      return data as Pick<Property, "id" | "name" | "address">;
     },
   });
 
@@ -46,12 +34,9 @@ function PublicRequest() {
     queryKey: ["public-bookings", property?.id],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("property_id", property!.id);
+      const { data, error } = await supabase.rpc("public_booking_availability", { _property_id: property?.id ?? "" });
       if (error) throw error;
-      return data as Booking[];
+      return (data ?? []).map((booking) => ({ ...booking, requester_name: t("Jiný pobyt", "Another stay"), requester_member_id: null, guests: 0, note: null, created_at: "", updated_at: "" })) as Booking[];
     },
   });
 

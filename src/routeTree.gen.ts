@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DokumentyRouteImport } from './routes/dokumenty'
 import { Route as DomuRouteImport } from './routes/domu'
 import { Route as ExportRouteImport } from './routes/export'
@@ -32,6 +33,11 @@ import { Route as VerejneManualPropertyIdRouteImport } from './routes/verejne.ma
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DokumentyRoute = DokumentyRouteImport.update({
@@ -128,6 +134,7 @@ const VerejneManualPropertyIdRoute = VerejneManualPropertyIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
@@ -171,6 +179,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/dokumenty'
     | '/domu'
     | '/export'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/dokumenty'
     | '/domu'
     | '/export'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/dokumenty'
     | '/domu'
     | '/export'
@@ -258,6 +270,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   DokumentyRoute: typeof DokumentyRoute
   DomuRoute: typeof DomuRoute
   ExportRoute: typeof ExportRoute
@@ -283,6 +296,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dokumenty': {
@@ -437,6 +457,7 @@ const VydajeRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   DokumentyRoute: DokumentyRoute,
   DomuRoute: DomuRoute,
   ExportRoute: ExportRoute,

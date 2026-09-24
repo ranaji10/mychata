@@ -10,6 +10,7 @@ import { useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 
 export const Route = createFileRoute("/domu")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Home — My Chata" },

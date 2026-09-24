@@ -8,6 +8,7 @@ import { LanguageToggle, useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 
 export const Route = createFileRoute("/verejne/zadost")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Stay request — My Chata" },

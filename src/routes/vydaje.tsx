@@ -11,6 +11,7 @@ import { EXPENSE_CATEGORY, expenseCategoryLabel, fmtDate, fmtKc, type Expense } 
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vydaje")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Expenses — My Chata" },

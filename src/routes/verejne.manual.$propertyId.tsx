@@ -7,6 +7,7 @@ import { LanguageToggle, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/verejne/manual/$propertyId")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "Public House Manual — My Chata" }, { name: "description", content: "Public bilingual cottage instructions." },
     { property: "og:title", content: "Public House Manual — My Chata" }, { property: "og:description", content: "Public bilingual cottage instructions." },

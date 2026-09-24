@@ -10,6 +10,7 @@ import { useLang } from "@/lib/i18n";
 import { fmtDate, taskCategoryLabel, taskTitle, todayISO, urgencyLabel, type Task } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Task detail — My Chata" },

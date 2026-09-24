@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/vice")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "More — My Chata" },

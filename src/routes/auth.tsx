@@ -7,6 +7,7 @@ import { LanguageToggle, useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: true },
   head: () => ({ meta: [
     { title: "Sign in — My Chata" }, { name: "description", content: "Secure sign in to your My Chata account." },
     { property: "og:title", content: "Sign in — My Chata" }, { property: "og:description", content: "Secure sign in to your My Chata account." },

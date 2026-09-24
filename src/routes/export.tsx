@@ -11,6 +11,7 @@ import { fmtDate, monthNames, type InstitutionalRequest } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/export")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Usage export — My Chata" },

@@ -11,6 +11,7 @@ import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/manual")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "House Manual — My Chata" },
     { name: "description", content: "Bilingual instructions and house information for your cottage." },

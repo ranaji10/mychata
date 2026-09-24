@@ -11,6 +11,7 @@ import { fmtDate, todayISO } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/dokumenty")({
+  staticData: { sitemap: false },
   validateSearch: (search: Record<string, unknown>) => ({ task: typeof search["task"] === "string" ? search["task"] : "" }),
   head: () => ({ meta: [
     { title: "Document Vault — My Chata" }, { name: "description", content: "Private cottage documents, warranties, and expiry reminders." },

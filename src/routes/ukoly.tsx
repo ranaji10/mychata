@@ -13,6 +13,7 @@ import { fmtDate, seasonalTemplates, taskCategoryLabel, taskTitle, todayISO, typ
 import { translateTaskText } from "@/lib/task-translation.functions";
 
 export const Route = createFileRoute("/ukoly")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Tasks — My Chata" },

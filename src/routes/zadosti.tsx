@@ -11,6 +11,7 @@ import { declineReasons, fmtDate, fmtDateTime, type InstitutionalRequest } from 
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/zadosti")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Requests — My Chata" },

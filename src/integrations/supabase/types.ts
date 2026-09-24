@@ -749,6 +749,22 @@ export type Database = {
           status: string
         }[]
       }
+      public_institutional_property: {
+        Args: never
+        Returns: {
+          address: string
+          id: string
+          name: string
+        }[]
+      }
+      public_property_details: {
+        Args: { _property_id: string }
+        Returns: {
+          address: string
+          id: string
+          name: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "member"

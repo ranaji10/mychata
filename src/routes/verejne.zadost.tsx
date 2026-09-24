@@ -24,21 +24,9 @@ function PublicRequest() {
   const { data: property } = useQuery({
     queryKey: ["institutional-property"],
     queryFn: async () => {
-      const { data: accounts, error: aErr } = await supabase
-        .from("accounts")
-        .select("id")
-        .eq("type", "INSTITUTIONAL")
-        .limit(1)
-        .single();
-      if (aErr) throw aErr;
-      const { data, error } = await supabase
-        .from("properties")
-        .select("*")
-        .eq("account_id", accounts.id)
-        .limit(1)
-        .single();
+      const { data, error } = await supabase.rpc("public_institutional_property").single();
       if (error) throw error;
-      return data as Property;
+      return data as Pick<Property, "id" | "name" | "address">;
     },
   });
 

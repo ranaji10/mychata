@@ -30,9 +30,9 @@ function PublicCalendar() {
   const { data: property } = useQuery({
     queryKey: ["public-property", propertyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("properties").select("*").eq("id", propertyId).single();
+      const { data, error } = await supabase.rpc("public_property_details", { _property_id: propertyId }).single();
       if (error) throw error;
-      return data as Property;
+      return data as Pick<Property, "id" | "name" | "address">;
     },
   });
 

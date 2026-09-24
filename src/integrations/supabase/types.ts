@@ -739,6 +739,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      public_booking_availability: {
+        Args: { _property_id: string }
+        Returns: {
+          end_date: string
+          id: string
+          property_id: string
+          start_date: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "member"

@@ -36,6 +36,13 @@
       "when": 1790266283341,
       "tag": "0004_scope_new_features_to_member_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790266375336,
+      "tag": "0005_protect_public_booking_details",
+      "breakpoints": true
     }
   ]
 }

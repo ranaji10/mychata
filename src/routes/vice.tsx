@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Building2, ChevronRight, ClipboardCheck, Globe, Link2, LogOut, Users } from "lucide-react";
+import { BookOpen, Building2, ChevronRight, ClipboardCheck, FileText, Globe, Link2, LogOut, Users } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Avatar, PageHeader } from "@/components/bits";
@@ -83,6 +83,14 @@ function MorePage() {
       </section>
 
       <section className="card mt-4 divide-y divide-border p-0">
+        <Link to="/manual" className="flex items-center gap-3 p-4 active:bg-secondary">
+          <BookOpen className="size-5 text-muted-foreground" />
+          <span className="flex-1 text-[15px] font-bold">{t("Manuál chaty", "House Manual")}</span><ChevronRight className="size-5 text-muted-foreground" />
+        </Link>
+        <Link to="/dokumenty" className="flex items-center gap-3 p-4 active:bg-secondary">
+          <FileText className="size-5 text-muted-foreground" />
+          <span className="flex-1 text-[15px] font-bold">{t("Dokumenty", "Document Vault")}</span><ChevronRight className="size-5 text-muted-foreground" />
+        </Link>
         <Link to="/predani" className="flex items-center gap-3 p-4 active:bg-secondary">
           <ClipboardCheck className="size-5 text-muted-foreground" />
           <span className="flex-1 text-[15px] font-bold">{t("Předání chaty", "Cottage handover")}</span>

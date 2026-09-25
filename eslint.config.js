@@ -20,6 +20,7 @@ export default tseslint.config(
       "src/integrations/supabase/previewAuthStorage.ts",
       "src/integrations/lovable/**",
       "src/routeTree.gen.ts",
+      "src/integrations/supabase/types.ts",
     ],
   },
   {

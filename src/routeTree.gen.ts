@@ -11,18 +11,27 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ClenoveRouteImport } from './routes/clenove'
 import { Route as DokumentyRouteImport } from './routes/dokumenty'
 import { Route as DomuRouteImport } from './routes/domu'
 import { Route as ExportRouteImport } from './routes/export'
+import { Route as FotkyRouteImport } from './routes/fotky'
 import { Route as KalendarRouteImport } from './routes/kalendar'
 import { Route as ManualRouteImport } from './routes/manual'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PredaniRouteImport } from './routes/predani'
+import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SchvalovaniRouteImport } from './routes/schvalovani'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SoukromiRouteImport } from './routes/soukromi'
 import { Route as UkolyRouteImport } from './routes/ukoly'
 import { Route as ViceRouteImport } from './routes/vice'
 import { Route as VydajeRouteImport } from './routes/vydaje'
 import { Route as ZadostiRouteImport } from './routes/zadosti'
+import { Route as ChataNovaRouteImport } from './routes/chata.nova'
+import { Route as HostTokenRouteImport } from './routes/host.$token'
+import { Route as PozvankaTokenRouteImport } from './routes/pozvanka.$token'
 import { Route as RezervaceIdRouteImport } from './routes/rezervace.$id'
 import { Route as RezervaceNovaRouteImport } from './routes/rezervace.nova'
 import { Route as UkolyIdRouteImport } from './routes/ukoly.$id'
@@ -41,6 +50,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClenoveRoute = ClenoveRouteImport.update({
+  id: '/clenove',
+  path: '/clenove',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DokumentyRoute = DokumentyRouteImport.update({
   id: '/dokumenty',
   path: '/dokumenty',
@@ -56,6 +70,11 @@ const ExportRoute = ExportRouteImport.update({
   path: '/export',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FotkyRoute = FotkyRouteImport.update({
+  id: '/fotky',
+  path: '/fotky',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KalendarRoute = KalendarRouteImport.update({
   id: '/kalendar',
   path: '/kalendar',
@@ -66,9 +85,24 @@ const ManualRoute = ManualRouteImport.update({
   path: '/manual',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PredaniRoute = PredaniRouteImport.update({
   id: '/predani',
   path: '/predani',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfilRoute = ProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SchvalovaniRoute = SchvalovaniRouteImport.update({
@@ -79,6 +113,11 @@ const SchvalovaniRoute = SchvalovaniRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoukromiRoute = SoukromiRouteImport.update({
+  id: '/soukromi',
+  path: '/soukromi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UkolyRoute = UkolyRouteImport.update({
@@ -99,6 +138,21 @@ const VydajeRoute = VydajeRouteImport.update({
 const ZadostiRoute = ZadostiRouteImport.update({
   id: '/zadosti',
   path: '/zadosti',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChataNovaRoute = ChataNovaRouteImport.update({
+  id: '/chata/nova',
+  path: '/chata/nova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HostTokenRoute = HostTokenRouteImport.update({
+  id: '/host/$token',
+  path: '/host/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PozvankaTokenRoute = PozvankaTokenRouteImport.update({
+  id: '/pozvanka/$token',
+  path: '/pozvanka/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RezervaceIdRoute = RezervaceIdRouteImport.update({
@@ -141,18 +195,27 @@ const VerejneManualPropertyIdRoute = VerejneManualPropertyIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
+  '/fotky': typeof FotkyRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
+  '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
+  '/profil': typeof ProfilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/chata/nova': typeof ChataNovaRoute
+  '/host/$token': typeof HostTokenRoute
+  '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
@@ -164,18 +227,27 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
+  '/fotky': typeof FotkyRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
+  '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
+  '/profil': typeof ProfilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/chata/nova': typeof ChataNovaRoute
+  '/host/$token': typeof HostTokenRoute
+  '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
@@ -188,18 +260,27 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
+  '/fotky': typeof FotkyRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
+  '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
+  '/profil': typeof ProfilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/chata/nova': typeof ChataNovaRoute
+  '/host/$token': typeof HostTokenRoute
+  '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
@@ -213,18 +294,27 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/clenove'
     | '/dokumenty'
     | '/domu'
     | '/export'
+    | '/fotky'
     | '/kalendar'
     | '/manual'
+    | '/onboarding'
     | '/predani'
+    | '/profil'
+    | '/reset-password'
     | '/schvalovani'
     | '/sitemap.xml'
+    | '/soukromi'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/chata/nova'
+    | '/host/$token'
+    | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
@@ -236,18 +326,27 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/clenove'
     | '/dokumenty'
     | '/domu'
     | '/export'
+    | '/fotky'
     | '/kalendar'
     | '/manual'
+    | '/onboarding'
     | '/predani'
+    | '/profil'
+    | '/reset-password'
     | '/schvalovani'
     | '/sitemap.xml'
+    | '/soukromi'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/chata/nova'
+    | '/host/$token'
+    | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
@@ -259,18 +358,27 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/clenove'
     | '/dokumenty'
     | '/domu'
     | '/export'
+    | '/fotky'
     | '/kalendar'
     | '/manual'
+    | '/onboarding'
     | '/predani'
+    | '/profil'
+    | '/reset-password'
     | '/schvalovani'
     | '/sitemap.xml'
+    | '/soukromi'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/chata/nova'
+    | '/host/$token'
+    | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
@@ -283,18 +391,27 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ClenoveRoute: typeof ClenoveRoute
   DokumentyRoute: typeof DokumentyRoute
   DomuRoute: typeof DomuRoute
   ExportRoute: typeof ExportRoute
+  FotkyRoute: typeof FotkyRoute
   KalendarRoute: typeof KalendarRoute
   ManualRoute: typeof ManualRoute
+  OnboardingRoute: typeof OnboardingRoute
   PredaniRoute: typeof PredaniRoute
+  ProfilRoute: typeof ProfilRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SchvalovaniRoute: typeof SchvalovaniRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SoukromiRoute: typeof SoukromiRoute
   UkolyRoute: typeof UkolyRouteWithChildren
   ViceRoute: typeof ViceRoute
   VydajeRoute: typeof VydajeRouteWithChildren
   ZadostiRoute: typeof ZadostiRoute
+  ChataNovaRoute: typeof ChataNovaRoute
+  HostTokenRoute: typeof HostTokenRoute
+  PozvankaTokenRoute: typeof PozvankaTokenRoute
   RezervaceIdRoute: typeof RezervaceIdRoute
   RezervaceNovaRoute: typeof RezervaceNovaRoute
   VerejneZadostRoute: typeof VerejneZadostRoute
@@ -318,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clenove': {
+      id: '/clenove'
+      path: '/clenove'
+      fullPath: '/clenove'
+      preLoaderRoute: typeof ClenoveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dokumenty': {
       id: '/dokumenty'
       path: '/dokumenty'
@@ -339,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fotky': {
+      id: '/fotky'
+      path: '/fotky'
+      fullPath: '/fotky'
+      preLoaderRoute: typeof FotkyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/kalendar': {
       id: '/kalendar'
       path: '/kalendar'
@@ -353,11 +484,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManualRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/predani': {
       id: '/predani'
       path: '/predani'
       fullPath: '/predani'
       preLoaderRoute: typeof PredaniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profil': {
+      id: '/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/schvalovani': {
@@ -372,6 +524,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/soukromi': {
+      id: '/soukromi'
+      path: '/soukromi'
+      fullPath: '/soukromi'
+      preLoaderRoute: typeof SoukromiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ukoly': {
@@ -400,6 +559,27 @@ declare module '@tanstack/react-router' {
       path: '/zadosti'
       fullPath: '/zadosti'
       preLoaderRoute: typeof ZadostiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chata/nova': {
+      id: '/chata/nova'
+      path: '/chata/nova'
+      fullPath: '/chata/nova'
+      preLoaderRoute: typeof ChataNovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/host/$token': {
+      id: '/host/$token'
+      path: '/host/$token'
+      fullPath: '/host/$token'
+      preLoaderRoute: typeof HostTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pozvanka/$token': {
+      id: '/pozvanka/$token'
+      path: '/pozvanka/$token'
+      fullPath: '/pozvanka/$token'
+      preLoaderRoute: typeof PozvankaTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rezervace/$id': {
@@ -478,18 +658,27 @@ const VydajeRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ClenoveRoute: ClenoveRoute,
   DokumentyRoute: DokumentyRoute,
   DomuRoute: DomuRoute,
   ExportRoute: ExportRoute,
+  FotkyRoute: FotkyRoute,
   KalendarRoute: KalendarRoute,
   ManualRoute: ManualRoute,
+  OnboardingRoute: OnboardingRoute,
   PredaniRoute: PredaniRoute,
+  ProfilRoute: ProfilRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SchvalovaniRoute: SchvalovaniRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SoukromiRoute: SoukromiRoute,
   UkolyRoute: UkolyRouteWithChildren,
   ViceRoute: ViceRoute,
   VydajeRoute: VydajeRouteWithChildren,
   ZadostiRoute: ZadostiRoute,
+  ChataNovaRoute: ChataNovaRoute,
+  HostTokenRoute: HostTokenRoute,
+  PozvankaTokenRoute: PozvankaTokenRoute,
   RezervaceIdRoute: RezervaceIdRoute,
   RezervaceNovaRoute: RezervaceNovaRoute,
   VerejneZadostRoute: VerejneZadostRoute,

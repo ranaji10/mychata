@@ -92,6 +92,33 @@ export type Database = {
           },
         ]
       }
+      consent_log: {
+        Row: {
+          analytics: boolean
+          anonymous_id: string | null
+          created_at: string
+          id: string
+          user_id: string | null
+          version: string
+        }
+        Insert: {
+          analytics: boolean
+          anonymous_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          version: string
+        }
+        Update: {
+          analytics?: boolean
+          anonymous_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           category: string
@@ -248,6 +275,117 @@ export type Database = {
           },
           {
             foreignKeyName: "expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_links: {
+        Row: {
+          created_at: string
+          created_by_member_id: string | null
+          expires_at: string | null
+          id: string
+          property_id: string
+          revoked_at: string | null
+          token: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by_member_id?: string | null
+          expires_at?: string | null
+          id?: string
+          property_id: string
+          revoked_at?: string | null
+          token?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by_member_id?: string | null
+          expires_at?: string | null
+          id?: string
+          property_id?: string
+          revoked_at?: string | null
+          token?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_links_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_links_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_requests: {
+        Row: {
+          created_at: string
+          end_date: string
+          guest_email: string | null
+          guest_link_id: string
+          guest_name: string
+          guest_phone: string | null
+          guests: number
+          id: string
+          note: string | null
+          property_id: string
+          start_date: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          guest_email?: string | null
+          guest_link_id: string
+          guest_name: string
+          guest_phone?: string | null
+          guests?: number
+          id?: string
+          note?: string | null
+          property_id: string
+          start_date: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          guest_email?: string | null
+          guest_link_id?: string
+          guest_name?: string
+          guest_phone?: string | null
+          guests?: number
+          id?: string
+          note?: string | null
+          property_id?: string
+          start_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_requests_guest_link_id_fkey"
+            columns: ["guest_link_id"]
+            isOneToOne: false
+            referencedRelation: "guest_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_requests_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
@@ -427,6 +565,112 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          accepted_by: string | null
+          account_id: string
+          created_at: string
+          created_by_member_id: string | null
+          email: string | null
+          expires_at: string
+          id: string
+          property_id: string | null
+          role: string
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_by?: string | null
+          account_id: string
+          created_at?: string
+          created_by_member_id?: string | null
+          email?: string | null
+          expires_at?: string
+          id?: string
+          property_id?: string | null
+          role?: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          accepted_by?: string | null
+          account_id?: string
+          created_at?: string
+          created_by_member_id?: string | null
+          email?: string | null
+          expires_at?: string
+          id?: string
+          property_id?: string | null
+          role?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manual_chunks: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          property_id: string
+          section_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          property_id: string
+          section_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          property_id?: string
+          section_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_chunks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_chunks_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "manual_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       manual_feedback: {
         Row: {
           created_at: string
@@ -559,20 +803,85 @@ export type Database = {
           },
         ]
       }
-      profiles: {
+      onboarding_answers: {
         Row: {
-          created_at: string
-          member_id: string | null
+          answers: Json
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string
-          member_id?: string | null
+          answers?: Json
+          updated_at?: string
           user_id: string
         }
         Update: {
+          answers?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      org_join_requests: {
+        Row: {
+          account_id: string
+          created_at: string
+          email: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
           created_at?: string
+          email: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_join_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          member_id: string | null
+          onboarding_completed_at: string | null
+          phone: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
           member_id?: string | null
+          onboarding_completed_at?: string | null
+          phone?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          member_id?: string | null
+          onboarding_completed_at?: string | null
+          phone?: string | null
           user_id?: string
         }
         Relationships: [
@@ -590,34 +899,49 @@ export type Database = {
           account_id: string
           address: string
           auto_confirm: boolean
+          city: string | null
           created_at: string
+          created_by_member_id: string | null
           handover_items: Json
           house_rules_text: string | null
           id: string
           name: string
+          overlap_max_guests: number | null
+          peak_seasons: string[]
           photo_url: string | null
+          rooms: number | null
         }
         Insert: {
           account_id: string
           address?: string
           auto_confirm?: boolean
+          city?: string | null
           created_at?: string
+          created_by_member_id?: string | null
           handover_items?: Json
           house_rules_text?: string | null
           id?: string
           name: string
+          overlap_max_guests?: number | null
+          peak_seasons?: string[]
           photo_url?: string | null
+          rooms?: number | null
         }
         Update: {
           account_id?: string
           address?: string
           auto_confirm?: boolean
+          city?: string | null
           created_at?: string
+          created_by_member_id?: string | null
           handover_items?: Json
           house_rules_text?: string | null
           id?: string
           name?: string
+          overlap_max_guests?: number | null
+          peak_seasons?: string[]
           photo_url?: string | null
+          rooms?: number | null
         }
         Relationships: [
           {
@@ -625,6 +949,88 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_admins: {
+        Row: {
+          id: string
+          member_id: string
+          property_id: string
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          property_id: string
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_admins_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_admins_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_photos: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          property_id: string
+          storage_path: string
+          uploaded_by_member_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          property_id: string
+          storage_path: string
+          uploaded_by_member_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          property_id?: string
+          storage_path?: string
+          uploaded_by_member_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_photos_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_photos_uploaded_by_member_id_fkey"
+            columns: ["uploaded_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
         ]
@@ -730,7 +1136,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: { _token: string }; Returns: string }
+      add_property: {
+        Args: {
+          _address?: string
+          _city?: string
+          _name: string
+          _rooms?: number
+        }
+        Returns: string
+      }
       claim_initial_membership: { Args: never; Returns: string }
+      create_account_onboarding: {
+        Args: {
+          _account_name: string
+          _address?: string
+          _city?: string
+          _house_rules?: string
+          _overlap_max_guests?: number
+          _property_name: string
+          _rooms?: number
+          _seasons?: string[]
+          _type: string
+        }
+        Returns: string
+      }
       current_account_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -738,6 +1168,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_property_admin: { Args: { _property_id: string }; Returns: boolean }
+      match_manual_chunks: {
+        Args: { _count?: number; _embedding: string; _property_id: string }
+        Returns: {
+          content: string
+          id: string
+          section_id: string
+          similarity: number
+        }[]
       }
       public_booking_availability: {
         Args: { _property_id: string }
@@ -747,6 +1187,17 @@ export type Database = {
           property_id: string
           start_date: string
           status: string
+        }[]
+      }
+      public_guest_link: {
+        Args: { _token: string }
+        Returns: {
+          id: string
+          property_address: string
+          property_id: string
+          property_name: string
+          valid_from: string
+          valid_to: string
         }[]
       }
       public_institutional_property: {

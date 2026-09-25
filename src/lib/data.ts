@@ -15,6 +15,20 @@ export interface Property {
   house_rules_text: string | null;
   auto_confirm: boolean;
   handover_items: string[];
+  rooms: number | null;
+  city: string | null;
+  overlap_max_guests: number | null;
+  peak_seasons: string[];
+  created_by_member_id: string | null;
+}
+
+export interface Profile {
+  user_id: string;
+  member_id: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  onboarding_completed_at: string | null;
 }
 
 export interface Member {
@@ -24,6 +38,7 @@ export interface Member {
   email: string;
   role: "OWNER" | "ADMIN" | "MEMBER";
   branch: string;
+  user_id: string | null;
 }
 
 export interface Booking {

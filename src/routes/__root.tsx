@@ -130,22 +130,32 @@ function RootShell({ children }: { children: ReactNode }) {
 
 import { AccountProvider } from "../lib/account";
 import { LanguageProvider } from "../lib/i18n";
+import { ConsentBanner, ConsentProvider } from "../lib/consent";
+import { trackPageView } from "../lib/analytics";
 import { Toaster } from "../components/ui/sonner";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
   useEffect(() => {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);
+  useEffect(() => {
+    trackPageView(router.state.location.pathname);
+    return router.subscribe("onResolved", ({ toLocation }) => trackPageView(toLocation.pathname));
+  }, [router]);
 
   const persister = typeof window === "undefined" ? undefined : createSyncStoragePersister({ storage: window.localStorage, key: "mychata.offline-cache" });
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: persister ?? { persistClient: async () => undefined, restoreClient: async () => undefined, removeClient: async () => undefined }, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
       <LanguageProvider>
         <AccountProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-          <Toaster position="top-center" richColors />
+          <ConsentProvider>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+            <ConsentBanner />
+            <Toaster position="top-center" richColors />
+          </ConsentProvider>
         </AccountProvider>
       </LanguageProvider>
     </PersistQueryClientProvider>

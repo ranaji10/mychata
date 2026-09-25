@@ -59,7 +59,7 @@ export const askManual = createServerFn({ method: "POST" })
       const { data: matches } = await context.supabase.rpc("match_manual_chunks", {
         _property_id: data.propertyId,
         _embedding: JSON.stringify(queryEmbedding),
-        _match_count: 4,
+        _count: 4,
       });
       chunks = (matches ?? []) as { content: string; section_id: string }[];
     } catch {

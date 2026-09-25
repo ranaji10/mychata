@@ -23,7 +23,7 @@ export const Route = createFileRoute("/vice")({
 });
 
 function MorePage() {
-  const { account, property, members, currentMemberId, user } = useAccount();
+  const { account, property, members, currentMemberId } = useAccount();
   const { t, lang, setLang } = useLang();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -42,9 +42,9 @@ function MorePage() {
   };
 
   const createGuestLink = async () => {
-    if (!property || !user) return;
+    if (!property || !currentMemberId) return;
     const token = crypto.randomUUID();
-    const { error } = await supabase.from("guest_links").insert({ property_id: property.id, token, created_by: user.id });
+    const { error } = await supabase.from("guest_links").insert({ property_id: property.id, token, created_by_member_id: currentMemberId });
     if (error) {
       toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
       return;

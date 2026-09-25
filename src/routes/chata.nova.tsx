@@ -30,8 +30,8 @@ function AddPropertyPage() {
     const { data, error } = await supabase.rpc("add_property", {
       _name: name.trim(),
       _address: address.trim(),
-      _city: city.trim() || null,
-      _rooms: rooms ? Number(rooms) : null,
+      _city: city.trim() || undefined,
+      _rooms: rooms ? Number(rooms) : undefined,
     });
     setBusy(false);
     if (error) {

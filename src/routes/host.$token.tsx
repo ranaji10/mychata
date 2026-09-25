@@ -51,9 +51,8 @@ function GuestBookingPage() {
         <LanguageToggle />
       </div>
       <p className="mt-6 font-bold text-primary">My Chata</p>
-      <h1 className="mt-1 text-2xl font-bold">{data.property?.name ?? t("Rezervace pobytu", "Book a stay")}</h1>
-      {data.property?.address && <p className="text-[15px] text-muted-foreground">{data.property.address}</p>}
-      {data.label && <p className="mt-1 text-[14px] font-semibold text-muted-foreground">{data.label}</p>}
+      <h1 className="mt-1 text-2xl font-bold">{data.propertyName}</h1>
+      {data.propertyAddress && <p className="text-[15px] text-muted-foreground">{data.property.address}</p>}
 
       {done ? (
         <div className="card mt-6 p-5 text-center">

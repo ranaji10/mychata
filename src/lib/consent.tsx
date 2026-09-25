@@ -2,6 +2,7 @@ import { Cookie } from "lucide-react";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { initAnalytics } from "@/lib/analytics";
+import { getConsentRequired } from "@/lib/region.functions";
 import { useLang } from "@/lib/i18n";
 
 const LS_KEY = "mychata.consent";
@@ -41,9 +42,19 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const existing = readChoice();
-    setChoice(existing);
-    initAnalytics(existing?.analytics ?? false);
-    setReady(true);
+    if (existing) {
+      setChoice(existing);
+      initAnalytics(existing.analytics);
+      setReady(true);
+      return;
+    }
+    // No saved choice: only EU/EEA/UK/CH visitors (or unknown) see the banner.
+    getConsentRequired()
+      .then(({ required }) => {
+        if (!required) setChoice({ analytics: true, version: CONSENT_VERSION, at: 0 });
+      })
+      .catch(() => undefined)
+      .finally(() => setReady(true));
   }, []);
 
   const value = useMemo<ConsentState>(

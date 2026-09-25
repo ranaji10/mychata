@@ -119,7 +119,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     queryClient.invalidateQueries();
   };
 
-  const needsOnboarding = !!user && !loadingIdentity && !loadingProfile && !identityMember;
+  // Onboarding is required until the profile is marked complete (invite acceptance marks it complete).
+  const needsOnboarding = !!user && !loadingIdentity && !loadingProfile && !profile?.onboarding_completed_at;
 
   const value: AccountState = {
     account,

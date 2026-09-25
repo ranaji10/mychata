@@ -36,7 +36,7 @@ interface ChataDraft {
 
 function OnboardingPage() {
   const { t, lang } = useLang();
-  const { user } = useAccount();
+  const { user, currentMember, profile } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -68,20 +68,23 @@ function OnboardingPage() {
     setBusy(true);
     try {
       const first = chatas[0]!;
-      const { error } = await supabase.rpc("create_account_onboarding", {
-        _type: type,
-        _account_name: accountName || first.name || "My Chata",
-        _property_name: first.name,
-        _address: first.address,
-        ...(first.city ? { _city: first.city } : {}),
-        ...(first.rooms ? { _rooms: Number(first.rooms) } : {}),
-        _seasons: seasons,
-        ...(overlapAllowed && overlapMaxGuests ? { _overlap_max_guests: Number(overlapMaxGuests) } : {}),
-        _house_rules: houseRules,
-      });
-      if (error) throw error;
-      // Additional chatas: creator becomes admin of each by default.
-      for (const extra of chatas.slice(1)) {
+      const alreadyMember = !!currentMember;
+      if (!alreadyMember) {
+        const { error } = await supabase.rpc("create_account_onboarding", {
+          _type: type,
+          _account_name: accountName || first.name || "My Chata",
+          _property_name: first.name,
+          _address: first.address,
+          ...(first.city ? { _city: first.city } : {}),
+          ...(first.rooms ? { _rooms: Number(first.rooms) } : {}),
+          _seasons: seasons,
+          ...(overlapAllowed && overlapMaxGuests ? { _overlap_max_guests: Number(overlapMaxGuests) } : {}),
+          _house_rules: houseRules,
+        });
+        if (error) throw error;
+      }
+      // Remaining chatas (all of them for existing members): creator becomes admin of each.
+      for (const extra of alreadyMember ? chatas : chatas.slice(1)) {
         if (!extra.name.trim()) continue;
         const { error: addError } = await supabase.rpc("add_property", {
           _name: extra.name,
@@ -91,6 +94,11 @@ function OnboardingPage() {
         });
         if (addError) throw addError;
       }
+      const { error: profileError } = await supabase.from("profiles").upsert(
+        { user_id: user.id, member_id: currentMember?.id ?? profile?.member_id ?? null, onboarding_completed_at: new Date().toISOString() },
+        { onConflict: "user_id" },
+      );
+      if (profileError) throw profileError;
       await supabase.from("onboarding_answers").upsert({
         user_id: user.id,
         answers: { type, peopleCount, seasons, overlapAllowed, overlapMaxGuests, chataCount: chatas.length },

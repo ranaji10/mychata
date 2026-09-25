@@ -88,6 +88,22 @@ function HomePage() {
     },
   });
 
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+  const { data: guestRequests } = useQuery({
+    queryKey: ["guest-requests", property?.id],
+    enabled: !!property && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("guest_requests")
+        .select("*")
+        .eq("property_id", property!.id)
+        .eq("status", "PENDING")
+        .order("start_date");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   if (loading || lb || lt) {
     return (
       <AppShell>
@@ -206,6 +222,53 @@ function HomePage() {
           </div>
           <ArrowRight className="size-5 text-muted-foreground" />
         </Link>
+      )}
+
+      {/* Guest booking requests (no-account guests) */}
+      {isAdmin && !!guestRequests?.length && (
+        <section className="card mt-4 p-4">
+          <h3 className="text-lg font-bold">{t("Žádosti hostů", "Guest requests")}</h3>
+          <div className="mt-2 space-y-2.5">
+            {guestRequests.map((g) => (
+              <div key={g.id} className="rounded-2xl bg-background p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate text-[15px] font-bold">{g.name}</p>
+                  <PillWarn>{t("Čeká", "Pending")}</PillWarn>
+                </div>
+                <p className="text-[13px] text-muted-foreground">
+                  {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests} {guestsLabel(g.guests)} · {g.email}
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button
+                    className="btn-secondary"
+                    onClick={async () => {
+                      await supabase.from("guest_requests").update({ status: "DECLINED" }).eq("id", g.id);
+                    }}
+                  >
+                    {t("Odmítnout", "Decline")}
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={async () => {
+                      await supabase.from("bookings").insert({
+                        property_id: property!.id,
+                        requester_name: g.name,
+                        start_date: g.start_date,
+                        end_date: g.end_date,
+                        guests: g.guests,
+                        note: g.note,
+                        status: "CONFIRMED",
+                      });
+                      await supabase.from("guest_requests").update({ status: "APPROVED" }).eq("id", g.id);
+                    }}
+                  >
+                    {t("Potvrdit pobyt", "Confirm stay")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Overdue task highlight */}

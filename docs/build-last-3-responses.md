@@ -5,6 +5,7 @@ Ticked items were checked after the build (typecheck, database, or test browser)
 ## 1. Growth plan build (analytics, accounts, onboarding, growth)
 
 ### Database
+
 - [x] Profiles gained display name, photo, phone, and onboarding-completed date
 - [x] Properties gained rooms, city, max guests for overlapping stays, busy seasons, and creator
 - [x] Per-chata admins (`property_admins`): whoever adds a chata becomes its admin
@@ -16,16 +17,19 @@ Ticked items were checked after the build (typecheck, database, or test browser)
 - [x] Account and chata creation functions (`create_account_onboarding`, `add_property`)
 
 ### Sign-in and accounts
+
 - [x] Sign-in with Google, email + password, or magic link; password reset page
 - [x] The institution path blocks public email providers (gmail, seznam…)
 - [x] Invite page (`/pozvanka/…`) adds the invitee straight to the right account
 
 ### Onboarding
+
 - [x] 5-step guided setup: account type → chatas (names, address, rooms) → people and seasons → overlap rules and guest limit → house rules
 - [x] Several chatas can be named; the creator becomes admin of each
 - [x] App sections stay locked until onboarding is finished
 
 ### Screens
+
 - [x] My Profile (`/profil`)
 - [x] Members & permissions, WhatsApp-style admin roles (`/clenove`)
 - [x] Add a chata (`/chata/nova`)
@@ -37,15 +41,18 @@ Ticked items were checked after the build (typecheck, database, or test browser)
 - [ ] House manual Q&A answering with the AI model — needs the AI key to be available in this environment; falls back to showing the original text
 
 ### Consent and analytics
+
 - [x] Friendly cookie card: "Help us improve", "Essentials only", "Customise"
 - [x] Choice saved for 12 months and logged for GDPR
 - [x] Analytics helper with typed events and shared context (account type, language, number of chatas; never names or emails)
 
 ## 2. Google Analytics connector sync
+
 - [x] Measurement ID G-6K9GYD9NSK confirmed synced from the Google Analytics connector
 - [x] Tag loads with that ID in the test browser
 
 ## 3. Tag detection, region consent, onboarding gate (this build)
+
 - [x] Google tag is now in the page head on every page, so Tag Assistant can always find it
 - [x] Commands are sent to Google in the correct format (fixes skipped commands)
 - [x] Consent defaults set before the tag loads: denied in EU/EEA/UK/CH, analytics granted elsewhere, ads always denied

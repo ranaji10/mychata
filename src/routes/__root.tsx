@@ -15,7 +15,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CONSENT_REGIONS } from "../lib/consent-regions";
 
-const GA_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as string | undefined;
+const GA_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as
+  string | undefined;
 
 /** Runs before gtag.js loads: region-scoped Consent Mode v2 defaults + saved choice. */
 function gtagBootstrap(id: string) {
@@ -102,8 +103,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "My Chata — správa sdílené chaty" },
       {
         property: "og:description",
-        content:
-          "Kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace.",
+        content: "Kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -156,16 +156,30 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    if ("serviceWorker" in navigator)
+      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);
   useEffect(() => {
     trackPageView(router.state.location.pathname);
     return router.subscribe("onResolved", ({ toLocation }) => trackPageView(toLocation.pathname));
   }, [router]);
 
-  const persister = typeof window === "undefined" ? undefined : createSyncStoragePersister({ storage: window.localStorage, key: "mychata.offline-cache" });
+  const persister =
+    typeof window === "undefined"
+      ? undefined
+      : createSyncStoragePersister({ storage: window.localStorage, key: "mychata.offline-cache" });
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: persister ?? { persistClient: async () => undefined, restoreClient: async () => undefined, removeClient: async () => undefined }, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: persister ?? {
+          persistClient: async () => undefined,
+          restoreClient: async () => undefined,
+          removeClient: async () => undefined,
+        },
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      }}
+    >
       <LanguageProvider>
         <AccountProvider>
           <ConsentProvider>
@@ -179,4 +193,3 @@ function RootComponent() {
     </PersistQueryClientProvider>
   );
 }
-

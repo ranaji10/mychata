@@ -1,5 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { BookOpen, Camera, ChevronDown, ChevronRight, ClipboardCheck, FileText, Globe, Home, Link2, LogOut, Shield, User, Users } from "lucide-react";
+import {
+  BookOpen,
+  Camera,
+  ChevronDown,
+  ChevronRight,
+  ClipboardCheck,
+  FileText,
+  Globe,
+  Home,
+  Link2,
+  LogOut,
+  Shield,
+  User,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -14,9 +28,15 @@ export const Route = createFileRoute("/vice")({
   head: () => ({
     meta: [
       { title: "More — My Chata" },
-      { name: "description", content: "Account settings, members, language and other My Chata options." },
+      {
+        name: "description",
+        content: "Account settings, members, language and other My Chata options.",
+      },
       { property: "og:title", content: "More — My Chata" },
-      { property: "og:description", content: "Account settings, members, language and other My Chata options." },
+      {
+        property: "og:description",
+        content: "Account settings, members, language and other My Chata options.",
+      },
     ],
   }),
   component: MorePage,
@@ -32,7 +52,18 @@ function MorePage() {
 
   const copyPublicLink = async () => {
     if (!property) return;
-    const url = `${window.location.origin}/verejne/kalendar/${property.id}`;
+    // Publishing the calendar is an explicit admin action; the link uses the share token.
+    const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
+      _property_id: property.id,
+      _enabled: true,
+    });
+    if (publishError || !publicToken) {
+      toast.error(
+        t("Veřejný kalendář může zapnout jen správce.", "Only an admin can publish the calendar."),
+      );
+      return;
+    }
+    const url = `${window.location.origin}/verejne/kalendar/${publicToken}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success(t("Odkaz na veřejný kalendář zkopírován.", "Public calendar link copied."));
@@ -44,7 +75,9 @@ function MorePage() {
   const createGuestLink = async () => {
     if (!property || !currentMemberId) return;
     const token = crypto.randomUUID();
-    const { error } = await supabase.from("guest_links").insert({ property_id: property.id, token, created_by_member_id: currentMemberId });
+    const { error } = await supabase
+      .from("guest_links")
+      .insert({ property_id: property.id, token, created_by_member_id: currentMemberId });
     if (error) {
       toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
       return;
@@ -52,7 +85,12 @@ function MorePage() {
     const url = `${window.location.origin}/host/${token}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success(t("Odkaz pro hosta zkopírován — pošlete ho komukoli.", "Guest link copied — send it to anyone."));
+      toast.success(
+        t(
+          "Odkaz pro hosta zkopírován — pošlete ho komukoli.",
+          "Guest link copied — send it to anyone.",
+        ),
+      );
     } catch {
       toast.info(url);
     }
@@ -74,7 +112,9 @@ function MorePage() {
       <section className="card mt-4 divide-y divide-border p-0">
         <Link to="/clenove" className="flex items-center gap-3 p-4 active:bg-secondary">
           <Users className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Členové a oprávnění", "Members & permissions")}</span>
+          <span className="flex-1 text-[15px] font-bold">
+            {t("Členové a oprávnění", "Members & permissions")}
+          </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link to="/chata/nova" className="flex items-center gap-3 p-4 active:bg-secondary">
@@ -92,34 +132,57 @@ function MorePage() {
           <span className="flex-1 text-[15px] font-bold">{t("Manuál chaty", "House Manual")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <Link to="/dokumenty" search={{ task: "" }} className="flex items-center gap-3 p-4 active:bg-secondary">
+        <Link
+          to="/dokumenty"
+          search={{ task: "" }}
+          className="flex items-center gap-3 p-4 active:bg-secondary"
+        >
           <FileText className="size-5 text-muted-foreground" />
           <span className="flex-1 text-[15px] font-bold">{t("Dokumenty", "Document Vault")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link to="/predani" className="flex items-center gap-3 p-4 active:bg-secondary">
           <ClipboardCheck className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Předání chaty", "Cottage handover")}</span>
+          <span className="flex-1 text-[15px] font-bold">
+            {t("Předání chaty", "Cottage handover")}
+          </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         {isFamily && (
           <>
-            <button onClick={copyPublicLink} className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary">
+            <button
+              onClick={copyPublicLink}
+              className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
+            >
               <Link2 className="size-5 text-muted-foreground" />
-              <span className="flex-1 text-[15px] font-bold">{t("Veřejný odkaz na kalendář", "Public calendar link")}</span>
+              <span className="flex-1 text-[15px] font-bold">
+                {t("Veřejný odkaz na kalendář", "Public calendar link")}
+              </span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
-            <button onClick={createGuestLink} className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary">
+            <button
+              onClick={createGuestLink}
+              className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
+            >
               <Link2 className="size-5 text-muted-foreground" />
-              <span className="flex-1 text-[15px] font-bold">{t("Odkaz pro hosta bez účtu", "Guest booking link (no account)")}</span>
+              <span className="flex-1 text-[15px] font-bold">
+                {t("Odkaz pro hosta bez účtu", "Guest booking link (no account)")}
+              </span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
           </>
         )}
         {!isFamily && (
-          <Link to="/verejne/zadost" className="flex items-center gap-3 p-4 active:bg-secondary">
+          <Link
+            to="/verejne/zadost/$token"
+            params={{ token: property?.public_token ?? "" }}
+            disabled={!property}
+            className="flex items-center gap-3 p-4 active:bg-secondary"
+          >
             <Link2 className="size-5 text-muted-foreground" />
-            <span className="flex-1 text-[15px] font-bold">{t("Veřejný formulář žádosti", "Public request form")}</span>
+            <span className="flex-1 text-[15px] font-bold">
+              {t("Veřejný formulář žádosti", "Public request form")}
+            </span>
             <ChevronRight className="size-5 text-muted-foreground" />
           </Link>
         )}
@@ -127,18 +190,32 @@ function MorePage() {
 
       {/* Language: collapsed row near the bottom */}
       <section className="card mt-4 p-0">
-        <button onClick={() => setLangOpen((v) => !v)} className="flex w-full items-center gap-3 p-4 text-left" aria-expanded={langOpen}>
+        <button
+          onClick={() => setLangOpen((v) => !v)}
+          className="flex w-full items-center gap-3 p-4 text-left"
+          aria-expanded={langOpen}
+        >
           <Globe className="size-5 text-muted-foreground" />
           <span className="flex-1 text-[15px] font-bold">{t("Jazyk", "Language")}</span>
-          <span className="text-[14px] font-semibold text-muted-foreground">{lang === "cs" ? "Čeština" : "English"}</span>
-          <ChevronDown className={`size-5 text-muted-foreground transition-transform ${langOpen ? "rotate-180" : ""}`} />
+          <span className="text-[14px] font-semibold text-muted-foreground">
+            {lang === "cs" ? "Čeština" : "English"}
+          </span>
+          <ChevronDown
+            className={`size-5 text-muted-foreground transition-transform ${langOpen ? "rotate-180" : ""}`}
+          />
         </button>
         {langOpen && (
           <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-            <button className={`btn-secondary ${lang === "cs" ? "ring-2 ring-primary" : ""}`} onClick={() => setLang("cs")}>
+            <button
+              className={`btn-secondary ${lang === "cs" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setLang("cs")}
+            >
               Čeština
             </button>
-            <button className={`btn-secondary ${lang === "en" ? "ring-2 ring-primary" : ""}`} onClick={() => setLang("en")}>
+            <button
+              className={`btn-secondary ${lang === "en" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setLang("en")}
+            >
               English
             </button>
           </div>
@@ -148,7 +225,9 @@ function MorePage() {
       <section className="card mt-4 divide-y divide-border p-0">
         <Link to="/soukromi" className="flex items-center gap-3 p-4 active:bg-secondary">
           <Shield className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Soukromí a cookies", "Privacy & cookies")}</span>
+          <span className="flex-1 text-[15px] font-bold">
+            {t("Soukromí a cookies", "Privacy & cookies")}
+          </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <button

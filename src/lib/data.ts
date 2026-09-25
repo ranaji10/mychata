@@ -20,6 +20,8 @@ export interface Property {
   overlap_max_guests: number | null;
   peak_seasons: string[];
   created_by_member_id: string | null;
+  public_token: string;
+  public_calendar_enabled: boolean;
 }
 
 export interface Profile {
@@ -29,6 +31,7 @@ export interface Profile {
   avatar_url: string | null;
   phone: string | null;
   onboarding_completed_at: string | null;
+  active_account_id: string | null;
 }
 
 export interface Member {
@@ -170,7 +173,12 @@ export function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd
   return aStart <= bEnd && bStart <= aEnd;
 }
 
-export function isSameDayChangeover(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+export function isSameDayChangeover(
+  aStart: string,
+  aEnd: string,
+  bStart: string,
+  bEnd: string,
+): boolean {
   return aStart === bEnd || bStart === aEnd;
 }
 
@@ -184,7 +192,11 @@ export function findConflicts(
   for (const o of others) {
     if (!rangesOverlap(start, end, o.start_date, o.end_date)) continue;
     const base = { name: o.requester_name, start: o.start_date, end: o.end_date };
-    if (isSameDayChangeover(start, end, o.start_date, o.end_date) && start !== o.start_date && end !== o.end_date) {
+    if (
+      isSameDayChangeover(start, end, o.start_date, o.end_date) &&
+      start !== o.start_date &&
+      end !== o.end_date
+    ) {
       out.push({ kind: "same-day", other: base });
     } else {
       out.push({ kind: "hard", other: base });
@@ -196,13 +208,33 @@ export function findConflicts(
 // ---------- Calendar helpers ----------
 
 export const CZ_MONTHS = [
-  "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
-  "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
+  "Leden",
+  "Únor",
+  "Březen",
+  "Duben",
+  "Květen",
+  "Červen",
+  "Červenec",
+  "Srpen",
+  "Září",
+  "Říjen",
+  "Listopad",
+  "Prosinec",
 ];
 export const CZ_DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 export const EN_MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 export const EN_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export function monthNames(lang: "cs" | "en") {
@@ -211,7 +243,6 @@ export function monthNames(lang: "cs" | "en") {
 export function dayNames(lang: "cs" | "en") {
   return lang === "en" ? EN_DAYS : CZ_DAYS;
 }
-
 
 export interface CalendarDay {
   iso: string;
@@ -306,7 +337,6 @@ export function declineReasons(lang: "cs" | "en") {
   return lang === "en" ? DECLINE_REASONS_EN : DECLINE_REASONS;
 }
 
-
 // Family branch colors for the calendar legend.
 export const BRANCH_COLORS = ["#FF5A5F", "#2E6FB0", "#16A34A", "#B45309", "#7C5CBF"];
 export function branchColor(branch: string, branches: string[]): string {
@@ -315,7 +345,12 @@ export function branchColor(branch: string, branches: string[]): string {
 }
 
 // Seasonal checklist templates (J2)
-export const SEASONAL_TEMPLATES: { id: string; title: string; description: string; tasks: string[] }[] = [
+export const SEASONAL_TEMPLATES: {
+  id: string;
+  title: string;
+  description: string;
+  tasks: string[];
+}[] = [
   {
     id: "winter",
     title: "Zazimování chaty",
@@ -354,7 +389,12 @@ export const SEASONAL_TEMPLATES: { id: string; title: string; description: strin
   },
 ];
 
-export const SEASONAL_TEMPLATES_EN: { id: string; title: string; description: string; tasks: string[] }[] = [
+export const SEASONAL_TEMPLATES_EN: {
+  id: string;
+  title: string;
+  description: string;
+  tasks: string[];
+}[] = [
   {
     id: "winter",
     title: "Winterising the cottage",

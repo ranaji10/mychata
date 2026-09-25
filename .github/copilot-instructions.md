@@ -1,0 +1,1 @@
+Follow `AGENTS.md` at the repository root. It holds the stack, commands and the invariants every change must respect (tenancy/RLS, migrations only in `drizzle/migrations/`, no pushes to `main`, Czech-first text via `t()`).

@@ -1,0 +1,47 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      e2e_base_url:
+        description: "Run smoke tests against this URL (e.g. staging)"
+        required: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3"
+      # Lovable writes package URLs from its private cache into bun.lock; CI can't reach it.
+      # Same tarballs and integrity hashes are on the public registry.
+      - name: Point lockfile at the public npm registry
+        run: sed -i -E 's#https://[a-z0-9-]+-npm\.pkg\.dev/lovable-core-prod/[a-z-]+/#https://registry.npmjs.org/#g' bun.lock
+      - run: bun install
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run format:check
+      - name: Unit, database security and policy-lint tests
+        run: bun run test
+      - name: Generated docs are up to date
+        run: bun run docs:check
+      - run: bun run build
+
+  e2e:
+    if: github.event_name == 'workflow_dispatch' && inputs.e2e_base_url != ''
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: sed -i -E 's#https://[a-z0-9-]+-npm\.pkg\.dev/lovable-core-prod/[a-z-]+/#https://registry.npmjs.org/#g' bun.lock
+      - run: bun install
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run e2e
+        env:
+          E2E_BASE_URL: ${{ inputs.e2e_base_url }}

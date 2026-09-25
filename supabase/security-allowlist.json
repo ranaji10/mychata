@@ -1,0 +1,45 @@
+{
+  "$comment": "Reviewed exceptions for supabase/tests/policy-lint.test.ts. Every entry needs a reason. Adding one requires a human reviewer on the PR.",
+  "anonExecutableDefinerFunctions": {
+    "public_calendar": "Share-token page; returns dates only when the admin published the calendar",
+    "public_property": "Share-token page; returns the chata name and two flags",
+    "public_manual": "Share-token page; returns PUBLIC sections only",
+    "public_flag_manual_section": "Share-token page; capped at 20 open flags per section",
+    "public_guest_link": "Guest link page; token check, returns name and address the family chose to share",
+    "public_guest_availability": "Guest link page; dates and status only",
+    "submit_guest_request": "Guest form; token check, validation, rate limits",
+    "submit_institutional_request": "Institution form; token check, validation, rate limits",
+    "feature_enabled": "Reads a public on/off switch",
+    "current_account_id": "Caller-scoped helper; returns null for anon",
+    "current_member_id": "Caller-scoped helper; returns null for anon",
+    "has_account_role": "Caller-scoped helper; false for anon",
+    "has_role": "Caller-scoped helper; false for anon",
+    "in_current_account": "Caller-scoped helper; false for anon",
+    "is_admin": "Caller-scoped helper; false for anon",
+    "is_member": "Caller-scoped helper; false for anon",
+    "is_property_admin": "Caller-scoped helper; false for anon",
+    "audit_decisions": "Trigger function; cannot be called directly",
+    "guard_public_form": "Trigger function; cannot be called directly"
+  },
+  "definerFunctionsWithoutCallerCheck": {
+    "public_calendar": "Scoped by share token",
+    "public_property": "Scoped by share token",
+    "public_manual": "Scoped by share token",
+    "public_flag_manual_section": "Scoped by share token",
+    "public_guest_link": "Scoped by guest token",
+    "public_guest_availability": "Scoped by guest token",
+    "submit_guest_request": "Scoped by guest token",
+    "submit_institutional_request": "Scoped by share token",
+    "feature_enabled": "Public switch",
+    "is_admin_only_file": "Returns a boolean used inside a storage policy",
+    "account_plan": "Returns a plan id; execute limited to authenticated",
+    "plan_limit": "Returns a plan limit; execute limited to authenticated",
+    "audit_decisions": "Trigger function",
+    "guard_public_form": "Trigger function"
+  },
+  "anonTablePrivileges": {
+    "consent_log:INSERT": "Cookie banner logs the choice before sign-in",
+    "feature_flags:SELECT": "Public switches",
+    "plans:SELECT": "Public price list"
+  }
+}

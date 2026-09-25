@@ -52,7 +52,11 @@ export function useLang(): LangState {
 export function LanguageToggle({ className = "" }: { className?: string }) {
   const { lang, setLang } = useLang();
   return (
-    <div className={`flex items-center gap-1 rounded-full bg-secondary p-1 ${className}`} role="group" aria-label="Language">
+    <div
+      className={`flex items-center gap-1 rounded-full bg-secondary p-1 ${className}`}
+      role="group"
+      aria-label="Language"
+    >
       {(["cs", "en"] as const).map((l) => (
         <button
           key={l}
@@ -60,7 +64,9 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
           className={`min-h-[36px] min-w-[44px] rounded-full px-3 text-[14px] font-bold ${
-            lang === l ? "bg-card text-foreground shadow-sm ring-1 ring-black/5" : "text-muted-foreground"
+            lang === l
+              ? "bg-card text-foreground shadow-sm ring-1 ring-black/5"
+              : "text-muted-foreground"
           }`}
         >
           {l === "cs" ? "CZ" : "EN"}

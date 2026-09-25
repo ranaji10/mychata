@@ -1,6 +1,7 @@
 # My Chata — Roadmap
 
 ## Done
+
 - [x] Phases 1–6 (family bookings, bilingual tasks, institutional theme, expenses/settlement, handover, manual, vault, offline)
 - [x] Security foundation (Google sign-in, RLS, public data via definer functions)
 - [x] SEO (sitemap, Search Console)
@@ -17,6 +18,7 @@
 - [x] Settings cleanup: collapsed Language row, removed nested toggles
 
 ## Open
+
 - [x] GA4 Measurement ID synced from connector — verified gtag loads only after consent (HTTP 200)
 - [ ] End-to-end test of signed-in flows (onboarding, invites, photos, guest links) needs a test account
 - [ ] RAG stage 2+ (documents, bookings, tasks as sources) — deferred until stage 1 proves useful

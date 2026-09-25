@@ -33,11 +33,9 @@ function ApprovalsPage() {
     if (account?.type === "FAMILY") navigate({ to: "/kalendar", replace: true });
   }, [account?.type, navigate]);
 
-  if (account?.type === "FAMILY") return null;
-
   const { data: pending, isLoading } = useQuery({
     queryKey: ["bookings", property?.id],
-    enabled: !!property,
+    enabled: !!property && account?.type !== "FAMILY",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
@@ -53,7 +51,10 @@ function ApprovalsPage() {
   const decide = useMutation({
     mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
       if (approve) {
-        const { error } = await supabase.from("bookings").update({ status: "CONFIRMED" }).eq("id", id);
+        const { error } = await supabase
+          .from("bookings")
+          .update({ status: "CONFIRMED" })
+          .eq("id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("bookings").delete().eq("id", id);
@@ -62,10 +63,16 @@ function ApprovalsPage() {
     },
     onSuccess: (_d, v) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(v.approve ? t("Rezervace schválena.", "Booking approved.") : t("Rezervace zamítnuta.", "Booking declined."));
+      toast.success(
+        v.approve
+          ? t("Rezervace schválena.", "Booking approved.")
+          : t("Rezervace zamítnuta.", "Booking declined."),
+      );
     },
     onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
   });
+
+  if (account?.type === "FAMILY") return null;
 
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
 
@@ -73,7 +80,10 @@ function ApprovalsPage() {
     <AppShell>
       <PageHeader
         title={t("Ke schválení", "Approvals")}
-        subtitle={t("Rodinné rezervace čekající na vaše rozhodnutí.", "Family bookings awaiting your decision.")}
+        subtitle={t(
+          "Rodinné rezervace čekající na vaše rozhodnutí.",
+          "Family bookings awaiting your decision.",
+        )}
       />
 
       {isLoading ? (
@@ -93,17 +103,26 @@ function ApprovalsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-bold">{b.requester_name}</p>
                   <p className="text-[14px] text-muted-foreground">
-                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests} {lang === "en" ? "guests" : "hostů"}
+                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests}{" "}
+                    {lang === "en" ? "guests" : "hostů"}
                   </p>
                 </div>
               </div>
-              {b.note && <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{b.note}“</p>}
+              {b.note && (
+                <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{b.note}“</p>
+              )}
               {isAdmin ? (
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => decide.mutate({ id: b.id, approve: true })} className="btn-primary flex-1">
+                  <button
+                    onClick={() => decide.mutate({ id: b.id, approve: true })}
+                    className="btn-primary flex-1"
+                  >
                     {t("Schválit", "Approve")}
                   </button>
-                  <button onClick={() => decide.mutate({ id: b.id, approve: false })} className="btn-danger flex-1">
+                  <button
+                    onClick={() => decide.mutate({ id: b.id, approve: false })}
+                    className="btn-danger flex-1"
+                  >
                     {t("Zamítnout", "Decline")}
                   </button>
                 </div>

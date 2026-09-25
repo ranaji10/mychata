@@ -7,7 +7,14 @@ import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtDate, taskCategoryLabel, taskTitle, todayISO, urgencyLabel, type Task } from "@/lib/data";
+import {
+  fmtDate,
+  taskCategoryLabel,
+  taskTitle,
+  todayISO,
+  urgencyLabel,
+  type Task,
+} from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
   staticData: { sitemap: false },
@@ -44,7 +51,11 @@ function TaskDetail() {
   };
 
   const update = useMutation({
-    mutationFn: async (patch: { assignee_member_id?: string | null; due_date?: string | null; status?: "OPEN" | "IN_PROGRESS" | "DONE" }) => {
+    mutationFn: async (patch: {
+      assignee_member_id?: string | null;
+      due_date?: string | null;
+      status?: "OPEN" | "IN_PROGRESS" | "DONE";
+    }) => {
       const { error } = await supabase.from("tasks").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -67,7 +78,11 @@ function TaskDetail() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate({ to: "/ukoly" })} aria-label={t("Zpět", "Back")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+        <button
+          onClick={() => navigate({ to: "/ukoly" })}
+          aria-label={t("Zpět", "Back")}
+          className="grid size-11 place-items-center rounded-xl bg-secondary"
+        >
           <ArrowLeft className="size-5" />
         </button>
         <h1 className="text-2xl font-bold">{t("Detail úkolu", "Task detail")}</h1>
@@ -88,7 +103,8 @@ function TaskDetail() {
         </div>
 
         <p className="mt-1 text-[14px] font-semibold text-muted-foreground">
-          {taskCategoryLabel(task.category, lang)} · {t("Priorita", "Priority")}: {urgencyLabel(task.urgency, lang)}
+          {taskCategoryLabel(task.category, lang)} · {t("Priorita", "Priority")}:{" "}
+          {urgencyLabel(task.urgency, lang)}
         </p>
 
         <div className="mt-4 space-y-3">
@@ -97,7 +113,9 @@ function TaskDetail() {
               <User className="size-5" />
             </div>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-muted-foreground">{t("Odpovědná osoba", "Assignee")}</p>
+              <p className="text-[13px] font-semibold text-muted-foreground">
+                {t("Odpovědná osoba", "Assignee")}
+              </p>
               <select
                 value={task.assignee_member_id ?? ""}
                 onChange={(e) => update.mutate({ assignee_member_id: e.target.value || null })}
@@ -106,7 +124,9 @@ function TaskDetail() {
               >
                 <option value="">{t("Nikdo", "Nobody")}</option>
                 {members.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -117,7 +137,9 @@ function TaskDetail() {
               <CalendarDays className="size-5" />
             </div>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-muted-foreground">{t("Termín", "Due date")}</p>
+              <p className="text-[13px] font-semibold text-muted-foreground">
+                {t("Termín", "Due date")}
+              </p>
               <input
                 type="date"
                 value={task.due_date ?? ""}
@@ -130,22 +152,39 @@ function TaskDetail() {
         </div>
 
         {task.done_note && (
-          <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">{t("Poznámka", "Note")}: „{task.done_note}“</p>
+          <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">
+            {t("Poznámka", "Note")}: „{task.done_note}“
+          </p>
         )}
       </section>
 
-      <div className="mt-4 grid grid-cols-3 gap-2" role="group" aria-label={t("Stav úkolu", "Task status")}>
-        {([
-          ["OPEN", t("Otevřené", "Open")],
-          ["IN_PROGRESS", t("Probíhá", "In progress")],
-          ["DONE", t("Hotovo", "Done")],
-        ] as const).map(([status, label]) => (
-          <button key={status} onClick={() => update.mutate({ status })} className={task.status === status ? "btn-primary px-2" : "btn-secondary px-2"}>
+      <div
+        className="mt-4 grid grid-cols-3 gap-2"
+        role="group"
+        aria-label={t("Stav úkolu", "Task status")}
+      >
+        {(
+          [
+            ["OPEN", t("Otevřené", "Open")],
+            ["IN_PROGRESS", t("Probíhá", "In progress")],
+            ["DONE", t("Hotovo", "Done")],
+          ] as const
+        ).map(([status, label]) => (
+          <button
+            key={status}
+            onClick={() => update.mutate({ status })}
+            className={task.status === status ? "btn-primary px-2" : "btn-secondary px-2"}
+          >
             {label}
           </button>
         ))}
       </div>
-      {done && <Link to="/dokumenty" search={{ task: task.id }} className="btn-secondary mt-3 w-full"><FileBadge className="size-5" />{t("Uložit záruku k úkolu", "File a warranty for this task")}</Link>}
+      {done && (
+        <Link to="/dokumenty" search={{ task: task.id }} className="btn-secondary mt-3 w-full">
+          <FileBadge className="size-5" />
+          {t("Uložit záruku k úkolu", "File a warranty for this task")}
+        </Link>
+      )}
     </AppShell>
   );
 }

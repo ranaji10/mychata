@@ -86,20 +86,20 @@ function GuestBookingPage() {
           </div>
 
           <div className="card mt-4 space-y-3 p-4">
-            <input className="input w-full" placeholder={t("Vaše jméno", "Your name")} value={name} onChange={(e) => setName(e.target.value)} />
-            <input className="input w-full" type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input className="field w-full" placeholder={t("Vaše jméno", "Your name")} value={name} onChange={(e) => setName(e.target.value)} />
+            <input className="field w-full" type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
                 <span className="text-[13px] font-bold text-muted-foreground">{t("Od", "From")}</span>
-                <input className="input mt-1 w-full" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+                <input className="field mt-1 w-full" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
               </label>
               <label className="block">
                 <span className="text-[13px] font-bold text-muted-foreground">{t("Do", "To")}</span>
-                <input className="input mt-1 w-full" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+                <input className="field mt-1 w-full" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
               </label>
             </div>
-            <input className="input w-full" type="number" min={1} max={50} placeholder={t("Počet hostů", "Number of guests")} value={guests} onChange={(e) => setGuests(e.target.value)} />
-            <textarea className="input min-h-20 w-full" placeholder={t("Poznámka (nepovinné)", "Note (optional)")} value={note} onChange={(e) => setNote(e.target.value)} />
+            <input className="field w-full" type="number" min={1} max={50} placeholder={t("Počet hostů", "Number of guests")} value={guests} onChange={(e) => setGuests(e.target.value)} />
+            <textarea className="field min-h-20 w-full" placeholder={t("Poznámka (nepovinné)", "Note (optional)")} value={note} onChange={(e) => setNote(e.target.value)} />
             <input className="hidden" tabIndex={-1} autoComplete="off" aria-hidden="true" value={company} onChange={(e) => setCompany(e.target.value)} />
             <button className="btn-primary w-full" disabled={busy || name.trim().length < 2 || !email.includes("@") || !start || !end} onClick={submit}>
               {busy ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}

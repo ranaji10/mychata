@@ -48,11 +48,11 @@ function AddPropertyPage() {
     <AppShell>
       <PageHeader title={t("Přidat chatu", "Add a cottage")} subtitle={t("Kdo chatu přidá, stává se jejím správcem.", "Whoever adds a cottage becomes its admin.")} />
       <div className="card mt-4 space-y-3 p-4">
-        <input className="input w-full" placeholder={t("Název chaty", "Cottage name")} value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="input w-full" placeholder={t("Adresa", "Address")} value={address} onChange={(e) => setAddress(e.target.value)} />
+        <input className="field w-full" placeholder={t("Název chaty", "Cottage name")} value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="field w-full" placeholder={t("Adresa", "Address")} value={address} onChange={(e) => setAddress(e.target.value)} />
         <div className="grid grid-cols-2 gap-2">
-          <input className="input" placeholder={t("Město", "City")} value={city} onChange={(e) => setCity(e.target.value)} />
-          <input className="input" type="number" min={1} placeholder={t("Pokoje", "Rooms")} value={rooms} onChange={(e) => setRooms(e.target.value)} />
+          <input className="field" placeholder={t("Město", "City")} value={city} onChange={(e) => setCity(e.target.value)} />
+          <input className="field" type="number" min={1} placeholder={t("Pokoje", "Rooms")} value={rooms} onChange={(e) => setRooms(e.target.value)} />
         </div>
         <button className="btn-primary w-full" disabled={busy || name.trim().length < 2 || address.trim().length < 2} onClick={save}>
           {busy ? t("Ukládám…", "Saving…") : t("Přidat chatu", "Add cottage")}

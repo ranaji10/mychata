@@ -155,7 +155,7 @@ function OnboardingPage() {
             </button>
             {type === "INSTITUTIONAL" && (
               <input
-                className="input mt-2 w-full"
+                className="field mt-2 w-full"
                 placeholder={t("Název organizace", "Organisation name")}
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
@@ -180,11 +180,11 @@ function OnboardingPage() {
             </p>
             {chatas.map((c, i) => (
               <div key={i} className="card space-y-2 p-4">
-                <input className="input w-full" placeholder={t("Název chaty", "Cottage name")} value={c.name} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
-                <input className="input w-full" placeholder={t("Adresa", "Address")} value={c.address} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, address: e.target.value } : x)))} />
+                <input className="field w-full" placeholder={t("Název chaty", "Cottage name")} value={c.name} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
+                <input className="field w-full" placeholder={t("Adresa", "Address")} value={c.address} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, address: e.target.value } : x)))} />
                 <div className="grid grid-cols-2 gap-2">
-                  <input className="input" placeholder={t("Město", "City")} value={c.city} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, city: e.target.value } : x)))} />
-                  <input className="input" type="number" min={1} placeholder={t("Pokoje", "Rooms")} value={c.rooms} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, rooms: e.target.value } : x)))} />
+                  <input className="field" placeholder={t("Město", "City")} value={c.city} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, city: e.target.value } : x)))} />
+                  <input className="field" type="number" min={1} placeholder={t("Pokoje", "Rooms")} value={c.rooms} onChange={(e) => setChatas(chatas.map((x, j) => (j === i ? { ...x, rooms: e.target.value } : x)))} />
                 </div>
               </div>
             ))}
@@ -197,7 +197,7 @@ function OnboardingPage() {
         {step === 2 && (
           <div className="space-y-4">
             <h1 className="text-2xl font-bold">{t("Kolik lidí chatu používá?", "About how many people use it?")}</h1>
-            <input className="input w-full" type="number" min={1} placeholder={t("Např. 8", "E.g. 8")} value={peopleCount} onChange={(e) => setPeopleCount(e.target.value)} />
+            <input className="field w-full" type="number" min={1} placeholder={t("Např. 8", "E.g. 8")} value={peopleCount} onChange={(e) => setPeopleCount(e.target.value)} />
             <p className="font-bold">{t("Máte rušná období?", "Any busy seasons?")}</p>
             <div className="flex flex-wrap gap-2">
               {SEASONS.map((s) => (
@@ -228,7 +228,7 @@ function OnboardingPage() {
                 </div>
                 {overlapAllowed && (
                   <input
-                    className="input w-full"
+                    className="field w-full"
                     type="number"
                     min={1}
                     placeholder={t("Max. hostů, nad které už rozhoduje správce", "Max guests before admin approval")}
@@ -249,7 +249,7 @@ function OnboardingPage() {
           <div className="space-y-4">
             <h1 className="text-2xl font-bold">{t("Pravidla domu", "House rules")}</h1>
             <textarea
-              className="input min-h-40 w-full"
+              className="field min-h-40 w-full"
               placeholder={t("Např. tichá noc od 22:00, boty u dveří…", "E.g. quiet hours after 10 pm, shoes at the door…")}
               value={houseRules}
               onChange={(e) => setHouseRules(e.target.value)}

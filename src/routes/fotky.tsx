@@ -113,10 +113,10 @@ function PhotosPage() {
           <figure key={p.id} className={`card overflow-hidden ${p.is_primary ? "ring-2 ring-primary" : ""}`}>
             {urls?.get(p.id) ? <img src={urls.get(p.id)} alt={p.caption ?? ""} className="aspect-square w-full object-cover" /> : <div className="aspect-square w-full bg-secondary" />}
             <figcaption className="flex items-center justify-between p-2">
-              <button className="btn-icon" aria-label={t("Nastavit jako hlavní", "Set as main")} onClick={() => makePrimary.mutate(p.id)}>
+              <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary" aria-label={t("Nastavit jako hlavní", "Set as main")} onClick={() => makePrimary.mutate(p.id)}>
                 <Star className={`size-5 ${p.is_primary ? "fill-primary text-primary" : ""}`} />
               </button>
-              <button className="btn-icon" aria-label={t("Smazat", "Delete")} onClick={() => remove.mutate(p)}>
+              <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary" aria-label={t("Smazat", "Delete")} onClick={() => remove.mutate(p)}>
                 <Trash2 className="size-5" />
               </button>
             </figcaption>

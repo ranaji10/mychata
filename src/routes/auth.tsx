@@ -103,9 +103,9 @@ function AuthPage() {
           </div>
         ) : (
           <div className="card mt-4 space-y-3 p-4">
-            <input className="input w-full" type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+            <input className="field w-full" type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
             {mode === "password" && (
-              <input className="input w-full" type="password" placeholder={t("Heslo", "Password")} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isSignUp ? "new-password" : "current-password"} />
+              <input className="field w-full" type="password" placeholder={t("Heslo", "Password")} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isSignUp ? "new-password" : "current-password"} />
             )}
             {mode === "password" ? (
               <>

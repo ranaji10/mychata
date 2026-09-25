@@ -120,7 +120,7 @@ function MembersPage() {
             <UserPlus className="size-5 text-primary" />
             {t("Pozvat nového člena", "Invite a new member")}
           </h2>
-          <input className="input w-full" type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className="field w-full" type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
           <div className="grid grid-cols-2 gap-2">
             <button className={`btn-secondary ${inviteRole === "member" ? "ring-2 ring-primary" : ""}`} onClick={() => setInviteRole("member")}>
               {t("Člen", "Member")}
@@ -139,7 +139,7 @@ function MembersPage() {
                 <div key={inv.id} className="flex items-center gap-2 rounded-2xl bg-secondary p-3">
                   <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{inv.email}</span>
                   <span className="pill bg-card text-muted-foreground">{inv.role === "admin" ? t("Správce", "Admin") : t("Člen", "Member")}</span>
-                  <button className="btn-icon" aria-label={t("Zkopírovat odkaz", "Copy link")} onClick={() => copyInvite(inv.token)}>
+                  <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary" aria-label={t("Zkopírovat odkaz", "Copy link")} onClick={() => copyInvite(inv.token)}>
                     <Copy className="size-5" />
                   </button>
                 </div>
@@ -175,7 +175,7 @@ function MembersPage() {
               </div>
               {isAdmin && m.id !== currentMember?.id && m.user_id && (
                 <button
-                  className="btn-icon"
+                  className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
                   aria-label={mIsAdmin ? t("Odebrat správce", "Remove admin") : t("Udělat správcem", "Make admin")}
                   onClick={() => toggleRole.mutate({ memberId: m.id, makeAdmin: !mIsAdmin })}
                 >

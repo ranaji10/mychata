@@ -65,11 +65,11 @@ function ProfilePage() {
       <div className="card mt-4 space-y-3 p-4">
         <label className="block">
           <span className="text-[14px] font-bold">{t("Zobrazované jméno", "Display name")}</span>
-          <input className="input mt-1 w-full" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="field mt-1 w-full" value={name} onChange={(e) => setName(e.target.value)} />
         </label>
         <label className="block">
           <span className="text-[14px] font-bold">{t("Telefon", "Phone")}</span>
-          <input className="input mt-1 w-full" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input className="field mt-1 w-full" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </label>
         <button className="btn-primary w-full" disabled={busy} onClick={save}>
           {busy ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}

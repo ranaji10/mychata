@@ -16,12 +16,11 @@ export const getGuestLinkInfo = createServerFn({ method: "GET" })
     const { data: link, error } = await supabase.rpc("public_guest_link", { _token: data.token });
     if (error || !link?.length) return null;
     const row = link[0]!;
-    const { data: prop } = await supabase.rpc("public_property_details", { _property_id: row.property_id });
     const { data: availability } = await supabase.rpc("public_booking_availability", { _property_id: row.property_id });
     return {
       propertyId: row.property_id,
-      label: row.label,
-      property: prop?.[0] ?? null,
+      propertyName: row.property_name,
+      propertyAddress: row.property_address,
       availability: availability ?? [],
     };
   });
@@ -51,8 +50,8 @@ export const submitGuestRequest = createServerFn({ method: "POST" })
     const { error: insertError } = await supabase.from("guest_requests").insert({
       guest_link_id: link[0]!.id,
       property_id: link[0]!.property_id,
-      name: input.name,
-      email: input.email,
+      guest_name: input.name,
+      guest_email: input.email,
       start_date: input.startDate,
       end_date: input.endDate,
       guests: input.guests,

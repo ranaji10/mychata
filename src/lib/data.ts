@@ -38,6 +38,7 @@ export interface Member {
   email: string;
   role: "OWNER" | "ADMIN" | "MEMBER";
   branch: string;
+  user_id: string | null;
 }
 
 export interface Booking {

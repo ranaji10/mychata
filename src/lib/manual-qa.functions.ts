@@ -37,7 +37,7 @@ export const rebuildManualChunks = createServerFn({ method: "POST" })
         if (!text.trim()) continue;
         try {
           const embedding = await embed(text, apiKey);
-          await context.supabase.from("manual_chunks").insert({ section_id: s.id, property_id: data.propertyId, lang, content: text, embedding: JSON.stringify(embedding) });
+          await context.supabase.from("manual_chunks").insert({ section_id: s.id, property_id: data.propertyId, lang, content: text, embedding: JSON.stringify(embedding) } as never);
         } catch {
           /* skip failed chunk */
         }

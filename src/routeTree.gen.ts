@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ClenoveRouteImport } from './routes/clenove'
 import { Route as DokumentyRouteImport } from './routes/dokumenty'
 import { Route as DomuRouteImport } from './routes/domu'
 import { Route as ExportRouteImport } from './routes/export'
@@ -27,6 +28,7 @@ import { Route as UkolyRouteImport } from './routes/ukoly'
 import { Route as ViceRouteImport } from './routes/vice'
 import { Route as VydajeRouteImport } from './routes/vydaje'
 import { Route as ZadostiRouteImport } from './routes/zadosti'
+import { Route as PozvankaTokenRouteImport } from './routes/pozvanka.$token'
 import { Route as RezervaceIdRouteImport } from './routes/rezervace.$id'
 import { Route as RezervaceNovaRouteImport } from './routes/rezervace.nova'
 import { Route as UkolyIdRouteImport } from './routes/ukoly.$id'
@@ -43,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClenoveRoute = ClenoveRouteImport.update({
+  id: '/clenove',
+  path: '/clenove',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DokumentyRoute = DokumentyRouteImport.update({
@@ -125,6 +132,11 @@ const ZadostiRoute = ZadostiRouteImport.update({
   path: '/zadosti',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PozvankaTokenRoute = PozvankaTokenRouteImport.update({
+  id: '/pozvanka/$token',
+  path: '/pozvanka/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RezervaceIdRoute = RezervaceIdRouteImport.update({
   id: '/rezervace/$id',
   path: '/rezervace/$id',
@@ -165,6 +177,7 @@ const VerejneManualPropertyIdRoute = VerejneManualPropertyIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
@@ -181,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
@@ -192,6 +206,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
@@ -208,6 +223,7 @@ export interface FileRoutesByTo {
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
@@ -220,6 +236,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
@@ -236,6 +253,7 @@ export interface FileRoutesById {
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
@@ -249,6 +267,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/clenove'
     | '/dokumenty'
     | '/domu'
     | '/export'
@@ -265,6 +284,7 @@ export interface FileRouteTypes {
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
@@ -276,6 +296,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/clenove'
     | '/dokumenty'
     | '/domu'
     | '/export'
@@ -292,6 +313,7 @@ export interface FileRouteTypes {
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
@@ -303,6 +325,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/clenove'
     | '/dokumenty'
     | '/domu'
     | '/export'
@@ -319,6 +342,7 @@ export interface FileRouteTypes {
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
     | '/ukoly/$id'
@@ -331,6 +355,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ClenoveRoute: typeof ClenoveRoute
   DokumentyRoute: typeof DokumentyRoute
   DomuRoute: typeof DomuRoute
   ExportRoute: typeof ExportRoute
@@ -347,6 +372,7 @@ export interface RootRouteChildren {
   ViceRoute: typeof ViceRoute
   VydajeRoute: typeof VydajeRouteWithChildren
   ZadostiRoute: typeof ZadostiRoute
+  PozvankaTokenRoute: typeof PozvankaTokenRoute
   RezervaceIdRoute: typeof RezervaceIdRoute
   RezervaceNovaRoute: typeof RezervaceNovaRoute
   VerejneZadostRoute: typeof VerejneZadostRoute
@@ -368,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clenove': {
+      id: '/clenove'
+      path: '/clenove'
+      fullPath: '/clenove'
+      preLoaderRoute: typeof ClenoveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dokumenty': {
@@ -482,6 +515,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZadostiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pozvanka/$token': {
+      id: '/pozvanka/$token'
+      path: '/pozvanka/$token'
+      fullPath: '/pozvanka/$token'
+      preLoaderRoute: typeof PozvankaTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rezervace/$id': {
       id: '/rezervace/$id'
       path: '/rezervace/$id'
@@ -558,6 +598,7 @@ const VydajeRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ClenoveRoute: ClenoveRoute,
   DokumentyRoute: DokumentyRoute,
   DomuRoute: DomuRoute,
   ExportRoute: ExportRoute,
@@ -574,6 +615,7 @@ const rootRouteChildren: RootRouteChildren = {
   ViceRoute: ViceRoute,
   VydajeRoute: VydajeRouteWithChildren,
   ZadostiRoute: ZadostiRoute,
+  PozvankaTokenRoute: PozvankaTokenRoute,
   RezervaceIdRoute: RezervaceIdRoute,
   RezervaceNovaRoute: RezervaceNovaRoute,
   VerejneZadostRoute: VerejneZadostRoute,

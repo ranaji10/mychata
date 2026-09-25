@@ -71,6 +71,13 @@
       "when": 1790304136752,
       "tag": "0009_onboarding_completion_flags",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790304458896,
+      "tag": "0010_0009_tighten_consent_log_insert",
+      "breakpoints": true
     }
   ]
 }

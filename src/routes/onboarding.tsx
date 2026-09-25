@@ -73,10 +73,10 @@ function OnboardingPage() {
         _account_name: accountName || first.name || "My Chata",
         _property_name: first.name,
         _address: first.address,
-        _city: first.city || undefined,
-        _rooms: first.rooms ? Number(first.rooms) : undefined,
+        ...(first.city ? { _city: first.city } : {}),
+        ...(first.rooms ? { _rooms: Number(first.rooms) } : {}),
         _seasons: seasons,
-        _overlap_max_guests: overlapAllowed && overlapMaxGuests ? Number(overlapMaxGuests) : undefined,
+        ...(overlapAllowed && overlapMaxGuests ? { _overlap_max_guests: Number(overlapMaxGuests) } : {}),
         _house_rules: houseRules,
       });
       if (error) throw error;
@@ -86,8 +86,8 @@ function OnboardingPage() {
         const { error: addError } = await supabase.rpc("add_property", {
           _name: extra.name,
           _address: extra.address,
-          _city: extra.city || undefined,
-          _rooms: extra.rooms ? Number(extra.rooms) : undefined,
+          ...(extra.city ? { _city: extra.city } : {}),
+          ...(extra.rooms ? { _rooms: Number(extra.rooms) } : {}),
         });
         if (addError) throw addError;
       }

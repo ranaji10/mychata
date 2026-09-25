@@ -24,7 +24,7 @@ function ProfilePage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setName(profile?.display_name ?? (user?.user_metadata?.full_name as string | undefined) ?? "");
+    setName(profile?.display_name ?? (user?.user_metadata?.["full_name"] as string | undefined) ?? "");
     setPhone(profile?.phone ?? "");
   }, [profile, user]);
 

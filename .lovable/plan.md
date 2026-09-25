@@ -9,7 +9,10 @@
 
 **What Google sign-in shares.** The app receives your name, email address, profile photo link, and Google account ID. Nothing else (no Gmail, contacts or Drive). Only the sign-in service stores this. The site can read it for the signed-in person only. You can see every signed-up person under View Backend → Users.
 
-**Chromium password error.** Right now only Google sign-in exists, so a password field probably belongs to Google's own screen or a browser autofill prompt. To pin down the problem, send: (1) a screenshot of the error, (2) the page address at that moment, (3) the time it happened, (4) the Console tab text from DevTools (right-click → Inspect → Console). I will also check the sign-in logs for that time.
+**Chromium password error.** Right now only Google sign-in exists, so a password field probably belongs to Google's own screen or a browser autofill prompt. To pin down the problem, send: (1) a screenshot of the error, (2) the page address at that moment, (3) the time it happened, (4) the Console tab text from DevTools (right-click → Inspect → Console). Sign-in logs for the two newest accounts (checked 25.09.2026):
+- **adrenaline.rush.1987@gmail.com**: name "Ranaji Deb", signed up with Google at 01:46:35 UTC, Google photo present, email confirmed. Every sign-in step succeeded with no errors. It is **not linked to any chata member and has no role**, which is why it shows "?".
+- **ranaji.deb@gmail.com**: name "Ranaji Deb", signed up with Google at 01:44:28 UTC, Google photo present, email confirmed. Every sign-in step succeeded with no errors. It is also **not linked to a member and has no role**.
+- The logs for the last 2 days show no failed sign-in attempts at all. The Chromium error therefore happened on Google's side or in the browser before it reached My Chata.
 
 **iPhone photo and name missing (screenshot).** Sign-in worked, but the account is not linked to a family member. The app only links a new person automatically when their email matches a member, or when they are the first person ever to sign in. This person matched neither, so the page shows "?". Invitations (below) fix this. The profile photo and name from Google will also be shown directly.
 

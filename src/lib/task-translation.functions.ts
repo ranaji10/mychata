@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const inputSchema = z.object({
   text: z.string().trim().min(1).max(500),
@@ -7,6 +8,7 @@ const inputSchema = z.object({
 });
 
 export const translateTaskText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) => inputSchema.parse(input))
   .handler(async ({ data }) => {
     const targetLanguage = data.sourceLanguage === "cs" ? "English" : "Czech";

@@ -17,16 +17,16 @@ export const Route = createFileRoute("/clenove")({
 
 interface Invitation {
   id: string;
-  email: string;
-  role: "admin" | "member";
+  email: string | null;
+  role: string;
   token: string;
+  status: string;
   created_at: string;
-  accepted_at: string | null;
 }
 
 function MembersPage() {
   const { t } = useLang();
-  const { account, property, members, currentMember, user } = useAccount();
+  const { account, property, members, currentMember } = useAccount();
   const queryClient = useQueryClient();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [email, setEmail] = useState("");
@@ -36,7 +36,7 @@ function MembersPage() {
     queryKey: ["invitations", account?.id],
     enabled: !!account && isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from("invitations").select("*").eq("account_id", account!.id).is("accepted_at", null).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("invitations").select("*").eq("account_id", account!.id).eq("status", "PENDING").order("created_at", { ascending: false });
       if (error) throw error;
       return data as Invitation[];
     },
@@ -55,7 +55,7 @@ function MembersPage() {
   const invite = useMutation({
     mutationFn: async () => {
       const token = crypto.randomUUID();
-      const { error } = await supabase.from("invitations").insert({ account_id: account!.id, property_id: property?.id ?? null, email: email.trim().toLowerCase(), role: inviteRole, token, invited_by: user!.id });
+      const { error } = await supabase.from("invitations").insert({ account_id: account!.id, property_id: property?.id ?? null, email: email.trim().toLowerCase(), role: inviteRole, token, created_by_member_id: currentMember?.id ?? null });
       if (error) throw error;
       return token;
     },
@@ -78,7 +78,7 @@ function MembersPage() {
       const target = members.find((m) => m.id === memberId);
       if (!target?.user_id) throw new Error("not-registered");
       if (makeAdmin) {
-        const { error } = await supabase.from("user_roles").upsert({ user_id: target.user_id, role: "admin" });
+        const { error } = await supabase.from("user_roles").upsert({ user_id: target.user_id, role: "admin" } as never);
         if (error) throw error;
       } else {
         const admins = members.filter((m) => m.role === "ADMIN" || m.role === "OWNER");

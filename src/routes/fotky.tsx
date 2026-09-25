@@ -17,8 +17,7 @@ export const Route = createFileRoute("/fotky")({
 
 interface PropertyPhoto {
   id: string;
-  photo_url: string;
-  caption: string | null;
+  storage_path: string;
   is_primary: boolean;
   uploaded_by_member_id: string | null;
 }
@@ -48,15 +47,13 @@ function PhotosPage() {
       const path = `${property.id}/photos/${crypto.randomUUID()}-${safeName}`;
       const { error: upError } = await supabase.storage.from("my-chata-files").upload(path, file);
       if (upError) throw upError;
-      const { data: signed } = await supabase.storage.from("my-chata-files").createSignedUrl(path, 60 * 60 * 24 * 365);
       const { error } = await supabase.from("property_photos").insert({
         property_id: property.id,
-        photo_url: path,
+        storage_path: path,
         is_primary: !photos?.length,
         uploaded_by_member_id: currentMember.id,
       });
       if (error) throw error;
-      void signed;
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
       toast.success(t("Fotka přidána.", "Photo added."));
     } catch {
@@ -82,7 +79,7 @@ function PhotosPage() {
     mutationFn: async (photo: PropertyPhoto) => {
       const { error } = await supabase.from("property_photos").delete().eq("id", photo.id);
       if (error) throw error;
-      await supabase.storage.from("my-chata-files").remove([photo.photo_url]);
+      await supabase.storage.from("my-chata-files").remove([photo.storage_path]);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["property-photos"] }),
   });
@@ -93,7 +90,7 @@ function PhotosPage() {
     queryFn: async () => {
       const map = new Map<string, string>();
       for (const p of photos!) {
-        const { data } = await supabase.storage.from("my-chata-files").createSignedUrl(p.photo_url, 3600);
+        const { data } = await supabase.storage.from("my-chata-files").createSignedUrl(p.storage_path, 3600);
         if (data?.signedUrl) map.set(p.id, data.signedUrl);
       }
       return map;
@@ -111,7 +108,7 @@ function PhotosPage() {
       <div className="mt-4 grid grid-cols-2 gap-3">
         {photos?.map((p) => (
           <figure key={p.id} className={`card overflow-hidden ${p.is_primary ? "ring-2 ring-primary" : ""}`}>
-            {urls?.get(p.id) ? <img src={urls.get(p.id)} alt={p.caption ?? ""} className="aspect-square w-full object-cover" /> : <div className="aspect-square w-full bg-secondary" />}
+            {urls?.get(p.id) ? <img src={urls.get(p.id)} alt="" className="aspect-square w-full object-cover" /> : <div className="aspect-square w-full bg-secondary" />}
             <figcaption className="flex items-center justify-between p-2">
               <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary" aria-label={t("Nastavit jako hlavní", "Set as main")} onClick={() => makePrimary.mutate(p.id)}>
                 <Star className={`size-5 ${p.is_primary ? "fill-primary text-primary" : ""}`} />

@@ -8,9 +8,11 @@ create extension if not exists unaccent with schema extensions;
 
 -- unaccent() is not IMMUTABLE, which an index expression needs; this wrapper is the
 -- standard workaround (fixed dictionary, so the result never changes).
+-- Resolved through search_path, so it works whether unaccent sits in `extensions` (Supabase
+-- default) or was installed earlier in `public`.
 create or replace function public.f_unaccent(text)
 returns text language sql immutable parallel safe strict set search_path = public, extensions as $$
-  select extensions.unaccent('extensions.unaccent'::regdictionary, $1)
+  select unaccent('unaccent'::regdictionary, $1)
 $$;
 
 drop function if exists public.match_manual_chunks(uuid, vector, int);

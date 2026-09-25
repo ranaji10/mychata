@@ -3,7 +3,7 @@
 // first paint — it never blocks rendering. Events fired before consent (or
 // while offline) wait in a small in-memory queue and flush once allowed.
 
-const MEASUREMENT_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY as string | undefined;
+const MEASUREMENT_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as string | undefined;
 const QUEUE_CAP = 200;
 
 declare global {

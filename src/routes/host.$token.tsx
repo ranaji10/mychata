@@ -74,7 +74,7 @@ function GuestBookingPage() {
                 {data.availability.map((b) => (
                   <li key={b.id} className="flex justify-between">
                     <span>
-                      {fmtDate(b.start_date, lang)} – {fmtDate(b.end_date, lang)}
+                      {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
                     </span>
                     <span className={`pill ${b.status === "CONFIRMED" ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn"}`}>
                       {b.status === "CONFIRMED" ? t("Obsazeno", "Booked") : t("Čeká", "Pending")}

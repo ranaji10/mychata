@@ -31,7 +31,7 @@ function ProfilePage() {
   const save = async () => {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase.from("profiles").upsert({ user_id: user.id, display_name: name, phone, avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null });
+    const { error } = await supabase.from("profiles").upsert({ user_id: user.id, display_name: name, phone, avatar_url: (user.user_metadata?.["avatar_url"] as string | undefined) ?? null });
     setBusy(false);
     if (error) toast.error(t("Uložení se nepodařilo.", "Could not save."));
     else {
@@ -46,7 +46,7 @@ function ProfilePage() {
     navigate({ to: "/auth", replace: true });
   };
 
-  const avatarUrl = profile?.avatar_url ?? (user?.user_metadata?.avatar_url as string | undefined) ?? null;
+  const avatarUrl = profile?.avatar_url ?? (user?.user_metadata?.["avatar_url"] as string | undefined) ?? null;
 
   return (
     <AppShell>

@@ -232,11 +232,11 @@ function HomePage() {
             {guestRequests.map((g) => (
               <div key={g.id} className="rounded-2xl bg-background p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-[15px] font-bold">{g.name}</p>
+                  <p className="truncate text-[15px] font-bold">{g.guest_name}</p>
                   <PillWarn>{t("Čeká", "Pending")}</PillWarn>
                 </div>
                 <p className="text-[13px] text-muted-foreground">
-                  {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests} {guestsLabel(g.guests)} · {g.email}
+                  {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests} {guestsLabel(g.guests)} · {g.guest_email}
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <button
@@ -252,7 +252,7 @@ function HomePage() {
                     onClick={async () => {
                       await supabase.from("bookings").insert({
                         property_id: property!.id,
-                        requester_name: g.name,
+                        requester_name: g.guest_name,
                         start_date: g.start_date,
                         end_date: g.end_date,
                         guests: g.guests,

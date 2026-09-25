@@ -9,3 +9,4 @@ Rules for this project (full version in AGENTS.md in the repository):
 5. All user-facing text goes through `t("Czech", "English")`, Czech first. Users are 45–68: large tap targets, plain words.
 6. Don't edit files under `supabase/tests`, `docs/decisions`, `.github` or `.claude`.
 7. Keep `main` working: the app is published from it.
+8. Never delete or empty `.env.production`. It holds only public values the browser build needs; without it the published app crashes (B-002).

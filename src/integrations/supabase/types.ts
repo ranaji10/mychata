@@ -1137,7 +1137,30 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: string }
+      add_property: {
+        Args: {
+          _address?: string
+          _city?: string
+          _name: string
+          _rooms?: number
+        }
+        Returns: string
+      }
       claim_initial_membership: { Args: never; Returns: string }
+      create_account_onboarding: {
+        Args: {
+          _account_name: string
+          _address?: string
+          _city?: string
+          _house_rules?: string
+          _overlap_max_guests?: number
+          _property_name: string
+          _rooms?: number
+          _seasons?: string[]
+          _type: string
+        }
+        Returns: string
+      }
       current_account_id: { Args: never; Returns: string }
       has_role: {
         Args: {

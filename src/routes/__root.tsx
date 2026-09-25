@@ -13,6 +13,18 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { CONSENT_REGIONS } from "../lib/region.functions";
+
+const GA_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as string | undefined;
+
+/** Runs before gtag.js loads: region-scoped Consent Mode v2 defaults + saved choice. */
+function gtagBootstrap(id: string) {
+  return `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;
+gtag('consent','default',{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500,region:${JSON.stringify(CONSENT_REGIONS)}});
+try{var c=JSON.parse(localStorage.getItem('mychata.consent')||'null');if(c&&c.version==='v1'&&Date.now()-c.at<31536000000){gtag('consent','update',{analytics_storage:c.analytics?'granted':'denied'});}}catch(e){}
+gtag('js',new Date());gtag('config',${JSON.stringify(id)},{send_page_view:false});`;
+}
 
 function NotFoundComponent() {
   return (
@@ -107,6 +119,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
       },
     ],
+    scripts: GA_ID
+      ? [
+          { children: gtagBootstrap(GA_ID) },
+          { src: `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`, async: true },
+        ]
+      : [],
   }),
   shellComponent: RootShell,
   component: RootComponent,

@@ -16,6 +16,7 @@ import { Route as DomuRouteImport } from './routes/domu'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as KalendarRouteImport } from './routes/kalendar'
 import { Route as ManualRouteImport } from './routes/manual'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PredaniRouteImport } from './routes/predani'
 import { Route as SchvalovaniRouteImport } from './routes/schvalovani'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -64,6 +65,11 @@ const KalendarRoute = KalendarRouteImport.update({
 const ManualRoute = ManualRouteImport.update({
   id: '/manual',
   path: '/manual',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PredaniRoute = PredaniRouteImport.update({
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/export': typeof ExportRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
+  '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/export': typeof ExportRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
+  '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/export': typeof ExportRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
+  '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/export'
     | '/kalendar'
     | '/manual'
+    | '/onboarding'
     | '/predani'
     | '/schvalovani'
     | '/sitemap.xml'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/export'
     | '/kalendar'
     | '/manual'
+    | '/onboarding'
     | '/predani'
     | '/schvalovani'
     | '/sitemap.xml'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/export'
     | '/kalendar'
     | '/manual'
+    | '/onboarding'
     | '/predani'
     | '/schvalovani'
     | '/sitemap.xml'
@@ -288,6 +300,7 @@ export interface RootRouteChildren {
   ExportRoute: typeof ExportRoute
   KalendarRoute: typeof KalendarRoute
   ManualRoute: typeof ManualRoute
+  OnboardingRoute: typeof OnboardingRoute
   PredaniRoute: typeof PredaniRoute
   SchvalovaniRoute: typeof SchvalovaniRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       path: '/manual'
       fullPath: '/manual'
       preLoaderRoute: typeof ManualRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/predani': {
@@ -483,6 +503,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExportRoute: ExportRoute,
   KalendarRoute: KalendarRoute,
   ManualRoute: ManualRoute,
+  OnboardingRoute: OnboardingRoute,
   PredaniRoute: PredaniRoute,
   SchvalovaniRoute: SchvalovaniRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -15,6 +15,7 @@ import { Route as ClenoveRouteImport } from './routes/clenove'
 import { Route as DokumentyRouteImport } from './routes/dokumenty'
 import { Route as DomuRouteImport } from './routes/domu'
 import { Route as ExportRouteImport } from './routes/export'
+import { Route as FotkyRouteImport } from './routes/fotky'
 import { Route as KalendarRouteImport } from './routes/kalendar'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -28,6 +29,8 @@ import { Route as UkolyRouteImport } from './routes/ukoly'
 import { Route as ViceRouteImport } from './routes/vice'
 import { Route as VydajeRouteImport } from './routes/vydaje'
 import { Route as ZadostiRouteImport } from './routes/zadosti'
+import { Route as ChataNovaRouteImport } from './routes/chata.nova'
+import { Route as HostTokenRouteImport } from './routes/host.$token'
 import { Route as PozvankaTokenRouteImport } from './routes/pozvanka.$token'
 import { Route as RezervaceIdRouteImport } from './routes/rezervace.$id'
 import { Route as RezervaceNovaRouteImport } from './routes/rezervace.nova'
@@ -65,6 +68,11 @@ const DomuRoute = DomuRouteImport.update({
 const ExportRoute = ExportRouteImport.update({
   id: '/export',
   path: '/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FotkyRoute = FotkyRouteImport.update({
+  id: '/fotky',
+  path: '/fotky',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KalendarRoute = KalendarRouteImport.update({
@@ -132,6 +140,16 @@ const ZadostiRoute = ZadostiRouteImport.update({
   path: '/zadosti',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChataNovaRoute = ChataNovaRouteImport.update({
+  id: '/chata/nova',
+  path: '/chata/nova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HostTokenRoute = HostTokenRouteImport.update({
+  id: '/host/$token',
+  path: '/host/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PozvankaTokenRoute = PozvankaTokenRouteImport.update({
   id: '/pozvanka/$token',
   path: '/pozvanka/$token',
@@ -181,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
+  '/fotky': typeof FotkyRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
@@ -194,6 +213,8 @@ export interface FileRoutesByFullPath {
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/chata/nova': typeof ChataNovaRoute
+  '/host/$token': typeof HostTokenRoute
   '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
@@ -210,6 +231,7 @@ export interface FileRoutesByTo {
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
+  '/fotky': typeof FotkyRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
@@ -223,6 +245,8 @@ export interface FileRoutesByTo {
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/chata/nova': typeof ChataNovaRoute
+  '/host/$token': typeof HostTokenRoute
   '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
@@ -240,6 +264,7 @@ export interface FileRoutesById {
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
   '/export': typeof ExportRoute
+  '/fotky': typeof FotkyRoute
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
@@ -253,6 +278,8 @@ export interface FileRoutesById {
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
+  '/chata/nova': typeof ChataNovaRoute
+  '/host/$token': typeof HostTokenRoute
   '/pozvanka/$token': typeof PozvankaTokenRoute
   '/rezervace/$id': typeof RezervaceIdRoute
   '/rezervace/nova': typeof RezervaceNovaRoute
@@ -271,6 +298,7 @@ export interface FileRouteTypes {
     | '/dokumenty'
     | '/domu'
     | '/export'
+    | '/fotky'
     | '/kalendar'
     | '/manual'
     | '/onboarding'
@@ -284,6 +312,8 @@ export interface FileRouteTypes {
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/chata/nova'
+    | '/host/$token'
     | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
@@ -300,6 +330,7 @@ export interface FileRouteTypes {
     | '/dokumenty'
     | '/domu'
     | '/export'
+    | '/fotky'
     | '/kalendar'
     | '/manual'
     | '/onboarding'
@@ -313,6 +344,8 @@ export interface FileRouteTypes {
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/chata/nova'
+    | '/host/$token'
     | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
@@ -329,6 +362,7 @@ export interface FileRouteTypes {
     | '/dokumenty'
     | '/domu'
     | '/export'
+    | '/fotky'
     | '/kalendar'
     | '/manual'
     | '/onboarding'
@@ -342,6 +376,8 @@ export interface FileRouteTypes {
     | '/vice'
     | '/vydaje'
     | '/zadosti'
+    | '/chata/nova'
+    | '/host/$token'
     | '/pozvanka/$token'
     | '/rezervace/$id'
     | '/rezervace/nova'
@@ -359,6 +395,7 @@ export interface RootRouteChildren {
   DokumentyRoute: typeof DokumentyRoute
   DomuRoute: typeof DomuRoute
   ExportRoute: typeof ExportRoute
+  FotkyRoute: typeof FotkyRoute
   KalendarRoute: typeof KalendarRoute
   ManualRoute: typeof ManualRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -372,6 +409,8 @@ export interface RootRouteChildren {
   ViceRoute: typeof ViceRoute
   VydajeRoute: typeof VydajeRouteWithChildren
   ZadostiRoute: typeof ZadostiRoute
+  ChataNovaRoute: typeof ChataNovaRoute
+  HostTokenRoute: typeof HostTokenRoute
   PozvankaTokenRoute: typeof PozvankaTokenRoute
   RezervaceIdRoute: typeof RezervaceIdRoute
   RezervaceNovaRoute: typeof RezervaceNovaRoute
@@ -422,6 +461,13 @@ declare module '@tanstack/react-router' {
       path: '/export'
       fullPath: '/export'
       preLoaderRoute: typeof ExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fotky': {
+      id: '/fotky'
+      path: '/fotky'
+      fullPath: '/fotky'
+      preLoaderRoute: typeof FotkyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kalendar': {
@@ -515,6 +561,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZadostiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chata/nova': {
+      id: '/chata/nova'
+      path: '/chata/nova'
+      fullPath: '/chata/nova'
+      preLoaderRoute: typeof ChataNovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/host/$token': {
+      id: '/host/$token'
+      path: '/host/$token'
+      fullPath: '/host/$token'
+      preLoaderRoute: typeof HostTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pozvanka/$token': {
       id: '/pozvanka/$token'
       path: '/pozvanka/$token'
@@ -602,6 +662,7 @@ const rootRouteChildren: RootRouteChildren = {
   DokumentyRoute: DokumentyRoute,
   DomuRoute: DomuRoute,
   ExportRoute: ExportRoute,
+  FotkyRoute: FotkyRoute,
   KalendarRoute: KalendarRoute,
   ManualRoute: ManualRoute,
   OnboardingRoute: OnboardingRoute,
@@ -615,6 +676,8 @@ const rootRouteChildren: RootRouteChildren = {
   ViceRoute: ViceRoute,
   VydajeRoute: VydajeRouteWithChildren,
   ZadostiRoute: ZadostiRoute,
+  ChataNovaRoute: ChataNovaRoute,
+  HostTokenRoute: HostTokenRoute,
   PozvankaTokenRoute: PozvankaTokenRoute,
   RezervaceIdRoute: RezervaceIdRoute,
   RezervaceNovaRoute: RezervaceNovaRoute,

@@ -35,6 +35,77 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          account_id: string | null
+          action: string
+          actor_user_id: string | null
+          at: string
+          detail: Json
+          id: number
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          action: string
+          actor_user_id?: string | null
+          at?: string
+          detail?: Json
+          id?: never
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          action?: string
+          actor_user_id?: string | null
+          at?: string
+          detail?: Json
+          id?: never
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_events: {
+        Row: {
+          id: number
+          payload: Json
+          processed_at: string | null
+          provider: string
+          provider_event_id: string
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id?: never
+          payload: Json
+          processed_at?: string | null
+          provider: string
+          provider_event_id: string
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: never
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          provider_event_id?: string
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           created_at: string
@@ -281,6 +352,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feature_flags: {
+        Row: {
+          enabled: boolean
+          key: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          key: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       guest_links: {
         Row: {
@@ -632,27 +724,45 @@ export type Database = {
       manual_chunks: {
         Row: {
           content: string
+          content_hash: string | null
           created_at: string
           embedding: string | null
           id: string
+          lang: string
+          model_version: string | null
           property_id: string
           section_id: string | null
+          tsv: unknown
+          updated_at: string
+          visibility: string
         }
         Insert: {
           content: string
+          content_hash?: string | null
           created_at?: string
           embedding?: string | null
           id?: string
+          lang?: string
+          model_version?: string | null
           property_id: string
           section_id?: string | null
+          tsv?: unknown
+          updated_at?: string
+          visibility?: string
         }
         Update: {
           content?: string
+          content_hash?: string | null
           created_at?: string
           embedding?: string | null
           id?: string
+          lang?: string
+          model_version?: string | null
           property_id?: string
           section_id?: string | null
+          tsv?: unknown
+          updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -856,8 +966,36 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          active: boolean
+          audience: string
+          id: string
+          limits: Json
+          name: string
+          price_czk_month: number | null
+        }
+        Insert: {
+          active?: boolean
+          audience: string
+          id: string
+          limits?: Json
+          name: string
+          price_czk_month?: number | null
+        }
+        Update: {
+          active?: boolean
+          audience?: string
+          id?: string
+          limits?: Json
+          name?: string
+          price_czk_month?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          active_account_id: string | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
@@ -867,6 +1005,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active_account_id?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
@@ -876,6 +1015,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active_account_id?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
@@ -885,6 +1025,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_active_account_id_fkey"
+            columns: ["active_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_member_id_fkey"
             columns: ["member_id"]
@@ -909,6 +1056,8 @@ export type Database = {
           overlap_max_guests: number | null
           peak_seasons: string[]
           photo_url: string | null
+          public_calendar_enabled: boolean
+          public_token: string
           rooms: number | null
         }
         Insert: {
@@ -925,6 +1074,8 @@ export type Database = {
           overlap_max_guests?: number | null
           peak_seasons?: string[]
           photo_url?: string | null
+          public_calendar_enabled?: boolean
+          public_token?: string
           rooms?: number | null
         }
         Update: {
@@ -941,6 +1092,8 @@ export type Database = {
           overlap_max_guests?: number | null
           peak_seasons?: string[]
           photo_url?: string | null
+          public_calendar_enabled?: boolean
+          public_token?: string
           rooms?: number | null
         }
         Relationships: [
@@ -1035,6 +1188,63 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          account_id: string
+          billing_email: string | null
+          company_id: string | null
+          current_period_end: string | null
+          plan_id: string
+          provider: string | null
+          provider_ref: string | null
+          seats: number | null
+          status: string
+          updated_at: string
+          vat_id: string | null
+        }
+        Insert: {
+          account_id: string
+          billing_email?: string | null
+          company_id?: string | null
+          current_period_end?: string | null
+          plan_id: string
+          provider?: string | null
+          provider_ref?: string | null
+          seats?: number | null
+          status?: string
+          updated_at?: string
+          vat_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          billing_email?: string | null
+          company_id?: string | null
+          current_period_end?: string | null
+          plan_id?: string
+          provider?: string | null
+          provider_ref?: string | null
+          seats?: number | null
+          status?: string
+          updated_at?: string
+          vat_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee_member_id: string | null
@@ -1113,6 +1323,27 @@ export type Database = {
           },
         ]
       }
+      usage_counters: {
+        Row: {
+          count: number
+          day: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          day?: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -1137,6 +1368,7 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: string }
+      account_plan: { Args: { _account_id: string }; Returns: string }
       add_property: {
         Args: {
           _address?: string
@@ -1145,6 +1377,10 @@ export type Database = {
           _rooms?: number
         }
         Returns: string
+      }
+      bump_usage: {
+        Args: { _daily_limit: number; _kind: string }
+        Returns: boolean
       }
       claim_initial_membership: { Args: never; Returns: string }
       create_account_onboarding: {
@@ -1162,6 +1398,13 @@ export type Database = {
         Returns: string
       }
       current_account_id: { Args: never; Returns: string }
+      current_member_id: { Args: never; Returns: string }
+      f_unaccent: { Args: { "": string }; Returns: string }
+      feature_enabled: { Args: { _key: string }; Returns: boolean }
+      has_account_role: {
+        Args: { _account_id: string; _role: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1169,22 +1412,29 @@ export type Database = {
         }
         Returns: boolean
       }
+      in_current_account: { Args: { _property_id: string }; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
+      is_admin_only_file: { Args: { _name: string }; Returns: boolean }
+      is_member: { Args: { _account_id: string }; Returns: boolean }
       is_property_admin: { Args: { _property_id: string }; Returns: boolean }
-      match_manual_chunks: {
-        Args: { _count?: number; _embedding: string; _property_id: string }
-        Returns: {
-          content: string
-          id: string
-          section_id: string
-          similarity: number
-        }[]
-      }
-      public_booking_availability: {
-        Args: { _property_id: string }
+      plan_limit: { Args: { _account_id: string; _key: string }; Returns: Json }
+      public_calendar: {
+        Args: { _token: string }
         Returns: {
           end_date: string
-          id: string
-          property_id: string
+          property_name: string
+          start_date: string
+          status: string
+        }[]
+      }
+      public_flag_manual_section: {
+        Args: { _section_id: string; _token: string }
+        Returns: boolean
+      }
+      public_guest_availability: {
+        Args: { _token: string }
+        Returns: {
+          end_date: string
           start_date: string
           status: string
         }[]
@@ -1200,21 +1450,76 @@ export type Database = {
           valid_to: string
         }[]
       }
-      public_institutional_property: {
-        Args: never
+      public_manual: {
+        Args: { _token: string }
         Returns: {
-          address: string
+          category: string
+          content_cs: string
+          content_en: string
+          display_order: number
           id: string
-          name: string
+          photo_url: string
+          title_cs: string
+          title_en: string
         }[]
       }
-      public_property_details: {
-        Args: { _property_id: string }
+      public_property: {
+        Args: { _token: string }
         Returns: {
-          address: string
-          id: string
-          name: string
+          calendar_enabled: boolean
+          is_institution: boolean
+          property_name: string
         }[]
+      }
+      rotate_public_token: { Args: { _property_id: string }; Returns: string }
+      search_manual: {
+        Args: {
+          _count?: number
+          _embedding: string
+          _lang?: string
+          _property_id: string
+          _query: string
+        }
+        Returns: {
+          content: string
+          score: number
+          section_id: string
+        }[]
+      }
+      set_active_account: { Args: { _account_id: string }; Returns: string }
+      set_member_role: {
+        Args: { _member_id: string; _role: string }
+        Returns: undefined
+      }
+      set_public_calendar: {
+        Args: { _enabled: boolean; _property_id: string }
+        Returns: string
+      }
+      submit_guest_request: {
+        Args: {
+          _email: string
+          _end: string
+          _guests: number
+          _name: string
+          _note?: string
+          _start: string
+          _token: string
+        }
+        Returns: string
+      }
+      submit_institutional_request: {
+        Args: {
+          _affiliation: string
+          _email: string
+          _end: string
+          _guests: number
+          _name: string
+          _note?: string
+          _phone: string
+          _start: string
+          _token: string
+        }
+        Returns: string
       }
     }
     Enums: {

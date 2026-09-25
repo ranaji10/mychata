@@ -157,7 +157,8 @@ export const askManual = createServerFn({ method: "POST" })
 
     const { data: chunks, error: searchError } = await context.supabase.rpc("search_manual", {
       _property_id: data.propertyId,
-      _embedding: queryVector,
+      // The SQL function accepts null (keyword-only search); generated types don't say so.
+      _embedding: queryVector as string,
       _query: data.question,
       _lang: data.lang,
       _count: 4,

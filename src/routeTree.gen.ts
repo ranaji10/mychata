@@ -18,8 +18,11 @@ import { Route as KalendarRouteImport } from './routes/kalendar'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PredaniRouteImport } from './routes/predani'
+import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SchvalovaniRouteImport } from './routes/schvalovani'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SoukromiRouteImport } from './routes/soukromi'
 import { Route as UkolyRouteImport } from './routes/ukoly'
 import { Route as ViceRouteImport } from './routes/vice'
 import { Route as VydajeRouteImport } from './routes/vydaje'
@@ -77,6 +80,16 @@ const PredaniRoute = PredaniRouteImport.update({
   path: '/predani',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfilRoute = ProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SchvalovaniRoute = SchvalovaniRouteImport.update({
   id: '/schvalovani',
   path: '/schvalovani',
@@ -85,6 +98,11 @@ const SchvalovaniRoute = SchvalovaniRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoukromiRoute = SoukromiRouteImport.update({
+  id: '/soukromi',
+  path: '/soukromi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UkolyRoute = UkolyRouteImport.update({
@@ -154,8 +172,11 @@ export interface FileRoutesByFullPath {
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
+  '/profil': typeof ProfilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
@@ -178,8 +199,11 @@ export interface FileRoutesByTo {
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
+  '/profil': typeof ProfilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
@@ -203,8 +227,11 @@ export interface FileRoutesById {
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
   '/predani': typeof PredaniRoute
+  '/profil': typeof ProfilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schvalovani': typeof SchvalovaniRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
@@ -229,8 +256,11 @@ export interface FileRouteTypes {
     | '/manual'
     | '/onboarding'
     | '/predani'
+    | '/profil'
+    | '/reset-password'
     | '/schvalovani'
     | '/sitemap.xml'
+    | '/soukromi'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
@@ -253,8 +283,11 @@ export interface FileRouteTypes {
     | '/manual'
     | '/onboarding'
     | '/predani'
+    | '/profil'
+    | '/reset-password'
     | '/schvalovani'
     | '/sitemap.xml'
+    | '/soukromi'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
@@ -277,8 +310,11 @@ export interface FileRouteTypes {
     | '/manual'
     | '/onboarding'
     | '/predani'
+    | '/profil'
+    | '/reset-password'
     | '/schvalovani'
     | '/sitemap.xml'
+    | '/soukromi'
     | '/ukoly'
     | '/vice'
     | '/vydaje'
@@ -302,8 +338,11 @@ export interface RootRouteChildren {
   ManualRoute: typeof ManualRoute
   OnboardingRoute: typeof OnboardingRoute
   PredaniRoute: typeof PredaniRoute
+  ProfilRoute: typeof ProfilRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SchvalovaniRoute: typeof SchvalovaniRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SoukromiRoute: typeof SoukromiRoute
   UkolyRoute: typeof UkolyRouteWithChildren
   ViceRoute: typeof ViceRoute
   VydajeRoute: typeof VydajeRouteWithChildren
@@ -380,6 +419,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PredaniRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profil': {
+      id: '/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/schvalovani': {
       id: '/schvalovani'
       path: '/schvalovani'
@@ -392,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/soukromi': {
+      id: '/soukromi'
+      path: '/soukromi'
+      fullPath: '/soukromi'
+      preLoaderRoute: typeof SoukromiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ukoly': {
@@ -505,8 +565,11 @@ const rootRouteChildren: RootRouteChildren = {
   ManualRoute: ManualRoute,
   OnboardingRoute: OnboardingRoute,
   PredaniRoute: PredaniRoute,
+  ProfilRoute: ProfilRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SchvalovaniRoute: SchvalovaniRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SoukromiRoute: SoukromiRoute,
   UkolyRoute: UkolyRouteWithChildren,
   ViceRoute: ViceRoute,
   VydajeRoute: VydajeRouteWithChildren,

@@ -22,6 +22,12 @@ There is one database. Lovable's preview and production appear to share it, so e
 | `LOVABLE_API_KEY`                                           | AI features                                    | **Yes**                                               |
 | `VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY`           | GA4 measurement id                             | No                                                    |
 
+## Where the values live
+
+- Public browser values (`VITE_*`): committed in `.env.production`, read by Vite at build time. Never secrets.
+- Secrets (`SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`): Lovable Cloud's secret store only.
+- Local overrides: `.env.local`, never committed.
+
 ## Local development
 
 See `../runbooks/local-dev.md`. Short version: `.env.local` with the publishable values, rewrite the registry URLs in `bun.lock` (below), `bun install`, `bun run dev`.

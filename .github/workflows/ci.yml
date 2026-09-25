@@ -31,6 +31,10 @@ jobs:
       - name: Generated docs are up to date
         run: bun run docs:check
       - run: bun run build
+      # Guard for incident B-002: a build without the public Supabase settings compiles fine
+      # but the app crashes in every browser. Fail CI instead of shipping that.
+      - name: Browser bundle contains the Supabase settings
+        run: grep -rlqE "VITE_SUPABASE_URL:.https://[a-z0-9]+\.supabase\.co" .output/public/assets || (echo "Client bundle has no Supabase URL. Is .env.production present?" && exit 1)
 
   e2e:
     if: github.event_name == 'workflow_dispatch' && inputs.e2e_base_url != ''

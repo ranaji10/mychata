@@ -4,11 +4,12 @@ As of 2026-09-25. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
-| Place                                       | State                                                                                                                                                                              |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Production (mychata.cz)                     | Built by Lovable from an older commit than `main` (the Language card seen in `Screenshots/Bugs` was already removed on `main`). Exact commit unknown: releases are not tagged yet. |
-| `main`                                      | `23d71f2`: V1 feature set with the defects below.                                                                                                                                  |
-| Branch `agent/claude/foundation-2026-09-25` | Fixes for defects 1–12, multi-account tenancy, tests, CI, docs. **Not merged, migrations not applied to the database.** See `docs/tasks/T-001-apply-foundation-branch.md`.         |
+| Place                   | State                                                                                                                                                                                                                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production (mychata.cz) | Publish of `main` at `4f08864` requested by Lovable on 2026-09-25 ~17:52 CEST. Not yet tagged; the five post-release checks (T-001 step 5) are still to do.                                                                                                                     |
+| Database                | Migrations 0011–0016 applied by Lovable on 2026-09-25. They ran as one batch (0016 is an empty marker Lovable added to trigger its migrator). Row counts unchanged (8 members, 4 profiles, 3 chatas). `types.ts` regenerated from the live database and matches the new schema. |
+| `main`                  | Foundation work merged (PR #1), then Lovable's commits: 0016 marker, regenerated `types.ts`, a type cast in `manual-qa.functions.ts`.                                                                                                                                           |
+| CI on `main`            | Failed on `4f08864` because Lovable's regenerated `types.ts` is not Prettier-formatted; fixed by ignoring that generated file (branch `agent/claude/ci-ignore-generated-types`). Code itself passes typecheck, 35 tests and build.                                              |
 
 ## Defects found on 2026-09-25 and their state
 
@@ -31,12 +32,13 @@ As of 2026-09-25. Update this file in every PR that changes behaviour.
 | 13  | A member could set their own role to ADMIN (latent until roles moved to `members.role`)     | yes          | 0011                            | "roles"                                                            |
 | 14  | `bun.lock` points at Lovable's private package cache, so installs fail outside Lovable      | seen         | CI workaround                   | CI step                                                            |
 
-## Verified on the branch (2026-09-25, by the builder; independent review still needed)
+## Verified (2026-09-25)
 
 - `bun run check`: lint 0 errors, typecheck clean, 35 tests pass (security 20, before-fix 6, policy lint 4, unit 5), generated docs current.
 - `bun run build` succeeds.
 - Playwright public smoke tests: 5/5 against a local dev server.
-- Not verified: anything against the real Supabase project; signed-in flows in a browser; AI answers with a real key; the account switcher UI.
+- Lovable (independently): migrations applied without data loss; share tokens present on every chata; app builds.
+- Not verified yet: signed-in flows in a browser, AI answers with a real key, the account switcher UI, public links in a private window (T-001 step 5).
 
 ## Known limitations still open
 

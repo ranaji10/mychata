@@ -14,5 +14,6 @@ src/integrations/supabase/client.ts
 src/integrations/supabase/cron-auth.ts
 src/integrations/supabase/previewAuthStorage.ts
 src/integrations/lovable/
+src/integrations/supabase/types.ts
 drizzle/migrations/meta/
 docs/generated/

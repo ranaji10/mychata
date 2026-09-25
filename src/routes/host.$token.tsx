@@ -52,7 +52,7 @@ function GuestBookingPage() {
       </div>
       <p className="mt-6 font-bold text-primary">My Chata</p>
       <h1 className="mt-1 text-2xl font-bold">{data.propertyName}</h1>
-      {data.propertyAddress && <p className="text-[15px] text-muted-foreground">{data.property.address}</p>}
+      {data.propertyAddress && <p className="text-[15px] text-muted-foreground">{data.propertyAddress}</p>}
 
       {done ? (
         <div className="card mt-6 p-5 text-center">

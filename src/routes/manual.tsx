@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Check, Copy, Flag, Plus } from "lucide-react";
+import { BookOpen, Check, Copy, Flag, Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { EmptyState, LoadingCards, PageHeader, PillNeutral } from "@/components/
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
+import { askManual, rebuildManualChunks } from "@/lib/manual-qa.functions";
 
 export const Route = createFileRoute("/manual")({
   staticData: { sitemap: false },
@@ -33,6 +34,23 @@ function ManualPage() {
   const [form, setForm] = useState({ titleCs: "", titleEn: "", contentCs: "", contentEn: "", category: "other", visibility: "PUBLIC" });
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const publicUrl = property ? `${typeof window === "undefined" ? "" : window.location.origin}/verejne/manual/${property.id}` : "";
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+
+  const ask = async () => {
+    if (!property || question.trim().length < 2) return;
+    setAsking(true);
+    setAnswer(null);
+    try {
+      const res = await askManual({ data: { propertyId: property.id, question: question.trim(), lang } });
+      setAnswer(res.answer ?? t("Na to jsem v manuálu odpověď nenašel.", "I could not find an answer in the manual."));
+    } catch {
+      setAnswer(t("Odpověď se nepodařilo získat.", "Could not get an answer."));
+    } finally {
+      setAsking(false);
+    }
+  };
 
   const { data: sections, isLoading } = useQuery({
     queryKey: ["manual-sections", property?.id], enabled: !!property,
@@ -58,12 +76,22 @@ function ManualPage() {
       });
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["manual-sections", property?.id] }); setEditing(false); setForm({ titleCs: "", titleEn: "", contentCs: "", contentEn: "", category: "other", visibility: "PUBLIC" }); toast.success(t("Sekce přidána.", "Section added.")); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["manual-sections", property?.id] }); setEditing(false); setForm({ titleCs: "", titleEn: "", contentCs: "", contentEn: "", category: "other", visibility: "PUBLIC" }); toast.success(t("Sekce přidána.", "Section added.")); if (property) void rebuildManualChunks({ data: { propertyId: property.id } }); },
     onError: () => toast.error(t("Sekci se nepodařilo přidat.", "Could not add the section.")),
   });
 
   return <AppShell>
     <PageHeader title={t("Manuál chaty", "House Manual")} subtitle={property?.name} back="/vice" action={isAdmin ? <button onClick={() => setEditing(true)} aria-label={t("Přidat sekci", "Add section")} className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><Plus className="size-5" /></button> : null} />
+
+    <section className="card mb-4 p-4">
+      <h2 className="flex items-center gap-2 font-bold"><Sparkles className="size-5 text-primary" />{t("Zeptejte se manuálu", "Ask the manual")}</h2>
+      <div className="mt-2 flex gap-2">
+        <input className="field flex-1" placeholder={t("Např. Jak se pouští topení?", "E.g. How do I turn on the heating?")} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} />
+        <button className="btn-primary shrink-0" disabled={asking} onClick={ask}>{asking ? "…" : t("Zeptat se", "Ask")}</button>
+      </div>
+      {answer && <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-secondary p-3 text-[15px]">{answer}</p>}
+    </section>
+
 
     {property && <section className="card mb-4 flex items-center gap-4 p-4">
       <div className="rounded-xl bg-card p-1 ring-1 ring-border"><QRCodeSVG value={publicUrl} size={82} /></div>

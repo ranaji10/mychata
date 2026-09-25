@@ -1,20 +1,28 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { CalendarDays, ClipboardList, Home, Inbox, Menu, Wallet } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { CalendarDays, ChevronDown, ClipboardList, Home, Inbox, Menu, Wallet } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { useIsMutating } from "@tanstack/react-query";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { account, property, user, loading } = useAccount();
+  const { account, property, properties, setActivePropertyId, user, loading, needsOnboarding } = useAccount();
   const navigate = useNavigate();
   const { t } = useLang();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const online = useConnectivity();
   const mutating = useIsMutating();
-  useEffect(() => { if (!loading && !user) navigate({ to: "/auth", replace: true }); }, [loading, user, navigate]);
-  if (loading || !user) return <div className="mx-auto min-h-screen max-w-[420px] bg-background" />;
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth", replace: true });
+  }, [loading, user, navigate]);
+  useEffect(() => {
+    if (!loading && user && needsOnboarding) navigate({ to: "/onboarding", replace: true });
+  }, [loading, user, needsOnboarding, navigate]);
+
+  if (loading || !user || needsOnboarding) return <div className="mx-auto min-h-screen max-w-[420px] bg-background" />;
 
   const FAMILY_TABS = [
     { to: "/domu", label: t("Domů", "Home"), icon: Home },
@@ -46,7 +54,32 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="truncate text-[13px] font-semibold text-muted-foreground">
             {account?.type === "INSTITUTIONAL" ? t("Organizační správa", "Organisation workspace") : account?.name ?? "My Chata"}
           </p>
-          <h1 className="truncate text-xl font-bold leading-tight">{property?.name ?? "My Chata"}</h1>
+          {properties.length > 1 ? (
+            <div className="relative">
+              <button onClick={() => setSwitcherOpen((v) => !v)} className="flex items-center gap-1 text-left" aria-expanded={switcherOpen}>
+                <h1 className="truncate text-xl font-bold leading-tight">{property?.name ?? "My Chata"}</h1>
+                <ChevronDown className="size-5 shrink-0 text-muted-foreground" />
+              </button>
+              {switcherOpen && (
+                <div className="absolute left-0 top-full z-30 mt-2 w-64 rounded-2xl border border-border bg-card p-2 shadow-xl">
+                  {properties.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setActivePropertyId(p.id);
+                        setSwitcherOpen(false);
+                      }}
+                      className={`flex w-full items-center rounded-xl px-3 py-2.5 text-left text-[15px] font-bold ${p.id === property?.id ? "bg-secondary" : ""}`}
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <h1 className="truncate text-xl font-bold leading-tight">{property?.name ?? "My Chata"}</h1>
+          )}
         </div>
         <LanguageToggle />
       </header>

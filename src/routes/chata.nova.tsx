@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -20,7 +20,8 @@ function AddPropertyPage() {
   const { t } = useLang();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { setActivePropertyId } = useAccount();
+  const { setActivePropertyId, currentMember, account } = useAccount();
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -37,7 +38,14 @@ function AddPropertyPage() {
     });
     setBusy(false);
     if (error) {
-      toast.error(t("Přidání se nepodařilo.", "Could not add the cottage."));
+      toast.error(
+        error.code === "42501"
+          ? t(
+              "Chatu do tohoto účtu může přidat jen správce.",
+              "Only an admin can add a cottage to this account.",
+            )
+          : t("Přidání se nepodařilo.", "Could not add the cottage."),
+      );
       return;
     }
     queryClient.invalidateQueries({ queryKey: ["properties"] });
@@ -55,7 +63,20 @@ function AddPropertyPage() {
           "Whoever adds a cottage becomes its admin.",
         )}
       />
-      <div className="card mt-4 space-y-3 p-4">
+      {!isAdmin && (
+        <div className="card mt-4 space-y-3 p-4">
+          <p className="text-[15px]">
+            {t(
+              `Do účtu „${account?.name ?? ""}“ může chaty přidávat jen správce. Požádejte správce, nebo si založte vlastní účet pro svou chatu.`,
+              `Only an admin can add cottages to "${account?.name ?? ""}". Ask an admin, or create your own account for your cottage.`,
+            )}
+          </p>
+          <Link to="/onboarding" className="btn-primary w-full">
+            {t("Založit vlastní účet", "Create my own account")}
+          </Link>
+        </div>
+      )}
+      <div className={`card mt-4 space-y-3 p-4 ${isAdmin ? "" : "hidden"}`}>
         <input
           className="field w-full"
           placeholder={t("Název chaty", "Cottage name")}

@@ -161,8 +161,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   };
 
   // Onboarding is required until the profile is marked complete (invite acceptance marks it complete).
+  // People who already belong to an account (invited, or linked by email) never need it (B-003).
   const needsOnboarding =
-    !!user && !loadingIdentity && !loadingProfile && !profile?.onboarding_completed_at;
+    !!user &&
+    !loadingIdentity &&
+    !loadingProfile &&
+    !profile?.onboarding_completed_at &&
+    (memberships?.length ?? 0) === 0;
 
   const value: AccountState = {
     account,

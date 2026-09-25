@@ -27,3 +27,19 @@ test("an invalid guest link says so", async ({ page }) => {
   await page.goto("/host/not-a-real-token-123456");
   await expect(page.getByText(/no longer valid|už neplatí/)).toBeVisible();
 });
+
+// Guard for B-002: the page rendered on the server but crashed in the browser.
+test("sign-in page runs in the browser without console errors", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "error") errors.push(m.text());
+  });
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/auth");
+  await expect(page.getByText(/Google/)).toBeVisible();
+  // Network-level failures (blocked trackers, offline fonts) are not app errors.
+  const ours = errors.filter(
+    (e) => !/googletagmanager|google-analytics|Failed to load resource: net::ERR_/.test(e),
+  );
+  expect(ours).toEqual([]);
+});

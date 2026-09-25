@@ -120,6 +120,13 @@
       "when": 1790351493964,
       "tag": "0016_apply_journaled_0011_0015",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790351553964,
+      "tag": "0017_claimed_members_skip_onboarding",
+      "breakpoints": true
     }
   ]
 }

@@ -4,12 +4,13 @@ As of 2026-09-25. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
-| Place                   | State                                                                                                                                                                                                                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Production (mychata.cz) | Publish of `main` at `4f08864` requested by Lovable on 2026-09-25 ~17:52 CEST. Not yet tagged; the five post-release checks (T-001 step 5) are still to do.                                                                                                                     |
-| Database                | Migrations 0011–0016 applied by Lovable on 2026-09-25. They ran as one batch (0016 is an empty marker Lovable added to trigger its migrator). Row counts unchanged (8 members, 4 profiles, 3 chatas). `types.ts` regenerated from the live database and matches the new schema. |
-| `main`                  | Foundation work merged (PR #1), then Lovable's commits: 0016 marker, regenerated `types.ts`, a type cast in `manual-qa.functions.ts`.                                                                                                                                           |
-| CI on `main`            | Failed on `4f08864` because Lovable's regenerated `types.ts` is not Prettier-formatted; fixed by ignoring that generated file (branch `agent/claude/ci-ignore-generated-types`). Code itself passes typecheck, 35 tests and build.                                              |
+| Place                   | State                                                                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production (mychata.cz) | Build from `main` after PR #4 (B-002 fix), published 2026-09-25 evening; checked 2026-09-26 00:50: sign-in page loads, browser bundle contains the Supabase settings. Not yet tagged. |
+| Database                | Migrations 0011–0016 applied 2026-09-25 (one batch). 0017 (B-003) is on branch `agent/claude/onboarding-fixes`, not applied.                                                          |
+| Backup                  | Full export taken 2026-09-25 (`Lovable DB exports/`, outside the repo). Routine: `runbooks/backup.md`.                                                                                |
+| CI                      | Green on `main`. Nightly production check added on the onboarding-fixes branch.                                                                                                       |
+| Open bugs               | B-003 (fixed on branch), B-004 (Google sign-in on Brave, open).                                                                                                                       |
 
 ## Defects found on 2026-09-25 and their state
 

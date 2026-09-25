@@ -106,7 +106,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace.",
       },
       { property: "og:type", content: "website" },
+      // Our own preview image. Without it, Lovable's publish attaches an automatic screenshot,
+      // which captured the error page during the 25 Sep outage (B-002).
+      { property: "og:image", content: "https://mychata.cz/og-image.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://mychata.cz/og-image.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

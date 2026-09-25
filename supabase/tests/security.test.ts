@@ -394,3 +394,44 @@ describe("multi-account membership", () => {
     });
   });
 });
+
+describe("onboarding and joining (B-003)", () => {
+  it("a person whose email an admin added is linked and skips onboarding", async () => {
+    const joiner = "10000000-0000-4000-8000-0000000000ee";
+    await admin(
+      db,
+      "insert into public.members (account_id, name, email, role) values ($1,'Joiner','joiner@example.org','MEMBER')",
+      [ids.acctA],
+    );
+    await as(
+      db,
+      { role: "authenticated", userId: joiner, email: "joiner@example.org" },
+      async (q) => {
+        const [m] = await q<{ m: string | null }>("select public.claim_initial_membership() as m");
+        expect(m?.m).not.toBeNull();
+        const [p] = await q<{ done: boolean; acct: string }>(
+          "select onboarding_completed_at is not null as done, active_account_id as acct from public.profiles where user_id = $1",
+          [joiner],
+        );
+        expect(p?.done).toBe(true);
+        expect(p?.acct).toBe(ids.acctA);
+      },
+    );
+  });
+  it("a plain member cannot add a chata to the shared account", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(q("select public.add_property('X')")).rejects.toThrow(/Admin role required/);
+    });
+  });
+  it("a plain member can create their own account and becomes its admin", async () => {
+    await as(db, aMember, async (q) => {
+      await q(
+        "select public.create_account_onboarding('FAMILY','Moje','Moje chata','Ulice 1', null, 2, '{}', null, '')",
+      );
+      const [r] = await q<{ x: boolean }>("select public.is_admin() as x");
+      expect(r?.x).toBe(true);
+      const accts = await q("select * from public.accounts");
+      expect(accts.length).toBe(2);
+    });
+  });
+});

@@ -1,0 +1,5 @@
+// EU/EEA + UK + Switzerland: consent banner required, analytics denied by default.
+export const CONSENT_REGIONS = [
+  "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE",
+  "IS","LI","NO","GB","CH",
+];

@@ -64,6 +64,13 @@
       "when": 1790301840783,
       "tag": "0008_onboarding_functions_and_profile_update",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790304136752,
+      "tag": "0009_onboarding_completion_flags",
+      "breakpoints": true
     }
   ]
 }

@@ -33,7 +33,11 @@ function PhotosPage() {
     queryKey: ["property-photos", property?.id],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase.from("property_photos").select("*").eq("property_id", property!.id).order("created_at");
+      const { data, error } = await supabase
+        .from("property_photos")
+        .select("*")
+        .eq("property_id", property!.id)
+        .order("created_at");
       if (error) throw error;
       return data as PropertyPhoto[];
     },
@@ -65,8 +69,14 @@ function PhotosPage() {
 
   const makePrimary = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from("property_photos").update({ is_primary: false }).eq("property_id", property!.id);
-      const { error } = await supabase.from("property_photos").update({ is_primary: true }).eq("id", id);
+      await supabase
+        .from("property_photos")
+        .update({ is_primary: false })
+        .eq("property_id", property!.id);
+      const { error } = await supabase
+        .from("property_photos")
+        .update({ is_primary: true })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -90,7 +100,9 @@ function PhotosPage() {
     queryFn: async () => {
       const map = new Map<string, string>();
       for (const p of photos!) {
-        const { data } = await supabase.storage.from("my-chata-files").createSignedUrl(p.storage_path, 3600);
+        const { data } = await supabase.storage
+          .from("my-chata-files")
+          .createSignedUrl(p.storage_path, 3600);
         if (data?.signedUrl) map.set(p.id, data.signedUrl);
       }
       return map;
@@ -100,28 +112,62 @@ function PhotosPage() {
   return (
     <AppShell>
       <PageHeader title={t("Fotky chaty", "Cottage photos")} subtitle={property?.name ?? ""} />
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
-      <button className="btn-primary mt-4 w-full" disabled={busy} onClick={() => fileRef.current?.click()}>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
+      />
+      <button
+        className="btn-primary mt-4 w-full"
+        disabled={busy}
+        onClick={() => fileRef.current?.click()}
+      >
         <ImagePlus className="size-5" />
         {busy ? t("Nahrávám…", "Uploading…") : t("Přidat fotku", "Add a photo")}
       </button>
       <div className="mt-4 grid grid-cols-2 gap-3">
         {photos?.map((p) => (
-          <figure key={p.id} className={`card overflow-hidden ${p.is_primary ? "ring-2 ring-primary" : ""}`}>
-            {urls?.get(p.id) ? <img src={urls.get(p.id)} alt="" className="aspect-square w-full object-cover" /> : <div className="aspect-square w-full bg-secondary" />}
+          <figure
+            key={p.id}
+            className={`card overflow-hidden ${p.is_primary ? "ring-2 ring-primary" : ""}`}
+          >
+            {urls?.get(p.id) ? (
+              <img src={urls.get(p.id)} alt="" className="aspect-square w-full object-cover" />
+            ) : (
+              <div className="aspect-square w-full bg-secondary" />
+            )}
             <figcaption className="flex items-center justify-between p-2">
-              <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary" aria-label={t("Nastavit jako hlavní", "Set as main")} onClick={() => makePrimary.mutate(p.id)}>
+              <button
+                className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
+                aria-label={t("Nastavit jako hlavní", "Set as main")}
+                onClick={() => makePrimary.mutate(p.id)}
+              >
                 <Star className={`size-5 ${p.is_primary ? "fill-primary text-primary" : ""}`} />
               </button>
-              <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary" aria-label={t("Smazat", "Delete")} onClick={() => remove.mutate(p)}>
+              <button
+                className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
+                aria-label={t("Smazat", "Delete")}
+                onClick={() => remove.mutate(p)}
+              >
                 <Trash2 className="size-5" />
               </button>
             </figcaption>
           </figure>
         ))}
       </div>
-      {!photos?.length && <p className="mt-6 text-center text-muted-foreground">{t("Zatím žádné fotky. Přidejte první!", "No photos yet. Add the first one!")}</p>}
-      <p className="mt-4 text-center text-[13px] text-muted-foreground">{t("Hvězdičkou vyberete hlavní fotku chaty.", "Use the star to pick the cottage's main photo.")}</p>
+      {!photos?.length && (
+        <p className="mt-6 text-center text-muted-foreground">
+          {t("Zatím žádné fotky. Přidejte první!", "No photos yet. Add the first one!")}
+        </p>
+      )}
+      <p className="mt-4 text-center text-[13px] text-muted-foreground">
+        {t(
+          "Hvězdičkou vyberete hlavní fotku chaty.",
+          "Use the star to pick the cottage's main photo.",
+        )}
+      </p>
     </AppShell>
   );
 }

@@ -37,7 +37,13 @@ export const rebuildManualChunks = createServerFn({ method: "POST" })
         if (!text.trim()) continue;
         try {
           const embedding = await embed(text, apiKey);
-          await context.supabase.from("manual_chunks").insert({ section_id: s.id, property_id: data.propertyId, lang, content: text, embedding: JSON.stringify(embedding) } as never);
+          await context.supabase.from("manual_chunks").insert({
+            section_id: s.id,
+            property_id: data.propertyId,
+            lang,
+            content: text,
+            embedding: JSON.stringify(embedding),
+          } as never);
         } catch {
           /* skip failed chunk */
         }
@@ -49,7 +55,15 @@ export const rebuildManualChunks = createServerFn({ method: "POST" })
 /** Answers a question from the property's manual using account-scoped retrieval. */
 export const askManual = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ propertyId: z.string().uuid(), question: z.string().min(2).max(500), lang: z.enum(["cs", "en"]) }).parse(data))
+  .inputValidator((data) =>
+    z
+      .object({
+        propertyId: z.string().uuid(),
+        question: z.string().min(2).max(500),
+        lang: z.enum(["cs", "en"]),
+      })
+      .parse(data),
+  )
   .handler(async ({ data, context }) => {
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { answer: null, sources: [] as string[] };
@@ -72,9 +86,16 @@ export const askManual = createServerFn({ method: "POST" })
         .select("id, title_cs, title_en, content_cs, content_en")
         .eq("property_id", data.propertyId)
         .limit(6);
-      chunks = (sections ?? []).map((s) => ({ section_id: s.id, content: data.lang === "en" ? `${s.title_en}\n${s.content_en}` : `${s.title_cs}\n${s.content_cs}` }));
+      chunks = (sections ?? []).map((s) => ({
+        section_id: s.id,
+        content:
+          data.lang === "en" ? `${s.title_en}\n${s.content_en}` : `${s.title_cs}\n${s.content_cs}`,
+      }));
     }
-    const contextText = chunks.map((c) => c.content).join("\n---\n").slice(0, 6000);
+    const contextText = chunks
+      .map((c) => c.content)
+      .join("\n---\n")
+      .slice(0, 6000);
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -92,5 +113,8 @@ export const askManual = createServerFn({ method: "POST" })
     });
     if (!res.ok) return { answer: null, sources: [] as string[] };
     const json = (await res.json()) as { choices: { message: { content: string } }[] };
-    return { answer: json.choices[0]?.message.content ?? null, sources: [...new Set(chunks.map((c) => c.section_id))] };
+    return {
+      answer: json.choices[0]?.message.content ?? null,
+      sources: [...new Set(chunks.map((c) => c.section_id))],
+    };
   });

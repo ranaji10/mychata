@@ -29,9 +29,24 @@ function PrivacyPage() {
       <section className="card mt-4 space-y-2 p-4">
         <h2 className="text-lg font-bold">{t("Co sbíráme", "What we collect")}</h2>
         <ul className="list-disc space-y-1 pl-5 text-[15px] text-muted-foreground">
-          <li>{t("Jméno, e-mail a fotka z vašeho Google účtu (při přihlášení).", "Name, email and photo from your Google account (on sign-in).")}</li>
-          <li>{t("Údaje, které sami zadáte: pobyty, úkoly, výdaje, dokumenty.", "Data you enter yourself: stays, tasks, expenses, documents.")}</li>
-          <li>{t("Pouze se souhlasem: anonymní statistiky návštěv (Google Analytics).", "Only with consent: anonymous visit statistics (Google Analytics).")}</li>
+          <li>
+            {t(
+              "Jméno, e-mail a fotka z vašeho Google účtu (při přihlášení).",
+              "Name, email and photo from your Google account (on sign-in).",
+            )}
+          </li>
+          <li>
+            {t(
+              "Údaje, které sami zadáte: pobyty, úkoly, výdaje, dokumenty.",
+              "Data you enter yourself: stays, tasks, expenses, documents.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Pouze se souhlasem: anonymní statistiky návštěv (Google Analytics).",
+              "Only with consent: anonymous visit statistics (Google Analytics).",
+            )}
+          </li>
         </ul>
       </section>
 
@@ -39,15 +54,29 @@ function PrivacyPage() {
         <h2 className="text-lg font-bold">{t("Cookies", "Cookies")}</h2>
         <ul className="list-disc space-y-1 pl-5 text-[15px] text-muted-foreground">
           <li>
-            <strong>{t("Nezbytné", "Essential")}</strong> — {t("přihlášení, jazyk, offline data. Vždy zapnuté.", "sign-in, language, offline data. Always on.")}
+            <strong>{t("Nezbytné", "Essential")}</strong> —{" "}
+            {t(
+              "přihlášení, jazyk, offline data. Vždy zapnuté.",
+              "sign-in, language, offline data. Always on.",
+            )}
           </li>
           <li>
-            <strong>{t("Analytické", "Analytics")}</strong> — {t("pouze s vaším souhlasem, lze kdykoli vypnout.", "only with your consent, can be turned off anytime.")}
+            <strong>{t("Analytické", "Analytics")}</strong> —{" "}
+            {t(
+              "pouze s vaším souhlasem, lze kdykoli vypnout.",
+              "only with your consent, can be turned off anytime.",
+            )}
           </li>
         </ul>
         <p className="text-[15px] text-muted-foreground">
           {t("Aktuální volba:", "Current choice:")}{" "}
-          <strong>{choice ? (choice.analytics ? t("S analytikou", "With analytics") : t("Jen nezbytné", "Essentials only")) : t("Zatím nevybráno", "Not chosen yet")}</strong>
+          <strong>
+            {choice
+              ? choice.analytics
+                ? t("S analytikou", "With analytics")
+                : t("Jen nezbytné", "Essentials only")
+              : t("Zatím nevybráno", "Not chosen yet")}
+          </strong>
         </p>
         <button className="btn-secondary w-full" onClick={reopen}>
           {t("Změnit nastavení cookies", "Change cookie settings")}

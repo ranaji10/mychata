@@ -36,7 +36,12 @@ function MembersPage() {
     queryKey: ["invitations", account?.id],
     enabled: !!account && isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from("invitations").select("*").eq("account_id", account!.id).eq("status", "PENDING").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("invitations")
+        .select("*")
+        .eq("account_id", account!.id)
+        .eq("status", "PENDING")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Invitation[];
     },
@@ -46,7 +51,10 @@ function MembersPage() {
     queryKey: ["property-admins", property?.id],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase.from("property_admins").select("member_id").eq("property_id", property!.id);
+      const { data, error } = await supabase
+        .from("property_admins")
+        .select("member_id")
+        .eq("property_id", property!.id);
       if (error) throw error;
       return new Set((data as { member_id: string }[]).map((r) => r.member_id));
     },
@@ -55,7 +63,14 @@ function MembersPage() {
   const invite = useMutation({
     mutationFn: async () => {
       const token = crypto.randomUUID();
-      const { error } = await supabase.from("invitations").insert({ account_id: account!.id, property_id: property?.id ?? null, email: email.trim().toLowerCase(), role: inviteRole, token, created_by_member_id: currentMember?.id ?? null });
+      const { error } = await supabase.from("invitations").insert({
+        account_id: account!.id,
+        property_id: property?.id ?? null,
+        email: email.trim().toLowerCase(),
+        role: inviteRole,
+        token,
+        created_by_member_id: currentMember?.id ?? null,
+      });
       if (error) throw error;
       return token;
     },
@@ -65,12 +80,15 @@ function MembersPage() {
       const link = `${window.location.origin}/pozvanka/${token}`;
       try {
         await navigator.clipboard.writeText(link);
-        toast.success(t("Pozvánka vytvořena a odkaz zkopírován.", "Invitation created and link copied."));
+        toast.success(
+          t("Pozvánka vytvořena a odkaz zkopírován.", "Invitation created and link copied."),
+        );
       } catch {
         toast.success(t("Pozvánka vytvořena.", "Invitation created."));
       }
     },
-    onError: () => toast.error(t("Pozvánku se nepodařilo vytvořit.", "Could not create the invitation.")),
+    onError: () =>
+      toast.error(t("Pozvánku se nepodařilo vytvořit.", "Could not create the invitation.")),
   });
 
   const toggleRole = useMutation({
@@ -78,12 +96,18 @@ function MembersPage() {
       const target = members.find((m) => m.id === memberId);
       if (!target?.user_id) throw new Error("not-registered");
       if (makeAdmin) {
-        const { error } = await supabase.from("user_roles").upsert({ user_id: target.user_id, role: "admin" } as never);
+        const { error } = await supabase
+          .from("user_roles")
+          .upsert({ user_id: target.user_id, role: "admin" } as never);
         if (error) throw error;
       } else {
         const admins = members.filter((m) => m.role === "ADMIN" || m.role === "OWNER");
         if (admins.length <= 1) throw new Error("last-admin");
-        const { error } = await supabase.from("user_roles").delete().eq("user_id", target.user_id).eq("role", "admin");
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", target.user_id)
+          .eq("role", "admin");
         if (error) throw error;
       }
     },
@@ -112,7 +136,10 @@ function MembersPage() {
 
   return (
     <AppShell>
-      <PageHeader title={t("Členové a oprávnění", "Members & permissions")} subtitle={account?.name ?? ""} />
+      <PageHeader
+        title={t("Členové a oprávnění", "Members & permissions")}
+        subtitle={account?.name ?? ""}
+      />
 
       {isAdmin && (
         <div className="card mt-4 space-y-3 p-4">
@@ -120,26 +147,52 @@ function MembersPage() {
             <UserPlus className="size-5 text-primary" />
             {t("Pozvat nového člena", "Invite a new member")}
           </h2>
-          <input className="field w-full" type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className="field w-full"
+            type="email"
+            placeholder="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
           <div className="grid grid-cols-2 gap-2">
-            <button className={`btn-secondary ${inviteRole === "member" ? "ring-2 ring-primary" : ""}`} onClick={() => setInviteRole("member")}>
+            <button
+              className={`btn-secondary ${inviteRole === "member" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setInviteRole("member")}
+            >
               {t("Člen", "Member")}
             </button>
-            <button className={`btn-secondary ${inviteRole === "admin" ? "ring-2 ring-primary" : ""}`} onClick={() => setInviteRole("admin")}>
+            <button
+              className={`btn-secondary ${inviteRole === "admin" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setInviteRole("admin")}
+            >
               {t("Správce", "Admin")}
             </button>
           </div>
-          <button className="btn-primary w-full" disabled={!email.includes("@") || invite.isPending} onClick={() => invite.mutate()}>
+          <button
+            className="btn-primary w-full"
+            disabled={!email.includes("@") || invite.isPending}
+            onClick={() => invite.mutate()}
+          >
             {t("Vytvořit pozvánku", "Create invitation")}
           </button>
           {!!invites?.length && (
             <div className="space-y-2">
-              <p className="text-[14px] font-bold text-muted-foreground">{t("Čekající pozvánky", "Pending invitations")}</p>
+              <p className="text-[14px] font-bold text-muted-foreground">
+                {t("Čekající pozvánky", "Pending invitations")}
+              </p>
               {invites.map((inv) => (
                 <div key={inv.id} className="flex items-center gap-2 rounded-2xl bg-secondary p-3">
-                  <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{inv.email}</span>
-                  <span className="pill bg-card text-muted-foreground">{inv.role === "admin" ? t("Správce", "Admin") : t("Člen", "Member")}</span>
-                  <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary" aria-label={t("Zkopírovat odkaz", "Copy link")} onClick={() => copyInvite(inv.token)}>
+                  <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+                    {inv.email}
+                  </span>
+                  <span className="pill bg-card text-muted-foreground">
+                    {inv.role === "admin" ? t("Správce", "Admin") : t("Člen", "Member")}
+                  </span>
+                  <button
+                    className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
+                    aria-label={t("Zkopírovat odkaz", "Copy link")}
+                    onClick={() => copyInvite(inv.token)}
+                  >
                     <Copy className="size-5" />
                   </button>
                 </div>
@@ -155,7 +208,9 @@ function MembersPage() {
           const isPropAdmin = propertyAdmins?.has(m.id);
           return (
             <div key={m.id} className="card flex items-center gap-3 p-4">
-              <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary font-bold text-muted-foreground">{m.name.slice(0, 1)}</div>
+              <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary font-bold text-muted-foreground">
+                {m.name.slice(0, 1)}
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold">{m.name}</p>
                 <p className="truncate text-[14px] text-muted-foreground">{m.email}</p>
@@ -167,16 +222,25 @@ function MembersPage() {
                   )}
                   {isPropAdmin && (
                     <span className="pill bg-ok-soft text-ok">
-                      <Crown className="size-3.5" /> {t("Správce této chaty", "Admin of this cottage")}
+                      <Crown className="size-3.5" />{" "}
+                      {t("Správce této chaty", "Admin of this cottage")}
                     </span>
                   )}
-                  {!m.user_id && <span className="pill bg-warn-soft text-warn">{t("Zatím nepřihlášen", "Not signed in yet")}</span>}
+                  {!m.user_id && (
+                    <span className="pill bg-warn-soft text-warn">
+                      {t("Zatím nepřihlášen", "Not signed in yet")}
+                    </span>
+                  )}
                 </div>
               </div>
               {isAdmin && m.id !== currentMember?.id && m.user_id && (
                 <button
                   className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
-                  aria-label={mIsAdmin ? t("Odebrat správce", "Remove admin") : t("Udělat správcem", "Make admin")}
+                  aria-label={
+                    mIsAdmin
+                      ? t("Odebrat správce", "Remove admin")
+                      : t("Udělat správcem", "Make admin")
+                  }
                   onClick={() => toggleRole.mutate({ memberId: m.id, makeAdmin: !mIsAdmin })}
                 >
                   {mIsAdmin ? <UserMinus className="size-5" /> : <ShieldCheck className="size-5" />}

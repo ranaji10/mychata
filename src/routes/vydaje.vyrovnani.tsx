@@ -15,9 +15,15 @@ export const Route = createFileRoute("/vydaje/vyrovnani")({
   head: () => ({
     meta: [
       { title: "Settlement — My Chata" },
-      { name: "description", content: "Settlement suggestions for shared expenses between members." },
+      {
+        name: "description",
+        content: "Settlement suggestions for shared expenses between members.",
+      },
       { property: "og:title", content: "Settlement — My Chata" },
-      { property: "og:description", content: "Settlement suggestions for shared expenses between members." },
+      {
+        property: "og:description",
+        content: "Settlement suggestions for shared expenses between members.",
+      },
     ],
   }),
   component: SettlementPage,
@@ -34,7 +40,10 @@ function SettlementPage() {
     queryKey: ["expenses", property?.id],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase.from("expenses").select("*").eq("property_id", property!.id);
+      const { data, error } = await supabase
+        .from("expenses")
+        .select("*")
+        .eq("property_id", property!.id);
       if (error) throw error;
       return data as Expense[];
     },
@@ -46,7 +55,10 @@ function SettlementPage() {
     queryFn: async () => {
       const ids = expenses!.map((e) => e.id);
       if (!ids.length) return [] as ExpenseSplit[];
-      const { data, error } = await supabase.from("expense_splits").select("*").in("expense_id", ids);
+      const { data, error } = await supabase
+        .from("expense_splits")
+        .select("*")
+        .in("expense_id", ids);
       if (error) throw error;
       return data as ExpenseSplit[];
     },
@@ -95,14 +107,23 @@ function SettlementPage() {
       toast.error(t("Vyrovnání se nepodařilo uložit.", "The settlement could not be saved."));
       return;
     }
-    toast.success(t(`${name(from)} a ${name(to)} jsou vyrovnáni.`, `${name(from)} and ${name(to)} are now settled.`));
+    toast.success(
+      t(
+        `${name(from)} a ${name(to)} jsou vyrovnáni.`,
+        `${name(from)} and ${name(to)} are now settled.`,
+      ),
+    );
     queryClient.invalidateQueries({ queryKey: ["splits", property?.id] });
   };
 
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate({ to: "/vydaje" })} aria-label={t("Zpět", "Back")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+        <button
+          onClick={() => navigate({ to: "/vydaje" })}
+          aria-label={t("Zpět", "Back")}
+          className="grid size-11 place-items-center rounded-xl bg-secondary"
+        >
           <ArrowLeft className="size-5" />
         </button>
         <h1 className="text-2xl font-bold">{t("Vyrovnat dluhy", "Settle debts")}</h1>
@@ -111,7 +132,11 @@ function SettlementPage() {
       {le || ls ? (
         <LoadingCards />
       ) : suggestions.length === 0 ? (
-        <EmptyState icon={HandCoins} title={t("Všechno je vyrovnané.", "Everything is settled.")} hint={t("Nikdo nikomu nedluží.", "No one owes anyone.")} />
+        <EmptyState
+          icon={HandCoins}
+          title={t("Všechno je vyrovnané.", "Everything is settled.")}
+          hint={t("Nikdo nikomu nedluží.", "No one owes anyone.")}
+        />
       ) : (
         <div className="mt-4 space-y-3">
           {suggestions.map((s) => (
@@ -126,19 +151,24 @@ function SettlementPage() {
                 </div>
                 <p className="text-xl font-bold">{fmtKc(s.amount)}</p>
               </div>
-               {currentMember?.id === s.to ? (
-                 <button
-                   onClick={() => settle(s.from, s.to)}
-                   disabled={settling === `${s.from}->${s.to}`}
-                   className="btn-primary mt-3 w-full disabled:opacity-40"
-                 >
-                   {settling === `${s.from}->${s.to}` ? t("Ukládám…", "Saving…") : t("Potvrdit přijetí platby", "Confirm payment received")}
-                 </button>
-               ) : (
-                 <p className="mt-3 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
-                   {t(`Přijetí platby potvrzuje ${name(s.to)}.`, `${name(s.to)} confirms receipt of payment.`)}
-                 </p>
-               )}
+              {currentMember?.id === s.to ? (
+                <button
+                  onClick={() => settle(s.from, s.to)}
+                  disabled={settling === `${s.from}->${s.to}`}
+                  className="btn-primary mt-3 w-full disabled:opacity-40"
+                >
+                  {settling === `${s.from}->${s.to}`
+                    ? t("Ukládám…", "Saving…")
+                    : t("Potvrdit přijetí platby", "Confirm payment received")}
+                </button>
+              ) : (
+                <p className="mt-3 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
+                  {t(
+                    `Přijetí platby potvrzuje ${name(s.to)}.`,
+                    `${name(s.to)} confirms receipt of payment.`,
+                  )}
+                </p>
+              )}
             </div>
           ))}
         </div>

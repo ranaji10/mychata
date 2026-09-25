@@ -15,7 +15,10 @@ export const Route = createFileRoute("/verejne/kalendar/$propertyId")({
       { title: "Public calendar — My Chata" },
       { name: "description", content: "Public overview of cottage availability — read only." },
       { property: "og:title", content: "Public calendar — My Chata" },
-      { property: "og:description", content: "Public overview of cottage availability — read only." },
+      {
+        property: "og:description",
+        content: "Public overview of cottage availability — read only.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -31,7 +34,9 @@ function PublicCalendar() {
   const { data: property } = useQuery({
     queryKey: ["public-property", propertyId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("public_property_details", { _property_id: propertyId }).single();
+      const { data, error } = await supabase
+        .rpc("public_property_details", { _property_id: propertyId })
+        .single();
       if (error) throw error;
       return data as Pick<Property, "id" | "name" | "address">;
     },
@@ -40,23 +45,46 @@ function PublicCalendar() {
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["public-cal-bookings", propertyId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("public_booking_availability", { _property_id: propertyId });
+      const { data, error } = await supabase.rpc("public_booking_availability", {
+        _property_id: propertyId,
+      });
       if (error) throw error;
-      return (data ?? []).map((booking) => ({ ...booking, requester_name: "", requester_member_id: null, guests: 0, note: null, created_at: "", updated_at: "" })) as Booking[];
+      return (data ?? []).map((booking) => ({
+        ...booking,
+        requester_name: "",
+        requester_member_id: null,
+        guests: 0,
+        note: null,
+        created_at: "",
+        updated_at: "",
+      })) as Booking[];
     },
   });
 
   const branches = useMemo(() => [] as string[], []);
 
-  const prev = () => setYm(({ year, month }) => (month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 }));
-  const next = () => setYm(({ year, month }) => (month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 }));
+  const prev = () =>
+    setYm(({ year, month }) =>
+      month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 },
+    );
+  const next = () =>
+    setYm(({ year, month }) =>
+      month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 },
+    );
 
   const upcoming = (bookings ?? []).filter((b) => b.end_date >= todayISO());
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
-      <h1 className="text-2xl font-bold">{property?.name ?? t("Kalendář chaty", "Cottage calendar")}</h1>
-      <p className="mt-1 text-[14px] text-muted-foreground">{t("Veřejný přehled obsazenosti — pouze ke čtení.", "Public overview of availability — read only.")}</p>
+      <h1 className="text-2xl font-bold">
+        {property?.name ?? t("Kalendář chaty", "Cottage calendar")}
+      </h1>
+      <p className="mt-1 text-[14px] text-muted-foreground">
+        {t(
+          "Veřejný přehled obsazenosti — pouze ke čtení.",
+          "Public overview of availability — read only.",
+        )}
+      </p>
 
       <section className="card mt-4 p-4">
         <div className="flex items-center justify-between">
@@ -64,10 +92,18 @@ function PublicCalendar() {
             {monthNames(lang)[ym.month]} {ym.year}
           </h2>
           <div className="flex gap-1">
-            <button onClick={prev} aria-label={t("Předchozí měsíc", "Previous month")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+            <button
+              onClick={prev}
+              aria-label={t("Předchozí měsíc", "Previous month")}
+              className="grid size-11 place-items-center rounded-xl bg-secondary"
+            >
               <ChevronLeft className="size-5" />
             </button>
-            <button onClick={next} aria-label={t("Další měsíc", "Next month")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+            <button
+              onClick={next}
+              aria-label={t("Další měsíc", "Next month")}
+              className="grid size-11 place-items-center rounded-xl bg-secondary"
+            >
               <ChevronRight className="size-5" />
             </button>
           </div>
@@ -76,12 +112,23 @@ function PublicCalendar() {
           {isLoading ? (
             <Skeleton className="h-64" />
           ) : (
-            <CalendarMonth year={ym.year} month={ym.month} bookings={bookings ?? []} branches={branches} />
+            <CalendarMonth
+              year={ym.year}
+              month={ym.month}
+              bookings={bookings ?? []}
+              branches={branches}
+            />
           )}
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-ok" />{t("Potvrzeno", "Confirmed")}</span>
-          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-warn" />{t("Čeká na schválení", "Awaiting approval")}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-3 rounded bg-ok" />
+            {t("Potvrzeno", "Confirmed")}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-3 rounded bg-warn" />
+            {t("Čeká na schválení", "Awaiting approval")}
+          </span>
         </div>
       </section>
 
@@ -92,7 +139,9 @@ function PublicCalendar() {
             <div key={b.id} className="card flex items-center gap-3 p-3">
               <span
                 className="size-3 shrink-0 rounded-full"
-                style={{ backgroundColor: b.status === "PENDING" ? "var(--color-warn)" : "var(--color-ok)" }}
+                style={{
+                  backgroundColor: b.status === "PENDING" ? "var(--color-warn)" : "var(--color-ok)",
+                }}
               />
               <p className="text-[15px] font-semibold">
                 {fmtDate(b.start_date)} – {fmtDate(b.end_date)}

@@ -29,7 +29,8 @@ function readChoice(): ConsentChoice | null {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ConsentChoice;
-    if (parsed.version !== CONSENT_VERSION || Date.now() - parsed.at > TWELVE_MONTHS_MS) return null;
+    if (parsed.version !== CONSENT_VERSION || Date.now() - parsed.at > TWELVE_MONTHS_MS)
+      return null;
     return parsed;
   } catch {
     return null;
@@ -86,7 +87,12 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
 
 export function useConsent(): ConsentState {
   const ctx = useContext(ConsentContext);
-  if (!ctx) return { choice: { analytics: false, version: CONSENT_VERSION, at: 0 }, decide: () => {}, reopen: () => {} };
+  if (!ctx)
+    return {
+      choice: { analytics: false, version: CONSENT_VERSION, at: 0 },
+      decide: () => {},
+      reopen: () => {},
+    };
   return ctx;
 }
 
@@ -103,7 +109,9 @@ export function ConsentBanner() {
           <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
             <Cookie className="size-6" />
           </div>
-          <h2 className="text-lg font-bold">{t("Sušenky? Jen ty nejlepší.", "Cookies? Only the good kind.")}</h2>
+          <h2 className="text-lg font-bold">
+            {t("Sušenky? Jen ty nejlepší.", "Cookies? Only the good kind.")}
+          </h2>
         </div>
         <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
           {t(

@@ -3,7 +3,17 @@ import { ArrowLeft, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useLang } from "@/lib/i18n";
 
-export function PageHeader({ title, subtitle, back, action }: { title: string; subtitle?: string | undefined; back?: string; action?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  back,
+  action,
+}: {
+  title: string;
+  subtitle?: string | undefined;
+  back?: string;
+  action?: ReactNode;
+}) {
   const { t } = useLang();
   return (
     <div className="mb-4 mt-2 flex items-center gap-3">
@@ -26,17 +36,41 @@ export function PageHeader({ title, subtitle, back, action }: { title: string; s
   );
 }
 
-export function StatCard({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: "danger" | "ok" | undefined }) {
+export function StatCard({
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: string;
+  tone?: "danger" | "ok" | undefined;
+}) {
   return (
     <div className="card p-4">
       <p className="text-[13px] font-semibold text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-3xl font-bold leading-none ${tone === "danger" ? "text-primary" : ""}`}>{value}</p>
+      <p
+        className={`mt-1 text-3xl font-bold leading-none ${tone === "danger" ? "text-primary" : ""}`}
+      >
+        {value}
+      </p>
       {hint && <p className="mt-1 text-[13px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
 
-export function EmptyState({ icon: Icon, title, hint, action }: { icon: LucideIcon; title: string; hint?: string; action?: ReactNode }) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  hint,
+  action,
+}: {
+  icon: LucideIcon;
+  title: string;
+  hint?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="card flex flex-col items-center px-6 py-10 text-center">
       <div className="grid size-14 place-items-center rounded-2xl bg-secondary text-muted-foreground">
@@ -88,7 +122,9 @@ export function Avatar({ name, className = "" }: { name: string; className?: str
     .join("")
     .toUpperCase();
   return (
-    <div className={`grid size-10 shrink-0 place-items-center rounded-full bg-fog text-sm font-bold text-muted-foreground ${className}`}>
+    <div
+      className={`grid size-10 shrink-0 place-items-center rounded-full bg-fog text-sm font-bold text-muted-foreground ${className}`}
+    >
       {initials || "?"}
     </div>
   );

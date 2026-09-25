@@ -4,9 +4,13 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
 function publicClient() {
-  return createClient<Database>(process.env["SUPABASE_URL"]!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, {
-    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-  });
+  return createClient<Database>(
+    process.env["SUPABASE_URL"]!,
+    process.env["SUPABASE_PUBLISHABLE_KEY"]!,
+    {
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    },
+  );
 }
 
 export const getGuestLinkInfo = createServerFn({ method: "GET" })
@@ -16,7 +20,9 @@ export const getGuestLinkInfo = createServerFn({ method: "GET" })
     const { data: link, error } = await supabase.rpc("public_guest_link", { _token: data.token });
     if (error || !link?.length) return null;
     const row = link[0]!;
-    const { data: availability } = await supabase.rpc("public_booking_availability", { _property_id: row.property_id });
+    const { data: availability } = await supabase.rpc("public_booking_availability", {
+      _property_id: row.property_id,
+    });
     return {
       propertyId: row.property_id,
       propertyName: row.property_name,

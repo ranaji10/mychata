@@ -53,7 +53,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     enabled: !!user,
     queryFn: async () => {
       await supabase.rpc("claim_initial_membership");
-      const { data, error } = await supabase.from("members").select("*").eq("user_id", user?.id ?? "").maybeSingle();
+      const { data, error } = await supabase
+        .from("members")
+        .select("*")
+        .eq("user_id", user?.id ?? "")
+        .maybeSingle();
       if (error) throw error;
       return (data as Member | null) ?? null;
     },
@@ -63,7 +67,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user?.id ?? "").maybeSingle();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user?.id ?? "")
+        .maybeSingle();
       if (error) throw error;
       return (data as Profile | null) ?? null;
     },
@@ -88,7 +96,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     queryKey: ["properties", account?.id],
     enabled: !!account,
     queryFn: async () => {
-      const { data, error } = await supabase.from("properties").select("*").eq("account_id", account!.id).order("created_at");
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("account_id", account!.id)
+        .order("created_at");
       if (error) throw error;
       return data as Property[];
     },
@@ -103,7 +115,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     queryKey: ["members", account?.id],
     enabled: !!account,
     queryFn: async () => {
-      const { data, error } = await supabase.from("members").select("*").eq("account_id", account!.id).order("created_at");
+      const { data, error } = await supabase
+        .from("members")
+        .select("*")
+        .eq("account_id", account!.id)
+        .order("created_at");
       if (error) throw error;
       return data as Member[];
     },
@@ -120,7 +136,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   };
 
   // Onboarding is required until the profile is marked complete (invite acceptance marks it complete).
-  const needsOnboarding = !!user && !loadingIdentity && !loadingProfile && !profile?.onboarding_completed_at;
+  const needsOnboarding =
+    !!user && !loadingIdentity && !loadingProfile && !profile?.onboarding_completed_at;
 
   const value: AccountState = {
     account,

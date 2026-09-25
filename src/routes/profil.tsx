@@ -10,7 +10,9 @@ import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/profil")({
   staticData: { sitemap: false },
-  head: () => ({ meta: [{ title: "My profile — My Chata" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "My profile — My Chata" }, { name: "robots", content: "noindex" }],
+  }),
   component: ProfilePage,
 });
 
@@ -24,14 +26,21 @@ function ProfilePage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setName(profile?.display_name ?? (user?.user_metadata?.["full_name"] as string | undefined) ?? "");
+    setName(
+      profile?.display_name ?? (user?.user_metadata?.["full_name"] as string | undefined) ?? "",
+    );
     setPhone(profile?.phone ?? "");
   }, [profile, user]);
 
   const save = async () => {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase.from("profiles").upsert({ user_id: user.id, display_name: name, phone, avatar_url: (user.user_metadata?.["avatar_url"] as string | undefined) ?? null });
+    const { error } = await supabase.from("profiles").upsert({
+      user_id: user.id,
+      display_name: name,
+      phone,
+      avatar_url: (user.user_metadata?.["avatar_url"] as string | undefined) ?? null,
+    });
     setBusy(false);
     if (error) toast.error(t("Uložení se nepodařilo.", "Could not save."));
     else {
@@ -46,30 +55,50 @@ function ProfilePage() {
     navigate({ to: "/auth", replace: true });
   };
 
-  const avatarUrl = profile?.avatar_url ?? (user?.user_metadata?.["avatar_url"] as string | undefined) ?? null;
+  const avatarUrl =
+    profile?.avatar_url ?? (user?.user_metadata?.["avatar_url"] as string | undefined) ?? null;
 
   return (
     <AppShell>
       <PageHeader title={t("Můj profil", "My profile")} subtitle={user?.email ?? ""} />
       <div className="card mt-4 flex items-center gap-4 p-4">
         {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="size-16 rounded-full object-cover" referrerPolicy="no-referrer" />
+          <img
+            src={avatarUrl}
+            alt=""
+            className="size-16 rounded-full object-cover"
+            referrerPolicy="no-referrer"
+          />
         ) : (
-          <div className="grid size-16 place-items-center rounded-full bg-secondary text-xl font-bold text-muted-foreground">{(name || "?").slice(0, 1).toUpperCase()}</div>
+          <div className="grid size-16 place-items-center rounded-full bg-secondary text-xl font-bold text-muted-foreground">
+            {(name || "?").slice(0, 1).toUpperCase()}
+          </div>
         )}
         <div>
           <p className="text-lg font-bold">{name || t("Bez jména", "No name")}</p>
-          <p className="text-[14px] text-muted-foreground">{currentMember?.role === "ADMIN" || currentMember?.role === "OWNER" ? t("Správce", "Admin") : t("Člen", "Member")}</p>
+          <p className="text-[14px] text-muted-foreground">
+            {currentMember?.role === "ADMIN" || currentMember?.role === "OWNER"
+              ? t("Správce", "Admin")
+              : t("Člen", "Member")}
+          </p>
         </div>
       </div>
       <div className="card mt-4 space-y-3 p-4">
         <label className="block">
           <span className="text-[14px] font-bold">{t("Zobrazované jméno", "Display name")}</span>
-          <input className="field mt-1 w-full" value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            className="field mt-1 w-full"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </label>
         <label className="block">
           <span className="text-[14px] font-bold">{t("Telefon", "Phone")}</span>
-          <input className="field mt-1 w-full" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input
+            className="field mt-1 w-full"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
         </label>
         <button className="btn-primary w-full" disabled={busy} onClick={save}>
           {busy ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}

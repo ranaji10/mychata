@@ -9,7 +9,14 @@ import { EmptyState, LoadingCards, PageHeader, PillDanger, PillNeutral } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtDate, seasonalTemplates, taskCategoryLabel, taskTitle, todayISO, type Task } from "@/lib/data";
+import {
+  fmtDate,
+  seasonalTemplates,
+  taskCategoryLabel,
+  taskTitle,
+  todayISO,
+  type Task,
+} from "@/lib/data";
 import { translateTaskText } from "@/lib/task-translation.functions";
 
 export const Route = createFileRoute("/ukoly")({
@@ -75,7 +82,9 @@ function TasksPage() {
 
   const addTask = async () => {
     if (!property || !currentMember || !title.trim()) return;
-    const translated = await translate({ data: { text: title.trim(), sourceLanguage: lang } }).catch(() => ({ translation: title.trim() }));
+    const translated = await translate({
+      data: { text: title.trim(), sourceLanguage: lang },
+    }).catch(() => ({ translation: title.trim() }));
     const { error } = await supabase.from("tasks").insert({
       property_id: property.id,
       title: title.trim(),
@@ -143,7 +152,10 @@ function TasksPage() {
 
   return (
     <AppShell>
-      <PageHeader title={t("Úkoly", "Tasks")} subtitle={t("Co je potřeba na chatě udělat.", "What needs doing at the cottage.")} />
+      <PageHeader
+        title={t("Úkoly", "Tasks")}
+        subtitle={t("Co je potřeba na chatě udělat.", "What needs doing at the cottage.")}
+      />
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
@@ -151,7 +163,9 @@ function TasksPage() {
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={`h-11 shrink-0 rounded-full px-4 text-[14px] font-bold ${
-              filter === f.key ? "bg-primary text-primary-foreground" : "bg-card text-foreground ring-1 ring-black/5"
+              filter === f.key
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-foreground ring-1 ring-black/5"
             }`}
           >
             {f.label}
@@ -165,7 +179,10 @@ function TasksPage() {
         <EmptyState
           icon={CheckCircle2}
           title={t("Žádné úkoly v tomto filtru.", "No tasks in this filter.")}
-          hint={t("Přidejte nový úkol nebo sezónní seznam.", "Add a new task or a seasonal checklist.")}
+          hint={t(
+            "Přidejte nový úkol nebo sezónní seznam.",
+            "Add a new task or a seasonal checklist.",
+          )}
         />
       ) : (
         <div className="mt-2 space-y-2.5">
@@ -175,7 +192,11 @@ function TasksPage() {
               <div key={task.id} className="card flex items-center gap-3 p-3">
                 <button
                   onClick={() => toggle.mutate(task)}
-                  aria-label={task.status === "DONE" ? t("Označit jako nesplněné", "Mark as not done") : t("Označit jako hotové", "Mark as done")}
+                  aria-label={
+                    task.status === "DONE"
+                      ? t("Označit jako nesplněné", "Mark as not done")
+                      : t("Označit jako hotové", "Mark as done")
+                  }
                   className="grid size-11 shrink-0 place-items-center"
                 >
                   {task.status === "DONE" ? (
@@ -185,12 +206,15 @@ function TasksPage() {
                   )}
                 </button>
                 <Link to="/ukoly/$id" params={{ id: task.id }} className="min-w-0 flex-1">
-                  <p className={`truncate text-[15px] font-bold ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}>
+                  <p
+                    className={`truncate text-[15px] font-bold ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}
+                  >
                     {taskTitle(task, lang)}
                   </p>
                   <p className="text-[13px] text-muted-foreground">
                     {memberName(task.assignee_member_id) ?? t("Nepřiřazeno", "Unassigned")}
-                    {task.due_date ? ` · ${fmtDate(task.due_date)}` : ""} · {taskCategoryLabel(task.category, lang)}
+                    {task.due_date ? ` · ${fmtDate(task.due_date)}` : ""} ·{" "}
+                    {taskCategoryLabel(task.category, lang)}
                   </p>
                 </Link>
                 {task.status === "DONE" ? (
@@ -201,7 +225,6 @@ function TasksPage() {
               </div>
             );
           })}
-
         </div>
       )}
 
@@ -209,27 +232,60 @@ function TasksPage() {
         <section className="card mt-4 space-y-3 p-4">
           <h3 className="text-lg font-bold">{t("Nový úkol", "New task")}</h3>
           <div>
-            <label htmlFor="task-title" className="mb-1 block text-[13px] font-bold">{t("Název", "Title")}</label>
-            <input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("Např. Koupit plyn", "E.g. Buy gas")} className="field" />
+            <label htmlFor="task-title" className="mb-1 block text-[13px] font-bold">
+              {t("Název", "Title")}
+            </label>
+            <input
+              id="task-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={t("Např. Koupit plyn", "E.g. Buy gas")}
+              className="field"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="task-assignee" className="mb-1 block text-[13px] font-bold">{t("Odpovědná osoba", "Assignee")}</label>
-              <select id="task-assignee" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="field">
+              <label htmlFor="task-assignee" className="mb-1 block text-[13px] font-bold">
+                {t("Odpovědná osoba", "Assignee")}
+              </label>
+              <select
+                id="task-assignee"
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+                className="field"
+              >
                 <option value="">{t("Nikdo", "Nobody")}</option>
                 {members.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label htmlFor="task-due" className="mb-1 block text-[13px] font-bold">{t("Termín", "Due date")}</label>
-              <input id="task-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} className="field" />
+              <label htmlFor="task-due" className="mb-1 block text-[13px] font-bold">
+                {t("Termín", "Due date")}
+              </label>
+              <input
+                id="task-due"
+                type="date"
+                value={due}
+                onChange={(e) => setDue(e.target.value)}
+                className="field"
+              />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={addTask} disabled={!title.trim()} className="btn-primary flex-1 disabled:opacity-40">{t("Přidat úkol", "Add task")}</button>
-            <button onClick={() => setShowForm(false)} className="btn-secondary">{t("Zrušit", "Cancel")}</button>
+            <button
+              onClick={addTask}
+              disabled={!title.trim()}
+              className="btn-primary flex-1 disabled:opacity-40"
+            >
+              {t("Přidat úkol", "Add task")}
+            </button>
+            <button onClick={() => setShowForm(false)} className="btn-secondary">
+              {t("Zrušit", "Cancel")}
+            </button>
           </div>
         </section>
       ) : (
@@ -243,10 +299,19 @@ function TasksPage() {
           <Sparkles className="size-5 text-primary" />
           <h3 className="text-lg font-bold">{t("Sezónní seznamy", "Seasonal checklists")}</h3>
         </div>
-        <p className="mt-1 text-[14px] text-muted-foreground">{t("Připravené kontrolní seznamy podle ročního období.", "Ready-made checklists for the season.")}</p>
+        <p className="mt-1 text-[14px] text-muted-foreground">
+          {t(
+            "Připravené kontrolní seznamy podle ročního období.",
+            "Ready-made checklists for the season.",
+          )}
+        </p>
         <div className="mt-3 space-y-2">
           {seasonalTemplates(lang).map((tpl) => (
-            <button key={tpl.id} onClick={() => addChecklist(tpl.id)} className="btn-secondary w-full">
+            <button
+              key={tpl.id}
+              onClick={() => addChecklist(tpl.id)}
+              className="btn-secondary w-full"
+            >
               {tpl.title} ({tpl.tasks.length})
             </button>
           ))}

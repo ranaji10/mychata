@@ -45,7 +45,10 @@ function BookingDetail() {
 
   const confirm = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("bookings").update({ status: "CONFIRMED" }).eq("id", id);
+      const { error } = await supabase
+        .from("bookings")
+        .update({ status: "CONFIRMED" })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -78,7 +81,9 @@ function BookingDetail() {
     );
   }
 
-  const isAdmin = account?.type === "INSTITUTIONAL" && (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
+  const isAdmin =
+    account?.type === "INSTITUTIONAL" &&
+    (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
   const pending = booking.status === "PENDING";
 
   const guestsLabel =
@@ -89,7 +94,11 @@ function BookingDetail() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate({ to: "/kalendar" })} aria-label={t("Zpět", "Back")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+        <button
+          onClick={() => navigate({ to: "/kalendar" })}
+          aria-label={t("Zpět", "Back")}
+          className="grid size-11 place-items-center rounded-xl bg-secondary"
+        >
           <ArrowLeft className="size-5" />
         </button>
         <h1 className="text-2xl font-bold">{t("Detail pobytu", "Stay detail")}</h1>
@@ -98,7 +107,11 @@ function BookingDetail() {
       <section className="card mt-4 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">{booking.requester_name}</h2>
-          {pending ? <PillWarn>{t("Čeká na schválení", "Awaiting approval")}</PillWarn> : <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>}
+          {pending ? (
+            <PillWarn>{t("Čeká na schválení", "Awaiting approval")}</PillWarn>
+          ) : (
+            <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
+          )}
         </div>
 
         <div className="mt-3 space-y-3">
@@ -129,8 +142,12 @@ function BookingDetail() {
 
       {pending && isAdmin && (
         <div className="mt-4 flex gap-2">
-          <button onClick={() => confirm.mutate()} className="btn-primary flex-1">{t("Schválit", "Approve")}</button>
-          <button onClick={() => remove.mutate()} className="btn-danger flex-1">{t("Zamítnout", "Decline")}</button>
+          <button onClick={() => confirm.mutate()} className="btn-primary flex-1">
+            {t("Schválit", "Approve")}
+          </button>
+          <button onClick={() => remove.mutate()} className="btn-danger flex-1">
+            {t("Zamítnout", "Decline")}
+          </button>
         </div>
       )}
 
@@ -142,7 +159,9 @@ function BookingDetail() {
 
       {pending && !isAdmin && (
         <p className="mt-4 text-center text-[14px] font-semibold text-muted-foreground">
-          <PillNeutral>{t("Schválit může pouze správce.", "Only an admin can approve.")}</PillNeutral>
+          <PillNeutral>
+            {t("Schválit může pouze správce.", "Only an admin can approve.")}
+          </PillNeutral>
         </p>
       )}
     </AppShell>

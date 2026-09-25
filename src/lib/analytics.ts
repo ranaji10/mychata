@@ -39,5 +39,8 @@ export function track(event: string, params: Record<string, unknown> = {}) {
 
 /** Page view on every client-side navigation. */
 export function trackPageView(path: string) {
-  track("page_view", { page_path: path, page_location: typeof window !== "undefined" ? window.location.href : path });
+  track("page_view", {
+    page_path: path,
+    page_location: typeof window !== "undefined" ? window.location.href : path,
+  });
 }

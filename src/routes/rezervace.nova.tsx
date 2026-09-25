@@ -38,7 +38,10 @@ function NewBooking() {
     queryKey: ["bookings", property?.id],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase.from("bookings").select("*").eq("property_id", property!.id);
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("*")
+        .eq("property_id", property!.id);
       if (error) throw error;
       return data as Booking[];
     },
@@ -75,7 +78,11 @@ function NewBooking() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate({ to: "/kalendar" })} aria-label={t("Zpět", "Back")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+        <button
+          onClick={() => navigate({ to: "/kalendar" })}
+          aria-label={t("Zpět", "Back")}
+          className="grid size-11 place-items-center rounded-xl bg-secondary"
+        >
           <ArrowLeft className="size-5" />
         </button>
         <h1 className="text-2xl font-bold">{t("Nová rezervace", "New booking")}</h1>
@@ -84,31 +91,71 @@ function NewBooking() {
       <section className="card mt-4 space-y-4 p-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="start" className="mb-1 block text-[13px] font-bold">{t("Příjezd", "Arrival")}</label>
-            <input id="start" type="date" value={start} min={todayISO()} onChange={(e) => setStart(e.target.value)} className="field" />
+            <label htmlFor="start" className="mb-1 block text-[13px] font-bold">
+              {t("Příjezd", "Arrival")}
+            </label>
+            <input
+              id="start"
+              type="date"
+              value={start}
+              min={todayISO()}
+              onChange={(e) => setStart(e.target.value)}
+              className="field"
+            />
           </div>
           <div>
-            <label htmlFor="end" className="mb-1 block text-[13px] font-bold">{t("Odjezd", "Departure")}</label>
-            <input id="end" type="date" value={end} min={start} onChange={(e) => setEnd(e.target.value)} className="field" />
+            <label htmlFor="end" className="mb-1 block text-[13px] font-bold">
+              {t("Odjezd", "Departure")}
+            </label>
+            <input
+              id="end"
+              type="date"
+              value={end}
+              min={start}
+              onChange={(e) => setEnd(e.target.value)}
+              className="field"
+            />
           </div>
         </div>
 
         <div>
-          <span className="mb-1 block text-[13px] font-bold">{t("Počet hostů", "Number of guests")}</span>
+          <span className="mb-1 block text-[13px] font-bold">
+            {t("Počet hostů", "Number of guests")}
+          </span>
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-2">
-            <button onClick={() => setGuests((g) => Math.max(1, g - 1))} aria-label={t("Odebrat hosta", "Remove guest")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+            <button
+              onClick={() => setGuests((g) => Math.max(1, g - 1))}
+              aria-label={t("Odebrat hosta", "Remove guest")}
+              className="grid size-11 place-items-center rounded-xl bg-secondary"
+            >
               <Minus className="size-5" />
             </button>
             <span className="flex-1 text-center text-2xl font-bold">{guests}</span>
-            <button onClick={() => setGuests((g) => Math.min(20, g + 1))} aria-label={t("Přidat hosta", "Add guest")} className="grid size-11 place-items-center rounded-xl bg-secondary">
+            <button
+              onClick={() => setGuests((g) => Math.min(20, g + 1))}
+              aria-label={t("Přidat hosta", "Add guest")}
+              className="grid size-11 place-items-center rounded-xl bg-secondary"
+            >
               <Plus className="size-5" />
             </button>
           </div>
         </div>
 
         <div>
-          <label htmlFor="note" className="mb-1 block text-[13px] font-bold">{t("Poznámka (nepovinné)", "Note (optional)")}</label>
-          <textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder={t("Např. dovezu dřevo, přivezu psa…", "E.g. bringing firewood, bringing the dog…")} className="field resize-none" />
+          <label htmlFor="note" className="mb-1 block text-[13px] font-bold">
+            {t("Poznámka (nepovinné)", "Note (optional)")}
+          </label>
+          <textarea
+            id="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={3}
+            placeholder={t(
+              "Např. dovezu dřevo, přivezu psa…",
+              "E.g. bringing firewood, bringing the dog…",
+            )}
+            className="field resize-none"
+          />
         </div>
 
         {invalid && (
@@ -123,27 +170,41 @@ function NewBooking() {
             <ul className="mt-1 list-disc space-y-1 pl-5">
               {overlaps.map((conflict) => (
                 <li key={`${conflict.other.name}-${conflict.other.start}`}>
-                  {conflict.other.name} ({fmtDate(conflict.other.start)} – {fmtDate(conflict.other.end)})
+                  {conflict.other.name} ({fmtDate(conflict.other.start)} –{" "}
+                  {fmtDate(conflict.other.end)})
                 </li>
               ))}
             </ul>
-            <p className="mt-2">{t("Překryv je v rodinném účtu povolen.", "Overlapping family stays are allowed.")}</p>
+            <p className="mt-2">
+              {t("Překryv je v rodinném účtu povolen.", "Overlapping family stays are allowed.")}
+            </p>
           </div>
         )}
 
         {changeovers.length > 0 && (
           <div className="flex gap-2 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
             <AlertTriangle className="mt-0.5 size-5 shrink-0" />
-            <p>{t("Ve stejný den odjíždí", "On the same day, departing:")} {changeovers.map((conflict) => conflict.other.name).join(", ")}. {t("Domluvte si předání chaty.", "Coordinate the cottage handover.")}</p>
+            <p>
+              {t("Ve stejný den odjíždí", "On the same day, departing:")}{" "}
+              {changeovers.map((conflict) => conflict.other.name).join(", ")}.{" "}
+              {t("Domluvte si předání chaty.", "Coordinate the cottage handover.")}
+            </p>
           </div>
         )}
       </section>
 
-      <button onClick={save} disabled={saving || invalid} className="btn-primary mt-4 w-full disabled:opacity-40">
+      <button
+        onClick={save}
+        disabled={saving || invalid}
+        className="btn-primary mt-4 w-full disabled:opacity-40"
+      >
         {saving ? t("Ukládám…", "Saving…") : t("Potvrdit rezervaci", "Confirm booking")}
       </button>
       <p className="mt-2 text-center text-[13px] text-muted-foreground">
-        {t("Rezervace se ihned zapíše do rodinného kalendáře.", "The booking is added to the family calendar immediately.")}
+        {t(
+          "Rezervace se ihned zapíše do rodinného kalendáře.",
+          "The booking is added to the family calendar immediately.",
+        )}
       </p>
     </AppShell>
   );

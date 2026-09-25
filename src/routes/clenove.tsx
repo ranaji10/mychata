@@ -92,23 +92,16 @@ function MembersPage() {
   });
 
   const toggleRole = useMutation({
+    // One server-side function decides (migration 0011): checks the caller is an admin of
+    // this account and refuses to remove the last admin.
     mutationFn: async ({ memberId, makeAdmin }: { memberId: string; makeAdmin: boolean }) => {
-      const target = members.find((m) => m.id === memberId);
-      if (!target?.user_id) throw new Error("not-registered");
-      if (makeAdmin) {
-        const { error } = await supabase
-          .from("user_roles")
-          .upsert({ user_id: target.user_id, role: "admin" } as never);
-        if (error) throw error;
-      } else {
-        const admins = members.filter((m) => m.role === "ADMIN" || m.role === "OWNER");
-        if (admins.length <= 1) throw new Error("last-admin");
-        const { error } = await supabase
-          .from("user_roles")
-          .delete()
-          .eq("user_id", target.user_id)
-          .eq("role", "admin");
-        if (error) throw error;
+      const { error } = await supabase.rpc("set_member_role", {
+        _member_id: memberId,
+        _role: makeAdmin ? "ADMIN" : "MEMBER",
+      });
+      if (error) {
+        if (error.message.includes("last_admin")) throw new Error("last-admin");
+        throw error;
       }
     },
     onSuccess: () => {

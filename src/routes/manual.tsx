@@ -45,11 +45,11 @@ function ManualPage() {
     contentCs: "",
     contentEn: "",
     category: "other",
-    visibility: "PUBLIC",
+    visibility: "MEMBERS_ONLY",
   });
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const publicUrl = property
-    ? `${typeof window === "undefined" ? "" : window.location.origin}/verejne/manual/${property.id}`
+    ? `${typeof window === "undefined" ? "" : window.location.origin}/verejne/manual/${property.public_token}`
     : "";
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
@@ -63,8 +63,16 @@ function ManualPage() {
       const res = await askManual({
         data: { propertyId: property.id, question: question.trim(), lang },
       });
+      const reasons: Record<string, string> = {
+        limit: t(
+          "Dnešní limit otázek je vyčerpán. Zkuste to zítra.",
+          "Today's question limit is reached. Try again tomorrow.",
+        ),
+        disabled: t("Odpovědi AI jsou dočasně vypnuté.", "AI answers are switched off for now."),
+      };
       setAnswer(
         res.answer ??
+          (res.reason ? reasons[res.reason] : undefined) ??
           t("Na to jsem v manuálu odpověď nenašel.", "I could not find an answer in the manual."),
       );
     } catch {
@@ -141,7 +149,7 @@ function ManualPage() {
         contentCs: "",
         contentEn: "",
         category: "other",
-        visibility: "PUBLIC",
+        visibility: "MEMBERS_ONLY",
       });
       toast.success(t("Sekce přidána.", "Section added."));
       if (property) void rebuildManualChunks({ data: { propertyId: property.id } });
@@ -329,8 +337,10 @@ function ManualPage() {
               onChange={(e) => setForm({ ...form, visibility: e.target.value })}
               className="field"
             >
-              <option value="PUBLIC">{t("Veřejné", "Public")}</option>
               <option value="MEMBERS_ONLY">{t("Jen členové", "Members only")}</option>
+              <option value="PUBLIC">
+                {t("Veřejné (kdokoli s odkazem)", "Public (anyone with the link)")}
+              </option>
             </select>
             <div className="flex gap-2">
               <button className="btn-primary flex-1">{t("Uložit", "Save")}</button>

@@ -52,7 +52,18 @@ function MorePage() {
 
   const copyPublicLink = async () => {
     if (!property) return;
-    const url = `${window.location.origin}/verejne/kalendar/${property.id}`;
+    // Publishing the calendar is an explicit admin action; the link uses the share token.
+    const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
+      _property_id: property.id,
+      _enabled: true,
+    });
+    if (publishError || !publicToken) {
+      toast.error(
+        t("Veřejný kalendář může zapnout jen správce.", "Only an admin can publish the calendar."),
+      );
+      return;
+    }
+    const url = `${window.location.origin}/verejne/kalendar/${publicToken}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success(t("Odkaz na veřejný kalendář zkopírován.", "Public calendar link copied."));
@@ -162,7 +173,12 @@ function MorePage() {
           </>
         )}
         {!isFamily && (
-          <Link to="/verejne/zadost" className="flex items-center gap-3 p-4 active:bg-secondary">
+          <Link
+            to="/verejne/zadost/$token"
+            params={{ token: property?.public_token ?? "" }}
+            disabled={!property}
+            className="flex items-center gap-3 p-4 active:bg-secondary"
+          >
             <Link2 className="size-5 text-muted-foreground" />
             <span className="flex-1 text-[15px] font-bold">
               {t("Veřejný formulář žádosti", "Public request form")}

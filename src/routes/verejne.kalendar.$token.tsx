@@ -5,10 +5,10 @@ import { useMemo, useState } from "react";
 import { CalendarMonth } from "@/routes/kalendar";
 import { Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
-import { monthNames, fmtDate, todayISO, type Booking, type Property } from "@/lib/data";
+import { monthNames, fmtDate, todayISO, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
-export const Route = createFileRoute("/verejne/kalendar/$propertyId")({
+export const Route = createFileRoute("/verejne/kalendar/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
@@ -27,30 +27,31 @@ export const Route = createFileRoute("/verejne/kalendar/$propertyId")({
 
 function PublicCalendar() {
   const { t, lang } = useLang();
-  const { propertyId } = Route.useParams();
+  const { token } = Route.useParams();
   const now = new Date();
   const [ym, setYm] = useState({ year: now.getFullYear(), month: now.getMonth() });
 
+  // Public pages are addressed by the property's share token, never its id (migration 0012).
   const { data: property } = useQuery({
-    queryKey: ["public-property", propertyId],
+    queryKey: ["public-property", token],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc("public_property_details", { _property_id: propertyId })
-        .single();
+      const { data, error } = await supabase.rpc("public_property", { _token: token });
       if (error) throw error;
-      return data as Pick<Property, "id" | "name" | "address">;
+      return data?.[0] ?? null;
     },
   });
 
   const { data: bookings, isLoading } = useQuery({
-    queryKey: ["public-cal-bookings", propertyId],
+    queryKey: ["public-cal-bookings", token],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("public_booking_availability", {
-        _property_id: propertyId,
-      });
+      const { data, error } = await supabase.rpc("public_calendar", { _token: token });
       if (error) throw error;
-      return (data ?? []).map((booking) => ({
-        ...booking,
+      return (data ?? []).map((booking, i) => ({
+        id: `public-${i}`,
+        property_id: "",
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+        status: booking.status,
         requester_name: "",
         requester_member_id: null,
         guests: 0,
@@ -77,7 +78,7 @@ function PublicCalendar() {
   return (
     <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
       <h1 className="text-2xl font-bold">
-        {property?.name ?? t("Kalendář chaty", "Cottage calendar")}
+        {property?.property_name ?? t("Kalendář chaty", "Cottage calendar")}
       </h1>
       <p className="mt-1 text-[14px] text-muted-foreground">
         {t(
@@ -85,6 +86,14 @@ function PublicCalendar() {
           "Public overview of availability — read only.",
         )}
       </p>
+      {property && !property.calendar_enabled && (
+        <p className="card mt-4 p-4 text-[15px]">
+          {t(
+            "Správce tento kalendář nezveřejnil.",
+            "The cottage admin has not made this calendar public.",
+          )}
+        </p>
+      )}
 
       <section className="card mt-4 p-4">
         <div className="flex items-center justify-between">

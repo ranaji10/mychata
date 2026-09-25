@@ -3,15 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { findConflicts, fmtDate, todayISO, type Booking, type Property } from "@/lib/data";
+import { findConflicts, fmtDate, todayISO, type Booking } from "@/lib/data";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 
-export const Route = createFileRoute("/verejne/zadost")({
-  staticData: { sitemap: true },
+export const Route = createFileRoute("/verejne/zadost/$token")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Stay request — My Chata" },
+      { name: "robots", content: "noindex" },
       { name: "description", content: "Public request form for a stay at the company cottage." },
       { property: "og:title", content: "Stay request — My Chata" },
       {
@@ -25,25 +26,30 @@ export const Route = createFileRoute("/verejne/zadost")({
 
 function PublicRequest() {
   const { t } = useLang();
-  const { data: property } = useQuery({
-    queryKey: ["institutional-property"],
+  const { token } = Route.useParams();
+  // Each institution shares its own link: /verejne/zadost/<property share token> (migration 0012).
+  const { data: property, isLoading: loadingProperty } = useQuery({
+    queryKey: ["institutional-property", token],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("public_institutional_property").single();
+      const { data, error } = await supabase.rpc("public_property", { _token: token });
       if (error) throw error;
-      return data as Pick<Property, "id" | "name" | "address">;
+      const row = data?.[0];
+      return row?.is_institution ? { name: row.property_name } : null;
     },
   });
 
   const { data: bookings } = useQuery({
-    queryKey: ["public-bookings", property?.id],
+    queryKey: ["public-bookings", token],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("public_booking_availability", {
-        _property_id: property?.id ?? "",
-      });
+      const { data, error } = await supabase.rpc("public_calendar", { _token: token });
       if (error) throw error;
-      return (data ?? []).map((booking) => ({
-        ...booking,
+      return (data ?? []).map((booking, i) => ({
+        id: `public-${i}`,
+        property_id: "",
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+        status: booking.status,
         requester_name: t("Jiný pobyt", "Another stay"),
         requester_member_id: null,
         guests: 0,
@@ -69,27 +75,36 @@ function PublicRequest() {
   const invalid = end < start;
   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 
+  const [failure, setFailure] = useState<string | null>(null);
+
   const submit = async () => {
-    const prop = property;
-    if (!prop || !name.trim() || !emailOk || invalid) return;
+    if (!property || !name.trim() || !emailOk || invalid) return;
     setSaving(true);
-    const { error } = await supabase.from("institutional_requests").insert({
-      property_id: prop.id,
-      requester_name: name.trim(),
-      requester_email: email.trim(),
-      affiliation: affiliation.trim() || null,
-      start_date: start,
-      end_date: end,
-      guests,
-      note: note || null,
-      status: "PENDING",
-      has_conflict: hasConflict,
-      conflict_note: hasConflict
-        ? conflicts.map((c) => `${c.other.name} (${c.other.start}–${c.other.end})`).join(", ")
-        : null,
+    setFailure(null);
+    // The server checks the token, recomputes conflicts and rate-limits (submit_institutional_request).
+    const { data: result, error } = await supabase.rpc("submit_institutional_request", {
+      _token: token,
+      _name: name.trim(),
+      _email: email.trim(),
+      _phone: "",
+      _affiliation: affiliation.trim(),
+      _start: start,
+      _end: end,
+      _guests: guests,
+      ...(note ? { _note: note } : {}),
     });
     setSaving(false);
-    if (error) return;
+    if (error || result !== "ok") {
+      setFailure(
+        result === "rate"
+          ? t("Dnes už bylo odesláno příliš mnoho žádostí.", "Too many requests today.")
+          : t(
+              "Žádost se nepodařilo odeslat. Zkontrolujte údaje.",
+              "Could not send. Please check the details.",
+            ),
+      );
+      return;
+    }
     setSent(true);
   };
 
@@ -269,6 +284,16 @@ function PublicRequest() {
           >
             {saving ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}
           </button>
+          {failure && (
+            <p role="alert" className="text-center text-[14px] font-semibold text-destructive">
+              {failure}
+            </p>
+          )}
+          {!loadingProperty && !property && (
+            <p className="text-center text-[14px] text-muted-foreground">
+              {t("Tento odkaz na formulář neplatí.", "This form link is not valid.")}
+            </p>
+          )}
         </section>
       )}
     </div>

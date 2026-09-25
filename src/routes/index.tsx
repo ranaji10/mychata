@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
 import { useAccount } from "@/lib/account";
 import { useEffect } from "react";
@@ -65,15 +65,6 @@ function Index() {
         {t("Bezpečně načítám váš účet.", "Securely loading your account.")}
       </p>
       <LogIn className="mt-5 size-8 text-primary" />
-
-      <div className="mt-auto pt-8 text-center text-[13px] text-muted-foreground">
-        <Link
-          to="/verejne/zadost"
-          className="font-semibold text-primary underline underline-offset-2"
-        >
-          {t("Veřejný formulář žádosti o pobyt", "Public stay request form")}
-        </Link>
-      </div>
     </div>
   );
 }

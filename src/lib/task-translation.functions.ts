@@ -10,10 +10,22 @@ const inputSchema = z.object({
 export const translateTaskText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => inputSchema.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const targetLanguage = data.sourceLanguage === "cs" ? "English" : "Czech";
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { translation: data.text };
+
+    // Kill switch and per-user daily cap (migration 0015). On refusal the task keeps its
+    // original wording, which the UI already handles as "translation unavailable".
+    const { data: enabled } = await context.supabase.rpc("feature_enabled", {
+      _key: "ai_translate",
+    });
+    if (!enabled) return { translation: data.text };
+    const { data: allowed } = await context.supabase.rpc("bump_usage", {
+      _kind: "ai_translate",
+      _daily_limit: 200,
+    });
+    if (!allowed) return { translation: data.text };
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

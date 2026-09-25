@@ -8,6 +8,10 @@ const LS_PROPERTY = "mychata.property";
 
 interface AccountState {
   account: Account | null;
+  /** Every account this person belongs to (family chata, in-laws' chata, an institution…). */
+  accounts: Account[];
+  /** Makes another account active. Row-level security follows the active account. */
+  switchAccount: (accountId: string) => Promise<void>;
   property: Property | null;
   properties: Property[];
   setActivePropertyId: (id: string) => void;
@@ -48,18 +52,20 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     return () => data.subscription.unsubscribe();
   }, []);
 
-  const { data: identityMember, isLoading: loadingIdentity } = useQuery({
-    queryKey: ["identity-member", user?.id],
+  // All member rows for this person, one per account (migration 0011).
+  const { data: memberships, isLoading: loadingIdentity } = useQuery({
+    queryKey: ["identity-members", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      await supabase.rpc("claim_initial_membership");
+      const { error: claimError } = await supabase.rpc("claim_initial_membership");
+      if (claimError) console.error("[account] claim_initial_membership", claimError.message);
       const { data, error } = await supabase
         .from("members")
         .select("*")
         .eq("user_id", user?.id ?? "")
-        .maybeSingle();
+        .order("created_at");
       if (error) throw error;
-      return (data as Member | null) ?? null;
+      return (data ?? []) as Member[];
     },
   });
 
@@ -77,6 +83,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Same rule as the database's current_account_id(): the saved active account if the
+  // person still belongs to it, otherwise their oldest membership.
+  const identityMember = useMemo(() => {
+    if (!memberships?.length) return null;
+    return memberships.find((m) => m.account_id === profile?.active_account_id) ?? memberships[0]!;
+  }, [memberships, profile?.active_account_id]);
+
   const { data: accounts, isLoading: loadingAccounts } = useQuery({
     queryKey: ["accounts", user?.id],
     enabled: !!identityMember,
@@ -91,6 +104,18 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     () => accounts?.find((a) => a.id === identityMember?.account_id) ?? null,
     [accounts, identityMember?.account_id],
   );
+
+  const switchAccount = async (accountId: string) => {
+    const { error } = await supabase.rpc("set_active_account", { _account_id: accountId });
+    if (error) throw error;
+    setActivePropertyIdState(null);
+    try {
+      localStorage.removeItem(LS_PROPERTY);
+    } catch {
+      /* ignore */
+    }
+    await queryClient.invalidateQueries();
+  };
 
   const { data: properties, isLoading: loadingProperties } = useQuery({
     queryKey: ["properties", account?.id],
@@ -141,6 +166,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   const value: AccountState = {
     account,
+    accounts: accounts ?? [],
+    switchAccount,
     property,
     properties: properties ?? [],
     setActivePropertyId,

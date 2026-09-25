@@ -122,7 +122,18 @@ function CalendarPage() {
     );
 
   const copyPublicLink = async () => {
-    const url = `${window.location.origin}/verejne/kalendar/${property!.id}`;
+    // Publishing the calendar is an explicit admin action; the link uses the share token.
+    const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
+      _property_id: property!.id,
+      _enabled: true,
+    });
+    if (publishError || !publicToken) {
+      toast.error(
+        t("Veřejný kalendář může zapnout jen správce.", "Only an admin can publish the calendar."),
+      );
+      return;
+    }
+    const url = `${window.location.origin}/verejne/kalendar/${publicToken}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success(t("Odkaz na veřejný kalendář zkopírován.", "Public calendar link copied."));

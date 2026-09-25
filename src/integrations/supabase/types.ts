@@ -628,6 +628,12 @@ export type Database = {
           content: string;
           created_at: string;
           embedding: string | null;
+          content_hash: string | null;
+          lang: string;
+          model_version: string | null;
+          tsv: unknown | null;
+          updated_at: string;
+          visibility: string;
           id: string;
           property_id: string;
           section_id: string | null;
@@ -636,6 +642,11 @@ export type Database = {
           content: string;
           created_at?: string;
           embedding?: string | null;
+          content_hash?: string | null;
+          lang?: string;
+          model_version?: string | null;
+          updated_at?: string;
+          visibility?: string;
           id?: string;
           property_id: string;
           section_id?: string | null;
@@ -644,6 +655,11 @@ export type Database = {
           content?: string;
           created_at?: string;
           embedding?: string | null;
+          content_hash?: string | null;
+          lang?: string;
+          model_version?: string | null;
+          updated_at?: string;
+          visibility?: string;
           id?: string;
           property_id?: string;
           section_id?: string | null;
@@ -857,6 +873,7 @@ export type Database = {
           display_name: string | null;
           member_id: string | null;
           onboarding_completed_at: string | null;
+          active_account_id: string | null;
           phone: string | null;
           user_id: string;
         };
@@ -866,6 +883,7 @@ export type Database = {
           display_name?: string | null;
           member_id?: string | null;
           onboarding_completed_at?: string | null;
+          active_account_id?: string | null;
           phone?: string | null;
           user_id: string;
         };
@@ -875,6 +893,7 @@ export type Database = {
           display_name?: string | null;
           member_id?: string | null;
           onboarding_completed_at?: string | null;
+          active_account_id?: string | null;
           phone?: string | null;
           user_id?: string;
         };
@@ -896,6 +915,8 @@ export type Database = {
           city: string | null;
           created_at: string;
           created_by_member_id: string | null;
+          public_calendar_enabled: boolean;
+          public_token: string;
           handover_items: Json;
           house_rules_text: string | null;
           id: string;
@@ -912,6 +933,8 @@ export type Database = {
           city?: string | null;
           created_at?: string;
           created_by_member_id?: string | null;
+          public_calendar_enabled?: boolean;
+          public_token?: string;
           handover_items?: Json;
           house_rules_text?: string | null;
           id?: string;
@@ -928,6 +951,8 @@ export type Database = {
           city?: string | null;
           created_at?: string;
           created_by_member_id?: string | null;
+          public_calendar_enabled?: boolean;
+          public_token?: string;
           handover_items?: Json;
           house_rules_text?: string | null;
           id?: string;
@@ -1125,12 +1150,187 @@ export type Database = {
         };
         Relationships: [];
       };
+      audit_log: {
+        Row: {
+          account_id: string | null;
+          action: string;
+          actor_user_id: string | null;
+          at: string;
+          detail: Json;
+          id: number;
+          target_id: string | null;
+          target_type: string | null;
+        };
+        Insert: {
+          account_id?: string | null;
+          action?: string;
+          actor_user_id?: string | null;
+          at?: string;
+          detail?: Json;
+          id?: number;
+          target_id?: string | null;
+          target_type?: string | null;
+        };
+        Update: {
+          account_id?: string | null;
+          action?: string;
+          actor_user_id?: string | null;
+          at?: string;
+          detail?: Json;
+          id?: number;
+          target_id?: string | null;
+          target_type?: string | null;
+        };
+        Relationships: [];
+      };
+      billing_events: {
+        Row: {
+          id: number;
+          payload: Json;
+          processed_at: string | null;
+          provider: string;
+          provider_event_id: string;
+          received_at: string;
+          type: string;
+        };
+        Insert: {
+          id?: number;
+          payload?: Json;
+          processed_at?: string | null;
+          provider?: string;
+          provider_event_id?: string;
+          received_at?: string;
+          type?: string;
+        };
+        Update: {
+          id?: number;
+          payload?: Json;
+          processed_at?: string | null;
+          provider?: string;
+          provider_event_id?: string;
+          received_at?: string;
+          type?: string;
+        };
+        Relationships: [];
+      };
+      feature_flags: {
+        Row: {
+          enabled: boolean;
+          key: string;
+          note: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          enabled?: boolean;
+          key?: string;
+          note?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          enabled?: boolean;
+          key?: string;
+          note?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      plans: {
+        Row: {
+          active: boolean;
+          audience: string;
+          id: string;
+          limits: Json;
+          name: string;
+          price_czk_month: number | null;
+        };
+        Insert: {
+          active?: boolean;
+          audience?: string;
+          id?: string;
+          limits?: Json;
+          name?: string;
+          price_czk_month?: number | null;
+        };
+        Update: {
+          active?: boolean;
+          audience?: string;
+          id?: string;
+          limits?: Json;
+          name?: string;
+          price_czk_month?: number | null;
+        };
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: {
+          account_id: string;
+          billing_email: string | null;
+          company_id: string | null;
+          current_period_end: string | null;
+          plan_id: string;
+          provider: string | null;
+          provider_ref: string | null;
+          seats: number | null;
+          status: string;
+          updated_at: string;
+          vat_id: string | null;
+        };
+        Insert: {
+          account_id?: string;
+          billing_email?: string | null;
+          company_id?: string | null;
+          current_period_end?: string | null;
+          plan_id?: string;
+          provider?: string | null;
+          provider_ref?: string | null;
+          seats?: number | null;
+          status?: string;
+          updated_at?: string;
+          vat_id?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          billing_email?: string | null;
+          company_id?: string | null;
+          current_period_end?: string | null;
+          plan_id?: string;
+          provider?: string | null;
+          provider_ref?: string | null;
+          seats?: number | null;
+          status?: string;
+          updated_at?: string;
+          vat_id?: string | null;
+        };
+        Relationships: [];
+      };
+      usage_counters: {
+        Row: {
+          count: number;
+          day: string;
+          kind: string;
+          user_id: string;
+        };
+        Insert: {
+          count?: number;
+          day?: string;
+          kind?: string;
+          user_id?: string;
+        };
+        Update: {
+          count?: number;
+          day?: string;
+          kind?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: string };
+      account_plan: { Args: { _account_id: string }; Returns: string };
       add_property: {
         Args: {
           _address?: string;
@@ -1140,6 +1340,7 @@ export type Database = {
         };
         Returns: string;
       };
+      bump_usage: { Args: { _daily_limit: number; _kind: string }; Returns: boolean };
       claim_initial_membership: { Args: never; Returns: string };
       create_account_onboarding: {
         Args: {
@@ -1156,6 +1357,9 @@ export type Database = {
         Returns: string;
       };
       current_account_id: { Args: never; Returns: string };
+      current_member_id: { Args: never; Returns: string };
+      feature_enabled: { Args: { _key: string }; Returns: boolean };
+      has_account_role: { Args: { _account_id: string; _role: string }; Returns: boolean };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
@@ -1163,25 +1367,26 @@ export type Database = {
         };
         Returns: boolean;
       };
+      is_admin: { Args: never; Returns: boolean };
+      is_member: { Args: { _account_id: string }; Returns: boolean };
       is_property_admin: { Args: { _property_id: string }; Returns: boolean };
-      match_manual_chunks: {
-        Args: { _count?: number; _embedding: string; _property_id: string };
-        Returns: {
-          content: string;
-          id: string;
-          section_id: string;
-          similarity: number;
-        }[];
-      };
-      public_booking_availability: {
-        Args: { _property_id: string };
+      plan_limit: { Args: { _account_id: string; _key: string }; Returns: Json };
+      public_calendar: {
+        Args: { _token: string };
         Returns: {
           end_date: string;
-          id: string;
-          property_id: string;
+          property_name: string;
           start_date: string;
           status: string;
         }[];
+      };
+      public_flag_manual_section: {
+        Args: { _section_id: string; _token: string };
+        Returns: boolean;
+      };
+      public_guest_availability: {
+        Args: { _token: string };
+        Returns: { end_date: string; start_date: string; status: string }[];
       };
       public_guest_link: {
         Args: { _token: string };
@@ -1194,21 +1399,62 @@ export type Database = {
           valid_to: string;
         }[];
       };
-      public_institutional_property: {
-        Args: never;
+      public_manual: {
+        Args: { _token: string };
         Returns: {
-          address: string;
+          category: string;
+          content_cs: string;
+          content_en: string;
+          display_order: number;
           id: string;
-          name: string;
+          photo_url: string | null;
+          title_cs: string;
+          title_en: string;
         }[];
       };
-      public_property_details: {
-        Args: { _property_id: string };
-        Returns: {
-          address: string;
-          id: string;
-          name: string;
-        }[];
+      public_property: {
+        Args: { _token: string };
+        Returns: { calendar_enabled: boolean; is_institution: boolean; property_name: string }[];
+      };
+      rotate_public_token: { Args: { _property_id: string }; Returns: string };
+      search_manual: {
+        Args: {
+          _count?: number;
+          _embedding: string | null;
+          _lang?: string;
+          _property_id: string;
+          _query: string;
+        };
+        Returns: { content: string; score: number; section_id: string }[];
+      };
+      set_active_account: { Args: { _account_id: string }; Returns: string };
+      set_member_role: { Args: { _member_id: string; _role: string }; Returns: undefined };
+      set_public_calendar: { Args: { _enabled: boolean; _property_id: string }; Returns: string };
+      submit_guest_request: {
+        Args: {
+          _email: string;
+          _end: string;
+          _guests: number;
+          _name: string;
+          _note?: string;
+          _start: string;
+          _token: string;
+        };
+        Returns: string;
+      };
+      submit_institutional_request: {
+        Args: {
+          _affiliation: string;
+          _email: string;
+          _end: string;
+          _guests: number;
+          _name: string;
+          _note?: string;
+          _phone: string;
+          _start: string;
+          _token: string;
+        };
+        Returns: string;
       };
     };
     Enums: {

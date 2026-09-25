@@ -18,7 +18,7 @@ export const Route = createFileRoute("/profil")({
 
 function ProfilePage() {
   const { t } = useLang();
-  const { user, profile, currentMember } = useAccount();
+  const { user, profile, currentMember, account, accounts, switchAccount } = useAccount();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -52,6 +52,11 @@ function ProfilePage() {
   const signOut = async () => {
     await supabase.auth.signOut();
     queryClient.clear();
+    try {
+      localStorage.removeItem("mychata.offline-cache");
+    } catch {
+      /* ignore */
+    }
     navigate({ to: "/auth", replace: true });
   };
 
@@ -104,6 +109,33 @@ function ProfilePage() {
           {busy ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
         </button>
       </div>
+      {accounts.length > 1 && (
+        <section className="card mt-4 p-4">
+          <h2 className="text-[15px] font-bold">{t("Moje účty", "My accounts")}</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            {t(
+              "Jste členem více účtů. Vyberte, se kterým chcete pracovat.",
+              "You belong to several accounts. Choose which one to work in.",
+            )}
+          </p>
+          <div className="mt-3 space-y-2">
+            {accounts.map((a) => (
+              <button
+                key={a.id}
+                className={a.id === account?.id ? "btn-primary w-full" : "btn-secondary w-full"}
+                disabled={a.id === account?.id}
+                onClick={() =>
+                  switchAccount(a.id)
+                    .then(() => navigate({ to: "/domu" }))
+                    .catch(() => toast.error(t("Přepnutí se nezdařilo.", "Could not switch.")))
+                }
+              >
+                {a.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       <button className="btn-secondary mt-4 w-full" onClick={signOut}>
         {t("Odhlásit se", "Sign out")}
       </button>

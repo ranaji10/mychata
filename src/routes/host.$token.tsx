@@ -26,6 +26,7 @@ function GuestBookingPage() {
   const [company, setCompany] = useState(""); // honeypot
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["guest-link", token],
@@ -57,7 +58,23 @@ function GuestBookingPage() {
       },
     });
     setBusy(false);
-    if (res.ok) setDone(true);
+    if (res.ok) {
+      setDone(true);
+      return;
+    }
+    const messages: Record<string, string> = {
+      link: t("Tento odkaz už neplatí.", "This link is no longer valid."),
+      dates: t("Zkontrolujte prosím termín.", "Please check the dates."),
+      guests: t("Zkontrolujte počet hostů.", "Please check the number of guests."),
+      name: t("Vyplňte prosím jméno.", "Please enter your name."),
+      email: t("Zkontrolujte e-mail.", "Please check the email address."),
+      rate: t(
+        "Dnes už bylo odesláno příliš mnoho žádostí. Zkuste to zítra.",
+        "Too many requests today. Please try again tomorrow.",
+      ),
+      save: t("Žádost se nepodařilo odeslat.", "The request could not be sent."),
+    };
+    setFailure(messages[res.error] ?? messages["save"]!);
   };
 
   return (
@@ -94,7 +111,7 @@ function GuestBookingPage() {
             ) : (
               <ul className="mt-2 space-y-1 text-[15px]">
                 {data.availability.map((b) => (
-                  <li key={b.id} className="flex justify-between">
+                  <li key={`${b.start_date}-${b.end_date}`} className="flex justify-between">
                     <span>
                       {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
                     </span>
@@ -175,6 +192,11 @@ function GuestBookingPage() {
             >
               {busy ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}
             </button>
+            {failure && (
+              <p role="alert" className="text-center text-[14px] font-semibold text-destructive">
+                {failure}
+              </p>
+            )}
             <p className="text-center text-[13px] text-muted-foreground">
               {t("Bez registrace — stačí vyplnit.", "No account needed — just fill it in.")}
             </p>

@@ -20,6 +20,8 @@ export interface Property {
   overlap_max_guests: number | null;
   peak_seasons: string[];
   created_by_member_id: string | null;
+  public_token: string;
+  public_calendar_enabled: boolean;
 }
 
 export interface Profile {
@@ -29,6 +31,7 @@ export interface Profile {
   avatar_url: string | null;
   phone: string | null;
   onboarding_completed_at: string | null;
+  active_account_id: string | null;
 }
 
 export interface Member {

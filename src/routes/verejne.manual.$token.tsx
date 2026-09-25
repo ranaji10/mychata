@@ -6,7 +6,7 @@ import { EmptyState, LoadingCards } from "@/components/bits";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/verejne/manual/$propertyId")({
+export const Route = createFileRoute("/verejne/manual/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
@@ -22,27 +22,27 @@ export const Route = createFileRoute("/verejne/manual/$propertyId")({
 });
 
 function PublicManual() {
-  const { propertyId } = Route.useParams();
+  const { token } = Route.useParams();
   const { t, lang } = useLang();
+  // Addressed by the property's share token; only PUBLIC sections come back (migration 0012).
   const { data, isLoading } = useQuery({
-    queryKey: ["public-manual", propertyId],
+    queryKey: ["public-manual", token],
     queryFn: async () => {
-      const [{ data: property }, { data: sections, error }] = await Promise.all([
-        supabase.rpc("public_property_details", { _property_id: propertyId }).single(),
-        supabase
-          .from("manual_sections")
-          .select("*")
-          .eq("property_id", propertyId)
-          .eq("visibility", "PUBLIC")
-          .order("display_order"),
+      const [{ data: property, error: pErr }, { data: sections, error }] = await Promise.all([
+        supabase.rpc("public_property", { _token: token }),
+        supabase.rpc("public_manual", { _token: token }),
       ]);
+      if (pErr) throw pErr;
       if (error) throw error;
-      return { property, sections };
+      return { property: property?.[0] ?? null, sections: sections ?? [] };
     },
   });
   const flag = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("manual_feedback").insert({ section_id: id });
+      const { error } = await supabase.rpc("public_flag_manual_section", {
+        _token: token,
+        _section_id: id,
+      });
       if (error) throw error;
     },
     onSuccess: () =>
@@ -56,9 +56,8 @@ function PublicManual() {
         <div>
           <p className="text-[13px] font-bold uppercase text-primary">My Chata</p>
           <h1 className="text-3xl font-bold">
-            {data?.property?.name ?? t("Manuál chaty", "House Manual")}
+            {data?.property?.property_name ?? t("Manuál chaty", "House Manual")}
           </h1>
-          <p className="text-[14px] text-muted-foreground">{data?.property?.address}</p>
         </div>
         <LanguageToggle />
       </header>

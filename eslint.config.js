@@ -6,7 +6,22 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  // Lovable regenerates these files; lint them there, not here.
+  {
+    ignores: [
+      "dist",
+      ".output",
+      ".vinxi",
+      "src/integrations/supabase/auth-attacher.ts",
+      "src/integrations/supabase/auth-middleware.ts",
+      "src/integrations/supabase/client.server.ts",
+      "src/integrations/supabase/client.ts",
+      "src/integrations/supabase/cron-auth.ts",
+      "src/integrations/supabase/previewAuthStorage.ts",
+      "src/integrations/lovable/**",
+      "src/routeTree.gen.ts",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

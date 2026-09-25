@@ -14,7 +14,16 @@
 - **ranaji.deb@gmail.com**: name "Ranaji Deb", signed up with Google at 01:44:28 UTC, Google photo present, email confirmed. Every sign-in step succeeded with no errors. It is also **not linked to a member and has no role**.
 - The logs for the last 2 days show no failed sign-in attempts at all. The Chromium error therefore happened on Google's side or in the browser before it reached My Chata.
 
-**iPhone photo and name missing (screenshot).** Sign-in worked, but the account is not linked to a family member. The app only links a new person automatically when their email matches a member, or when they are the first person ever to sign in. This person matched neither, so the page shows "?". Invitations (below) fix this. The profile photo and name from Google will also be shown directly.
+**iPhone photo and name missing (screenshot).** Sign-in worked, but the account is not linked to a family member. The app only links a new person automatically when their email matches a member, or when they are the first person ever to sign in. This person matched neither, so the page shows "?". Invitations (below) fix this. The profile photo and name from Google will also be shown directly. From now on, every new account (family, institution, or any future type) that isn't joining through an invitation is sent into onboarding first. Profile, Add chata, and every other section stay locked until onboarding is finished. Onboarding appears as a step-by-step "Get your chata ready for bookings" checklist:
+1. Choose account type (Family / Institution)
+2. Confirm your profile (name, photo)
+3. Add your chata (name, address, rooms)
+4. Set booking rules (overlaps, guest limit, busy seasons)
+5. Add house rules
+6. Add a main photo
+7. Invite members (can be skipped)
+
+Each step shows as done or to do. The app unlocks once the required steps (1–4) are done; the rest stay visible on the home screen until finished. People who join through an invitation skip straight to the account they were invited to. At the end of onboarding, the person names each of their chatas, and **whoever adds a chata automatically becomes that chata's admin** (other chatas can have their own admins later, WhatsApp-style). (Technical: an `onboarding_completed_at` column on profiles, a client-side gate in AppShell that redirects to `/onboarding` until it is set, and a `property_admins` table keyed per chata.)
 
 ## What gets built
 

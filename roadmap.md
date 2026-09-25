@@ -17,7 +17,7 @@
 - [x] Settings cleanup: collapsed Language row, removed nested toggles
 
 ## Open
-- [ ] GA4 Measurement ID still needed from user to activate tracking (analytics.ts reads VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY — currently not a measurement ID)
+- [x] GA4 Measurement ID synced from connector — verified gtag loads only after consent (HTTP 200)
 - [ ] End-to-end test of signed-in flows (onboarding, invites, photos, guest links) needs a test account
 - [ ] RAG stage 2+ (documents, bookings, tasks as sources) — deferred until stage 1 proves useful
 - [ ] Email/SMS/push notifications — deferred until a delivery provider is chosen

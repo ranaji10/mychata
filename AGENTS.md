@@ -54,6 +54,7 @@ bun run docs:gen       # after any migration or route change
 | Why things are the way they are              | `docs/decisions/`                           |
 | Your task                                    | `docs/tasks/T-xxx-*.md`                     |
 | Work from Lovable, Gemini, others            | `docs/external/README.md`                   |
+| Two maintainers: branches, merges, Lovable   | `docs/runbooks/two-person-workflow.md`      |
 
 Files marked "automatically generated" in `src/integrations/` and `src/routeTree.gen.ts` belong to Lovable/the router plugin: don't hand-edit (exception: `types.ts` may be patched for new schema until Lovable regenerates it).
 

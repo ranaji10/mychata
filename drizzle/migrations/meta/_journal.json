@@ -127,6 +127,13 @@
       "when": 1790351553964,
       "tag": "0017_claimed_members_skip_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790383193280,
+      "tag": "0018_claimed_members_skip_onboarding",
+      "breakpoints": true
     }
   ]
 }

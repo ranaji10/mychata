@@ -15,7 +15,7 @@ Sep 25, 2026 · @Tuik
 
 MyChata has a real, well-scoped V1 for family cottage co-management. But the repo docs describe it as more finished and safer than the code is, and the build system around it (Lovable pushing straight to production, one database, no tests, three competing sources of truth) can't safely absorb subscriptions, a marketplace or parallel agents yet. Reviewed: the local `MyChata MVP` folder, all 11 migrations, every server function, the live mychata.cz home page and the iOS bug screenshot.
 
-## Progress checklist (updated 26 Sep, 13:30)
+## Progress checklist (updated 26 Sep, 14:00)
 
 The security fixes are live. On 25 Sep Lovable applied migrations 0011–0015 to the production database with no data lost, and mychata.cz now runs the new build. None of the fixes have been checked in a browser yet, and the automated checks on `main` have failed since Lovable's last commit. A fix for that is ready. The rest of the original action list is still open.
 
@@ -470,20 +470,33 @@ Add Rajat as a collaborator on the existing repo now. Don't move the repo or lea
 
 **Guardrails for two people.**
 
-| Guardrail                                                                | Where                                | State                                              |
-| ------------------------------------------------------------------------ | ------------------------------------ | -------------------------------------------------- |
-| Migration guard: duplicate numbers, journal, edits to applied files      | CI                                   | Ready on branch agent/claude/two-person-guardrails |
-| Who merges what, one Lovable operator at a time, claim migration numbers | docs/runbooks/two-person-workflow.md | Ready on the same branch                           |
-| Ruleset on main: PR + green CI, Lovable app on the bypass list           | GitHub settings (repo owner)         | To do, about 10 min; test with one Lovable edit    |
-| CODEOWNERS for migrations, auth, server functions, CI                    | .github/CODEOWNERS                   | After Rajat's username is known; both names        |
-| Both watch the repo (CI and nightly failures reach both)                 | GitHub                               | To do, each person                                 |
-| Separate backups held by each of you                                     | runbooks/backup.md                   | To do                                              |
+| Guardrail                                                                                            | Where                                                         | State                                                   |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------- |
+| Migration guard: duplicate numbers, journal, edits to applied files                                  | CI                                                            | Ready on branch agent/claude/two-person-guardrails      |
+| Sync check: is my copy current, is anyone else changing my files, next free migration number         | scripts/sync-check.sh, git hooks, VS Code task on folder open | Ready on the same branch; hooks already on for your Mac |
+| Who merges what, one Lovable operator at a time                                                      | docs/runbooks/two-person-workflow.md                          | Ready on the same branch                                |
+| Ruleset on main: PR + green CI + branch up to date, **no approvals**, Lovable app on the bypass list | GitHub settings (repo owner)                                  | To do, about 10 min; test with one Lovable edit         |
+| CODEOWNERS, notification only                                                                        | .github/CODEOWNERS                                            | Optional, once Rajat's username is known                |
+| Both watch the repo (CI and nightly failures reach both)                                             | GitHub                                                        | To do, each person                                      |
+| Separate backups held by each of you                                                                 | runbooks/backup.md                                            | To do                                                   |
 
 **Lovable environment.** Keep one Lovable workspace with both of you as members, and one person driving it at a time. It edits main for screens and wording only, under the Knowledge rules, with nothing published before CI is green. The prompt batches L-1 to L-3 follow those rules.
 
 **Leaving Lovable for Claude via MCP?** Claude already does everything except screens, through PRs. You could stop using Lovable's editor any day. But Lovable also hosts the site, runs the database, brokers Google sign-in and holds the AI key, and an MCP connection replaces none of these. So the real move is Model B, in this order: staging (T-003) → signed-in end-to-end tests (T-004) → own Supabase and hosting (T-002). Moving before those exist just moves the risk. The 4–8 week estimate stands. Give agents the Supabase MCP only read-only, and only against staging.
 
-**Sharing this doc with Rajat.** Use Share at the top of the doc. It adds people from your organization with view, comment or edit rights. If he's on a separate Claude Pro account and Share doesn't offer to add him, export the doc (click the title → Export → Word, PDF or Markdown). The repo stays the source of truth: STATUS.md, the tasks and the runbooks are all there for him.
+**Lovable's MCP connector for Claude: not now.** It connects from Claude's side, not from Lovable's workspace settings. It gives Claude your whole Lovable account, including running SQL on the live database and publishing, and it would bypass every PR, CI and migration rule above. Lovable's own "chat connectors" work the other way (Lovable's agent reaching your tools), so a Claude connector there adds nothing.
+
+**Email: decided.** Lovable's built-in email, from no-reply@notify.mychata.cz, with replies going to podpora@mychata.cz. It's included in paid workspaces, needs no extra vendor, and covers sign-in emails too. Steps: docs/tasks/T-005-email.md; prompts L-E and CC-3 are in the prompts doc.
+
+**AI and credits.** Every AI call and email bills to the Lovable workspace "My Lovable", which holds the project. The monthly AI grant is used first, then general credits. When credits run out, the manual shows the best-matching excerpt instead of an AI answer. This is recorded in docs/architecture/environments.md.
+
+**Sharing this doc with Rajat.** Edit rights in a Claude doc only reach people in the same Claude organization; a public link is read-only. Three routes:
+
+1. **Claude Team plan** with both of you as members (third-party reports put it at a 2-seat minimum; check claude.com/pricing). Then Share gives him edit rights, and you can share Projects too.
+2. **Ask Anthropic** for cross-account editing: use the thumbs-down feedback button in the app, or support.claude.com.
+3. **Use the repo as the live tracker** (recommended now). Every Claude session, yours or his, already writes its results into the repo through PRs: docs/STATUS.md, the task briefs, and copies of Claude docs in docs/external/claude/. GitHub Issues can hold the to-do list, with comments from both sessions. It has history, needs no new tools, and two sessions can't overwrite each other.
+
+A Google Doc edited by two Claude accounts through the Drive connector won't work. The connector available here can create files and rename or move them, but it can't edit an existing document's content. Even with a connector that could, two sessions writing the same doc would overwrite each other without warning.
 
 ## Questions you haven't asked yet
 
@@ -508,3 +521,7 @@ Suggested next step: run the foundation lane (section 5, weeks 1–2) and fix de
 - [Airbnb host-only fee explained (Hostaway)](https://www.hostaway.com/blog/airbnb-host-only-fee-what-to-know-about-the-15-percent-host-fee/)
 - [Chaty a chalupy (Česko v datech, Eurostat 2018 data)](https://www.ceskovdatech.cz/clanek/155-chaty-a-chalupy/)
 - Code evidence: `MyChata MVP` folder on your Mac, repo commit `23d71f2` plus uncommitted local changes, read on 25 Sep 2026; live home page of mychata.cz on the same date.
+
+---
+
+Source file: `docs/external/claude/2026-09-25-critical-review.md` in the mychata repo (a copy, refreshed whenever Claude edits this doc).

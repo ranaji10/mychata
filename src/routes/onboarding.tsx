@@ -79,8 +79,12 @@ function OnboardingPage() {
     setBusy(true);
     try {
       const first = chatas[0]!;
-      const alreadyMember = !!currentMember;
-      if (!alreadyMember) {
+      // Chatas can be added to the current account only by its admins. Anyone else
+      // (new people, or plain members of someone else's account) gets their own account,
+      // where they are admin. See B-003.
+      const addToCurrentAccount =
+        currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+      if (!addToCurrentAccount) {
         const { error } = await supabase.rpc("create_account_onboarding", {
           _type: type,
           _account_name: accountName || first.name || "My Chata",
@@ -96,8 +100,8 @@ function OnboardingPage() {
         });
         if (error) throw error;
       }
-      // Remaining chatas (all of them for existing members): creator becomes admin of each.
-      for (const extra of alreadyMember ? chatas : chatas.slice(1)) {
+      // Remaining chatas (all of them when adding to the current account); creator is admin.
+      for (const extra of addToCurrentAccount ? chatas : chatas.slice(1)) {
         if (!extra.name.trim()) continue;
         const { error: addError } = await supabase.rpc("add_property", {
           _name: extra.name,
@@ -136,8 +140,14 @@ function OnboardingPage() {
       toast.success(t("Vítejte! Vaše chata je připravena.", "Welcome! Your cottage is ready."));
       navigate({ to: "/domu", replace: true });
     } catch (e) {
+      const code = (e as { code?: string } | null)?.code;
       toast.error(
-        t("Něco se nepodařilo. Zkuste to znovu.", "Something went wrong. Please try again."),
+        code === "42501"
+          ? t(
+              "Nemáte oprávnění správce pro tento účet.",
+              "You don't have admin rights for this account.",
+            )
+          : t("Něco se nepodařilo. Zkuste to znovu.", "Something went wrong. Please try again."),
       );
       console.error(e);
     } finally {

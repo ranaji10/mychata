@@ -1,0 +1,21 @@
+name: Nightly production check
+# Opens mychata.cz in a real browser every night and fails (GitHub emails the repo owner)
+# if a public page is broken or logs errors. Catches problems like B-002 within a day.
+on:
+  schedule:
+    - cron: "17 3 * * *" # 05:17 Prague summer time
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: sed -i -E 's#https://[a-z0-9-]+-npm\.pkg\.dev/lovable-core-prod/[a-z-]+/#https://registry.npmjs.org/#g' bun.lock
+      - run: bun install
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run e2e
+        env:
+          E2E_BASE_URL: https://mychata.cz

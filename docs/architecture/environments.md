@@ -2,13 +2,18 @@
 
 ## Today (Model A, ADR-0007)
 
-| Piece                   | Where                                                             | Who controls it                     |
-| ----------------------- | ----------------------------------------------------------------- | ----------------------------------- |
-| Hosting, build, publish | Lovable Cloud (Cloudflare)                                        | Lovable "Publish" button            |
-| Database, auth, storage | Supabase project `envsfjjefkievkwqbrby`, managed by Lovable Cloud | Lovable; admin key not held locally |
-| Google sign-in          | `@lovable.dev/cloud-auth-js` broker                               | Lovable                             |
-| AI                      | Lovable AI gateway, `LOVABLE_API_KEY`                             | Lovable                             |
-| Code                    | GitHub `ranaji10/mychata`, two-way sync with Lovable on `main`    | You                                 |
+| Piece                   | Where                                                               | Who controls it                     |
+| ----------------------- | ------------------------------------------------------------------- | ----------------------------------- |
+| Hosting, build, publish | Lovable Cloud (Cloudflare)                                          | Lovable "Publish" button            |
+| Database, auth, storage | Supabase project `envsfjjefkievkwqbrby`, managed by Lovable Cloud   | Lovable; admin key not held locally |
+| Google sign-in          | `@lovable.dev/cloud-auth-js` broker                                 | Lovable                             |
+| AI                      | Lovable AI gateway, `LOVABLE_API_KEY`                               | Lovable                             |
+| Code                    | GitHub `ranaji10/mychata`, two-way sync with Lovable on `main`      | You                                 |
+| Email                   | Lovable built-in email, sender `no-reply@notify.mychata.cz` (T-005) | Lovable workspace                   |
+
+Lovable workspace: **My Lovable** (id `tJRlotDLnAwgKcKFekh8`). The project, its Cloud database, its AI usage and its email all bill to this workspace. Check its credit balance in that workspace's settings in Lovable.
+
+AI billing: calls through `LOVABLE_API_KEY` use the workspace's monthly AI grant first, then its general credits ([Lovable docs](https://docs.lovable.dev/integrations/ai)). When credits run out the gateway answers 402; the manual then falls back to showing the best-matching excerpt (see `src/lib/manual-qa.functions.ts`), so it degrades instead of breaking. Decide whether to turn on auto top-up. Using our own Google key instead would bill Google directly (open decision, ADR-0004).
 
 There is one database. Lovable's preview and production appear to share it, so every applied migration hits real data. Staging: T-003. Own hosting: T-002.
 

@@ -15,9 +15,15 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the migration guard compares this branch with main
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3"
+      # Two people plus Lovable add migrations: catch duplicate numbers, journal gaps
+      # and edits to already-applied migrations before anything else runs.
+      - name: Migration numbering and history guard
+        run: bun scripts/check-migrations.ts origin/main
       # Lovable writes package URLs from its private cache into bun.lock; CI can't reach it.
       # Same tarballs and integrity hashes are on the public registry.
       - name: Point lockfile at the public npm registry

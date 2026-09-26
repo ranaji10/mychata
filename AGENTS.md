@@ -22,6 +22,7 @@ TanStack Start 1.168 (SSR on Cloudflare via Nitro) · React 19 · TanStack Route
 ## Commands
 
 ```
+bash scripts/sync-check.sh   # FIRST, every session: is this copy current, who else is changing the same files
 bun install            # CI rewrites Lovable's private registry URLs first, see docs/architecture/environments.md
 bun run dev
 bun run check          # lint + typecheck + format + all tests + generated-docs check. Must pass before a PR.
@@ -54,8 +55,13 @@ bun run docs:gen       # after any migration or route change
 | Why things are the way they are              | `docs/decisions/`                           |
 | Your task                                    | `docs/tasks/T-xxx-*.md`                     |
 | Work from Lovable, Gemini, others            | `docs/external/README.md`                   |
+| Two maintainers: branches, merges, Lovable   | `docs/runbooks/two-person-workflow.md`      |
 
 Files marked "automatically generated" in `src/integrations/` and `src/routeTree.gen.ts` belong to Lovable/the router plugin: don't hand-edit (exception: `types.ts` may be patched for new schema until Lovable regenerates it).
+
+## Claude artifacts and docs
+
+Every Claude artifact or doc made for MyChata gets a copy in `docs/external/claude/YYYY-MM-DD-<topic>.md` (frontmatter `artifact:` = its link) and a "Source file:" line at its end naming that path. Refresh the copy whenever you edit the artifact. Index: `docs/external/claude/README.md`.
 
 ## Before you finish
 

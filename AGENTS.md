@@ -46,6 +46,7 @@ bun run docs:gen       # after any migration or route change
 | Current state, what is verified, what's live | `docs/STATUS.md`                            |
 | Tables, columns, policies, functions         | `docs/generated/schema.md` (generated)      |
 | Routes and which are public                  | `docs/generated/routes.md` (generated)      |
+| Look and feel, audience rules                | `docs/product/design.md`                    |
 | Accounts, roles, public links                | `docs/architecture/tenancy-and-security.md` |
 | House manual search                          | `docs/architecture/rag.md`                  |
 | Plans and billing                            | `docs/architecture/billing.md`              |

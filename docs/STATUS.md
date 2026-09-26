@@ -10,7 +10,7 @@ As of 2026-09-25. Update this file in every PR that changes behaviour.
 | Database                | Migrations 0011–0016 applied 2026-09-25 (one batch). 0017 (B-003) is on branch `agent/claude/onboarding-fixes`, not applied.                                                          |
 | Backup                  | Full export taken 2026-09-25 (`Lovable DB exports/`, outside the repo). Routine: `runbooks/backup.md`.                                                                                |
 | CI                      | Green on `main`. Nightly production check added on the onboarding-fixes branch.                                                                                                       |
-| Open bugs               | B-003 (fixed on branch), B-004 (Google sign-in on Brave, open).                                                                                                                       |
+| Open bugs               | B-003 (fixed on branch), B-004 (Google sign-in on Brave, open), B-005 (Firefox session → T-014).                                                                                      |
 
 ## Defects found on 2026-09-25 and their state
 

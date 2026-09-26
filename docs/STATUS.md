@@ -4,13 +4,14 @@ As of 2026-09-25. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
-| Place                   | State                                                                                                                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Production (mychata.cz) | Build from `main` after PR #4 (B-002 fix), published 2026-09-25 evening; checked 2026-09-26 00:50: sign-in page loads, browser bundle contains the Supabase settings. Not yet tagged. |
-| Database                | Migrations 0011–0016 applied 2026-09-25 (one batch). 0017 (B-003) is on branch `agent/claude/onboarding-fixes`, not applied.                                                          |
-| Backup                  | Full export taken 2026-09-25 (`Lovable DB exports/`, outside the repo). Routine: `runbooks/backup.md`.                                                                                |
-| CI                      | Green on `main`. Nightly production check added on the onboarding-fixes branch.                                                                                                       |
-| Open bugs               | B-003 (fixed on branch), B-004 (Google sign-in on Brave, open), B-005 (Firefox session → T-014).                                                                                      |
+| Place                   | State                                                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Production (mychata.cz) | `2905bc4` published by Lovable 2026-09-26 ~02:50 (B-003 fix, preview image). Five checks and release tag pending (`runbooks/release.md`). |
+| Database                | Migrations up to 0018 applied. 0018 is an exact copy of 0017 that Lovable added to trigger its migrator; both ran, harmless. Keep both.   |
+| Backup                  | Full export taken 2026-09-25 (`Lovable DB exports/`, outside the repo). Routine: `runbooks/backup.md`.                                    |
+| CI                      | Green on `main`. Nightly production check runs at 05:17.                                                                                  |
+| Open bugs               | B-004 (Google sign-in on Brave), B-005 (Firefox session → T-014).                                                                         |
+| Open tasks              | T-014 performance, T-015/T-016 missing tests (from Lovable's 26 Sep review), T-001–T-013 as listed below.                                 |
 
 ## Defects found on 2026-09-25 and their state
 

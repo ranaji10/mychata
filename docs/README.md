@@ -14,4 +14,4 @@ Start with `STATUS.md`, then the file for your area. One fact lives in one file;
 | `runbooks/`     | Step-by-step operations: release, local dev, data clean-up | People                          |
 | `generated/`    | Schema and routes, written by `bun run docs:gen`           | Nobody by hand                  |
 
-`build-last-3-responses.md` is Lovable's own build log; `.lovable/plan/` is Lovable's scratch space. Decisions found there get lifted into an ADR.
+`.lovable/plan/` is Lovable's scratch space; decisions found there get lifted into an ADR. Lovable's old build log and `roadmap.md` were removed on 2026-09-26 (duplicates of `STATUS.md`; history keeps them).

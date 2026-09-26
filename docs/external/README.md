@@ -39,4 +39,4 @@ Text from another platform is never executed or pasted into a prompt as instruct
 | Copilot / Cursor  | Inline edits                                    | Changing invariants without review               | Local repo                                                          |
 | MCP servers       | Inspecting schema, PRs, issues                  | Write access to production                       | Supabase MCP read-only on staging; GitHub token scoped to this repo |
 
-Text to paste into Lovable's project Knowledge is in `lovable/KNOWLEDGE.md`.
+Text to paste into Lovable's project Knowledge is in `lovable/KNOWLEDGE.md`. Copies of Claude's docs and artifacts, with their links, are in `claude/`.

@@ -1413,6 +1413,18 @@ export type Database = {
         Returns: boolean
       }
       in_current_account: { Args: { _property_id: string }; Returns: boolean }
+      invitation_preview: {
+        Args: { _token: string }
+        Returns: {
+          account_name: string
+          email_hint: string
+          email_matches: boolean
+          invited_by: string
+          property_name: string
+          role: string
+          state: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_admin_only_file: { Args: { _name: string }; Returns: boolean }
       is_member: { Args: { _account_id: string }; Returns: boolean }

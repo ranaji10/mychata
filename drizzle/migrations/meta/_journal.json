@@ -148,6 +148,13 @@
       "when": 1790620020000,
       "tag": "0020_invitation_fixes",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790623406694,
+      "tag": "0021_apply_journaled_0019_0020",
+      "breakpoints": true
     }
   ]
 }

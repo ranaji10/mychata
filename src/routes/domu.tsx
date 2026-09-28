@@ -6,18 +6,22 @@ import { LoadingCards, PillDanger, PillOk, PillWarn, StatCard } from "@/componen
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
+  checklistProgress,
   fmtDate,
+  fmtDateTime,
   fmtKc,
   taskTitle,
   todayISO,
   type Booking,
   type Expense,
+  type Handover,
   type ExpenseSplit,
   type InstitutionalRequest,
   type Task,
 } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
+import { usePrimaryPhotoUrl } from "@/lib/use-primary-photo";
 
 export const Route = createFileRoute("/domu")({
   staticData: { sitemap: false },
@@ -41,6 +45,24 @@ export const Route = createFileRoute("/domu")({
 function HomePage() {
   const { t, lang } = useLang();
   const { account, property, currentMember, loading } = useAccount();
+
+  // The last leaving checklist, so whoever comes next sees what was done (T-019). Emailing it
+  // to the next booker comes with notifications (CC-3).
+  const { data: lastDeparture } = useQuery({
+    queryKey: ["handovers", property?.id, "latest"],
+    enabled: !!property,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("handovers")
+        .select("*")
+        .eq("property_id", property!.id)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as Handover | null) ?? null;
+    },
+  });
 
   const { data: bookings, isLoading: lb } = useQuery({
     queryKey: ["bookings", property?.id],
@@ -129,6 +151,8 @@ function HomePage() {
     },
   });
 
+  const { data: mainPhoto } = usePrimaryPhotoUrl(property?.id);
+
   if (loading || lb || lt) {
     return (
       <AppShell>
@@ -159,7 +183,7 @@ function HomePage() {
       <section>
         <div className="relative overflow-hidden rounded-3xl">
           <img
-            src={chataImg}
+            src={mainPhoto ?? chataImg}
             alt={property?.name ?? t("Chata", "Cottage")}
             className="aspect-[16/10] w-full object-cover"
             width={1024}
@@ -225,7 +249,7 @@ function HomePage() {
                   {t("Detail pobytu", "Stay details")}
                 </Link>
                 <Link to="/predani" className="btn-secondary flex-1">
-                  {t("Předání", "Handover")}
+                  {t("Odjezd", "Leaving")}
                 </Link>
               </div>
             </>
@@ -418,11 +442,32 @@ function HomePage() {
               {t("Detail pobytu", "Stay details")}
             </Link>
             <Link to="/predani" className="btn-secondary flex-1">
-              {t("Předání chaty", "Cottage handover")}
+              {t("Odjezdový checklist", "Leaving checklist")}
             </Link>
           </div>
         </section>
       )}
+
+      {lastDeparture &&
+        (() => {
+          const { done, total } = checklistProgress(lastDeparture.checklist_state);
+          return (
+            <Link to="/predani" className="card mt-4 block p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-lg font-bold">{t("Poslední odjezd", "Last departure")}</h3>
+                {done === total ? (
+                  <PillOk>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillOk>
+                ) : (
+                  <PillWarn>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillWarn>
+                )}
+              </div>
+              <p className="mt-1 text-[15px] text-muted-foreground">
+                {fmtDateTime(lastDeparture.submitted_at)}
+                {lastDeparture.note ? ` · „${lastDeparture.note}“` : ""}
+              </p>
+            </Link>
+          );
+        })()}
 
       {openTasks.length === 0 && overdueTasks.length === 0 && (
         <div className="card mt-4 p-4 text-center">

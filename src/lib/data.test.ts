@@ -7,6 +7,7 @@ import {
   fmtDate,
   fmtKc,
   isSameDayChangeover,
+  normalizePhone,
   rangesOverlap,
 } from "./data";
 
@@ -71,5 +72,23 @@ describe("expense settlement (B-009)", () => {
   it("settled only when splits exist and all are paid back", () => {
     expect(expenseSettlement([{ paid_back: true }, { paid_back: true }])).toBe("settled");
     expect(expenseSettlement([{ paid_back: true }, { paid_back: false }])).toBe("unsettled");
+  });
+});
+
+describe("normalizePhone (B-016)", () => {
+  it("accepts common Czech and international formats", () => {
+    expect(normalizePhone("+420 777 123 456")).toEqual({ value: "+420777123456" });
+    expect(normalizePhone("777123456")).toEqual({ value: "+420777123456" });
+    expect(normalizePhone("00420 777-123-456")).toEqual({ value: "+420777123456" });
+    expect(normalizePhone("+49 (30) 1234567")).toEqual({ value: "+49301234567" });
+  });
+  it("allows no phone at all", () => {
+    expect(normalizePhone("  ")).toEqual({ value: null });
+  });
+  it("rejects text and numbers that are too short or too long", () => {
+    expect(normalizePhone("call me")).toBeNull();
+    expect(normalizePhone("12345")).toBeNull();
+    expect(normalizePhone("+420 777 123 456 789 000")).toBeNull();
+    expect(normalizePhone("+0777123456")).toBeNull();
   });
 });

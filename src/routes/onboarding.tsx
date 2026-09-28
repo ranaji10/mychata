@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Check, Home } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
+import { pendingInvite } from "@/lib/pending-invite";
 
 export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
@@ -47,6 +48,13 @@ function OnboardingPage() {
   const { t, lang } = useLang();
   const { user, currentMember, profile } = useAccount();
   const navigate = useNavigate();
+
+  // Someone who signed up from an invitation link joins that account instead of creating
+  // a new one (B-013).
+  useEffect(() => {
+    const token = pendingInvite();
+    if (token) navigate({ to: "/pozvanka/$token", params: { token }, replace: true });
+  }, [navigate]);
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState(0);

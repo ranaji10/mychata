@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LogIn, Mail } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useLang } from "@/lib/i18n";
+import { pendingInvite } from "@/lib/pending-invite";
 import chataImg from "@/assets/chata.jpg";
 
 export const Route = createFileRoute("/auth")({
@@ -34,11 +35,47 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
 
+  // After any sign-in (including Google's redirect back to /auth), go to a waiting invitation
+  // first, otherwise Home (B-013).
+  const goOn = useCallback(() => {
+    const token = pendingInvite();
+    if (token) navigate({ to: "/pozvanka/$token", params: { token }, replace: true });
+    else navigate({ to: "/domu", replace: true });
+  }, [navigate]);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/domu", replace: true });
+      if (data.user) goOn();
     });
-  }, [navigate]);
+  }, [goOn]);
+
+  // Friendly text for the errors people actually hit; the raw message stays visible for support.
+  const explain = (message: string) => {
+    const m = message.toLowerCase();
+    if (m.includes("invalid login credentials"))
+      return t("Nesprávný e-mail nebo heslo.", "Wrong email or password.");
+    if (m.includes("email not confirmed"))
+      return t(
+        "E-mail ještě není potvrzený. Klikněte na odkaz v potvrzovacím e-mailu (zkontrolujte i spam).",
+        "Your email isn't confirmed yet. Click the link in the confirmation email (check spam too).",
+      );
+    if (m.includes("already registered") || m.includes("already been registered"))
+      return t(
+        "Tento e-mail už má účet. Přihlaste se, nebo si obnovte heslo.",
+        "This email already has an account. Sign in, or reset your password.",
+      );
+    if (m.includes("rate limit") || m.includes("over_email_send_rate_limit"))
+      return t(
+        "Poslali jsme příliš mnoho e-mailů. Zkuste to za hodinu, nebo použijte Google.",
+        "Too many emails sent. Try again in an hour, or use Google.",
+      );
+    if (m.includes("password") && (m.includes("at least") || m.includes("weak")))
+      return t(
+        "Heslo je příliš slabé (alespoň 8 znaků).",
+        "Password too weak (at least 8 characters).",
+      );
+    return t(`Nepodařilo se: ${message}`, `That didn't work: ${message}`);
+  };
 
   const signInGoogle = async () => {
     setBusy(true);
@@ -56,27 +93,38 @@ function AuthPage() {
     setBusy(true);
     setError("");
     setInfo("");
-    const fn = isSignUp ? supabase.auth.signUp : supabase.auth.signInWithPassword;
-    const { error: err } = await fn({
-      email,
-      password,
-      ...(isSignUp ? { options: { emailRedirectTo: window.location.origin + "/auth" } } : {}),
-    } as never);
-    setBusy(false);
-    if (err) {
-      setError(
-        t(
-          "Přihlášení se nezdařilo. Zkontrolujte e-mail a heslo.",
-          "Sign-in failed. Check your email and password.",
-        ),
-      );
-    } else if (isSignUp) {
-      setInfo(
-        t(
-          "Poslali jsme vám potvrzovací e-mail. Klikněte na odkaz v něm.",
-          "We sent you a confirmation email. Click the link in it.",
-        ),
-      );
+    try {
+      // Call the methods on supabase.auth itself: a detached `const fn = supabase.auth.signUp`
+      // loses its `this` and crashed before any request was sent (B-014).
+      const cleanEmail = email.trim().toLowerCase();
+      if (isSignUp) {
+        const { data, error: err } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: { emailRedirectTo: window.location.origin + "/auth" },
+        });
+        if (err) throw err;
+        if (data.session) goOn();
+        else
+          setInfo(
+            t(
+              "Poslali jsme vám potvrzovací e-mail. Klikněte na odkaz v něm (zkontrolujte i spam).",
+              "We sent you a confirmation email. Click the link in it (check spam too).",
+            ),
+          );
+      } else {
+        const { error: err } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+        if (err) throw err;
+        goOn();
+      }
+    } catch (e) {
+      console.error("[auth] password", e);
+      setError(explain((e as { message?: string } | null)?.message ?? String(e)));
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -84,12 +132,14 @@ function AuthPage() {
     setBusy(true);
     setError("");
     const { error: err } = await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim().toLowerCase(),
       options: { emailRedirectTo: window.location.origin + "/auth" },
     });
     setBusy(false);
-    if (err) setError(t("Odkaz se nepodařilo odeslat.", "Could not send the link."));
-    else
+    if (err) {
+      console.error("[auth] magic link", err);
+      setError(explain(err.message));
+    } else
       setInfo(
         t("Poslali jsme vám přihlašovací odkaz na e-mail.", "We emailed you a sign-in link."),
       );

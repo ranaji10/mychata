@@ -19,7 +19,8 @@
     "is_member": "Caller-scoped helper; false for anon",
     "is_property_admin": "Caller-scoped helper; false for anon",
     "audit_decisions": "Trigger function; cannot be called directly",
-    "guard_public_form": "Trigger function; cannot be called directly"
+    "guard_public_form": "Trigger function; cannot be called directly",
+    "invitation_preview": "Invitation page; token check, returns names, role and a masked email only"
   },
   "definerFunctionsWithoutCallerCheck": {
     "public_calendar": "Scoped by share token",
@@ -35,7 +36,8 @@
     "account_plan": "Returns a plan id; execute limited to authenticated",
     "plan_limit": "Returns a plan limit; execute limited to authenticated",
     "audit_decisions": "Trigger function",
-    "guard_public_form": "Trigger function"
+    "guard_public_form": "Trigger function",
+    "invitation_preview": "Scoped by invitation token"
   },
   "anonTablePrivileges": {
     "consent_log:INSERT": "Cookie banner logs the choice before sign-in",

@@ -70,6 +70,7 @@ function PhotosPage() {
         throw error;
       }
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
+      queryClient.invalidateQueries({ queryKey: ["primary-photo"] });
       toast.success(t("Fotka přidána.", "Photo added."));
     } catch (error) {
       console.error("[fotky] upload", error);
@@ -104,11 +105,13 @@ function PhotosPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
+      queryClient.invalidateQueries({ queryKey: ["primary-photo"] });
       toast.success(t("Hlavní fotka nastavena.", "Main photo set."));
     },
     onError: (error) => {
       console.error("[fotky] makePrimary", error);
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
+      queryClient.invalidateQueries({ queryKey: ["primary-photo"] });
       toast.error(
         t(
           `Hlavní fotku se nepodařilo nastavit: ${error.message}`,
@@ -128,7 +131,10 @@ function PhotosPage() {
       // The photo is gone from the app; a leftover file is only logged.
       if (fileError) console.error("[fotky] remove file", fileError);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["property-photos"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["property-photos"] });
+      queryClient.invalidateQueries({ queryKey: ["primary-photo"] });
+    },
     onError: (error) => {
       console.error("[fotky] remove", error);
       toast.error(

@@ -472,3 +472,21 @@ export const SEASONAL_TEMPLATES_EN: {
 export function seasonalTemplates(lang: "cs" | "en") {
   return lang === "en" ? SEASONAL_TEMPLATES_EN : SEASONAL_TEMPLATES;
 }
+
+// ---------- Phone numbers ----------
+
+/**
+ * Normalises a phone number to international form (+420 777 123 456 → +420777123456).
+ * A bare 9-digit number is taken as Czech. Empty input is allowed (no phone).
+ * Returns null for anything that can't be a phone number (B-016).
+ */
+export function normalizePhone(input: string): { value: string | null } | null {
+  const trimmed = input.trim();
+  if (trimmed === "") return { value: null };
+  if (!/^[+0-9\s().\-/]+$/.test(trimmed)) return null;
+  let digits = trimmed.replace(/[\s().\-/]/g, "");
+  if (digits.startsWith("00")) digits = "+" + digits.slice(2);
+  if (/^\d{9}$/.test(digits)) digits = "+420" + digits;
+  if (!/^\+[1-9]\d{7,14}$/.test(digits)) return null;
+  return { value: digits };
+}

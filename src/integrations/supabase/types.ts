@@ -1416,12 +1416,12 @@ export type Database = {
       invitation_preview: {
         Args: { _token: string }
         Returns: {
-          account_name: string | null
-          email_hint: string | null
-          email_matches: boolean | null
-          invited_by: string | null
-          property_name: string | null
-          role: string | null
+          account_name: string
+          email_hint: string
+          email_matches: boolean
+          invited_by: string
+          property_name: string
+          role: string
           state: string
         }[]
       }

@@ -27,7 +27,7 @@ export function inviteMailto(opts: {
   to: string;
   link: string;
   chata: string;
-  inviter?: string | null;
+  inviter?: string | null | undefined;
   admin: boolean;
 }): string {
   const who = opts.inviter ? `${opts.inviter} vás zve` : "Zveme vás";

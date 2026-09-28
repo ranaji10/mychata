@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
+import type { Profile } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/profil")({
@@ -25,27 +26,43 @@ function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Keyed on the stored values, not on the user/profile objects: those are replaced on every
+  // auth event (token refresh, returning to the tab), which reset the fields mid-edit (B-008).
+  const fullName = user?.user_metadata?.["full_name"] as string | undefined;
   useEffect(() => {
-    setName(
-      profile?.display_name ?? (user?.user_metadata?.["full_name"] as string | undefined) ?? "",
-    );
+    setName(profile?.display_name ?? fullName ?? "");
     setPhone(profile?.phone ?? "");
-  }, [profile, user]);
+  }, [profile?.display_name, profile?.phone, fullName]);
 
   const save = async () => {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase.from("profiles").upsert({
-      user_id: user.id,
-      display_name: name,
-      phone,
-      avatar_url: (user.user_metadata?.["avatar_url"] as string | undefined) ?? null,
-    });
-    setBusy(false);
-    if (error) toast.error(t("Uložení se nepodařilo.", "Could not save."));
-    else {
+    const wantedPhone = phone.trim() || null;
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            user_id: user.id,
+            display_name: name.trim(),
+            phone: wantedPhone,
+            avatar_url: (user.user_metadata?.["avatar_url"] as string | undefined) ?? null,
+          },
+          { onConflict: "user_id" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      // Show what the database actually stored, and say so if it isn't what was typed.
+      if ((data.phone ?? null) !== wantedPhone) throw new Error("phone_not_stored");
+      queryClient.setQueryData(["profile", user.id], data as Profile);
       toast.success(t("Profil uložen.", "Profile saved."));
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } catch (error) {
+      console.error("[profil] save", error);
+      const detail = (error as { message?: string } | null)?.message ?? String(error);
+      toast.error(t(`Uložení se nepodařilo: ${detail}`, `Could not save: ${detail}`));
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -101,6 +118,9 @@ function ProfilePage() {
           <span className="text-[14px] font-bold">{t("Telefon", "Phone")}</span>
           <input
             className="field mt-1 w-full"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />

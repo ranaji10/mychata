@@ -136,14 +136,24 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     return properties.find((p) => p.id === activePropertyId) ?? properties[0]!;
   }, [properties, activePropertyId]);
 
+  // Assignee and split lists. Row-level security lets a person read the members of EVERY
+  // account they belong to, so the list must be filtered to the active one, and the
+  // database's current_account_id() decides which that is (B-010).
   const { data: members, isLoading: loadingMembers } = useQuery({
     queryKey: ["members", account?.id],
     enabled: !!account,
     queryFn: async () => {
+      const { data: activeId, error: activeError } = await supabase.rpc("current_account_id");
+      if (activeError) throw activeError;
+      if (activeId !== account!.id) {
+        // Switched on another device or tab: re-read the profile, which moves `account`.
+        void queryClient.invalidateQueries({ queryKey: ["profile"] });
+        return [];
+      }
       const { data, error } = await supabase
         .from("members")
         .select("*")
-        .eq("account_id", account!.id)
+        .eq("account_id", activeId)
         .order("created_at");
       if (error) throw error;
       return data as Member[];

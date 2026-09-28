@@ -435,3 +435,75 @@ describe("onboarding and joining (B-003)", () => {
     });
   });
 });
+
+describe("profile phone (B-008)", () => {
+  // The exact statement PostgREST runs for supabase.from("profiles").upsert(...).select().
+  const upsert = `insert into public.profiles (user_id, display_name, phone, avatar_url)
+    values ($1, $2, $3, null)
+    on conflict (user_id) do update set user_id = excluded.user_id,
+      display_name = excluded.display_name, phone = excluded.phone, avatar_url = excluded.avatar_url
+    returning *`;
+  const read = "select phone from public.profiles where user_id = $1";
+
+  it("a saved phone is still there on the next request (existing profile row)", async () => {
+    const [written] = await asCommitted<{ phone: string }>(db, aAdmin, upsert, [
+      U.aAdmin,
+      "Anna",
+      "+420 777 111 222",
+    ]);
+    expect(written?.phone).toBe("+420 777 111 222");
+    await as(db, aAdmin, async (q) => {
+      expect(await q(read, [U.aAdmin])).toEqual([{ phone: "+420 777 111 222" }]);
+    });
+  });
+  it("works the same for someone who has no profile row yet", async () => {
+    expect(await admin(db, read, [U.aMember])).toHaveLength(0);
+    await asCommitted(db, aMember, upsert, [U.aMember, "Petr", "+420 603 000 111"]);
+    await as(db, aMember, async (q) => {
+      expect(await q(read, [U.aMember])).toEqual([{ phone: "+420 603 000 111" }]);
+    });
+  });
+  it("nobody else can read or overwrite it", async () => {
+    await as(db, bAdmin, async (q) => {
+      expect(await q(read, [U.aAdmin])).toHaveLength(0);
+      await expect(q(upsert, [U.aAdmin, "X", "666"])).rejects.toThrow(/row-level security/);
+    });
+  });
+});
+
+describe("assignee list (B-010)", () => {
+  // The query behind the task assignee and expense split lists (src/lib/account.tsx).
+  const list =
+    "select id, account_id from public.members where account_id = public.current_account_id()";
+
+  it("a member of B never appears in A's list, even for someone in both accounts", async () => {
+    await admin(
+      db,
+      "insert into public.invitations (account_id, role, token, email) values ($1,'MEMBER','invite-bara-b010', $2)",
+      [ids.acctA, EMAIL.bAdmin],
+    );
+    await as(db, bAdmin, async (q) => {
+      // Only in B: A's members are invisible, whatever the filter.
+      expect(
+        await q("select * from public.members where account_id = $1", [ids.acctA]),
+      ).toHaveLength(0);
+
+      await q("select public.accept_invitation('invite-bara-b010')");
+      // Now in both. Row-level security shows both member lists, which is why the app
+      // must filter by the active account...
+      const visible = await q<{ account_id: string }>("select account_id from public.members");
+      expect(new Set(visible.map((m) => m.account_id))).toEqual(new Set([ids.acctA, ids.acctB]));
+
+      // ...and with A active, the list holds A's people only.
+      const inA = await q<{ id: string; account_id: string }>(list);
+      expect(inA.length).toBeGreaterThan(0);
+      expect(inA.every((m) => m.account_id === ids.acctA)).toBe(true);
+      expect(inA.map((m) => m.id)).not.toContain(ids.memberBAdmin);
+
+      await q("select public.set_active_account($1)", [ids.acctB]);
+      const inB = await q<{ id: string; account_id: string }>(list);
+      expect(inB.every((m) => m.account_id === ids.acctB)).toBe(true);
+      expect(inB.map((m) => m.id)).not.toContain(ids.memberAMember);
+    });
+  });
+});

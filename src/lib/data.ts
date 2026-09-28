@@ -129,10 +129,46 @@ export interface Handover {
   property_id: string;
   booking_id: string | null;
   member_id: string | null;
-  checklist_state: Record<string, { state: "checked" | "na"; reason?: string }>;
+  checklist_state: Record<string, ChecklistEntry>;
   note: string | null;
   photo_url: string | null;
   submitted_at: string;
+}
+
+// ---------- Handover checklist ----------
+
+/** "na" is what handovers saved before 28 Sep 2026 used for an unticked item; read it as skipped. */
+export type ChecklistEntry = { state: "checked" | "skipped" | "na"; reason?: string };
+
+/** What is stored for a handover: every item, marked done or skipped. */
+export function buildChecklistState(
+  items: string[],
+  checked: boolean[],
+): Record<string, ChecklistEntry> {
+  return Object.fromEntries(
+    items.map((item, i) => [item, { state: checked[i] ? "checked" : "skipped" }]),
+  );
+}
+
+export function checklistProgress(state: Record<string, ChecklistEntry> | null | undefined): {
+  done: number;
+  total: number;
+} {
+  const entries = Object.values(state ?? {});
+  return { done: entries.filter((e) => e.state === "checked").length, total: entries.length };
+}
+
+// ---------- Expense settlement ----------
+
+/**
+ * not_split: nobody else owes anything (only the payer was in the split).
+ * settled: there are splits and every one is paid back.
+ */
+export type ExpenseSettlement = "not_split" | "unsettled" | "settled";
+
+export function expenseSettlement(splits: { paid_back: boolean }[]): ExpenseSettlement {
+  if (splits.length === 0) return "not_split";
+  return splits.every((s) => s.paid_back) ? "settled" : "unsettled";
 }
 
 // ---------- Formatting (Czech locale) ----------

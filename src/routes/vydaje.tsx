@@ -7,7 +7,14 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillWarn } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { EXPENSE_CATEGORY, expenseCategoryLabel, fmtDate, fmtKc, type Expense } from "@/lib/data";
+import {
+  EXPENSE_CATEGORY,
+  expenseCategoryLabel,
+  expenseSettlement,
+  fmtDate,
+  fmtKc,
+  type Expense,
+} from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vydaje")({
@@ -70,9 +77,7 @@ function ExpensesPage() {
     },
   });
 
-  const unsettledByExpense = new Set(
-    (splits ?? []).filter((s) => !s.paid_back).map((s) => s.expense_id),
-  );
+  const splitsOf = (expenseId: string) => (splits ?? []).filter((s) => s.expense_id === expenseId);
 
   const payerName = (id: string | null) => members.find((m) => m.id === id)?.name ?? "—";
 
@@ -130,24 +135,29 @@ function ExpensesPage() {
       return;
     }
 
-    const { error: splitError } = await supabase.from("expense_splits").insert(
-      selectedMembers
-        .map((member, index) => ({ member, amount: Math.round((shares[index] ?? 0) * 100) / 100 }))
-        .filter(({ member }) => member.id !== currentMember.id)
-        .map(({ member, amount: owed }) => ({
-          expense_id: expense.id,
-          member_id: member.id,
-          amount_owed: owed,
-          paid_back: false,
-        })),
-    );
+    const splitRows = selectedMembers
+      .map((member, index) => ({ member, amount: Math.round((shares[index] ?? 0) * 100) / 100 }))
+      .filter(({ member }) => member.id !== currentMember.id)
+      .map(({ member, amount: owed }) => ({
+        expense_id: expense.id,
+        member_id: member.id,
+        amount_owed: owed,
+        paid_back: false,
+      }));
+    const { error: splitError } = splitRows.length
+      ? await supabase.from("expense_splits").insert(splitRows)
+      : { error: null };
 
     setSaving(false);
     if (splitError) {
       toast.error(t("Rozdělení se nepodařilo uložit.", "The split could not be saved."));
       return;
     }
-    toast.success(t("Výdaj přidán a rozdělen.", "Expense added and split."));
+    toast.success(
+      splitRows.length
+        ? t("Výdaj přidán a rozdělen.", "Expense added and split.")
+        : t("Výdaj přidán, nerozdělen.", "Expense added, not split."),
+    );
     setDesc("");
     setAmount("");
     setSelected([]);
@@ -201,11 +211,21 @@ function ExpensesPage() {
               </div>
               <div className="text-right">
                 <p className="text-[16px] font-bold">{fmtKc(Number(e.amount))}</p>
-                {unsettledByExpense.has(e.id) ? (
-                  <PillWarn>{t("Nevyrovnané", "Unsettled")}</PillWarn>
-                ) : (
-                  <PillNeutral>{t("Vyrovnané", "Settled")}</PillNeutral>
-                )}
+                {splits &&
+                  (() => {
+                    const status = expenseSettlement(splitsOf(e.id));
+                    if (status === "unsettled")
+                      return <PillWarn>{t("Nevyrovnané", "Unsettled")}</PillWarn>;
+                    if (status === "settled")
+                      return <PillNeutral>{t("Vyrovnané", "Settled")}</PillNeutral>;
+                    return (
+                      <PillNeutral>
+                        {e.paid_by_member_id === currentMember?.id
+                          ? t("Zaplaceno vámi, nerozděleno", "Paid by you, not split")
+                          : t("Nerozděleno", "Not split")}
+                      </PillNeutral>
+                    );
+                  })()}
               </div>
             </div>
           ))}

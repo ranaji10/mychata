@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
+import { classifyUploadError, preparePhoto, uploadErrorMessage } from "@/lib/photos";
 
 export const Route = createFileRoute("/fotky")({
   staticData: { sitemap: false },
@@ -47,9 +48,12 @@ function PhotosPage() {
     if (!property || !currentMember) return;
     setBusy(true);
     try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const photo = await preparePhoto(file);
+      const safeName = photo.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${property.id}/photos/${crypto.randomUUID()}-${safeName}`;
-      const { error: upError } = await supabase.storage.from("my-chata-files").upload(path, file);
+      const { error: upError } = await supabase.storage
+        .from("my-chata-files")
+        .upload(path, photo, { contentType: photo.type });
       if (upError) throw upError;
       const { error } = await supabase.from("property_photos").insert({
         property_id: property.id,
@@ -57,22 +61,41 @@ function PhotosPage() {
         is_primary: !photos?.length,
         uploaded_by_member_id: currentMember.id,
       });
-      if (error) throw error;
+      if (error) {
+        // Don't leave an orphan file behind when the row is refused.
+        const { error: cleanupError } = await supabase.storage
+          .from("my-chata-files")
+          .remove([path]);
+        if (cleanupError) console.error("[fotky] cleanup", cleanupError);
+        throw error;
+      }
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
       toast.success(t("Fotka přidána.", "Photo added."));
-    } catch {
-      toast.error(t("Nahrání se nepodařilo.", "Upload failed."));
+    } catch (error) {
+      console.error("[fotky] upload", error);
+      const online = typeof navigator === "undefined" || navigator.onLine;
+      toast.error(
+        uploadErrorMessage(
+          classifyUploadError(error, online),
+          t,
+          (error as { message?: string } | null)?.message ?? String(error),
+        ),
+      );
     } finally {
       setBusy(false);
+      // Lets the same file be picked again after a failure.
+      if (fileRef.current) fileRef.current.value = "";
     }
   };
 
   const makePrimary = useMutation({
     mutationFn: async (id: string) => {
-      await supabase
+      // Only one main photo is allowed (unique index), so clear the old one first.
+      const { error: clearError } = await supabase
         .from("property_photos")
         .update({ is_primary: false })
         .eq("property_id", property!.id);
+      if (clearError) throw clearError;
       const { error } = await supabase
         .from("property_photos")
         .update({ is_primary: true })
@@ -83,15 +106,38 @@ function PhotosPage() {
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
       toast.success(t("Hlavní fotka nastavena.", "Main photo set."));
     },
+    onError: (error) => {
+      console.error("[fotky] makePrimary", error);
+      queryClient.invalidateQueries({ queryKey: ["property-photos"] });
+      toast.error(
+        t(
+          `Hlavní fotku se nepodařilo nastavit: ${error.message}`,
+          `Could not set the main photo: ${error.message}`,
+        ),
+      );
+    },
   });
 
   const remove = useMutation({
     mutationFn: async (photo: PropertyPhoto) => {
       const { error } = await supabase.from("property_photos").delete().eq("id", photo.id);
       if (error) throw error;
-      await supabase.storage.from("my-chata-files").remove([photo.storage_path]);
+      const { error: fileError } = await supabase.storage
+        .from("my-chata-files")
+        .remove([photo.storage_path]);
+      // The photo is gone from the app; a leftover file is only logged.
+      if (fileError) console.error("[fotky] remove file", fileError);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["property-photos"] }),
+    onError: (error) => {
+      console.error("[fotky] remove", error);
+      toast.error(
+        t(
+          `Fotku se nepodařilo smazat: ${error.message}`,
+          `Could not delete the photo: ${error.message}`,
+        ),
+      );
+    },
   });
 
   const { data: urls } = useQuery({
@@ -100,9 +146,10 @@ function PhotosPage() {
     queryFn: async () => {
       const map = new Map<string, string>();
       for (const p of photos!) {
-        const { data } = await supabase.storage
+        const { data, error } = await supabase.storage
           .from("my-chata-files")
           .createSignedUrl(p.storage_path, 3600);
+        if (error) console.error("[fotky] signed url", p.storage_path, error);
         if (data?.signedUrl) map.set(p.id, data.signedUrl);
       }
       return map;
@@ -115,7 +162,7 @@ function PhotosPage() {
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         className="hidden"
         onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
       />

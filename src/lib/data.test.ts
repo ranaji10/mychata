@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { findConflicts, fmtDate, fmtKc, isSameDayChangeover, rangesOverlap } from "./data";
+import {
+  buildChecklistState,
+  checklistProgress,
+  expenseSettlement,
+  findConflicts,
+  fmtDate,
+  fmtKc,
+  isSameDayChangeover,
+  rangesOverlap,
+} from "./data";
 
 const booking = (start: string, end: string, name = "Petra") => ({
   requester_name: name,
@@ -32,5 +41,35 @@ describe("formatting", () => {
     expect(fmtDate("2026-09-25")).toBe("25.09.2026");
     expect(fmtDate(null)).toBe("—");
     expect(fmtKc(1234567)).toBe("1 234 567 Kč");
+  });
+});
+
+describe("handover checklist (B-006)", () => {
+  const items = ["Odpadky", "Okna", "Voda"];
+  it("records ticked items as done and the rest as skipped", () => {
+    expect(buildChecklistState(items, [true, false, true])).toEqual({
+      Odpadky: { state: "checked" },
+      Okna: { state: "skipped" },
+      Voda: { state: "checked" },
+    });
+  });
+  it("can be saved with nothing ticked", () => {
+    expect(checklistProgress(buildChecklistState(items, []))).toEqual({ done: 0, total: 3 });
+  });
+  it("counts done items, reading the old 'na' as skipped", () => {
+    expect(
+      checklistProgress({ A: { state: "checked" }, B: { state: "na" }, C: { state: "skipped" } }),
+    ).toEqual({ done: 1, total: 3 });
+    expect(checklistProgress(null)).toEqual({ done: 0, total: 0 });
+  });
+});
+
+describe("expense settlement (B-009)", () => {
+  it("an expense nobody else shares is not split, never 'settled'", () => {
+    expect(expenseSettlement([])).toBe("not_split");
+  });
+  it("settled only when splits exist and all are paid back", () => {
+    expect(expenseSettlement([{ paid_back: true }, { paid_back: true }])).toBe("settled");
+    expect(expenseSettlement([{ paid_back: true }, { paid_back: false }])).toBe("unsettled");
   });
 });

@@ -5,11 +5,18 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, LoadingCards, PageHeader, PillOk } from "@/components/bits";
+import { EmptyState, LoadingCards, PageHeader, PillOk, PillWarn } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtDateTime, todayISO, type Booking, type Handover } from "@/lib/data";
+import {
+  buildChecklistState,
+  checklistProgress,
+  fmtDateTime,
+  todayISO,
+  type Booking,
+  type Handover,
+} from "@/lib/data";
 
 export const Route = createFileRoute("/predani")({
   staticData: { sitemap: false },
@@ -101,6 +108,7 @@ function HandoverPage() {
 
   const doneCount = checked.filter(Boolean).length;
   const allDone = doneCount === items.length;
+  const skippedCount = items.length - doneCount;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -117,9 +125,7 @@ function HandoverPage() {
           property_id: property!.id,
           booking_id: activeBooking?.id ?? null,
           member_id: currentMember?.id ?? null,
-          checklist_state: Object.fromEntries(
-            items.map((item, i) => [item, { state: checked[i] ? "checked" : "na" }]),
-          ),
+          checklist_state: buildChecklistState(items, checked),
           note: note || null,
           photo_url: photoUrl,
         })
@@ -157,7 +163,15 @@ function HandoverPage() {
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });
     },
-    onError: () => toast.error(t("Předání se nepodařilo uložit.", "Could not save the handover.")),
+    onError: (error) => {
+      console.error("[predani] save", error);
+      toast.error(
+        t(
+          `Předání se nepodařilo uložit: ${error.message}`,
+          `Could not save the handover: ${error.message}`,
+        ),
+      );
+    },
   });
 
   const memberName = (id: string | null) =>
@@ -246,14 +260,27 @@ function HandoverPage() {
           />
         </label>
 
+        {!allDone && (
+          <p className="mt-4 text-[14px] text-muted-foreground">
+            {t(
+              `Neodškrtnuté body (${skippedCount}) se uloží jako vynechané.`,
+              `Unticked items (${skippedCount}) will be saved as skipped.`,
+            )}
+          </p>
+        )}
         <button
           onClick={() => save.mutate()}
-          disabled={!allDone}
-          className="btn-primary mt-4 w-full disabled:opacity-40"
+          disabled={save.isPending}
+          className="btn-primary mt-3 w-full disabled:opacity-40"
         >
-          {allDone
-            ? t("Dokončit předání", "Complete handover")
-            : t(`Zbývá ${items.length - doneCount} bodů`, `${items.length - doneCount} items left`)}
+          {save.isPending
+            ? t("Ukládám…", "Saving…")
+            : allDone
+              ? t("Dokončit předání", "Complete handover")
+              : t(
+                  `Uložit předání (${doneCount} z ${items.length} hotovo)`,
+                  `Save handover (${doneCount} of ${items.length} done)`,
+                )}
         </button>
       </section>
 
@@ -275,18 +302,22 @@ function HandoverPage() {
           />
         ) : (
           <div className="space-y-2.5">
-            {history.map((h) => (
-              <div key={h.id} className="card p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[15px] font-bold">{memberName(h.member_id)}</p>
-                  <PillOk>{t("Dokončeno", "Completed")}</PillOk>
+            {history.map((h) => {
+              const { done, total } = checklistProgress(h.checklist_state);
+              const label = t(`${done} z ${total} hotovo`, `${done} of ${total} done`);
+              return (
+                <div key={h.id} className="card p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[15px] font-bold">{memberName(h.member_id)}</p>
+                    {done === total ? <PillOk>{label}</PillOk> : <PillWarn>{label}</PillWarn>}
+                  </div>
+                  <p className="text-[13px] text-muted-foreground">{fmtDateTime(h.submitted_at)}</p>
+                  {h.note && (
+                    <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{h.note}“</p>
+                  )}
                 </div>
-                <p className="text-[13px] text-muted-foreground">{fmtDateTime(h.submitted_at)}</p>
-                {h.note && (
-                  <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{h.note}“</p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

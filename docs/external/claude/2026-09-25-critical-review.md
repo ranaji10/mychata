@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-09-26
+updated: 2026-09-28
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 ---
@@ -13,118 +13,54 @@ artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 
 Sep 25, 2026 · @Tuik
 
-MyChata has a real, well-scoped V1 for family cottage co-management. But the repo docs describe it as more finished and safer than the code is, and the build system around it (Lovable pushing straight to production, one database, no tests, three competing sources of truth) can't safely absorb subscriptions, a marketplace or parallel agents yet. Reviewed: the local `MyChata MVP` folder, all 11 migrations, every server function, the live mychata.cz home page and the iOS bug screenshot.
+The V1 security fixes are live and hold when probed from outside, and the setup for two maintainers is merged (PR #7). The next release is CC-1, five bug fixes from the Gemini review, followed by the remaining prompts in order. The original review from 25 Sep is in sections 1–9 below.
 
-## Progress checklist (updated 26 Sep, 14:00)
+_How this doc is kept: open work on top, reference sections in the middle, everything finished in Completed at the bottom, oldest first._
 
-The security fixes are live. On 25 Sep Lovable applied migrations 0011–0015 to the production database with no data lost, and mychata.cz now runs the new build. None of the fixes have been checked in a browser yet, and the automated checks on `main` have failed since Lovable's last commit. A fix for that is ready. The rest of the original action list is still open.
+## Next steps, in order (28 Sep)
 
-### Done
+- [ ] 1\. **Merge CC-1.** In VS Code, Publish Branch `agent/claude/T-017-review-bugs`, open the PR, and merge only when CI is green. Its tests haven't run anywhere yet.
+- [ ] 2\. **Let Lovable pull the merge.** Don't edit in Lovable until it shows the T-017 commit.
+- [ ] 3\. **Publish and release.** Publish from Lovable. Run the five checks (`docs/runbooks/release.md`) plus the CC-1 checks: save a half-done handover, upload an iPhone photo, reload the profile after saving a phone number, add an expense only you paid. Then tag `release-2026-09-DD` (the first release tag) and fill in the Production row in STATUS.md.
+- [ ] 4\. **Remove the demo family (T-012).** This is your decision; the script is ready. Do it before L-1 so later reviews see real data only.
+- [ ] 5\. **Email DNS (T-005 steps 1–3).** Start now, in parallel: verification can take up to 72 h.
+- [ ] 6\. **L-1 in Lovable** (navigation and Home), then CI green, then publish.
+- [ ] 7\. **CC-2** (migration 0019: checklists and defaults), merge, Lovable applies the migration, then **L-2**.
+- [ ] 8\. **L-E** (Lovable email setup, needs DNS verified), then **CC-3** (notifications, builds on L-E's send function), then **L-3** (needs CC-1, CC-3 and the G-1 content).
 
-- [x] Critical review written (sections below)
-- [x] Fixes built and tested on a branch: 35 automated tests pass and the app builds
-- [x] Branch pushed, PR #1 merged, checks passed on the merge (action 1)
-- [x] Lovable Knowledge rules pasted (action 3)
-- [x] `main` protected against force pushes and deletion; secret scanning and Dependabot on (action 4)
-- [x] Lovable switched back from `lovable/experiments` to `main`
-- [x] Migrations 0011–0015 applied to the live database. Lovable added an empty 0016 to trigger them, so they ran as one batch. Counts are unchanged: 8 members, 4 profiles, 3 chatas. Also confirmed independently: the database types Lovable regenerated on GitHub contain the new functions and no longer contain the old leaky ones.
-- [x] Live site runs the new build. Checked 18:00: a wrong institution form link shows "Tento odkaz na formulář neplatí", and the home page no longer links to the demo university's form.
-- [x] Defects 1–13 in "Fix first" are fixed in the live database. So far this is proven only by automated tests and Lovable's security scan. The scan flags one item: anyone can read the feature switches. That's intended; they're on/off flags, not data.
+At any time: CP-1 (Copilot tests), G-1 (Gemini Czech content, before L-3), Dependabot PR #2 (after the first release tag). After every Lovable batch, pull main before starting the next Claude branch; the sync check warns if you forget. Prompts: [MyChata: agent prompts from the 26 Sep review](https://claude.ai/code/artifact/7b07f9c1-14fd-4777-8538-cd684a70538e).
 
-### Do next (in this order)
+## Open tasks and decisions
 
-**Urgent (20:30): the live site is down for every visitor.** It shows "This page didn't load". The 17:52 publish built the browser code without the public Supabase address and key. Those values lived in a committed `.env` until Lovable removed it from git this morning. Switching Lovable's branch and back then rebuilt its workspace from GitHub, where the file no longer existed. Details are in `docs/bugs/B-002`.
+| Item                                                                                              | Owner                  | Note                                                                         |
+| ------------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| Ruleset on main: PR, green CI, branch up to date, 0 approvals, Lovable app on the bypass list     | Repo owner             | Confirm it's set, then test with one Lovable edit                            |
+| Add Rajat as a collaborator (Write); both Watch the repo                                          | Repo owner, both       | Rajat runs `git config core.hooksPath .githooks` once                        |
+| Write down who holds the Lovable workspace, its publish button and billing; auto top-up yes or no | Both                   | Credits run out → the manual shows excerpts instead of AI answers            |
+| Tell members the public links changed                                                             | You                    | Old calendar and manual links and printed QR codes stopped working on 25 Sep |
+| Monthly backup, a copy each                                                                       | Both                   | The export has no uploaded photos or documents; ask Lovable quarterly        |
+| Confirm you can export the full database and hold its admin key                                   | You                    |                                                                              |
+| Repo public or private                                                                            | Both                   | Also decides the AGPL question                                               |
+| Staging (T-003) → signed-in tests (T-004) → own hosting (T-002, Model B)                          | Claude, you            | Before billing or a marketplace                                              |
+| Error monitoring (T-006)                                                                          | Claude                 |                                                                              |
+| T-014 performance (from B-005), T-015 and T-016 missing tests                                     | Claude, Copilot (CP-1) |                                                                              |
+| Legal basics: operator identity, terms, company, trademark, licence, AI data processing           | You                    | mychata.cz still names no operator                                           |
+| Talk to 10 families and 3 institutions; 40 manual test questions (T-008)                          | You                    |                                                                              |
+| Notion: archive or reference only                                                                 | You                    |                                                                              |
+| Later: billing (T-009), direct bookings and calendar sync (T-010, T-011)                          | Later                  |                                                                              |
+| Local: `git stash drop` (old Prettier stash)                                                      | You                    |                                                                              |
+| Dependabot's weekly package updates fail on Lovable's private package links                       | Low                    |                                                                              |
+| Shared editing of this doc (Claude Team plan)                                                     | Both                   | Optional; the repo is the shared tracker meanwhile                           |
 
-- [x] **Merge `agent/claude/fix-build-env`, then publish from Lovable.** The branch puts the public values back in a committed `.env.production` (no secrets) and adds a check that fails CI if the browser code is ever built without them again. I tested both cases. Open mychata.cz afterwards with the browser console open.
-- [x] **Download a full backup now** in Lovable: Cloud → Advanced settings → Export data. Store it outside Lovable. Ask whether the export includes sign-in accounts and uploaded files.
+## Open defects
 
-**Update 26 Sep, 01:00.** The site is back up. The sign-in page loads, and the browser code now contains the Supabase settings. The backup is a complete database copy: all 30 app tables plus sign-in accounts. It does not include uploaded photos and documents. The first five checks found a real bug (B-003), now fixed on a branch.
-
-- [x] **Merge `agent/claude/onboarding-fixes`, then ask Lovable to apply migration 0017 and publish.** People linked to an existing account now skip onboarding. Non-admins who add a chata get their own account instead of a 403. A new preview image replaces the error-page screenshot in WhatsApp previews. A nightly GitHub check opens mychata.cz in a real browser. 38 tests pass.
-- [ ] **Redo the five checks** after that publish.
-- [ ] **Monthly backup routine** (`docs/runbooks/backup.md`): export, keep the last 3, store encrypted outside the repo. Ask Lovable once a quarter for a copy of the uploaded files.
-- [ ] **Google sign-in on Brave (B-004).** It fails in Lovable's sign-in broker, not our code. Email login works meanwhile. Ask Lovable whether you can use your own Google sign-in credentials.
-- [ ] **Demo family contains a real Gmail member.** Decide with T-012 (demo data removal).
-
-**Update 26 Sep, 03:00.** PR #5 was merged and 0017 is live; the checks on `main` pass and the new preview image is served. To trigger its migrator, Lovable added `0018`, an exact copy of 0017. Running it twice is harmless because the migration only replaces a function and fills in a date that's already set. Leave both files in place: applied migrations are never deleted.
-
-- [ ] **Five checks on the live site**, then tag the release
-- [x] **Delete the four memory entries** Lovable listed (Settings → Knowledge → Memory)
-- [x] **Cleanup PR** (duplicates from Lovable's review, 0018 note, release rule) → Claude, not Lovable. Done: PR #6, merged 03:25
-- [ ] **T-014, T-015, T-016** (performance, missing tests) → Claude via PRs
-- [ ] **Lovable's next job: UI and UX only** (see the prompt in chat)
-
-**Update 26 Sep, 05:30.** The cleanup is merged and main is green, but nothing is released yet: the five checks and the release tag are still the next step.
-
-- **PR #6 merged at 03:25**, CI green on main. It adds the full release checklist (docs/runbooks/release.md), saves the design rules Lovable dropped from its memory into docs/product/design.md, adds Knowledge rules 3a (a trigger migration must be empty, never a copy) and 9 (no project rules in Lovable's memory), and deletes the duplicate build log and roadmap.md.
-- **GitHub branches cleaned up.** Only main and one Dependabot branch remain.
-- **Live site loads** (checked 05:25). Production is still 2905bc4 with no release tag.
-- **Nightly production check has not run yet.** Nothing had appeared on GitHub by 05:20; scheduled jobs often start late. Look under Actions later this morning.
-- **Your Mac copy is on the deleted cleanup branch.** Run `git checkout main && git pull` in the mychata folder.
-- **New: Dependabot PR #2** (actions/checkout 4 → 7). Merge it after the release tag, once its CI passes.
-
-**Update 26 Sep, 13:30.** The live security fixes hold when probed as an anonymous visitor, and a guardrails branch for two maintainers is ready on your Mac. The Gemini review is now a set of prompts, one batch per agent: [MyChata: agent prompts from the 26 Sep review](https://claude.ai/code/artifact/7b07f9c1-14fd-4777-8538-cd684a70538e).
-
-- **Live database, anonymous and read-only.** The four removed functions are gone (404). Chatas, members, bookings, expenses, tasks and manual sections all refuse access (401). The link functions return nothing for a wrong token. Only the on/off feature switches are readable, as intended.
-- **Nightly production check** first ran at 10:33, five hours late (normal for GitHub's scheduler), and passed.
-- **New finding: two security headers missing on mychata.cz** (Content-Security-Policy, X-Frame-Options), so another site could embed the app in a frame. Lovable's hosting sets the headers. Ask Lovable whether custom headers are possible; otherwise fix with Model B.
-- **Guardrails branch `agent/claude/two-person-guardrails`** (on your Mac, not pushed; I have no push access). It adds a CI step that fails on duplicate migration numbers, journal gaps and edits to applied migrations, plus docs/runbooks/two-person-workflow.md. Publish the branch from VS Code, open a PR, merge.
-- **Bots.** Lovable made 125 of the repo's 146 commits: 93 are titled "Changes" and 26 contain no changes. Since its Knowledge rules went in (25 Sep) it made 9 commits. One edited a server function, against the rules, and broke CI (4f08864, fixed in PR #3). Dependabot's weekly package updates fail every time because of Lovable's private package links, so they add nothing. Its GitHub Actions update (PR #2) is useful. CI caught one real failure and guards against a repeat of B-002.
-- **The "strangers in my cottage" findings in the Gemini review are the demo family** (Chata U Lípý, Petra Nováková). Your account is linked to it. That makes T-012 urgent before anyone else reviews the app.
-
-* [x] **Turn the checks on `main` green again.** Done: merged as PR #3, and the checks were green again at 18:16.
-* [ ] **Five checks on the live site** (T-001 step 5). They need a signed-in account:
-  - [ ] Sign in
-  - [ ] Make someone admin, then back
-  - [ ] Ask the manual a question
-  - [ ] Copy the public calendar link in Kalendář and open it in a private window
-  - [ ] Create a guest link in Více and send a request from a private window
-* [ ] **Tell members the links changed.** Old public calendar and manual links and printed QR codes no longer work. Re-share them from Kalendář and Manuál. Institutions share their own request form link from Více.
-* [ ] **Tag the release** after the checks pass (`docs/runbooks/release.md` step 4), then fill in the Production row in `docs/STATUS.md`.
-* [ ] **Decide public or private.** The repo has been public since it was created. With the fixes live, it's much less urgent. Still, public means anyone can read the code, the architecture docs and the list of past defects. Choose deliberately; this also ties to the AGPL licence question.
-* [x] **Clean up branches** on GitHub. Delete `lovable/experiments`, `agent/claude/foundation-2026-09-25` and `agent/claude/ci-ignore-generated-types`. Keep `agent/claude/fix-build-env` until it is merged, then delete it too.
-* [x] **GitHub file pages showing 500.** This comes from GitHub's side (the code, pull requests and checks all work). If it still happens, contact GitHub Support.
-
-### Still open from the action list
-
-- [ ] 5\. Confirm you can export the full database and hold the admin key
-- [ ] 6\. Check "Confirm email" is on
-- [ ] 7\. Demo family and fake university still in the live database (script ready; your decision)
-- [ ] 8\. Staging database (T-003)
-- [ ] 9\. Email provider (T-005) and error monitoring (T-006)
-- [ ] 10\. Legal basics: operator identity, terms, company, trademark, licence, AI data processing
-- [ ] 11\. Notion: archive or reference only
-- [ ] 12\. Talk to 10 families and 3 institutions; write 40 test questions for the manual (T-008)
-- [ ] 13\. Later work in order: T-004 signed-in tests → T-002 own hosting → T-009 billing → T-010/T-011 direct bookings and calendar sync
-- [ ] 14\. Local: open the `mychata` folder in VS Code; `git stash drop` once you're happy
-- [ ] Low priority: Dependabot's weekly package check fails, most likely because of Lovable's private package links in `bun.lock`
-
-Full details: `mychata/docs/STATUS.md` and `mychata/docs/tasks/`
-
-.
-
-## Fix first: defects found in the code
-
-These came from reading the migrations and server functions, not from the docs. Several contradict items marked ✅ in `docs/00-OVERVIEW.md` and `docs/build-last-3-responses.md`. Paths are relative to `my-chata-manager_LovableCodebaseDownload/`. Nothing below was tested against the live database; each has a one-line check.
-
-**Status 25 Sep, 18:00:** all 12 are fixed. The database fixes are live and #12 was fixed on your Mac. They're not yet checked in a browser; see the progress checklist above.
-
-| #   | Defect                                                                                                                                                                                                                                                                                                             | Where                                                                                                          | Severity                          | Fix                                                                                                                                                                      |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Any signed-in user can read any other property's manual chunks, including members-only sections. `match_manual_chunks` is SECURITY DEFINER, granted to all authenticated users, takes any `_property_id` and any `_count`. Latent today only because of #2; fixing RAG switches the leak on.                       | `drizzle/migrations/0007_*.sql`, `src/lib/manual-qa.functions.ts`                                              | Critical                          | Add an account check inside the function (`property_id in (select id from properties where account_id = current_account_id())`), cap `_count` at 8, filter by visibility |
-| 2   | RAG Stage 1 has almost certainly never stored an embedding. The insert writes a `lang` column that doesn't exist in `manual_chunks`, `gemini-embedding-001` returns 3,072 dims against `vector(768)`, and insert errors are never checked. Q&A silently falls back to pasting the first 6 sections into the model. | `src/lib/manual-qa.functions.ts`, `src/integrations/supabase/types.ts`                                         | High                              | Check: `select count(*) from manual_chunks;` Then add `lang`, set `output_dimensionality: 768` (or migrate the column), throw on insert error                            |
-| 3   | Every PUBLIC manual section of every property can be listed by anyone holding the publishable key, which ships in every page. New sections default to `PUBLIC`; onboarding writes house rules as `PUBLIC`. Wi-Fi codes and key-box instructions are the kind of thing admins put there.                            | `0001_*.sql`, `0008_*.sql`, `src/routes/verejne.manual.$propertyId.tsx`                                        | High                              | Default to members-only. Serve the public manual through a definer function keyed by an unguessable share token, not the property id                                     |
-| 4   | A property id alone gets a stranger the address plus every booked date, which also tells them when the cottage is empty.                                                                                                                                                                                           | `public_property_details`, `public_booking_availability` (`0005`, `0006`)                                      | High                              | Same token pattern as #3; public availability only for properties that opt in                                                                                            |
-| 5   | Make/remove admin always fails. `clenove.tsx` writes `user_roles` from the browser, but users only have SELECT on it. The last-admin check counts `members.role`, while access checks `user_roles`: two role systems that drift.                                                                                   | `src/routes/clenove.tsx`, `0003_*.sql`                                                                         | High                              | One definer function `set_member_role(member_id, role)`, one role store, scoped per account                                                                              |
-| 6   | Guest booking submissions very likely fail. `submitGuestRequest` inserts with the anon key; `guest_requests` has no anon INSERT grant or policy.                                                                                                                                                                   | `src/lib/guest.functions.ts`, `0007_*.sql`                                                                     | High                              | Check by submitting one test request. Replace with a definer function `submit_guest_request(token, …)` plus a rate limit                                                 |
-| 7   | A user can belong to only one account, ever. `members.user_id` is UNIQUE, `current_account_id()` uses `LIMIT 1`, admin is a global role. Inviting someone who already has an account silently returns null.                                                                                                        | `0003_*.sql`, `0007_*.sql` (`accept_invitation`)                                                               | High (blocks institutional plans) | See section 2: a memberships table and an explicit active account                                                                                                        |
-| 8   | The public stay-request form linked from the mychata.cz home page is hard-wired to the first institutional property, which is the seeded demo "Vysoká škola podhorní". Real visitors can file requests into a fake university. Seed families with `example.cz` emails also live in production.                     | `public_institutional_property()`, `supabase/migrations/20260908133152_*.sql`, `src/routes/verejne.zadost.tsx` | Medium                            | Remove seed data from production; one public request page per institution via slug                                                                                       |
-| 9   | Any member can edit or delete every booking, task, expense, split and handover in the account. "Only the receiver confirms a settlement" is enforced only in the UI.                                                                                                                                               | `FOR ALL` policies in `0003_*.sql`, `src/routes/vydaje.vyrovnani.tsx`                                          | Medium (money)                    | Per-row policies: author or admin edits; only the receiving member can set `paid_back`                                                                                   |
-| 10  | Admin-only documents: the row is protected, the file is not. Storage policies check only the property folder.                                                                                                                                                                                                      | `0004_*.sql`                                                                                                   | Medium                            | Store admin-only files under a separate prefix with an admin check                                                                                                       |
-| 11  | No rate limit on `askManual` or `translateTaskText`; anon can insert unlimited `manual_feedback` rows.                                                                                                                                                                                                             | `src/lib/*.functions.ts`, `0001_*.sql`                                                                         | Medium (cost)                     | Per-user daily cap in a small `usage_counters` table                                                                                                                     |
-| 12  | Local copy is not runnable as is. `VITE_SUPABASE_PUBLISHABLE_KEY` starts with `ssb_` (typo) in both `.env.local` files; 60 files carry an uncommitted Prettier reformat; a stray `package-lock.json` sits in a Bun project.                                                                                        | both `.env.local`, `git status`                                                                                | Low but blocking                  | Fix the key; commit the reformat alone or discard it; delete `package-lock.json`                                                                                         |
-
-Two more to verify rather than assume. First, `claim_initial_membership` links a new user to any unclaimed member whose email matches, so make sure "Confirm email" is on for password sign-ups, or someone could claim a relative's seat. Second, the iOS screenshot in `Screenshots/Bugs/` still shows the Language card the repo has already removed, so the live site is running an older build than `main`. Nothing records which commit is live.
+| Defect                                                                                                                             | State                                                | Next                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| B-006 to B-010: half-done handover, hidden photo errors, phone not shown, "Settled" on unsplit expenses, assignee list per account | Fixed on branch T-017, reviewed 28 Sep, not live     | Next steps 1–3                                      |
+| B-004: Google sign-in fails on Brave                                                                                               | In Lovable's sign-in broker; email login works       | Ask Lovable about using your own Google credentials |
+| Missing security headers (Content-Security-Policy, X-Frame-Options)                                                                | Lovable hosting sets them                            | Ask Lovable; otherwise Model B                      |
+| "Confirm email" for password sign-ups not verified                                                                                 | Someone could claim a relative's seat by email match | L-E turns it on; check it in step 8                 |
+| B-005: Firefox desktop session findings                                                                                            | Tracked as T-014                                     |                                                     |
 
 ## 1. The ecosystem today
 
@@ -464,21 +400,9 @@ Add Rajat as a collaborator on the existing repo now. Don't move the repo or lea
 
 **The repo.** It lives at ranaji10/mychata (public). GitHub has no way to add an account "as a branch". Instead, add Rajat under Settings → Collaborators with the Write role. He then works on branches named after his GitHub username and opens PRs like everyone else. Keep the repo where it is for now, because Lovable's sync is tied to it and moving or renaming it can disconnect Lovable. When you move to Model B, transfer it to a GitHub organization you both own, so the business doesn't depend on one personal account.
 
-**Tag now, as a baseline, not a release.** Create `baseline-2026-09-26` on d6494c3 (Releases → Draft a new release → new tag). Keep `release-…` tags for commits that passed the five checks.
+**The Lovable link.** Lovable was reconnected to the repo on 27 Sep and pulls from main on the next merge; it can't pull retroactively. Write down who holds the Lovable workspace, its publish button and its billing (Open tasks). Don't reconnect it again without need: each reconnection risks a new repo and split history.
 
-**The Lovable link.** Lovable's commits arrive through its GitHub app on ranaji10's repo. Check in Lovable → Settings → GitHub which account it shows. If it is Rajat's, one person owns the Lovable workspace, its AI billing and its publish button, while another owns the repo. Write down who holds what. Don't reconnect it now: reconnecting can create a new repo and split the history.
-
-**Guardrails for two people.**
-
-| Guardrail                                                                                            | Where                                                         | State                                                   |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------- |
-| Migration guard: duplicate numbers, journal, edits to applied files                                  | CI                                                            | Ready on branch agent/claude/two-person-guardrails      |
-| Sync check: is my copy current, is anyone else changing my files, next free migration number         | scripts/sync-check.sh, git hooks, VS Code task on folder open | Ready on the same branch; hooks already on for your Mac |
-| Who merges what, one Lovable operator at a time                                                      | docs/runbooks/two-person-workflow.md                          | Ready on the same branch                                |
-| Ruleset on main: PR + green CI + branch up to date, **no approvals**, Lovable app on the bypass list | GitHub settings (repo owner)                                  | To do, about 10 min; test with one Lovable edit         |
-| CODEOWNERS, notification only                                                                        | .github/CODEOWNERS                                            | Optional, once Rajat's username is known                |
-| Both watch the repo (CI and nightly failures reach both)                                             | GitHub                                                        | To do, each person                                      |
-| Separate backups held by each of you                                                                 | runbooks/backup.md                                            | To do                                                   |
+**Guardrails for two people.** The CI migration guard, the sync check with its git hooks and VS Code task, and the two-person runbook are live since PR #7 (see Completed). The GitHub settings still to do are in Open tasks.
 
 **Lovable environment.** Keep one Lovable workspace with both of you as members, and one person driving it at a time. It edits main for screens and wording only, under the Knowledge rules, with nothing published before CI is green. The prompt batches L-1 to L-3 follow those rules.
 
@@ -509,10 +433,8 @@ A Google Doc edited by two Claude accounts through the Drive connector won't wor
 | Is "My Chata" / mychata.cz clear to trademark in CZ and the EU?                          | Cheap to check at ÚPV and EUIPO now, expensive after a brand campaign                                                                                                          |
 | What happens to a family's documents if they delete their account or stop paying?        | Ownership deeds and insurance papers live in the vault; retention, export and deletion rules must exist before billing                                                         |
 | Are backups and point-in-time recovery on, and has a restore ever been tested?           | One bad agent migration on the only database is the most likely serious incident                                                                                               |
-| Who pays for AI calls, and at what usage does the free tier stop being free?             | AI answers and translations have no cap today (defect 11)                                                                                                                      |
+| Who pays for AI calls, and at what usage does the free tier stop being free?             | Answered 26 Sep: the "My Lovable" workspace pays, and daily caps exist since migration 0015. Still open: auto top-up yes or no                                                 |
 | How many hours a week does this get against the other ventures?                          | The lane plan in section 5 assumes steady attention; a V3 marketplace needs a funded growth budget on top                                                                      |
-
-Suggested next step: run the foundation lane (section 5, weeks 1–2) and fix defects 1, 3, 4 and 5 before anything new ships. I can write the first task briefs and the root `AGENTS.md` into the repo on a branch if you want.
 
 ## Sources
 
@@ -521,6 +443,52 @@ Suggested next step: run the foundation lane (section 5, weeks 1–2) and fix de
 - [Airbnb host-only fee explained (Hostaway)](https://www.hostaway.com/blog/airbnb-host-only-fee-what-to-know-about-the-15-percent-host-fee/)
 - [Chaty a chalupy (Česko v datech, Eurostat 2018 data)](https://www.ceskovdatech.cz/clanek/155-chaty-a-chalupy/)
 - Code evidence: `MyChata MVP` folder on your Mac, repo commit `23d71f2` plus uncommitted local changes, read on 25 Sep 2026; live home page of mychata.cz on the same date.
+
+## Completed
+
+Finished work, oldest first. Details for each step are in the repo: `docs/STATUS.md`, `docs/bugs/`, and the pull requests.
+
+### Chain of events
+
+| When          | What happened                                                                                                                                                                                                                                                            | Evidence                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| 25 Sep        | Critical review written (sections 1–9).                                                                                                                                                                                                                                  | This doc                              |
+| 25 Sep        | Fixes for defects 1–13 built, 35 tests passing; PR #1 merged. Lovable Knowledge rules pasted. main protected against force pushes and deletion; secret scanning and Dependabot on.                                                                                       | PR #1                                 |
+| 25 Sep        | Lovable switched back from lovable/experiments to main. Migrations 0011–0015 applied to the live database through an empty 0016, with no data lost (8 members, 4 profiles, 3 chatas).                                                                                    | Lovable, regenerated types            |
+| 25 Sep, 18:00 | Live site on the new build: a wrong form link is refused, and the home page no longer links to the demo university's form.                                                                                                                                               | Browser check                         |
+| 25 Sep, 18:16 | CI green again after Lovable's commit broke it.                                                                                                                                                                                                                          | PR #3                                 |
+| 25 Sep, 20:30 | Outage B-002: a publish built the app without its Supabase settings. Fixed with a committed `.env.production` and a CI guard, then republished. Full database backup taken (30 tables plus sign-in accounts; no uploaded files).                                         | PR #4, B-002                          |
+| 26 Sep, 01:00 | Site back up. The first five checks found B-003 (members sent to onboarding).                                                                                                                                                                                            | B-003                                 |
+| 26 Sep, 02:34 | B-003 fixed, new link-preview image, nightly production check added; 0017 live. Lovable added 0018, a copy of 0017 (harmless, kept).                                                                                                                                     | PR #5                                 |
+| 26 Sep, 03:25 | Cleanup: release checklist, design rules saved from Lovable's memory, Knowledge rules 3a and 9. Lovable memory entries deleted, old GitHub branches deleted. The GitHub 500 errors were on GitHub's side.                                                                | PR #6                                 |
+| 26 Sep, 10:33 | First nightly production check passed.                                                                                                                                                                                                                                   | GitHub Actions                        |
+| 26 Sep, 13:30 | Live database probed as an anonymous visitor: the fixes hold. Bot audit done. Gemini review triaged into the prompts doc.                                                                                                                                                | Prompts doc                           |
+| 26 Sep        | Decided: no approvals between partners; email through Lovable's built-in email; AI and email billed to the "My Lovable" workspace; no Lovable connector for Claude for now; the repo is the shared tracker.                                                              | T-005, environments.md                |
+| 26–27 Sep     | Two-person setup merged: CI migration guard, sync check with git hooks and a VS Code task, two-person runbook, email plan, copies of Claude docs in the repo. Tag `baseline-2026-09-26` on 7d5d8b7. Lovable reconnected to the repo, waiting for the next merge to pull. | PR #7                                 |
+| 28 Sep        | CC-1 (T-017) built by Claude Code and reviewed: code, database rules, new security tests and formatting all check out. The branch was wrongly set to track main, which could have pushed it straight to main; that link was removed.                                     | Branch agent/claude/T-017-review-bugs |
+
+### Defects 1–13, found 25 Sep
+
+These came from reading the migrations and server functions, not from the docs. Several contradict items marked ✅ in `docs/00-OVERVIEW.md` and `docs/build-last-3-responses.md`. Paths are relative to `my-chata-manager_LovableCodebaseDownload/`. Nothing below was tested against the live database; each has a one-line check.
+
+**All fixed and live since 25 Sep** (migrations 0011–0015). A 13th was found during the fix: a member could make themselves admin. The anonymous probe on 26 Sep confirmed 1, 3 and 4 from outside. The table keeps the original findings.
+
+| #   | Defect                                                                                                                                                                                                                                                                                                             | Where                                                                                                          | Severity                          | Fix                                                                                                                                                                      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Any signed-in user can read any other property's manual chunks, including members-only sections. `match_manual_chunks` is SECURITY DEFINER, granted to all authenticated users, takes any `_property_id` and any `_count`. Latent today only because of #2; fixing RAG switches the leak on.                       | `drizzle/migrations/0007_*.sql`, `src/lib/manual-qa.functions.ts`                                              | Critical                          | Add an account check inside the function (`property_id in (select id from properties where account_id = current_account_id())`), cap `_count` at 8, filter by visibility |
+| 2   | RAG Stage 1 has almost certainly never stored an embedding. The insert writes a `lang` column that doesn't exist in `manual_chunks`, `gemini-embedding-001` returns 3,072 dims against `vector(768)`, and insert errors are never checked. Q&A silently falls back to pasting the first 6 sections into the model. | `src/lib/manual-qa.functions.ts`, `src/integrations/supabase/types.ts`                                         | High                              | Check: `select count(*) from manual_chunks;` Then add `lang`, set `output_dimensionality: 768` (or migrate the column), throw on insert error                            |
+| 3   | Every PUBLIC manual section of every property can be listed by anyone holding the publishable key, which ships in every page. New sections default to `PUBLIC`; onboarding writes house rules as `PUBLIC`. Wi-Fi codes and key-box instructions are the kind of thing admins put there.                            | `0001_*.sql`, `0008_*.sql`, `src/routes/verejne.manual.$propertyId.tsx`                                        | High                              | Default to members-only. Serve the public manual through a definer function keyed by an unguessable share token, not the property id                                     |
+| 4   | A property id alone gets a stranger the address plus every booked date, which also tells them when the cottage is empty.                                                                                                                                                                                           | `public_property_details`, `public_booking_availability` (`0005`, `0006`)                                      | High                              | Same token pattern as #3; public availability only for properties that opt in                                                                                            |
+| 5   | Make/remove admin always fails. `clenove.tsx` writes `user_roles` from the browser, but users only have SELECT on it. The last-admin check counts `members.role`, while access checks `user_roles`: two role systems that drift.                                                                                   | `src/routes/clenove.tsx`, `0003_*.sql`                                                                         | High                              | One definer function `set_member_role(member_id, role)`, one role store, scoped per account                                                                              |
+| 6   | Guest booking submissions very likely fail. `submitGuestRequest` inserts with the anon key; `guest_requests` has no anon INSERT grant or policy.                                                                                                                                                                   | `src/lib/guest.functions.ts`, `0007_*.sql`                                                                     | High                              | Check by submitting one test request. Replace with a definer function `submit_guest_request(token, …)` plus a rate limit                                                 |
+| 7   | A user can belong to only one account, ever. `members.user_id` is UNIQUE, `current_account_id()` uses `LIMIT 1`, admin is a global role. Inviting someone who already has an account silently returns null.                                                                                                        | `0003_*.sql`, `0007_*.sql` (`accept_invitation`)                                                               | High (blocks institutional plans) | See section 2: a memberships table and an explicit active account                                                                                                        |
+| 8   | The public stay-request form linked from the mychata.cz home page is hard-wired to the first institutional property, which is the seeded demo "Vysoká škola podhorní". Real visitors can file requests into a fake university. Seed families with `example.cz` emails also live in production.                     | `public_institutional_property()`, `supabase/migrations/20260908133152_*.sql`, `src/routes/verejne.zadost.tsx` | Medium                            | Remove seed data from production; one public request page per institution via slug                                                                                       |
+| 9   | Any member can edit or delete every booking, task, expense, split and handover in the account. "Only the receiver confirms a settlement" is enforced only in the UI.                                                                                                                                               | `FOR ALL` policies in `0003_*.sql`, `src/routes/vydaje.vyrovnani.tsx`                                          | Medium (money)                    | Per-row policies: author or admin edits; only the receiving member can set `paid_back`                                                                                   |
+| 10  | Admin-only documents: the row is protected, the file is not. Storage policies check only the property folder.                                                                                                                                                                                                      | `0004_*.sql`                                                                                                   | Medium                            | Store admin-only files under a separate prefix with an admin check                                                                                                       |
+| 11  | No rate limit on `askManual` or `translateTaskText`; anon can insert unlimited `manual_feedback` rows.                                                                                                                                                                                                             | `src/lib/*.functions.ts`, `0001_*.sql`                                                                         | Medium (cost)                     | Per-user daily cap in a small `usage_counters` table                                                                                                                     |
+| 12  | Local copy is not runnable as is. `VITE_SUPABASE_PUBLISHABLE_KEY` starts with `ssb_` (typo) in both `.env.local` files; 60 files carry an uncommitted Prettier reformat; a stray `package-lock.json` sits in a Bun project.                                                                                        | both `.env.local`, `git status`                                                                                | Low but blocking                  | Fix the key; commit the reformat alone or discard it; delete `package-lock.json`                                                                                         |
+
+Two follow-ups from then: "Confirm email" for password sign-ups is still open (see Open defects), and "which build is live" is now answered by release tags and the Production row in STATUS.md.
 
 ---
 

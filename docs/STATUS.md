@@ -10,7 +10,7 @@ As of 2026-09-25. Update this file in every PR that changes behaviour.
 | Database                | Migrations up to 0018 applied. 0018 is an exact copy of 0017 that Lovable added to trigger its migrator; both ran, harmless. Keep both.                                                |
 | Backup                  | Full export taken 2026-09-25 (`Lovable DB exports/`, outside the repo). Routine: `runbooks/backup.md`.                                                                                 |
 | CI                      | Green on `main`. Migration guard (duplicate numbers, journal, edits to applied files) runs first. Nightly production check scheduled 05:17; first run 26 Sep started 10:33 and passed. |
-| Open bugs               | B-004 (Google sign-in on Brave), B-005 (Firefox session → T-014).                                                                                                                      |
+| Open bugs               | B-004 (Google sign-in on Brave), B-005 (Firefox session → T-014). B-006–B-010: fixed on branch, not yet live (below).                                                                  |
 | Open tasks              | T-014 performance, T-015/T-016 missing tests (from Lovable's 26 Sep review), T-001–T-013 as listed below.                                                                              |
 
 ## Defects found on 2026-09-25 and their state
@@ -33,6 +33,18 @@ As of 2026-09-25. Update this file in every PR that changes behaviour.
 | 12  | Local copy not runnable (key typo, stray lockfile, uncommitted reformat)                    | seen         | yes                             | n/a                                                                |
 | 13  | A member could set their own role to ADMIN (latent until roles moved to `members.role`)     | yes          | 0011                            | "roles"                                                            |
 | 14  | `bun.lock` points at Lovable's private package cache, so installs fail outside Lovable      | seen         | CI workaround                   | CI step                                                            |
+
+## Walkthrough bugs of 2026-09-26 (T-017)
+
+Branch `agent/claude/T-017-review-bugs`. All are **fixed on branch, not yet live**. Tests written but not yet run (see the PR's Verification section).
+
+| Bug   | What                                                                    | State                                                           | Test                                                   |
+| ----- | ----------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------ |
+| B-006 | Handover could only be saved with every item ticked                     | fixed on branch, not yet live                                   | `data.test.ts` "handover checklist" + manual check     |
+| B-007 | Photo upload hid the real error; no resize; `makePrimary` ignored error | fixed on branch, not yet live                                   | `photos.test.ts` + manual check (resize needs browser) |
+| B-008 | Profile phone empty after save and reload                               | fixed on branch, not yet live; root cause not confirmed         | security.test.ts "profile phone (B-008)"               |
+| B-009 | Expense with no one else in the split shown as "Settled"                | fixed on branch, not yet live                                   | `data.test.ts` "expense settlement"                    |
+| B-010 | Assignee list must follow `current_account_id()`                        | fixed on branch, not yet live; write-side gap open (needs 0019) | security.test.ts "assignee list (B-010)"               |
 
 ## Verified (2026-09-25)
 

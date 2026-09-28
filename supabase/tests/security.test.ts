@@ -507,3 +507,120 @@ describe("assignee list (B-010)", () => {
     });
   });
 });
+
+describe("invitations (T-019: B-011, B-012, B-013)", () => {
+  it("an admin invitation saved in lower case still makes an admin", async () => {
+    await admin(
+      db,
+      "insert into public.invitations (account_id, role, token, email) values ($1,'admin','t019-lower', $2)",
+      [ids.acctA, EMAIL.newcomer],
+    );
+    expect(
+      await admin(db, "select role from public.invitations where token = 't019-lower'"),
+    ).toEqual([{ role: "ADMIN" }]);
+    await as(db, newcomer, async (q) => {
+      await q("select public.accept_invitation('t019-lower')");
+      expect(await q("select role from public.members where user_id = $1", [U.newcomer])).toEqual([
+        { role: "ADMIN" },
+      ]);
+    });
+  });
+
+  it("someone already in the account is promoted by an admin invitation, never demoted", async () => {
+    await admin(
+      db,
+      "insert into public.invitations (account_id, role, token, email) values ($1,'ADMIN','t019-promote', $2), ($1,'MEMBER','t019-keep', $3)",
+      [ids.acctA, EMAIL.aMember, EMAIL.aAdmin],
+    );
+    await as(db, aMember, async (q) => {
+      await q("select public.accept_invitation('t019-promote')");
+      expect(await q("select role from public.members where id = $1", [ids.memberAMember])).toEqual(
+        [{ role: "ADMIN" }],
+      );
+    });
+    await as(db, aAdmin, async (q) => {
+      await q("select public.accept_invitation('t019-keep')");
+      expect(await q("select role from public.members where id = $1", [ids.memberAAdmin])).toEqual([
+        { role: "ADMIN" },
+      ]);
+    });
+  });
+
+  it("unknown, expired and used links raise a specific error instead of 'success'", async () => {
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, expires_at, status, accepted_by)
+       values ($1,'MEMBER','t019-expired', $2, now() - interval '1 day', 'PENDING', null),
+              ($1,'MEMBER','t019-used', $2, now() + interval '1 day', 'ACCEPTED', $3)`,
+      [ids.acctA, EMAIL.newcomer, U.aMember],
+    );
+    await as(db, newcomer, async (q) => {
+      await expect(q("select public.accept_invitation('t019-nope')")).rejects.toThrow(
+        /invitation_not_found/,
+      );
+      await expect(q("select public.accept_invitation('t019-expired')")).rejects.toThrow(
+        /invitation_expired/,
+      );
+      await expect(q("select public.accept_invitation('t019-used')")).rejects.toThrow(
+        /invitation_used/,
+      );
+    });
+  });
+
+  it("the preview shows what the link is for, masks the email, and says if it fits", async () => {
+    await admin(
+      db,
+      "insert into public.invitations (account_id, role, token, email, created_by_member_id) values ($1,'ADMIN','t019-preview', $2, $3)",
+      [ids.acctA, EMAIL.newcomer, ids.memberAAdmin],
+    );
+    await as(db, anon, async (q) => {
+      const p = await one(q("select * from public.invitation_preview('t019-preview')"));
+      expect(p).toMatchObject({
+        state: "valid",
+        account_name: "Rodina A",
+        role: "ADMIN",
+        email_hint: "n***@example.org",
+        email_matches: null,
+      });
+      expect(await one(q("select state from public.invitation_preview('t019-missing')"))).toEqual({
+        state: "not_found",
+      });
+    });
+    await as(db, bAdmin, async (q) => {
+      const p = await one(
+        q<{ email_matches: boolean }>(
+          "select email_matches from public.invitation_preview('t019-preview')",
+        ),
+      );
+      expect(p.email_matches).toBe(false);
+    });
+    await as(db, newcomer, async (q) => {
+      const p = await one(
+        q<{ email_matches: boolean }>(
+          "select email_matches from public.invitation_preview('t019-preview')",
+        ),
+      );
+      expect(p.email_matches).toBe(true);
+    });
+  });
+});
+
+describe("demo data removed (T-012, migration 0019)", () => {
+  const demo = ["a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"];
+  it("the seeded demo accounts are gone, with a copy kept out of reach of the API", async () => {
+    expect(await admin(db, "select id from public.accounts where id = any($1)", [demo])).toEqual(
+      [],
+    );
+    expect(
+      await admin(db, "select count(*)::int as n from demo_archive.accounts where id = any($1)", [
+        demo,
+      ]),
+    ).toEqual([{ n: 2 }]);
+    await as(db, anon, async (q) => {
+      await expect(q("select * from demo_archive.accounts")).rejects.toThrow(/permission denied/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await expect(q("select * from demo_archive.members")).rejects.toThrow(/permission denied/);
+    });
+  });
+});

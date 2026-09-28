@@ -40,7 +40,14 @@ function TasksPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>("all");
   const [title, setTitle] = useState("");
-  const [assignee, setAssignee] = useState<string>("");
+  // null = not chosen yet: new tasks default to the person adding them (T-019).
+  const [assignee, setAssignee] = useState<string | null>(null);
+  const chosenAssignee = assignee ?? currentMember?.id ?? "";
+  // Ready-made checklist waiting for "who does these?" before it is added (T-019).
+  const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
+  const [assignMode, setAssignMode] = useState<"all" | "each">("all");
+  const [assignAll, setAssignAll] = useState<string | null>(null);
+  const [assignEach, setAssignEach] = useState<Record<number, string>>({});
   const [due, setDue] = useState(todayISO());
   const [showForm, setShowForm] = useState(false);
   const translate = useServerFn(translateTaskText);
@@ -93,7 +100,7 @@ function TasksPage() {
       title_en: lang === "en" ? title.trim() : translated.translation,
       category: "other",
       urgency: "LOW",
-      assignee_member_id: assignee || null,
+      assignee_member_id: chosenAssignee || null,
       due_date: due,
       status: "OPEN",
       created_by: currentMember.name,
@@ -104,6 +111,7 @@ function TasksPage() {
     }
     toast.success(t("Úkol přidán.", "Task added."));
     setTitle("");
+    setAssignee(null);
     setShowForm(false);
     invalidate();
   };
@@ -125,6 +133,10 @@ function TasksPage() {
         urgency: "LOW" as const,
         status: "OPEN" as const,
         created_by: currentMember.name,
+        assignee_member_id:
+          (assignMode === "all"
+            ? (assignAll ?? currentMember.id)
+            : (assignEach[index] ?? currentMember.id)) || null,
       })),
     );
     if (error) {
@@ -137,7 +149,17 @@ function TasksPage() {
         `Added checklist "${template.title}" (${template.tasks.length} tasks).`,
       ),
     );
+    setPendingTemplate(null);
+    setAssignEach({});
     invalidate();
+  };
+
+  // Open tasks that came from the same template, so a second tap doesn't silently duplicate.
+  const alreadyOpen = (templateId: string) => {
+    const cs = seasonalTemplates("cs").find((tpl) => tpl.id === templateId)?.tasks ?? [];
+    return (tasks ?? []).filter(
+      (task) => task.status !== "DONE" && task.title_cs !== null && cs.includes(task.title_cs),
+    ).length;
   };
 
   const today = todayISO();
@@ -250,7 +272,7 @@ function TasksPage() {
               </label>
               <select
                 id="task-assignee"
-                value={assignee}
+                value={chosenAssignee}
                 onChange={(e) => setAssignee(e.target.value)}
                 className="field"
               >
@@ -307,13 +329,92 @@ function TasksPage() {
         </p>
         <div className="mt-3 space-y-2">
           {seasonalTemplates(lang).map((tpl) => (
-            <button
-              key={tpl.id}
-              onClick={() => addChecklist(tpl.id)}
-              className="btn-secondary w-full"
-            >
-              {tpl.title} ({tpl.tasks.length})
-            </button>
+            <div key={tpl.id}>
+              <button
+                onClick={() => {
+                  setPendingTemplate(pendingTemplate === tpl.id ? null : tpl.id);
+                  setAssignMode("all");
+                  setAssignAll(null);
+                  setAssignEach({});
+                }}
+                className={`btn-secondary w-full ${pendingTemplate === tpl.id ? "ring-2 ring-primary" : ""}`}
+              >
+                {tpl.title} ({tpl.tasks.length})
+              </button>
+              {pendingTemplate === tpl.id && (
+                <div className="mt-2 space-y-3 rounded-2xl bg-secondary p-3">
+                  {alreadyOpen(tpl.id) > 0 && (
+                    <p className="text-[14px] font-semibold text-warn">
+                      {t(
+                        `Z tohoto seznamu už máte ${alreadyOpen(tpl.id)} nesplněných úkolů. Přidat znovu?`,
+                        `You already have ${alreadyOpen(tpl.id)} open tasks from this checklist. Add again?`,
+                      )}
+                    </p>
+                  )}
+                  <p className="text-[15px] font-bold">{t("Kdo je udělá?", "Who does them?")}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      className={`btn-secondary ${assignMode === "all" ? "ring-2 ring-primary" : ""}`}
+                      onClick={() => setAssignMode("all")}
+                    >
+                      {t("Všechny jeden člověk", "All to one person")}
+                    </button>
+                    <button
+                      className={`btn-secondary ${assignMode === "each" ? "ring-2 ring-primary" : ""}`}
+                      onClick={() => setAssignMode("each")}
+                    >
+                      {t("Každý úkol zvlášť", "Each task separately")}
+                    </button>
+                  </div>
+                  {assignMode === "all" ? (
+                    <select
+                      className="field"
+                      aria-label={t("Odpovědná osoba", "Assignee")}
+                      value={assignAll ?? currentMember?.id ?? ""}
+                      onChange={(e) => setAssignAll(e.target.value)}
+                    >
+                      <option value="">{t("Nikdo", "Nobody")}</option>
+                      {members.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <ul className="space-y-2">
+                      {tpl.tasks.map((taskTitle, index) => (
+                        <li key={taskTitle} className="space-y-1">
+                          <p className="text-[14px]">{taskTitle}</p>
+                          <select
+                            className="field"
+                            aria-label={taskTitle}
+                            value={assignEach[index] ?? currentMember?.id ?? ""}
+                            onChange={(e) =>
+                              setAssignEach({ ...assignEach, [index]: e.target.value })
+                            }
+                          >
+                            <option value="">{t("Nikdo", "Nobody")}</option>
+                            {members.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.name}
+                              </option>
+                            ))}
+                          </select>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex gap-2">
+                    <button className="btn-primary flex-1" onClick={() => addChecklist(tpl.id)}>
+                      {t(`Přidat ${tpl.tasks.length} úkolů`, `Add ${tpl.tasks.length} tasks`)}
+                    </button>
+                    <button className="btn-secondary" onClick={() => setPendingTemplate(null)}>
+                      {t("Zrušit", "Cancel")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </section>

@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import type { Profile } from "@/lib/data";
+import { normalizePhone, type Profile } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/profil")({
@@ -37,7 +37,18 @@ function ProfilePage() {
   const save = async () => {
     if (!user) return;
     setBusy(true);
-    const wantedPhone = phone.trim() || null;
+    const normalized = normalizePhone(phone);
+    if (!normalized) {
+      setBusy(false);
+      toast.error(
+        t(
+          "Telefon zadejte jako +420 777 123 456 (nebo 9 číslic pro české číslo).",
+          "Enter the phone as +420 777 123 456 (or 9 digits for a Czech number).",
+        ),
+      );
+      return;
+    }
+    const wantedPhone = normalized.value;
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -121,9 +132,16 @@ function ProfilePage() {
             type="tel"
             inputMode="tel"
             autoComplete="tel"
+            placeholder="+420 777 123 456"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            aria-invalid={!normalizePhone(phone)}
           />
+          {!normalizePhone(phone) && (
+            <span className="mt-1 block text-[14px] font-semibold text-warn">
+              {t("Zadejte číslo jako +420 777 123 456.", "Enter the number as +420 777 123 456.")}
+            </span>
+          )}
         </label>
         <button className="btn-primary w-full" disabled={busy} onClick={save}>
           {busy ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}

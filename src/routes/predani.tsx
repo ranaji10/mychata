@@ -159,7 +159,7 @@ function HandoverPage() {
     },
     onSuccess: () => {
       if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
-      toast.success(t("Předání chaty zaznamenáno.", "Handover recorded."));
+      toast.success(t("Odjezdový checklist uložen.", "Leaving checklist saved."));
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });
     },
@@ -180,8 +180,11 @@ function HandoverPage() {
   return (
     <AppShell>
       <PageHeader
-        title={t("Předání chaty", "Cottage handover")}
-        subtitle={t("Zkontrolujte vše před odjezdem.", "Check everything before you leave.")}
+        title={t("Odjezdový checklist", "Leaving checklist")}
+        subtitle={t(
+          "Odškrtněte, co jste udělali. Kdo přijede příště, uvidí shrnutí.",
+          "Tick what you did. Whoever comes next sees the summary.",
+        )}
       />
 
       <section className="card p-4">
@@ -287,14 +290,14 @@ function HandoverPage() {
       <section className="mt-4">
         <div className="mb-2 flex items-center gap-2">
           <History className="size-5 text-muted-foreground" />
-          <h3 className="text-lg font-bold">{t("Historie předání", "Handover history")}</h3>
+          <h3 className="text-lg font-bold">{t("Předchozí odjezdy", "Previous departures")}</h3>
         </div>
         {isLoading ? (
           <LoadingCards />
         ) : !history?.length ? (
           <EmptyState
             icon={ClipboardCheck}
-            title={t("Zatím žádná předání.", "No handovers yet.")}
+            title={t("Zatím žádné odjezdy.", "No departures yet.")}
             hint={t(
               "Po dokončení checklistu se zobrazí zde.",
               "They will appear here once you complete a checklist.",
@@ -305,17 +308,39 @@ function HandoverPage() {
             {history.map((h) => {
               const { done, total } = checklistProgress(h.checklist_state);
               const label = t(`${done} z ${total} hotovo`, `${done} of ${total} done`);
+              const entries = Object.entries(h.checklist_state ?? {});
+              // Tap to see what was done and what was skipped (B-017).
               return (
-                <div key={h.id} className="card p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[15px] font-bold">{memberName(h.member_id)}</p>
+                <details key={h.id} className="card group p-4">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-bold">{memberName(h.member_id)}</p>
+                      <p className="text-[13px] text-muted-foreground">
+                        {fmtDateTime(h.submitted_at)}
+                      </p>
+                    </div>
                     {done === total ? <PillOk>{label}</PillOk> : <PillWarn>{label}</PillWarn>}
-                  </div>
-                  <p className="text-[13px] text-muted-foreground">{fmtDateTime(h.submitted_at)}</p>
+                  </summary>
+                  <ul className="mt-3 space-y-1.5">
+                    {entries.map(([item, entry]) => (
+                      <li key={item} className="flex items-start gap-2 text-[15px]">
+                        {entry.state === "checked" ? (
+                          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
+                        ) : (
+                          <Circle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className={entry.state === "checked" ? "" : "text-muted-foreground"}>
+                          {item}
+                          {entry.state !== "checked" && ` (${t("vynecháno", "skipped")})`}
+                          {entry.reason && ` — ${entry.reason}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                   {h.note && (
-                    <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{h.note}“</p>
+                    <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">„{h.note}“</p>
                   )}
-                </div>
+                </details>
               );
             })}
           </div>

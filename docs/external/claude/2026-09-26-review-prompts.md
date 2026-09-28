@@ -2,6 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-26
+updated: 2026-09-28
 status: reviewed
 artifact: https://claude.ai/code/artifact/7b07f9c1-14fd-4777-8538-cd684a70538e
 input: private/Raw Agent Suggestions/26092026_Gemini_Feedback_mychata.cz.md (workspace, not in git)
@@ -12,6 +13,8 @@ input: private/Raw Agent Suggestions/26092026_Gemini_Feedback_mychata.cz.md (wor
 # MyChata: agent prompts from the 26 Sep review
 
 The Gemini walkthrough found 5 real bugs and about 25 UX requests. Most of the "strangers in my cottage" findings are the demo family still in production, not a data leak. Send Claude Code's bug batch first. Hold Lovable's batches until the GitHub flow for two maintainers is in place.
+
+**Update 28 Sep.** CC-1 is live (PR #8). Branch `agent/claude/T-019-invites-signin-demo` now covers several items below, so skip them in the prompts: invitations (several at once, role, send by email, accept page), email sign-up, main photo on Home, phone check, expandable past departures, "who does these?" for ready-made checklists, new tasks defaulting to me, and the demo-data removal (T-012). CC-2's migration is now 0021. The document vault plan is `docs/tasks/T-020-document-vault-rag.md`.
 
 ## What the review actually found
 
@@ -125,7 +128,7 @@ Build one notifications pipeline, not one per feature:
 - Wrap Lovable's send call in src/lib/email.server.ts: sendEmail({to, template, data, lang}). Nothing else calls the provider, so moving off Lovable later (Model B) changes one file.
 - notifications table (account_id, recipient_member_id, kind, payload jsonb, read_at, emailed_at, email_error), RLS: the recipient reads their own.
 - The existing cron worker (cron-auth.ts) sends queued emails, retries failures three times, and records email_error.
-- Kinds in this PR: invitation (email by default; keep copy-link as a fallback), booking_awaiting_approval (to the chata admins), task_tagged, handover_to_next_guest (to the member with the next confirmed booking; the confirmation names them and the dates).
+- Kinds in this PR: invitation (email by default; keep copy-link as a fallback), booking_awaiting_approval (to the chata admins), task_tagged, leaving_checklist (the last leaving checklist, with done and skipped items and the date it was done, goes to the member with the next confirmed booking; if nobody is booked yet, it goes when the next booking is confirmed; the confirmation names them and the dates).
 - Czech first, English when the member's language is English. Rate limit per sender per day. No member phone numbers or emails shown in the UI; the Message button creates a notification.
 Done when: tests cover RLS and the queue; one real email per kind reaches a maintainer's own address, never real members.
 ```
@@ -146,6 +149,8 @@ UI and wording only. Do not create or edit migrations, SQL, RLS, auth or server 
 5. Rename the bottom tab "Více / More" to "Nastavení / Settings" (route stays /vice). Sections inside Settings (Members, Add a chata, Photos, Documents) open as expanding panels or as pages with a visible back arrow to Settings. Nobody should need to tap the tab again to get back.
 6. Guest link and public calendar link: use navigator.share() when available (phone share sheet: WhatsApp, Messages, AirDrop); fall back to copying with a toast. Never use alert().
 
+7. Public calendar page (/verejne/kalendar/$token): make it inviting. Show the chata name, a month view with free and booked days in clear colours, the next free weekend highlighted, the season (e.g. "Letní sezóna"), and a "Share" button. Show no guest names, ever. If the chata has a guest link, add "Ask for these dates". Use the stock picture for now: showing the main photo publicly needs a Claude change.
+
 When done, list every file changed and what I should click to check each item.
 ```
 
@@ -154,9 +159,9 @@ When done, list every file changed and what I should click to check each item.
 ```
 Same rules as before: UI only, design.md, t(cs, en). The database changes from PR "T-018 checklists and defaults" are live; use them, don't change them.
 
-1. Adding a seasonal checklist: first ask "Assign all to" (me by default, or pick a member) and show which checklist it is. Add it as one collapsed group at the bottom. Keep the scroll position where it was. If the same checklist already exists this season, ask before adding.
+1. Adding a seasonal checklist (the "who does them?" question already exists, T-019): add it as one collapsed group at the bottom. Keep the scroll position where it was. If the same checklist already exists this season, ask before adding.
 2. Group tasks by checklist, with a collapsed "Done" section at the bottom holding completed tasks.
-3. New task form: assignee preselected to me.
+3. (Done in T-019: new tasks default to me.)
 4. Overdue task: show a small prompt on the tile "Add a note about the delay" that opens the task detail with the note field focused.
 5. Task detail (/ukoly/$id): notes field and a people picker listing members of this chata only. Show the tag chips. (Sending the notification comes later with email; for now show "Tagged, they'll see it in the app.")
 6. Stay awaiting approval (/rezervace/$id): show who approves (the admin's name, no phone or email), what happens next, and a "Message the admin" button. Until email exists, the button can open a prefilled mailto: to the chata's shared contact if set, otherwise it's hidden.
@@ -168,7 +173,7 @@ Same rules as before: UI only, design.md, t(cs, en). The database changes from P
 Same rules: UI only, design.md, t(cs, en).
 
 1. Expense detail: tapping an unsettled expense opens a detail sheet: who paid, the split per person, receipt photo (upload/view), and actions: "Remind" (sends the notification from CC-3), "Mark my share paid" (the person who owes), "Cover it all" (payer only, uses the CC-2 function, asks to confirm).
-2. Handover: "Save and hand over" works with any number of items ticked. The confirmation reads: "Handover sent to {name}, staying {from}–{to}." If there is no next booking: "Saved. No upcoming stay yet." Handover history tiles expand in place to show done and skipped items and notes.
+2. Handover: "Save and hand over" works with any number of items ticked. The confirmation reads: "Handover sent to {name}, staying {from}–{to}." If there is no next booking: "Saved. No upcoming stay yet." (Past departures already expand, T-019.)
 3. Add a chata: the first screen asks one question, "What's your chata called?" After that the chata appears as a tile with a "Details missing" badge. Each missing field (address, rooms, capacity, seasons) has a one-line "Why we ask" note saying exactly how it's used (for example: "Address: shown only to members and to guests you approve"). Nothing but the name is required.
 4. House rules: a "Use a starter set" button fills an editable list of 8–10 basic family rules (text from docs/content/house-rules-cs-en.md, which a person will supply). Nothing is saved until the user taps Save.
 5. Manual: show each empty section as a question with suggested answers to pick or edit (question bank in docs/content/manual-questions-cs-en.md). Members-only stays the default.

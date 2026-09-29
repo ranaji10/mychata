@@ -163,39 +163,6 @@ export type Database = {
           },
         ]
       }
-      checklists: {
-        Row: {
-          account_id: string
-          created_at: string
-          created_by_member_id: string | null
-          id: string
-          property_id: string
-          season: string
-          template_id: string
-          title: string
-        }
-        Insert: {
-          account_id: string
-          created_at?: string
-          created_by_member_id?: string | null
-          id?: string
-          property_id: string
-          season: string
-          template_id: string
-          title: string
-        }
-        Update: {
-          account_id?: string
-          created_at?: string
-          created_by_member_id?: string | null
-          id?: string
-          property_id?: string
-          season?: string
-          template_id?: string
-          title?: string
-        }
-        Relationships: []
-      }
       consent_log: {
         Row: {
           analytics: boolean
@@ -1294,7 +1261,6 @@ export type Database = {
         Row: {
           assignee_member_id: string | null
           category: string
-          checklist_id: string | null
           created_at: string
           created_by: string
           description_cs: string | null
@@ -1315,7 +1281,6 @@ export type Database = {
         Insert: {
           assignee_member_id?: string | null
           category?: string
-          checklist_id?: string | null
           created_at?: string
           created_by?: string
           description_cs?: string | null
@@ -1336,7 +1301,6 @@ export type Database = {
         Update: {
           assignee_member_id?: string | null
           category?: string
-          checklist_id?: string | null
           created_at?: string
           created_by?: string
           description_cs?: string | null
@@ -1445,18 +1409,6 @@ export type Database = {
         }
         Returns: string
       }
-      add_checklist: {
-        Args: {
-          _force?: boolean
-          _lang: string
-          _property_id: string
-          _tasks: Json
-          _template_id: string
-          _title: string
-        }
-        Returns: string
-      }
-      cover_expense: { Args: { _expense_id: string }; Returns: number }
       current_account_id: { Args: never; Returns: string }
       current_member_id: { Args: never; Returns: string }
       decide_guest_request: {

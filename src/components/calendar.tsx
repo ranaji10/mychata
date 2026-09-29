@@ -21,6 +21,7 @@ export function CalendarMonth({
   selection,
   onPickDay,
   minDate,
+  highlight,
 }: {
   year: number;
   month: number;
@@ -29,6 +30,8 @@ export function CalendarMonth({
   onPickDay?: (iso: string) => void;
   /** Days before this can't be picked (defaults to today when picking). */
   minDate?: string;
+  /** Free days worth pointing out (e.g. the next free weekend on the public calendar). */
+  highlight?: string[];
 }) {
   const { lang, t } = useLang();
   const days = monthGrid(year, month);
@@ -56,6 +59,7 @@ export function CalendarMonth({
             !!selection.end &&
             d.iso > selection.start &&
             d.iso < selection.end;
+          const isHighlighted = !booking && !!highlight?.includes(d.iso);
           const style = isEndpoint
             ? { backgroundColor: "var(--color-primary)", color: "var(--color-primary-foreground)" }
             : inRange
@@ -68,9 +72,14 @@ export function CalendarMonth({
                 ? { backgroundColor: "var(--color-ok)", color: "#fff" }
                 : isPending
                   ? { backgroundColor: "var(--color-warn-soft)", color: "var(--color-warn)" }
-                  : isToday
-                    ? { boxShadow: "inset 0 0 0 2px var(--color-primary)" }
-                    : undefined;
+                  : isHighlighted
+                    ? {
+                        backgroundColor: "var(--color-ok-soft)",
+                        boxShadow: "inset 0 0 0 2px var(--color-ok)",
+                      }
+                    : isToday
+                      ? { boxShadow: "inset 0 0 0 2px var(--color-primary)" }
+                      : undefined;
           const label = (
             <span
               className={!booking && !d.inMonth && !isEndpoint ? "text-muted-foreground/50" : ""}

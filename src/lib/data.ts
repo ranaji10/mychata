@@ -93,6 +93,8 @@ export interface Task {
   done_note: string | null;
   created_by: string;
   created_at: string;
+  /** Set for tasks added as part of a seasonal checklist (T-018). */
+  checklist_id?: string | null;
 }
 
 export function taskTitle(task: Task, lang: "cs" | "en"): string {

@@ -169,6 +169,13 @@
       "when": 1790656073364,
       "tag": "0023_0022_admin_guard_decisions_settlement",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790670024000,
+      "tag": "0024_checklists_and_defaults",
+      "breakpoints": true
     }
   ]
 }

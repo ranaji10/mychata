@@ -82,23 +82,32 @@ function NewBooking() {
   const save = async () => {
     if (!property || !currentMember || invalid) return;
     setSaving(true);
-    const { error } = await supabase.from("bookings").insert({
-      property_id: property.id,
-      requester_member_id: currentMember.id,
-      requester_name: currentMember.name,
-      start_date: start,
-      end_date: end,
-      guests,
-      note: note || null,
-      status: "CONFIRMED",
-    });
+    const { data: saved, error } = await supabase
+      .from("bookings")
+      .insert({
+        property_id: property.id,
+        requester_member_id: currentMember.id,
+        requester_name: currentMember.name,
+        start_date: start,
+        end_date: end,
+        guests,
+        note: note || null,
+        status: "CONFIRMED",
+      })
+      .select("status")
+      .single();
     setSaving(false);
     if (error) {
       toast.error(t("Rezervaci se nepodařilo uložit.", "The booking could not be saved."));
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["bookings", property.id] });
-    toast.success(t("Rezervace byla potvrzena.", "Booking confirmed."));
+    // Where the chata doesn't auto-confirm, the database keeps a member's booking pending.
+    toast.success(
+      saved?.status === "PENDING"
+        ? t("Rezervace čeká na schválení správcem.", "Booking sent to the admin for approval.")
+        : t("Rezervace byla potvrzena.", "Booking confirmed."),
+    );
     navigate({ to: "/kalendar" });
   };
 

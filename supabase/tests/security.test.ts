@@ -721,3 +721,115 @@ describe("walkthrough fixes (T-021, migration 0022)", () => {
     });
   });
 });
+
+describe("checklists and defaults (T-018, migration 0024)", () => {
+  const tasksJson = JSON.stringify([
+    { title_cs: "Vypustit vodu", title_en: "Drain the water", assignee: null },
+    { title_cs: "Zavřít okenice", title_en: "Close the shutters" },
+  ]);
+  it("adds a checklist with its tasks once per season, a second copy only when confirmed", async () => {
+    await as(db, aMember, async (q) => {
+      const [c] = await q<{ id: string }>(
+        "select public.add_checklist($1,'winter','Zima','cs',$2::jsonb) as id",
+        [ids.propA, tasksJson],
+      );
+      const tasks = await q<{ title: string; checklist_id: string; category: string }>(
+        "select title, checklist_id, category from public.tasks where checklist_id = $1 order by title",
+        [c!.id],
+      );
+      expect(tasks.map((t) => t.title)).toEqual(["Vypustit vodu", "Zavřít okenice"]);
+      expect(tasks.every((t) => t.category === "seasonal")).toBe(true);
+      await expect(
+        q("select public.add_checklist($1,'winter','Zima','cs',$2::jsonb)", [ids.propA, tasksJson]),
+      ).rejects.toThrow(/checklist_exists/);
+      await q("select public.add_checklist($1,'winter','Zima','cs',$2::jsonb, true)", [
+        ids.propA,
+        tasksJson,
+      ]);
+    });
+  });
+  it("refuses other accounts and assignees from other accounts", async () => {
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q("select public.add_checklist($1,'winter','Zima','cs',$2::jsonb)", [ids.propA, tasksJson]),
+      ).rejects.toThrow(/not_a_member/);
+    });
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.add_checklist($1,'summer','Léto','cs',$2::jsonb)", [
+          ids.propA,
+          JSON.stringify([{ title_cs: "x", title_en: "x", assignee: ids.memberBAdmin }]),
+        ]),
+      ).rejects.toThrow(/assignee_not_in_account/);
+    });
+  });
+  it("a booking with only dates gets the member as booker; confirmed only where the chata auto-confirms", async () => {
+    await as(db, aMember, async (q) => {
+      const [b] = await q<{ requester_member_id: string; requester_name: string; status: string }>(
+        "insert into public.bookings (property_id, start_date, end_date) values ($1, current_date + 60, current_date + 62) returning requester_member_id, requester_name, status",
+        [ids.propA],
+      );
+      expect(b).toMatchObject({
+        requester_member_id: ids.memberAMember,
+        requester_name: "Petr",
+        status: "CONFIRMED",
+      });
+    });
+    await admin(db, "update public.properties set auto_confirm = false where id = $1", [ids.propA]);
+    try {
+      await as(db, aMember, async (q) => {
+        const [b] = await q<{ status: string }>(
+          "insert into public.bookings (property_id, start_date, end_date, status) values ($1, current_date + 70, current_date + 72, 'CONFIRMED') returning status",
+          [ids.propA],
+        );
+        expect(b!.status).toBe("PENDING");
+      });
+      await as(db, aAdmin, async (q) => {
+        const [b] = await q<{ status: string }>(
+          "insert into public.bookings (property_id, start_date, end_date, status) values ($1, current_date + 80, current_date + 82, 'CONFIRMED') returning status",
+          [ids.propA],
+        );
+        expect(b!.status).toBe("CONFIRMED");
+      });
+    } finally {
+      await admin(db, "update public.properties set auto_confirm = true where id = $1", [
+        ids.propA,
+      ]);
+    }
+  });
+  it("only the payer or an admin covers an expense, and it is audited", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(q("select public.cover_expense($1)", [ids.expenseA])).rejects.toThrow(
+        /only_payer_covers/,
+      );
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(q("select public.cover_expense($1)", [ids.expenseA])).rejects.toThrow(
+        /not_a_member/,
+      );
+    });
+    await as(db, aAdmin, async (q) => {
+      const [r] = await q<{ n: number }>("select public.cover_expense($1) as n", [ids.expenseA]);
+      expect(r!.n).toBe(1);
+      const log = await q(
+        "select 1 from public.audit_log where action = 'expense_covered' and target_id = $1",
+        [ids.expenseA],
+      );
+      expect(log).toHaveLength(1);
+    });
+  });
+  it("a new task without an assignee goes to its creator; an explicit null stays unassigned", async () => {
+    await as(db, aMember, async (q) => {
+      const [a] = await q<{ assignee_member_id: string | null }>(
+        "insert into public.tasks (property_id, title) values ($1, 'Default') returning assignee_member_id",
+        [ids.propA],
+      );
+      expect(a!.assignee_member_id).toBe(ids.memberAMember);
+      const [b] = await q<{ assignee_member_id: string | null }>(
+        "insert into public.tasks (property_id, title, assignee_member_id) values ($1, 'Nobody', null) returning assignee_member_id",
+        [ids.propA],
+      );
+      expect(b!.assignee_member_id).toBeNull();
+    });
+  });
+});

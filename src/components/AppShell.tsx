@@ -72,13 +72,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         ? t("Správce", "Admin")
         : t("Člen", "Member");
 
-  const pickCottage = async (accountId: string, propertyId: string) => {
+  const pickCottage = async (accountId: string, propertyId?: string) => {
     setSwitching(true);
     try {
       if (accountId !== account?.id) {
+        // switchAccount already clears the chosen cottage; the first one becomes active.
         await switchAccount(accountId);
-        setActivePropertyId(propertyId);
-      } else {
+        if (propertyId) setActivePropertyId(propertyId);
+      } else if (propertyId) {
         setActivePropertyId(propertyId);
       }
       setSwitcherOpen(false);
@@ -219,7 +220,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     ) : (
                       <button
                         disabled={switching}
-                        onClick={() => pickCottage(m.account_id, m.account_id)}
+                        onClick={() => pickCottage(m.account_id)}
                         className="mt-2 flex min-h-[44px] w-full items-center rounded-2xl bg-secondary px-3 py-2 text-left text-[15px] font-semibold"
                       >
                         {t("Přepnout na tento účet", "Switch to this account")}

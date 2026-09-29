@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
@@ -32,10 +32,17 @@ export const Route = createFileRoute("/vydaje")({
       },
     ],
   }),
-  component: ExpensesPage,
+  component: ExpensesRoute,
 });
 
 const CATEGORY_KEYS = Object.keys(EXPENSE_CATEGORY) as (keyof typeof EXPENSE_CATEGORY)[];
+
+// /vydaje/vyrovnani (Settle debts) is a child of this route in the file-based router, so
+// it renders inside this component. Without an <Outlet /> the address changed but the list stayed on screen (T-022).
+function ExpensesRoute() {
+  const children = useChildMatches();
+  return children.length ? <Outlet /> : <ExpensesPage />;
+}
 
 function ExpensesPage() {
   const { t, lang } = useLang();

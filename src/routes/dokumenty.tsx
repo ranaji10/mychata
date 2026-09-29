@@ -70,6 +70,16 @@ function DocumentsPage() {
   });
   const [file, setFile] = useState<File | null>(null);
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+  // Stored as codes (INSURANCE…); people see words in their language (T-022).
+  const categoryLabel = (code: string) =>
+    ({
+      INSURANCE: t("Pojištění", "Insurance"),
+      OWNERSHIP: t("Vlastnictví", "Ownership"),
+      UTILITIES: t("Energie a služby", "Utilities"),
+      SERVICE_RECORDS: t("Servisní záznamy", "Service records"),
+      WARRANTIES: t("Záruky", "Warranties"),
+      OTHER: t("Ostatní", "Other"),
+    })[code] ?? code;
   const { data: documents, isLoading } = useQuery({
     queryKey: ["documents", property?.id],
     enabled: !!property,
@@ -241,7 +251,7 @@ function DocumentsPage() {
         )}
       />
       <div className="mb-4 flex gap-2">
-        <label className="field flex items-center gap-2">
+        <label className="field flex min-w-0 flex-1 items-center gap-2">
           <Search className="size-5 text-muted-foreground" />
           <input
             value={query}
@@ -253,11 +263,14 @@ function DocumentsPage() {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="field w-36"
+          className="field w-32 shrink-0"
+          aria-label={t("Kategorie", "Category")}
         >
           <option value="ALL">{t("Vše", "All")}</option>
           {categories.map((value) => (
-            <option key={value}>{value}</option>
+            <option key={value} value={value}>
+              {categoryLabel(value)}
+            </option>
           ))}
         </select>
       </div>
@@ -277,7 +290,9 @@ function DocumentsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-bold">{document.title}</h2>
-                    <p className="text-[13px] text-muted-foreground">{document.category}</p>
+                    <p className="text-[13px] text-muted-foreground">
+                      {categoryLabel(document.category)}
+                    </p>
                   </div>
                   {days !== null && days < 0 ? (
                     <PillDanger>{t("Po platnosti", "Expired")}</PillDanger>
@@ -382,7 +397,9 @@ function DocumentsPage() {
               className="field"
             >
               {categories.map((value) => (
-                <option key={value}>{value}</option>
+                <option key={value} value={value}>
+                  {categoryLabel(value)}
+                </option>
               ))}
             </select>
             <textarea

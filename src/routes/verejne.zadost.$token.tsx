@@ -132,7 +132,20 @@ function PublicRequest() {
         </div>
       </div>
 
-      {sent ? (
+      {!loadingProperty && !property ? (
+        // An unknown or family link: say so instead of showing a form that can't be sent.
+        <section className="card mt-4 p-4">
+          <p className="text-[15px] font-semibold">
+            {t("Tento odkaz na formulář neplatí.", "This form link is not valid.")}
+          </p>
+          <p className="mt-1 text-[14px] text-muted-foreground">
+            {t(
+              "Požádejte správce chaty o aktuální odkaz.",
+              "Ask the cottage's administrator for the current link.",
+            )}
+          </p>
+        </section>
+      ) : sent ? (
         <div className="card mt-4 p-6 text-center">
           <CheckCircle2 className="mx-auto size-14 text-ok" />
           <h1 className="mt-3 text-2xl font-bold">{t("Žádost odeslána", "Request sent")}</h1>
@@ -287,11 +300,6 @@ function PublicRequest() {
           {failure && (
             <p role="alert" className="text-center text-[14px] font-semibold text-destructive">
               {failure}
-            </p>
-          )}
-          {!loadingProperty && !property && (
-            <p className="text-center text-[14px] text-muted-foreground">
-              {t("Tento odkaz na formulář neplatí.", "This form link is not valid.")}
             </p>
           )}
         </section>

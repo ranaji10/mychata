@@ -64,6 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 flex items-center gap-3 bg-background/95 px-4 pb-3 pt-4 backdrop-blur">
         <Link
           to="/domu"
+          aria-label={t("Domů", "Home")}
           className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-lg font-extrabold text-primary-foreground shadow-lg shadow-primary/30"
         >
           M

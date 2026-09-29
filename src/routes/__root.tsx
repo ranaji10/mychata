@@ -184,6 +184,9 @@ function RootComponent() {
           removeClient: async () => undefined,
         },
         maxAge: 1000 * 60 * 60 * 24 * 7,
+        // Bump when a cached query changes shape, so old saved copies are dropped instead of
+        // crashing a page (29 Sep: the members page cached a Set, which JSON turns into {}).
+        buster: "2026-09-29",
       }}
     >
       <LanguageProvider>

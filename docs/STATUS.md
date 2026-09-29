@@ -1,16 +1,17 @@
 # Status
 
-As of 2026-09-28. Update this file in every PR that changes behaviour.
+As of 2026-09-29. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
 | Place                   | State                                                                                                                                                                                             |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Production (mychata.cz) | Runs PR #8 (T-017, B-006–B-010), confirmed by the 28 Sep network recording. No release tag yet (`runbooks/release.md`).                                                                           |
-| Database                | Migrations up to 0018 applied. 0019 (remove demo data, T-012) and 0020 (invitation fixes) are on branch `agent/claude/T-019-invites-signin-demo`: take an export, then ask Lovable to apply both. |
+| Database                | Migrations up to 0021 applied (Lovable, 28 Sep). 0022 (T-021) is on branch `agent/claude/T-021-walkthrough-fixes`: take an export, then ask Lovable to apply it. |
 | Backup                  | Full export taken 2026-09-25 (`Lovable DB exports/`, outside the repo). Routine: `runbooks/backup.md`.                                                                                            |
 | CI                      | Green on `main`. Migration guard (duplicate numbers, journal, edits to applied files) runs first. Nightly production check scheduled 05:17; first run 26 Sep started 10:33 and passed.            |
 | Open bugs               | B-004 (Google sign-in on Brave), B-005 (Firefox session → T-014). B-011–B-017 fixed on branch T-019, not yet live.                                                                                |
+| T-021                   | Walkthrough fixes of 28 Sep on branch `agent/claude/T-021-walkthrough-fixes`, migration 0022. Manual checks after publish: members page reload, demote an admin, approve a guest request as admin (spinner, card gone), ask a question on Document Vault after uploading a PDF, custom split + Settle debts, tap two dates on the calendar, sign up by email and open the link twice, public calendar CZ/EN. |
 | Open tasks              | T-019 review, T-020 document vault search (planned), T-014 performance, T-015/T-016 missing tests, T-001–T-013 as listed below.                                                                   |
 
 ## Defects found on 2026-09-25 and their state

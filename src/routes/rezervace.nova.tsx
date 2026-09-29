@@ -6,7 +6,16 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { findConflicts, fmtDate, todayISO, type Booking } from "@/lib/data";
+import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
+import {
+  findConflicts,
+  fmtDate,
+  isoDateOrNull,
+  pickRange,
+  todayISO,
+  type Booking,
+  type DateRange,
+} from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/rezervace/nova")({
@@ -19,6 +28,12 @@ export const Route = createFileRoute("/rezervace/nova")({
       { property: "og:description", content: "Book a stay at the cottage." },
     ],
   }),
+  // Dates picked on the calendar arrive as ?start=YYYY-MM-DD&end=YYYY-MM-DD (T-021).
+  validateSearch: (search: Record<string, unknown>): { start?: string; end?: string } => {
+    const start = isoDateOrNull(search["start"]);
+    const end = isoDateOrNull(search["end"]);
+    return { ...(start ? { start } : {}), ...(end ? { end } : {}) };
+  },
   component: NewBooking,
 });
 
@@ -28,8 +43,20 @@ function NewBooking() {
   const queryClient = useQueryClient();
   const { t } = useLang();
 
-  const [start, setStart] = useState(todayISO());
-  const [end, setEnd] = useState(todayISO());
+  const search = Route.useSearch();
+  const initialStart = search.start && search.start >= todayISO() ? search.start : todayISO();
+  const initialEnd = search.end && search.end >= initialStart ? search.end : initialStart;
+  const [start, setStart] = useState(initialStart);
+  const [end, setEnd] = useState(initialEnd);
+  // Tapping on the calendar: first tap arrival, second tap departure.
+  const [range, setRange] = useState<DateRange>({ start: initialStart, end: initialEnd });
+  const nav = useMonthNav(initialStart);
+  const onPickDay = (iso: string) => {
+    const next = pickRange(range, iso);
+    setRange(next);
+    setStart(next.start ?? iso);
+    setEnd(next.end ?? next.start ?? iso);
+  };
   const [guests, setGuests] = useState(2);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
@@ -88,6 +115,28 @@ function NewBooking() {
         <h1 className="text-2xl font-bold">{t("Nová rezervace", "New booking")}</h1>
       </div>
 
+      <section className="card mt-4 p-4">
+        <MonthHeader {...nav} />
+        <p className="mt-2 text-[14px] font-semibold text-muted-foreground">
+          {!range.end
+            ? t("Teď klepněte na den odjezdu.", "Now tap your departure day.")
+            : t(
+                "Klepněte na den příjezdu a pak na den odjezdu.",
+                "Tap your arrival day, then your departure day.",
+              )}
+        </p>
+        <div className="mt-3">
+          <CalendarMonth
+            year={nav.year}
+            month={nav.month}
+            bookings={bookings ?? []}
+            selection={range}
+            onPickDay={onPickDay}
+          />
+        </div>
+        <CalendarLegend picking />
+      </section>
+
       <section className="card mt-4 space-y-4 p-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -99,7 +148,10 @@ function NewBooking() {
               type="date"
               value={start}
               min={todayISO()}
-              onChange={(e) => setStart(e.target.value)}
+              onChange={(e) => {
+                setStart(e.target.value);
+                setRange({ start: e.target.value, end: end >= e.target.value ? end : null });
+              }}
               className="field"
             />
           </div>
@@ -112,7 +164,10 @@ function NewBooking() {
               type="date"
               value={end}
               min={start}
-              onChange={(e) => setEnd(e.target.value)}
+              onChange={(e) => {
+                setEnd(e.target.value);
+                setRange({ start, end: e.target.value });
+              }}
               className="field"
             />
           </div>

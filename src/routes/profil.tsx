@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
+import { CottageSetup } from "@/components/CottageSetup";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { normalizePhone, type Profile } from "@/lib/data";
@@ -67,6 +68,16 @@ function ProfilePage() {
       // Show what the database actually stored, and say so if it isn't what was typed.
       if ((data.phone ?? null) !== wantedPhone) throw new Error("phone_not_stored");
       queryClient.setQueryData(["profile", user.id], data as Profile);
+      // Lists of people (members, expenses, calendar) show the member name, so keep it in step.
+      if (name.trim().length > 1) {
+        const { error: memberError } = await supabase
+          .from("members")
+          .update({ name: name.trim(), phone: wantedPhone })
+          .eq("user_id", user.id);
+        if (memberError) throw memberError;
+        void queryClient.invalidateQueries({ queryKey: ["members"] });
+        void queryClient.invalidateQueries({ queryKey: ["identity-members", user.id] });
+      }
       toast.success(t("Profil uložen.", "Profile saved."));
     } catch (error) {
       console.error("[profil] save", error);
@@ -147,6 +158,19 @@ function ProfilePage() {
           {busy ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
         </button>
       </div>
+      {(!profile?.phone || !profile?.display_name) && (
+        <p className="mt-3 rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+          {!profile?.display_name && !profile?.phone
+            ? t("Doplňte své jméno a telefon.", "Please add your name and phone number.")
+            : !profile?.phone
+              ? t(
+                  "Doplňte telefon, aby vás ostatní zastihli.",
+                  "Add your phone number so others can reach you.",
+                )
+              : t("Doplňte své jméno.", "Please add your name.")}
+        </p>
+      )}
+      <CottageSetup />
       {accounts.length > 1 && (
         <section className="card mt-4 p-4">
           <h2 className="text-[15px] font-bold">{t("Moje účty", "My accounts")}</h2>

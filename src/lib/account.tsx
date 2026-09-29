@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account, Member, Profile, Property } from "@/lib/data";
+import { signupMetadata } from "@/lib/signup";
 
 const LS_PROPERTY = "mychata.property";
 
@@ -82,6 +83,33 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       return (data as Profile | null) ?? null;
     },
   });
+
+  // A name given at sign-up (email form or Google) becomes the display name when none is
+  // set yet, and replaces the "part of the email" name the database used as a fallback
+  // (T-021: email sign-ups showed "ranaji" instead of the person's name).
+  const metaName = signupMetadata(user?.user_metadata).fullName;
+  useEffect(() => {
+    if (!user || loadingProfile || loadingIdentity || !metaName || profile?.display_name) return;
+    const emailName = (user.email ?? "").split("@")[0] ?? "";
+    void (async () => {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ user_id: user.id, display_name: metaName }, { onConflict: "user_id" });
+      if (error) {
+        console.error("[account] save sign-up name", error.message);
+        return;
+      }
+      const { error: memberError } = await supabase
+        .from("members")
+        .update({ name: metaName })
+        .eq("user_id", user.id)
+        .in("name", [emailName, "Admin", "Member"]);
+      if (memberError) console.error("[account] member name", memberError.message);
+      void queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      void queryClient.invalidateQueries({ queryKey: ["members"] });
+      void queryClient.invalidateQueries({ queryKey: ["identity-members", user.id] });
+    })();
+  }, [user, loadingProfile, loadingIdentity, metaName, profile?.display_name, queryClient]);
 
   // Same rule as the database's current_account_id(): the saved active account if the
   // person still belongs to it, otherwise their oldest membership.

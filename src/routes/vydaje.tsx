@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,12 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
   EXPENSE_CATEGORY,
+  equalShares,
   expenseCategoryLabel,
   expenseSettlement,
   fmtDate,
   fmtKc,
-  type Expense,
+  parseAmount,
 } from "@/lib/data";
+import { expenseDataKey, useExpenseData } from "@/lib/expenses";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vydaje")({
@@ -48,123 +50,118 @@ function ExpensesPage() {
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const { data: expenses, isLoading } = useQuery({
-    queryKey: ["expenses", property?.id],
-    enabled: !!property,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("property_id", property!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Expense[];
-    },
-  });
-
-  const { data: splits } = useQuery({
-    queryKey: ["splits", property?.id],
-    enabled: !!property && !!expenses,
-    queryFn: async () => {
-      const ids = expenses!.map((e) => e.id);
-      if (!ids.length) return [];
-      const { data, error } = await supabase
-        .from("expense_splits")
-        .select("*")
-        .in("expense_id", ids);
-      if (error) throw error;
-      return data as { expense_id: string; paid_back: boolean }[];
-    },
-  });
+  const { data, isLoading } = useExpenseData(property?.id);
+  const expenses = data?.expenses;
+  const splits = data?.splits;
 
   const splitsOf = (expenseId: string) => (splits ?? []).filter((s) => s.expense_id === expenseId);
 
   const payerName = (id: string | null) => members.find((m) => m.id === id)?.name ?? "—";
 
-  const toggleMember = (id: string) =>
-    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  const amountCzk = parseAmount(amount);
+  const selectedMembers = members.filter((member) => selected.includes(member.id));
+
+  // Custom split: start from equal shares so people only adjust what differs.
+  const prefillCustom = (ids: string[], total: number) => {
+    if (!ids.length || !Number.isFinite(total) || total <= 0) return;
+    const shares = equalShares(total, ids.length);
+    setCustomAmounts(Object.fromEntries(ids.map((id, i) => [id, String(shares[i] ?? 0)])));
+  };
+  const toggleMember = (id: string) => {
+    const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
+    setSelected(next);
+    if (splitMethod === "CUSTOM") prefillCustom(next, amountCzk);
+  };
+  const chooseMethod = (method: typeof splitMethod) => {
+    setSplitMethod(method);
+    if (method === "CUSTOM") prefillCustom(selected, amountCzk);
+  };
+
+  const shares = selectedMembers.map((member, index) => {
+    if (splitMethod === "CUSTOM") return parseAmount(customAmounts[member.id] ?? "0");
+    if (splitMethod === "BY_BRANCH") {
+      const branchOf = (m: (typeof members)[number]) => m.branch || m.name;
+      const branchNames = [...new Set(selectedMembers.map(branchOf))];
+      const inBranch = selectedMembers.filter((m) => branchOf(m) === branchOf(member)).length;
+      return Math.round((amountCzk / branchNames.length / inBranch) * 100) / 100;
+    }
+    return equalShares(amountCzk, selectedMembers.length)[index] ?? 0;
+  });
+  const assigned = Math.round(shares.reduce((sum, v) => sum + (Number.isFinite(v) ? v : 0), 0) * 100) / 100;
+  const customInvalid = splitMethod === "CUSTOM" && shares.some((v) => !Number.isFinite(v) || v < 0);
+  const remaining = Number.isFinite(amountCzk) ? Math.round((amountCzk - assigned) * 100) / 100 : 0;
+  const customMismatch = splitMethod === "CUSTOM" && (customInvalid || Math.abs(remaining) > 0.01);
 
   const save = async () => {
-    const amountCzk = Math.round(Number(amount.replace(",", ".")) * 100) / 100;
-    if (!property || !currentMember || !desc.trim() || !amountCzk || selected.length === 0) return;
-    setSaving(true);
-
-    const selectedMembers = members.filter((member) => selected.includes(member.id));
-    const branchNames = [...new Set(selectedMembers.map((member) => member.branch || member.name))];
-    const shares = selectedMembers.map((member) => {
-      if (splitMethod === "CUSTOM")
-        return Number((customAmounts[member.id] ?? "0").replace(",", "."));
-      if (splitMethod === "BY_BRANCH") {
-        const branch = member.branch || member.name;
-        const branchMembers = selectedMembers.filter(
-          (candidate) => (candidate.branch || candidate.name) === branch,
-        ).length;
-        return amountCzk / branchNames.length / branchMembers;
-      }
-      return amountCzk / selectedMembers.length;
-    });
-    const shareTotal = Math.round(shares.reduce((sum, share) => sum + share, 0) * 100) / 100;
-    if (splitMethod === "CUSTOM" && Math.abs(shareTotal - amountCzk) > 0.01) {
+    if (!property || !currentMember || !desc.trim() || selected.length === 0) return;
+    if (!Number.isFinite(amountCzk) || amountCzk <= 0) {
+      toast.error(t("Zadejte částku, např. 1 250 nebo 99,50.", "Enter an amount, e.g. 1250 or 99.50."));
+      return;
+    }
+    if (customMismatch) {
       toast.error(
         t(
           "Vlastní částky musí dát dohromady celkový výdaj.",
           "Custom amounts must add up to the total expense.",
         ),
       );
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data: expense, error } = await supabase
+        .from("expenses")
+        .insert({
+          property_id: property.id,
+          paid_by_member_id: currentMember.id,
+          amount: amountCzk,
+          description: desc.trim(),
+          category,
+          split_method: splitMethod,
+          date: new Date().toISOString().slice(0, 10),
+        })
+        .select()
+        .single();
+      if (error || !expense) throw error ?? new Error("expense_not_saved");
+
+      // The payer doesn't owe themselves; everyone else owes their share.
+      const splitRows = selectedMembers
+        .map((member, index) => ({ member, owed: shares[index] ?? 0 }))
+        .filter(({ member, owed }) => member.id !== currentMember.id && owed > 0)
+        .map(({ member, owed }) => ({
+          expense_id: expense.id,
+          member_id: member.id,
+          amount_owed: owed,
+          paid_back: false,
+        }));
+      if (splitRows.length) {
+        const { error: splitError } = await supabase.from("expense_splits").insert(splitRows);
+        if (splitError) {
+          // Don't leave an expense that looks unsplit: remove it and say so.
+          const { error: undoError } = await supabase.from("expenses").delete().eq("id", expense.id);
+          if (undoError) console.error("[vydaje] undo expense", undoError);
+          throw splitError;
+        }
+      }
+      await queryClient.invalidateQueries({ queryKey: expenseDataKey(property.id) });
+      toast.success(
+        splitRows.length
+          ? t("Výdaj přidán a rozdělen.", "Expense added and split.")
+          : t("Výdaj přidán, nerozdělen.", "Expense added, not split."),
+      );
+      setDesc("");
+      setAmount("");
+      setSelected([]);
+      setCustomAmounts({});
+      setSplitMethod("EQUAL");
+      setShowForm(false);
+    } catch (e) {
+      console.error("[vydaje] save", e);
+      const detail = (e as { message?: string } | null)?.message ?? String(e);
+      toast.error(t(`Výdaj se nepodařilo uložit: ${detail}`, `The expense could not be saved: ${detail}`));
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const { data: expense, error } = await supabase
-      .from("expenses")
-      .insert({
-        property_id: property.id,
-        paid_by_member_id: currentMember.id,
-        amount: amountCzk,
-        description: desc.trim(),
-        category,
-        split_method: splitMethod,
-        date: new Date().toISOString().slice(0, 10),
-      })
-      .select()
-      .single();
-
-    if (error || !expense) {
-      setSaving(false);
-      toast.error(t("Výdaj se nepodařilo uložit.", "The expense could not be saved."));
-      return;
-    }
-
-    const splitRows = selectedMembers
-      .map((member, index) => ({ member, amount: Math.round((shares[index] ?? 0) * 100) / 100 }))
-      .filter(({ member }) => member.id !== currentMember.id)
-      .map(({ member, amount: owed }) => ({
-        expense_id: expense.id,
-        member_id: member.id,
-        amount_owed: owed,
-        paid_back: false,
-      }));
-    const { error: splitError } = splitRows.length
-      ? await supabase.from("expense_splits").insert(splitRows)
-      : { error: null };
-
-    setSaving(false);
-    if (splitError) {
-      toast.error(t("Rozdělení se nepodařilo uložit.", "The split could not be saved."));
-      return;
-    }
-    toast.success(
-      splitRows.length
-        ? t("Výdaj přidán a rozdělen.", "Expense added and split.")
-        : t("Výdaj přidán, nerozdělen.", "Expense added, not split."),
-    );
-    setDesc("");
-    setAmount("");
-    setSelected([]);
-    setCustomAmounts({});
-    setShowForm(false);
-    queryClient.invalidateQueries({ queryKey: ["expenses", property.id] });
-    queryClient.invalidateQueries({ queryKey: ["splits", property.id] });
   };
 
   const total = expenses?.reduce((s, e) => s + Number(e.amount), 0) ?? 0;
@@ -256,7 +253,10 @@ function ExpensesPage() {
                 id="exp-amount"
                 inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (splitMethod === "CUSTOM") prefillCustom(selected, parseAmount(e.target.value));
+                }}
                 placeholder="0"
                 className="field"
               />
@@ -293,7 +293,7 @@ function ExpensesPage() {
               ).map(([method, label]) => (
                 <button
                   key={method}
-                  onClick={() => setSplitMethod(method)}
+                  onClick={() => chooseMethod(method)}
                   className={
                     splitMethod === method
                       ? "btn-primary px-2 text-[13px]"
@@ -325,7 +325,17 @@ function ExpensesPage() {
               ))}
             </div>
             <p className="mt-1 text-[12px] text-muted-foreground">
-              {t("Částka se rozdělí rovným dílem.", "The amount will be split equally.")}
+              {splitMethod === "EQUAL"
+                ? t(
+                    "Částka se rozdělí rovným dílem mezi vybrané (včetně vás, pokud jste vybráni).",
+                    "The amount is split equally between the people chosen (including you, if chosen).",
+                  )
+                : splitMethod === "BY_BRANCH"
+                  ? t(
+                      "Každá větev rodiny platí stejně, uvnitř větve rovným dílem.",
+                      "Each family branch pays the same; within a branch, equally.",
+                    )
+                  : t("Zadejte částku u každého.", "Enter an amount for each person.")}
             </p>
           </div>
           {splitMethod === "CUSTOM" && selected.length > 0 && (
@@ -353,12 +363,41 @@ function ExpensesPage() {
                     />
                   </label>
                 ))}
+              <p
+                className={`rounded-2xl p-3 text-[14px] font-semibold ${
+                  customMismatch ? "bg-warn-soft text-warn" : "bg-ok-soft text-ok"
+                }`}
+                aria-live="polite"
+              >
+                {customInvalid
+                  ? t("Zkontrolujte částky.", "Check the amounts.")
+                  : Math.abs(remaining) <= 0.01
+                    ? t("Rozděleno přesně.", "Split exactly.")
+                    : remaining > 0
+                      ? t(`Zbývá rozdělit ${fmtKc(remaining)}.`, `${fmtKc(remaining)} left to assign.`)
+                      : t(`O ${fmtKc(-remaining)} víc než výdaj.`, `${fmtKc(-remaining)} more than the expense.`)}
+              </p>
             </div>
+          )}
+          {splitMethod !== "CUSTOM" && selectedMembers.length > 0 && Number.isFinite(amountCzk) && amountCzk > 0 && (
+            <ul className="space-y-1 text-[14px]">
+              {selectedMembers.map((member, index) => (
+                <li key={member.id} className="flex justify-between">
+                  <span className="truncate">
+                    {member.name}
+                    {member.id === currentMember?.id ? ` (${t("vy, platíte", "you, paying")})` : ""}
+                  </span>
+                  <span className="font-semibold">{fmtKc(shares[index] ?? 0)}</span>
+                </li>
+              ))}
+            </ul>
           )}
           <div className="flex gap-2">
             <button
               onClick={save}
-              disabled={saving || !desc.trim() || !amount || selected.length === 0}
+              disabled={
+                saving || !desc.trim() || !amount || selected.length === 0 || customMismatch
+              }
               className="btn-primary flex-1 disabled:opacity-40"
             >
               {saving ? t("Ukládám…", "Saving…") : t("Přidat výdaj", "Add expense")}

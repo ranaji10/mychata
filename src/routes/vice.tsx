@@ -144,7 +144,7 @@ function MorePage() {
         <Link to="/predani" className="flex items-center gap-3 p-4 active:bg-secondary">
           <ClipboardCheck className="size-5 text-muted-foreground" />
           <span className="flex-1 text-[15px] font-bold">
-            {t("Odjezdový checklist", "Leaving checklist")}
+            {t("Odjezdový checklist", "Check-out checklist")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>

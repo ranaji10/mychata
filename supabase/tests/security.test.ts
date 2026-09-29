@@ -624,3 +624,97 @@ describe("demo data removed (T-012, migration 0019)", () => {
     });
   });
 });
+
+describe("walkthrough fixes (T-021, migration 0022)", () => {
+  it("only an admin decides a guest request, and approving writes the booking once", async () => {
+    const r = await admin(
+      db,
+      "insert into public.guest_requests (guest_link_id, property_id, guest_name, start_date, end_date, guests) values ($1,$2,'Host T021', current_date + 40, current_date + 42, 2) returning id",
+      [ids.guestLinkA, ids.propA],
+    );
+    const reqId = (r[0] as { id: string }).id;
+    await as(db, aMember, async (q) => {
+      await expect(q("select public.decide_guest_request($1, true)", [reqId])).rejects.toThrow(
+        /Admin/,
+      );
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(q("select public.decide_guest_request($1, true)", [reqId])).rejects.toThrow(
+        /Admin/,
+      );
+    });
+    await as(db, aAdmin, async (q) => {
+      await q("select public.decide_guest_request($1, true)", [reqId]);
+      expect(
+        await q("select 1 from public.bookings where requester_name = 'Host T021'"),
+      ).toHaveLength(1);
+      await expect(q("select public.decide_guest_request($1, true)", [reqId])).rejects.toThrow(
+        /already_decided/,
+      );
+    });
+  });
+
+  it("settling marks both directions paid, and only the receiver or an admin may do it", async () => {
+    // Petr also paid 200 that Anna owes half of: net Petr owes Anna 400.
+    const ex = await admin(
+      db,
+      "insert into public.expenses (property_id, amount, paid_by_member_id) values ($1, 200, $2) returning id",
+      [ids.propA, ids.memberAMember],
+    );
+    await admin(
+      db,
+      "insert into public.expense_splits (expense_id, member_id, amount_owed) values ($1,$2,100)",
+      [(ex[0] as { id: string }).id, ids.memberAAdmin],
+    );
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.settle_debt($1,$2,$3)", [ids.propA, ids.memberAMember, ids.memberAAdmin]),
+      ).rejects.toThrow(/only_receiver_confirms/);
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q("select public.settle_debt($1,$2,$3)", [ids.propA, ids.memberAMember, ids.memberAAdmin]),
+      ).rejects.toThrow(/not_a_member/);
+    });
+    await as(db, aAdmin, async (q) => {
+      const [row] = await q<{ n: number }>("select public.settle_debt($1,$2,$3) as n", [
+        ids.propA,
+        ids.memberAMember,
+        ids.memberAAdmin,
+      ]);
+      expect(row!.n).toBe(2);
+      const open = await q(
+        "select 1 from public.expense_splits s join public.expenses e on e.id = s.expense_id where e.property_id = $1 and not s.paid_back",
+        [ids.propA],
+      );
+      expect(open).toHaveLength(0);
+    });
+  });
+
+  it("only an admin fills in cottage details", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.update_property_details($1, 'Nova 1')", [ids.propA]),
+      ).rejects.toThrow(/Admin/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await q("select public.update_property_details($1, null, 'Jičín', 5, '{summer}', 8)", [
+        ids.propA,
+      ]);
+      const [p] = await q<{ city: string; rooms: number; address: string }>(
+        "select city, rooms, address from public.properties where id = $1",
+        [ids.propA],
+      );
+      expect(p).toMatchObject({ city: "Jičín", rooms: 5, address: "Addr A" });
+    });
+  });
+
+  it("members never read the text of admin-only documents", async () => {
+    await admin(db, "update public.documents set extracted_text = 'deed text' where title = 'Deed'");
+    await as(db, aMember, async (q) => {
+      expect(await q("select extracted_text from public.documents where title = 'Deed'")).toEqual(
+        [],
+      );
+    });
+  });
+});

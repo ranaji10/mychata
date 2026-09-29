@@ -1,12 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
-import { CalendarMonth } from "@/routes/kalendar";
 import { Skeleton } from "@/components/bits";
+import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
 import { supabase } from "@/integrations/supabase/client";
-import { monthNames, fmtDate, todayISO, type Booking } from "@/lib/data";
-import { useLang } from "@/lib/i18n";
+import { fmtDate, todayISO, type Booking } from "@/lib/data";
+import { LanguageToggle, useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/verejne/kalendar/$token")({
   staticData: { sitemap: false },
@@ -26,10 +24,9 @@ export const Route = createFileRoute("/verejne/kalendar/$token")({
 });
 
 function PublicCalendar() {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const { token } = Route.useParams();
-  const now = new Date();
-  const [ym, setYm] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const nav = useMonthNav();
 
   // Public pages are addressed by the property's share token, never its id (migration 0012).
   const { data: property } = useQuery({
@@ -62,24 +59,16 @@ function PublicCalendar() {
     },
   });
 
-  const branches = useMemo(() => [] as string[], []);
-
-  const prev = () =>
-    setYm(({ year, month }) =>
-      month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 },
-    );
-  const next = () =>
-    setYm(({ year, month }) =>
-      month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 },
-    );
-
   const upcoming = (bookings ?? []).filter((b) => b.end_date >= todayISO());
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
-      <h1 className="text-2xl font-bold">
-        {property?.property_name ?? t("Kalendář chaty", "Cottage calendar")}
-      </h1>
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="text-2xl font-bold">
+          {property?.property_name ?? t("Kalendář chaty", "Cottage calendar")}
+        </h1>
+        <LanguageToggle className="shrink-0" />
+      </div>
       <p className="mt-1 text-[14px] text-muted-foreground">
         {t(
           "Veřejný přehled obsazenosti — pouze ke čtení.",
@@ -96,49 +85,15 @@ function PublicCalendar() {
       )}
 
       <section className="card mt-4 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">
-            {monthNames(lang)[ym.month]} {ym.year}
-          </h2>
-          <div className="flex gap-1">
-            <button
-              onClick={prev}
-              aria-label={t("Předchozí měsíc", "Previous month")}
-              className="grid size-11 place-items-center rounded-xl bg-secondary"
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-            <button
-              onClick={next}
-              aria-label={t("Další měsíc", "Next month")}
-              className="grid size-11 place-items-center rounded-xl bg-secondary"
-            >
-              <ChevronRight className="size-5" />
-            </button>
-          </div>
-        </div>
+        <MonthHeader {...nav} />
         <div className="mt-3">
           {isLoading ? (
             <Skeleton className="h-64" />
           ) : (
-            <CalendarMonth
-              year={ym.year}
-              month={ym.month}
-              bookings={bookings ?? []}
-              branches={branches}
-            />
+            <CalendarMonth year={nav.year} month={nav.month} bookings={bookings ?? []} />
           )}
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded bg-ok" />
-            {t("Potvrzeno", "Confirmed")}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded bg-warn" />
-            {t("Čeká na schválení", "Awaiting approval")}
-          </span>
-        </div>
+        <CalendarLegend />
       </section>
 
       <section className="mt-4">

@@ -171,6 +171,63 @@ export function expenseSettlement(splits: { paid_back: boolean }[]): ExpenseSett
   return splits.every((s) => s.paid_back) ? "settled" : "unsettled";
 }
 
+export interface SettlementSuggestion {
+  from: string;
+  to: string;
+  amount: number;
+}
+
+/**
+ * Who pays whom, netted per pair: if Jana owes Petr 300 and Petr owes Jana 100, the
+ * suggestion is Jana → Petr 200. Settling marks both directions paid (settle_debt()).
+ */
+export function settlementSuggestions(
+  expenses: { id: string; paid_by_member_id: string | null }[],
+  splits: { expense_id: string; member_id: string; amount_owed: number | string; paid_back: boolean }[],
+): SettlementSuggestion[] {
+  const payerOf = new Map(expenses.map((e) => [e.id, e.paid_by_member_id]));
+  const owes = new Map<string, number>(); // "debtor->payer" => amount
+  for (const s of splits) {
+    if (s.paid_back) continue;
+    const payer = payerOf.get(s.expense_id);
+    if (!payer || payer === s.member_id) continue;
+    const key = `${s.member_id}->${payer}`;
+    owes.set(key, (owes.get(key) ?? 0) + Number(s.amount_owed));
+  }
+  const result: SettlementSuggestion[] = [];
+  const seen = new Set<string>();
+  for (const [key, amount] of owes) {
+    if (seen.has(key)) continue;
+    const [from = "", to = ""] = key.split("->");
+    const reverseKey = `${to}->${from}`;
+    seen.add(key);
+    seen.add(reverseKey);
+    const net = Math.round((amount - (owes.get(reverseKey) ?? 0)) * 100) / 100;
+    if (net > 0) result.push({ from, to, amount: net });
+    else if (net < 0) result.push({ from: to, to: from, amount: -net });
+  }
+  return result.filter((r) => r.amount >= 1);
+}
+
+/** Czech-style amounts: "1 250,50", "1250.5", "1 000" → number; anything else → NaN. */
+export function parseAmount(input: string): number {
+  const cleaned = input.replace(/[\s\u00a0]/g, "").replace(/kč$/i, "").replace(",", ".");
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return Number.NaN;
+  return Math.round(Number(cleaned) * 100) / 100;
+}
+
+/**
+ * Splits a total into equal shares in whole hellers so the shares add up exactly
+ * (100 Kč between 3 → 33.34, 33.33, 33.33).
+ */
+export function equalShares(total: number, count: number): number[] {
+  if (count <= 0) return [];
+  const cents = Math.round(total * 100);
+  const base = Math.floor(cents / count);
+  const rest = cents - base * count;
+  return Array.from({ length: count }, (_, i) => (base + (i < rest ? 1 : 0)) / 100);
+}
+
 // ---------- Formatting (Czech locale) ----------
 
 export function fmtDate(iso: string | null | undefined): string {
@@ -239,6 +296,30 @@ export function findConflicts(
     }
   }
   return out;
+}
+
+// ---------- Picking a stay on the calendar ----------
+
+export interface DateRange {
+  start: string | null;
+  end: string | null;
+}
+
+/**
+ * Tap-to-pick: the first tap is the arrival, the second the departure. A second tap before
+ * the arrival starts again from that day; a tap after a finished range starts a new one.
+ */
+export function pickRange(range: DateRange, iso: string): DateRange {
+  if (!range.start || range.end) return { start: iso, end: null };
+  if (iso < range.start) return { start: iso, end: null };
+  return { start: range.start, end: iso };
+}
+
+/** A YYYY-MM-DD string that is a real date, or null. Used for dates passed in the address. */
+export function isoDateOrNull(value: unknown): string | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const d = new Date(`${value}T00:00:00`);
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value ? null : value;
 }
 
 // ---------- Calendar helpers ----------

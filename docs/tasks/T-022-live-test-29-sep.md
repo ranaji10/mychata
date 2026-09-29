@@ -10,19 +10,19 @@ Sign-in page (three options, institute refuses Gmail, expired-link message and r
 
 ## Found and fixed on this branch
 
-| # | Where | Problem | Fix |
-| --- | --- | --- | --- |
-| 1 | Settle debts (`/vydaje/vyrovnani`) | **The page never showed**: it is a child route of `/vydaje`, which had no `<Outlet />`, so the address changed but the expenses list stayed. This is why "Settle debts doesn't do anything" | Parent renders the child when one matches |
-| 2 | Task detail (`/ukoly/$id`) | Same cause: task detail never opened | Same fix |
-| 3 | Everyone whose only account was the demo family | They belong to no account but had finished onboarding once, so Home loaded empty ("Hello," with no name, institution tiles, no cottage, no admin rights). This is the "there is no admin" case | Anyone with no account goes to onboarding |
-| 4 | Document Vault on a phone | Filter row wider than the screen (page scrolled sideways, 434 px) | Search field shrinks, category box fixed width |
-| 5 | Document Vault | Categories shown as codes (`SERVICE_RECORDS`) | Czech/English labels |
-| 6 | Questions | Answer language followed the app language, not the question | Answers in the question's language |
-| 7 | Public calendar with an unknown link | Empty calendar, no explanation | "This calendar link is not valid" |
-| 8 | Institution request form with an unknown link | Full form shown with "Company cottage", error only at the bottom | Form hidden, clear message |
-| 9 | Language switch | 36 px high, below the 44 px rule | 44 px |
-| 10 | Privacy page | Mentioned only Google sign-in; nothing about AI answers | Email sign-up and AI processing added (wording for the maintainers to confirm) |
-| 11 | Header logo "M" | No accessible name | "Home" label |
+| #   | Where                                           | Problem                                                                                                                                                                                        | Fix                                                                            |
+| --- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | Settle debts (`/vydaje/vyrovnani`)              | **The page never showed**: it is a child route of `/vydaje`, which had no `<Outlet />`, so the address changed but the expenses list stayed. This is why "Settle debts doesn't do anything"    | Parent renders the child when one matches                                      |
+| 2   | Task detail (`/ukoly/$id`)                      | Same cause: task detail never opened                                                                                                                                                           | Same fix                                                                       |
+| 3   | Everyone whose only account was the demo family | They belong to no account but had finished onboarding once, so Home loaded empty ("Hello," with no name, institution tiles, no cottage, no admin rights). This is the "there is no admin" case | Anyone with no account goes to onboarding                                      |
+| 4   | Document Vault on a phone                       | Filter row wider than the screen (page scrolled sideways, 434 px)                                                                                                                              | Search field shrinks, category box fixed width                                 |
+| 5   | Document Vault                                  | Categories shown as codes (`SERVICE_RECORDS`)                                                                                                                                                  | Czech/English labels                                                           |
+| 6   | Questions                                       | Answer language followed the app language, not the question                                                                                                                                    | Answers in the question's language                                             |
+| 7   | Public calendar with an unknown link            | Empty calendar, no explanation                                                                                                                                                                 | "This calendar link is not valid"                                              |
+| 8   | Institution request form with an unknown link   | Full form shown with "Company cottage", error only at the bottom                                                                                                                               | Form hidden, clear message                                                     |
+| 9   | Language switch                                 | 36 px high, below the 44 px rule                                                                                                                                                               | 44 px                                                                          |
+| 10  | Privacy page                                    | Mentioned only Google sign-in; nothing about AI answers                                                                                                                                        | Email sign-up and AI processing added (wording for the maintainers to confirm) |
+| 11  | Header logo "M"                                 | No accessible name                                                                                                                                                                             | "Home" label                                                                   |
 
 ## Found, not changed (for the maintainers)
 

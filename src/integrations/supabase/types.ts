@@ -163,6 +163,61 @@ export type Database = {
           },
         ]
       }
+      checklists: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by_member_id: string | null
+          id: string
+          property_id: string
+          season: string
+          template_id: string
+          title: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by_member_id?: string | null
+          id?: string
+          property_id: string
+          season: string
+          template_id: string
+          title: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by_member_id?: string | null
+          id?: string
+          property_id?: string
+          season?: string
+          template_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consent_log: {
         Row: {
           analytics: boolean
@@ -1261,6 +1316,7 @@ export type Database = {
         Row: {
           assignee_member_id: string | null
           category: string
+          checklist_id: string | null
           created_at: string
           created_by: string
           description_cs: string | null
@@ -1281,6 +1337,7 @@ export type Database = {
         Insert: {
           assignee_member_id?: string | null
           category?: string
+          checklist_id?: string | null
           created_at?: string
           created_by?: string
           description_cs?: string | null
@@ -1301,6 +1358,7 @@ export type Database = {
         Update: {
           assignee_member_id?: string | null
           category?: string
+          checklist_id?: string | null
           created_at?: string
           created_by?: string
           description_cs?: string | null
@@ -1324,6 +1382,13 @@ export type Database = {
             columns: ["assignee_member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "checklists"
             referencedColumns: ["id"]
           },
           {
@@ -1381,6 +1446,17 @@ export type Database = {
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: string }
       account_plan: { Args: { _account_id: string }; Returns: string }
+      add_checklist: {
+        Args: {
+          _force?: boolean
+          _lang: string
+          _property_id: string
+          _tasks: Json
+          _template_id: string
+          _title: string
+        }
+        Returns: string
+      }
       add_property: {
         Args: {
           _address?: string
@@ -1395,6 +1471,7 @@ export type Database = {
         Returns: boolean
       }
       claim_initial_membership: { Args: never; Returns: string }
+      cover_expense: { Args: { _expense_id: string }; Returns: number }
       create_account_onboarding: {
         Args: {
           _account_name: string

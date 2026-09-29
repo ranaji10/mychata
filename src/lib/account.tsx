@@ -198,14 +198,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     queryClient.invalidateQueries();
   };
 
-  // Onboarding is required until the profile is marked complete (invite acceptance marks it complete).
   // People who already belong to an account (invited, or linked by email) never need it (B-003).
+  // Anyone who belongs to no account needs onboarding, even if they finished it once: their
+  // only account may have been removed (the demo family, 28 Sep), which left them on an empty
+  // Home with no cottage and no admin rights (T-022).
   const needsOnboarding =
-    !!user &&
-    !loadingIdentity &&
-    !loadingProfile &&
-    !profile?.onboarding_completed_at &&
-    (memberships?.length ?? 0) === 0;
+    !!user && !loadingIdentity && !loadingProfile && (memberships?.length ?? 0) === 0;
 
   const value: AccountState = {
     account,

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Circle, Plus, Sparkles } from "lucide-react";
@@ -29,10 +29,17 @@ export const Route = createFileRoute("/ukoly")({
       { property: "og:description", content: "Tasks and seasonal checklists for your cottage." },
     ],
   }),
-  component: TasksPage,
+  component: TasksRoute,
 });
 
 type Filter = "all" | "mine" | "overdue" | "seasonal";
+
+// /ukoly/$id (task detail) is a child of this route in the file-based router, so it
+// renders inside this component. Without an <Outlet /> the address changed but the list stayed on screen (T-022).
+function TasksRoute() {
+  const children = useChildMatches();
+  return children.length ? <Outlet /> : <TasksPage />;
+}
 
 function TasksPage() {
   const { property, currentMember, members } = useAccount();

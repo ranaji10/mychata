@@ -29,7 +29,7 @@ function PublicCalendar() {
   const nav = useMonthNav();
 
   // Public pages are addressed by the property's share token, never its id (migration 0012).
-  const { data: property } = useQuery({
+  const { data: property, isLoading: loadingProperty } = useQuery({
     queryKey: ["public-property", token],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("public_property", { _token: token });
@@ -75,6 +75,14 @@ function PublicCalendar() {
           "Public overview of availability — read only.",
         )}
       </p>
+      {!loadingProperty && !property && (
+        <p className="card mt-4 p-4 text-[15px]">
+          {t(
+            "Tento odkaz na kalendář neplatí. Požádejte správce chaty o aktuální odkaz.",
+            "This calendar link is not valid. Ask the cottage's administrator for the current link.",
+          )}
+        </p>
+      )}
       {property && !property.calendar_enabled && (
         <p className="card mt-4 p-4 text-[15px]">
           {t(

@@ -31,14 +31,20 @@ function PrivacyPage() {
         <ul className="list-disc space-y-1 pl-5 text-[15px] text-muted-foreground">
           <li>
             {t(
-              "Jméno, e-mail a fotka z vašeho Google účtu (při přihlášení).",
-              "Name, email and photo from your Google account (on sign-in).",
+              "Jméno a e-mail, které zadáte při registraci, nebo jméno, e-mail a fotka z vašeho Google účtu.",
+              "The name and email you give when signing up, or the name, email and photo from your Google account.",
             )}
           </li>
           <li>
             {t(
               "Údaje, které sami zadáte: pobyty, úkoly, výdaje, dokumenty.",
               "Data you enter yourself: stays, tasks, expenses, documents.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Když se zeptáte manuálu nebo dokumentů, text manuálu, vašich dokumentů a otázka se pošlou k zodpovězení modelu umělé inteligence (Google Gemini přes Lovable AI). Stejně tak se jednou přečte text nahraného dokumentu.",
+              "When you ask the manual or the documents, the text of the manual, your documents and the question are sent to an AI model (Google Gemini via Lovable AI) to answer. An uploaded document's text is read the same way, once.",
             )}
           </li>
           <li>

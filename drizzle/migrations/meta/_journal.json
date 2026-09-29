@@ -176,6 +176,13 @@
       "when": 1790670024000,
       "tag": "0024_checklists_and_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790669607208,
+      "tag": "0025_apply_journaled_0024",
+      "breakpoints": true
     }
   ]
 }

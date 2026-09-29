@@ -194,7 +194,29 @@ export type Database = {
           template_id?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       consent_log: {
         Row: {
@@ -1363,6 +1385,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tasks_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "checklists"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tasks_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -1417,6 +1446,17 @@ export type Database = {
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: string }
       account_plan: { Args: { _account_id: string }; Returns: string }
+      add_checklist: {
+        Args: {
+          _force?: boolean
+          _lang: string
+          _property_id: string
+          _tasks: Json
+          _template_id: string
+          _title: string
+        }
+        Returns: string
+      }
       add_property: {
         Args: {
           _address?: string
@@ -1431,6 +1471,7 @@ export type Database = {
         Returns: boolean
       }
       claim_initial_membership: { Args: never; Returns: string }
+      cover_expense: { Args: { _expense_id: string }; Returns: number }
       create_account_onboarding: {
         Args: {
           _account_name: string
@@ -1445,18 +1486,6 @@ export type Database = {
         }
         Returns: string
       }
-      add_checklist: {
-        Args: {
-          _force?: boolean
-          _lang: string
-          _property_id: string
-          _tasks: Json
-          _template_id: string
-          _title: string
-        }
-        Returns: string
-      }
-      cover_expense: { Args: { _expense_id: string }; Returns: number }
       current_account_id: { Args: never; Returns: string }
       current_member_id: { Args: never; Returns: string }
       decide_guest_request: {

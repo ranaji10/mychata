@@ -52,6 +52,8 @@ function TasksPage() {
   const chosenAssignee = assignee ?? currentMember?.id ?? "";
   // Ready-made checklist waiting for "who does these?" before it is added (T-019).
   const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
+  // Set when the database says this checklist was already added this season (T-018).
+  const [duplicateOf, setDuplicateOf] = useState<string | null>(null);
   const [assignMode, setAssignMode] = useState<"all" | "each">("all");
   const [assignAll, setAssignAll] = useState<string | null>(null);
   const [assignEach, setAssignEach] = useState<Record<number, string>>({});
@@ -123,30 +125,36 @@ function TasksPage() {
     invalidate();
   };
 
-  const addChecklist = async (templateId: string) => {
+  const addChecklist = async (templateId: string, force = false) => {
     if (!property || !currentMember) return;
     const template = seasonalTemplates(lang).find((tpl) => tpl.id === templateId);
     const csTemplate = seasonalTemplates("cs").find((tpl) => tpl.id === templateId);
     const enTemplate = seasonalTemplates("en").find((tpl) => tpl.id === templateId);
     if (!template || !csTemplate || !enTemplate) return;
-    const { error } = await supabase.from("tasks").insert(
-      template.tasks.map((title, index) => ({
-        property_id: property.id,
-        title,
-        source_language: lang,
-        title_cs: csTemplate.tasks[index] ?? title,
-        title_en: enTemplate.tasks[index] ?? title,
-        category: "seasonal" as const,
-        urgency: "LOW" as const,
-        status: "OPEN" as const,
-        created_by: currentMember.name,
-        assignee_member_id:
-          (assignMode === "all"
-            ? (assignAll ?? currentMember.id)
-            : (assignEach[index] ?? currentMember.id)) || null,
-      })),
-    );
+    // One database step creates the checklist and its tasks (T-018). A second copy of the
+    // same checklist in the same season needs a confirmation.
+    const tasksJson = template.tasks.map((title, index) => ({
+      title_cs: csTemplate.tasks[index] ?? title,
+      title_en: enTemplate.tasks[index] ?? title,
+      assignee:
+        (assignMode === "all"
+          ? (assignAll ?? currentMember.id)
+          : (assignEach[index] ?? currentMember.id)) || null,
+    }));
+    const { error } = await supabase.rpc("add_checklist", {
+      _property_id: property.id,
+      _template_id: templateId,
+      _title: template.title,
+      _lang: lang,
+      _tasks: tasksJson,
+      _force: force,
+    });
+    if (error?.message.includes("checklist_exists")) {
+      setDuplicateOf(templateId);
+      return;
+    }
     if (error) {
+      console.error("[ukoly] add checklist", error);
       toast.error(t("Seznam se nepodařilo přidat.", "Could not add the checklist."));
       return;
     }
@@ -157,6 +165,7 @@ function TasksPage() {
       ),
     );
     setPendingTemplate(null);
+    setDuplicateOf(null);
     setAssignEach({});
     invalidate();
   };
@@ -411,11 +420,30 @@ function TasksPage() {
                       ))}
                     </ul>
                   )}
+                  {duplicateOf === tpl.id && (
+                    <p className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+                      {t(
+                        "Tento seznam už letos máte. Opravdu ho přidat znovu?",
+                        "You already added this checklist this season. Add it again anyway?",
+                      )}
+                    </p>
+                  )}
                   <div className="flex gap-2">
-                    <button className="btn-primary flex-1" onClick={() => addChecklist(tpl.id)}>
-                      {t(`Přidat ${tpl.tasks.length} úkolů`, `Add ${tpl.tasks.length} tasks`)}
+                    <button
+                      className="btn-primary flex-1"
+                      onClick={() => addChecklist(tpl.id, duplicateOf === tpl.id)}
+                    >
+                      {duplicateOf === tpl.id
+                        ? t("Ano, přidat znovu", "Yes, add again")
+                        : t(`Přidat ${tpl.tasks.length} úkolů`, `Add ${tpl.tasks.length} tasks`)}
                     </button>
-                    <button className="btn-secondary" onClick={() => setPendingTemplate(null)}>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => {
+                        setPendingTemplate(null);
+                        setDuplicateOf(null);
+                      }}
+                    >
                       {t("Zrušit", "Cancel")}
                     </button>
                   </div>

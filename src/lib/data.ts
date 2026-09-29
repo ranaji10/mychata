@@ -93,6 +93,8 @@ export interface Task {
   done_note: string | null;
   created_by: string;
   created_at: string;
+  /** Set for tasks added as part of a seasonal checklist (T-018). */
+  checklist_id?: string | null;
 }
 
 export function taskTitle(task: Task, lang: "cs" | "en"): string {
@@ -326,7 +328,7 @@ export function pickRange(range: DateRange, iso: string): DateRange {
 /** A YYYY-MM-DD string that is a real date, or null. Used for dates passed in the address. */
 export function isoDateOrNull(value: unknown): string | null {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const d = new Date(`${value}T00:00:00`);
+  const d = new Date(`${value}T00:00:00Z`); // UTC, so the check works in every time zone
   return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value ? null : value;
 }
 

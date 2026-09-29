@@ -74,6 +74,8 @@ function RequestsPage() {
         if (approve) {
           const { error: bErr } = await supabase.from("bookings").insert({
             property_id: req.property_id,
+            // The applicant is not a member: don't make the approver the booker (0024 default).
+            requester_member_id: null,
             requester_name: req.requester_name,
             start_date: req.start_date,
             end_date: req.end_date,

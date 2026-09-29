@@ -246,8 +246,7 @@ function HomePage() {
         <section
           className={`card mt-3 p-4 ${nextBooking ? "cursor-pointer active:scale-[0.99]" : ""}`}
           onClick={() =>
-            nextBooking &&
-            navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })
+            nextBooking && navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })
           }
         >
           <div className="flex items-center justify-between">

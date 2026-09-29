@@ -1,5 +1,5 @@
-
 ## UI/wording pass (29 Sep 2026, verified) — UI only, no migrations/SQL/RLS/auth/server functions
+
 - [x] 1. Chata switcher: header chata name opens sheet listing all chatas+accounts with role, switchAccount; "Add a chata" at bottom; keep Profile switcher
   - Scope note: sheet lists every account I belong to with role; cottages only for the active account (listing other accounts' cottages needs an RLS change — prohibited this pass)
 - [x] 2. Home: primary "Přidat pobyt / Add booking" → /kalendar?book=true; whole "Next stay" card tappable

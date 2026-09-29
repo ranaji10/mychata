@@ -164,7 +164,11 @@ function PhotosPage() {
 
   return (
     <AppShell>
-      <PageHeader title={t("Fotky chaty", "Cottage photos")} subtitle={property?.name ?? ""} />
+      <PageHeader
+        title={t("Fotky chaty", "Cottage photos")}
+        subtitle={property?.name ?? ""}
+        back="/vice"
+      />
       <input
         ref={fileRef}
         type="file"

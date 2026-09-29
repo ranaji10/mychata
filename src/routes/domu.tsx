@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, Inbox, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -45,6 +45,7 @@ export const Route = createFileRoute("/domu")({
 function HomePage() {
   const { t, lang } = useLang();
   const { account, property, currentMember, loading } = useAccount();
+  const navigate = useNavigate();
 
   // The last leaving checklist, so whoever comes next sees what was done (T-019). Emailing it
   // to the next booker comes with notifications (CC-3).
@@ -235,9 +236,20 @@ function HomePage() {
         {t("Dobrý den", "Hello")}, {currentMember?.name?.split(" ")[0] ?? ""}
       </p>
 
-      {/* Family: next stay is the first actionable card */}
+      {/* Add a booking: always one tap away (the calendar opens with date picking). */}
+      <Link to="/kalendar" search={{ book: true }} className="btn-primary mt-3 w-full">
+        <CalendarDays className="size-5" /> {t("Přidat pobyt", "Add booking")}
+      </Link>
+
+      {/* Family: next stay is the first actionable card — the whole card opens the stay */}
       {isFamily && (
-        <section className="card mt-3 p-4">
+        <section
+          className={`card mt-3 p-4 ${nextBooking ? "cursor-pointer active:scale-[0.99]" : ""}`}
+          onClick={() =>
+            nextBooking &&
+            navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })
+          }
+        >
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
             {nextBooking && <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>}
@@ -255,11 +267,16 @@ function HomePage() {
                 <Link
                   to="/rezervace/$id"
                   params={{ id: nextBooking.id }}
+                  onClick={(e) => e.stopPropagation()}
                   className="btn-primary flex-1"
                 >
                   {t("Detail pobytu", "Stay details")}
                 </Link>
-                <Link to="/predani" className="btn-secondary flex-1">
+                <Link
+                  to="/predani"
+                  onClick={(e) => e.stopPropagation()}
+                  className="btn-secondary flex-1"
+                >
                   {t("Odjezd", "Check Out")}
                 </Link>
               </div>
@@ -269,9 +286,6 @@ function HomePage() {
               <p className="mt-1 text-[15px] text-muted-foreground">
                 {t("Zatím není naplánovaný žádný pobyt.", "No stay is planned yet.")}
               </p>
-              <Link to="/kalendar" search={{ book: true }} className="btn-primary mt-3 w-full">
-                {t("Rezervovat termín", "Book a date")}
-              </Link>
             </>
           )}
         </section>
@@ -437,9 +451,12 @@ function HomePage() {
         </section>
       )}
 
-      {/* Next booking card */}
+      {/* Next booking card (institutional) — the whole card opens the stay */}
       {!isFamily && nextBooking && (
-        <section className="card mt-4 p-4">
+        <section
+          className="card mt-4 cursor-pointer p-4 active:scale-[0.99]"
+          onClick={() => navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })}
+        >
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
             <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
@@ -454,11 +471,16 @@ function HomePage() {
             <Link
               to="/rezervace/$id"
               params={{ id: nextBooking.id }}
+              onClick={(e) => e.stopPropagation()}
               className="btn-primary flex-1"
             >
               {t("Detail pobytu", "Stay details")}
             </Link>
-            <Link to="/predani" className="btn-secondary flex-1">
+            <Link
+              to="/predani"
+              onClick={(e) => e.stopPropagation()}
+              className="btn-secondary flex-1"
+            >
               {t("Odjezdový checklist", "Check-out checklist")}
             </Link>
           </div>

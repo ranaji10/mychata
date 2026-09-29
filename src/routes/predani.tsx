@@ -185,6 +185,7 @@ function HandoverPage() {
           "Odškrtněte, co jste udělali. Kdo přijede příště, uvidí shrnutí.",
           "Tick what you did. Whoever comes next sees the summary.",
         )}
+        back="/vice"
       />
 
       <section className="card p-4">

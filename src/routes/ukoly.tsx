@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Circle, Plus, Sparkles } from "lucide-react";
@@ -44,6 +44,7 @@ function TasksRoute() {
 function TasksPage() {
   const { property, currentMember, members } = useAccount();
   const { t, lang } = useLang();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>("all");
   const [title, setTitle] = useState("");
@@ -227,9 +228,16 @@ function TasksPage() {
           {filtered.map((task) => {
             const overdue = task.status !== "DONE" && task.due_date && task.due_date < today;
             return (
-              <div key={task.id} className="card flex items-center gap-3 p-3">
+              <div
+                key={task.id}
+                className="card flex cursor-pointer items-center gap-3 p-3 active:scale-[0.99]"
+                onClick={() => navigate({ to: "/ukoly/$id", params: { id: task.id } })}
+              >
                 <button
-                  onClick={() => toggle.mutate(task)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle.mutate(task);
+                  }}
                   aria-label={
                     task.status === "DONE"
                       ? t("Označit jako nesplněné", "Mark as not done")
@@ -243,7 +251,7 @@ function TasksPage() {
                     <Circle className="size-7 text-muted-foreground" />
                   )}
                 </button>
-                <Link to="/ukoly/$id" params={{ id: task.id }} className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1">
                   <p
                     className={`truncate text-[15px] font-bold ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}
                   >
@@ -254,7 +262,7 @@ function TasksPage() {
                     {task.due_date ? ` · ${fmtDate(task.due_date)}` : ""} ·{" "}
                     {taskCategoryLabel(task.category, lang)}
                   </p>
-                </Link>
+                </div>
                 {task.status === "DONE" ? (
                   <PillNeutral>{t("Hotovo", "Done")}</PillNeutral>
                 ) : overdue ? (

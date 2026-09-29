@@ -94,7 +94,7 @@ function GuestBookingPage() {
             {t("Děkujeme! Žádost byla odeslána.", "Thank you! Your request was sent.")}
           </p>
           <p className="mt-2 text-[15px] text-muted-foreground">
-            {t("Správce chaty vám odpoví e-mailem.", "The cottage admin will reply by email.")}
+            {t("Správce chaty se vám ozve.", "The cottage admin will get back to you.")}
           </p>
         </div>
       ) : (
@@ -143,7 +143,7 @@ function GuestBookingPage() {
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
                 <span className="text-[13px] font-bold text-muted-foreground">
-                  {t("Od", "From")}
+                  {t("Příjezd", "Arrival")}
                 </span>
                 <input
                   className="field mt-1 w-full"
@@ -153,7 +153,9 @@ function GuestBookingPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-[13px] font-bold text-muted-foreground">{t("Do", "To")}</span>
+                <span className="text-[13px] font-bold text-muted-foreground">
+                  {t("Odjezd", "Departure")}
+                </span>
                 <input
                   className="field mt-1 w-full"
                   type="date"

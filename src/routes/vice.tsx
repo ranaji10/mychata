@@ -27,12 +27,12 @@ export const Route = createFileRoute("/vice")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "More — My Chata" },
+      { title: "Settings — My Chata" },
       {
         name: "description",
         content: "Account settings, members, language and other My Chata options.",
       },
-      { property: "og:title", content: "More — My Chata" },
+      { property: "og:title", content: "Settings — My Chata" },
       {
         property: "og:description",
         content: "Account settings, members, language and other My Chata options.",
@@ -50,6 +50,25 @@ function MorePage() {
   const isFamily = account?.type === "FAMILY";
   const [langOpen, setLangOpen] = useState(false);
 
+  // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
+  // The toast says the link was copied — never the raw URL.
+  const shareLink = async (url: string) => {
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ url, title: "My Chata" });
+        return;
+      } catch {
+        // Share sheet dismissed or unavailable — fall through to copying.
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("Odkaz zkopírován", "Link copied"));
+    } catch {
+      toast.error(t("Odkaz se nepodařilo zkopírovat.", "The link could not be copied."));
+    }
+  };
+
   const copyPublicLink = async () => {
     if (!property) return;
     // Publishing the calendar is an explicit admin action; the link uses the share token.
@@ -63,13 +82,7 @@ function MorePage() {
       );
       return;
     }
-    const url = `${window.location.origin}/verejne/kalendar/${publicToken}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success(t("Odkaz na veřejný kalendář zkopírován.", "Public calendar link copied."));
-    } catch {
-      toast.info(url);
-    }
+    await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`);
   };
 
   const createGuestLink = async () => {
@@ -82,23 +95,12 @@ function MorePage() {
       toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
       return;
     }
-    const url = `${window.location.origin}/host/${token}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success(
-        t(
-          "Odkaz pro hosta zkopírován — pošlete ho komukoli.",
-          "Guest link copied — send it to anyone.",
-        ),
-      );
-    } catch {
-      toast.info(url);
-    }
+    await shareLink(`${window.location.origin}/host/${token}`);
   };
 
   return (
     <AppShell>
-      <PageHeader title={t("Více", "More")} subtitle={account?.name} />
+      <PageHeader title={t("Nastavení", "Settings")} subtitle={account?.name} />
 
       <Link to="/profil" className="card flex items-center gap-3 p-4 active:bg-secondary">
         <Avatar name={members.find((m) => m.id === currentMemberId)?.name ?? ""} />

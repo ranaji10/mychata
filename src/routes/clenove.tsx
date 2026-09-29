@@ -1,5 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, Crown, Loader2, Mail, Share2, ShieldCheck, UserMinus, UserPlus, X } from "lucide-react";
+import {
+  Copy,
+  Crown,
+  Loader2,
+  Mail,
+  Share2,
+  ShieldCheck,
+  UserMinus,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

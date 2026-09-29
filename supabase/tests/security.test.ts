@@ -710,7 +710,10 @@ describe("walkthrough fixes (T-021, migration 0022)", () => {
   });
 
   it("members never read the text of admin-only documents", async () => {
-    await admin(db, "update public.documents set extracted_text = 'deed text' where title = 'Deed'");
+    await admin(
+      db,
+      "update public.documents set extracted_text = 'deed text' where title = 'Deed'",
+    );
     await as(db, aMember, async (q) => {
       expect(await q("select extracted_text from public.documents where title = 'Deed'")).toEqual(
         [],

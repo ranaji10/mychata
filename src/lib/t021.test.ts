@@ -60,7 +60,10 @@ describe("answers from the manual and documents", () => {
   });
   it("quotes the best matching passage without AI", () => {
     const best = bestExcerpt(
-      [src("Wi-Fi", "Heslo je chata123"), src("Topení", "Kotel zapnete vypínačem.\nKočky nesmí do ložnice.")],
+      [
+        src("Wi-Fi", "Heslo je chata123"),
+        src("Topení", "Kotel zapnete vypínačem.\nKočky nesmí do ložnice."),
+      ],
       "Mohou sem kočky?",
     );
     expect(best?.source.title).toBe("Topení");
@@ -74,11 +77,16 @@ describe("answers from the manual and documents", () => {
     expect(parseModelAnswer("Yes [1]", 2)).toEqual({ answer: "Yes [1]", used: [1] });
   });
   it("turns Word XML into text", () => {
-    expect(docxXmlToText("<w:p><w:r><w:t>A &amp; B</w:t></w:r></w:p><w:p>C</w:p>")).toBe("A & B\nC");
+    expect(docxXmlToText("<w:p><w:r><w:t>A &amp; B</w:t></w:r></w:p><w:p>C</w:p>")).toBe(
+      "A & B\nC",
+    );
   });
   it("prefers the newest Gemini Flash model the gateway lists", () => {
     expect(
-      preferredChatModels(["google/gemini-3.6-flash", "google/gemini-3.8-flash", "google/gemini-3.1-flash-lite"], ["x"]),
+      preferredChatModels(
+        ["google/gemini-3.6-flash", "google/gemini-3.8-flash", "google/gemini-3.1-flash-lite"],
+        ["x"],
+      ),
     ).toEqual(["google/gemini-3.8-flash", "google/gemini-3.6-flash", "x"]);
     expect(fileKind("manual.PDF")).toBe("pdf");
     expect(fileKind("a.docx")).toBe("docx");

@@ -87,15 +87,19 @@ function ExpensesPage() {
     }
     return equalShares(amountCzk, selectedMembers.length)[index] ?? 0;
   });
-  const assigned = Math.round(shares.reduce((sum, v) => sum + (Number.isFinite(v) ? v : 0), 0) * 100) / 100;
-  const customInvalid = splitMethod === "CUSTOM" && shares.some((v) => !Number.isFinite(v) || v < 0);
+  const assigned =
+    Math.round(shares.reduce((sum, v) => sum + (Number.isFinite(v) ? v : 0), 0) * 100) / 100;
+  const customInvalid =
+    splitMethod === "CUSTOM" && shares.some((v) => !Number.isFinite(v) || v < 0);
   const remaining = Number.isFinite(amountCzk) ? Math.round((amountCzk - assigned) * 100) / 100 : 0;
   const customMismatch = splitMethod === "CUSTOM" && (customInvalid || Math.abs(remaining) > 0.01);
 
   const save = async () => {
     if (!property || !currentMember || !desc.trim() || selected.length === 0) return;
     if (!Number.isFinite(amountCzk) || amountCzk <= 0) {
-      toast.error(t("Zadejte částku, např. 1 250 nebo 99,50.", "Enter an amount, e.g. 1250 or 99.50."));
+      toast.error(
+        t("Zadejte částku, např. 1 250 nebo 99,50.", "Enter an amount, e.g. 1250 or 99.50."),
+      );
       return;
     }
     if (customMismatch) {
@@ -138,7 +142,10 @@ function ExpensesPage() {
         const { error: splitError } = await supabase.from("expense_splits").insert(splitRows);
         if (splitError) {
           // Don't leave an expense that looks unsplit: remove it and say so.
-          const { error: undoError } = await supabase.from("expenses").delete().eq("id", expense.id);
+          const { error: undoError } = await supabase
+            .from("expenses")
+            .delete()
+            .eq("id", expense.id);
           if (undoError) console.error("[vydaje] undo expense", undoError);
           throw splitError;
         }
@@ -158,7 +165,9 @@ function ExpensesPage() {
     } catch (e) {
       console.error("[vydaje] save", e);
       const detail = (e as { message?: string } | null)?.message ?? String(e);
-      toast.error(t(`Výdaj se nepodařilo uložit: ${detail}`, `The expense could not be saved: ${detail}`));
+      toast.error(
+        t(`Výdaj se nepodařilo uložit: ${detail}`, `The expense could not be saved: ${detail}`),
+      );
     } finally {
       setSaving(false);
     }
@@ -255,7 +264,8 @@ function ExpensesPage() {
                 value={amount}
                 onChange={(e) => {
                   setAmount(e.target.value);
-                  if (splitMethod === "CUSTOM") prefillCustom(selected, parseAmount(e.target.value));
+                  if (splitMethod === "CUSTOM")
+                    prefillCustom(selected, parseAmount(e.target.value));
                 }}
                 placeholder="0"
                 className="field"
@@ -374,24 +384,35 @@ function ExpensesPage() {
                   : Math.abs(remaining) <= 0.01
                     ? t("Rozděleno přesně.", "Split exactly.")
                     : remaining > 0
-                      ? t(`Zbývá rozdělit ${fmtKc(remaining)}.`, `${fmtKc(remaining)} left to assign.`)
-                      : t(`O ${fmtKc(-remaining)} víc než výdaj.`, `${fmtKc(-remaining)} more than the expense.`)}
+                      ? t(
+                          `Zbývá rozdělit ${fmtKc(remaining)}.`,
+                          `${fmtKc(remaining)} left to assign.`,
+                        )
+                      : t(
+                          `O ${fmtKc(-remaining)} víc než výdaj.`,
+                          `${fmtKc(-remaining)} more than the expense.`,
+                        )}
               </p>
             </div>
           )}
-          {splitMethod !== "CUSTOM" && selectedMembers.length > 0 && Number.isFinite(amountCzk) && amountCzk > 0 && (
-            <ul className="space-y-1 text-[14px]">
-              {selectedMembers.map((member, index) => (
-                <li key={member.id} className="flex justify-between">
-                  <span className="truncate">
-                    {member.name}
-                    {member.id === currentMember?.id ? ` (${t("vy, platíte", "you, paying")})` : ""}
-                  </span>
-                  <span className="font-semibold">{fmtKc(shares[index] ?? 0)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          {splitMethod !== "CUSTOM" &&
+            selectedMembers.length > 0 &&
+            Number.isFinite(amountCzk) &&
+            amountCzk > 0 && (
+              <ul className="space-y-1 text-[14px]">
+                {selectedMembers.map((member, index) => (
+                  <li key={member.id} className="flex justify-between">
+                    <span className="truncate">
+                      {member.name}
+                      {member.id === currentMember?.id
+                        ? ` (${t("vy, platíte", "you, paying")})`
+                        : ""}
+                    </span>
+                    <span className="font-semibold">{fmtKc(shares[index] ?? 0)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           <div className="flex gap-2">
             <button
               onClick={save}

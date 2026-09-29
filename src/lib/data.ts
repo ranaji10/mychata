@@ -183,7 +183,12 @@ export interface SettlementSuggestion {
  */
 export function settlementSuggestions(
   expenses: { id: string; paid_by_member_id: string | null }[],
-  splits: { expense_id: string; member_id: string; amount_owed: number | string; paid_back: boolean }[],
+  splits: {
+    expense_id: string;
+    member_id: string;
+    amount_owed: number | string;
+    paid_back: boolean;
+  }[],
 ): SettlementSuggestion[] {
   const payerOf = new Map(expenses.map((e) => [e.id, e.paid_by_member_id]));
   const owes = new Map<string, number>(); // "debtor->payer" => amount
@@ -211,7 +216,10 @@ export function settlementSuggestions(
 
 /** Czech-style amounts: "1 250,50", "1250.5", "1 000" → number; anything else → NaN. */
 export function parseAmount(input: string): number {
-  const cleaned = input.replace(/[\s\u00a0]/g, "").replace(/kč$/i, "").replace(",", ".");
+  const cleaned = input
+    .replace(/[\s\u00a0]/g, "")
+    .replace(/kč$/i, "")
+    .replace(",", ".");
   if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return Number.NaN;
   return Math.round(Number(cleaned) * 100) / 100;
 }

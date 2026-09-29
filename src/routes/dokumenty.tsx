@@ -103,18 +103,20 @@ function DocumentsPage() {
         if (error) throw error;
         fileUrl = path;
       }
-      const { data: inserted, error } = await supabase.from("documents").insert({
-        property_id: property.id,
-        linked_task_id: linkedTaskId || null,
-        title: form.title,
-        category: form.category,
-        notes: form.notes || null,
-        issue_date: form.issueDate || null,
-        expiry_date: form.expiryDate || null,
-        visibility: form.visibility,
-        file_url: fileUrl,
-        text_status: fileUrl ? "pending" : "no_file",
-      })
+      const { data: inserted, error } = await supabase
+        .from("documents")
+        .insert({
+          property_id: property.id,
+          linked_task_id: linkedTaskId || null,
+          title: form.title,
+          category: form.category,
+          notes: form.notes || null,
+          issue_date: form.issueDate || null,
+          expiry_date: form.expiryDate || null,
+          visibility: form.visibility,
+          file_url: fileUrl,
+          text_status: fileUrl ? "pending" : "no_file",
+        })
         .select("id")
         .single();
       if (error) throw error;
@@ -155,14 +157,27 @@ function DocumentsPage() {
       void queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
     },
     onSuccess: (r) => {
-      if (r.status === "ready") toast.success(t("Dokument je připravený pro otázky.", "The document is ready for questions."));
+      if (r.status === "ready")
+        toast.success(
+          t("Dokument je připravený pro otázky.", "The document is ready for questions."),
+        );
       else if (r.status === "limit")
-        toast.error(t("Dnešní limit čtení dokumentů je vyčerpán.", "Today's document reading limit is reached."));
+        toast.error(
+          t(
+            "Dnešní limit čtení dokumentů je vyčerpán.",
+            "Today's document reading limit is reached.",
+          ),
+        );
       else if (r.status === "disabled")
-        toast.error(t("Čtení dokumentů pomocí AI je vypnuté.", "Reading documents with AI is switched off."));
+        toast.error(
+          t("Čtení dokumentů pomocí AI je vypnuté.", "Reading documents with AI is switched off."),
+        );
       else if (r.status === "failed")
         toast.error(
-          t(`Text dokumentu se nepodařilo přečíst: ${"error" in r ? r.error : ""}`, `Couldn't read the document's text: ${"error" in r ? r.error : ""}`),
+          t(
+            `Text dokumentu se nepodařilo přečíst: ${"error" in r ? r.error : ""}`,
+            `Couldn't read the document's text: ${"error" in r ? r.error : ""}`,
+          ),
         );
       else if (r.status === "not_allowed")
         toast.error(t("Text může uložit jen správce.", "Only an admin can store the text."));
@@ -220,7 +235,10 @@ function DocumentsPage() {
       <AskBox
         propertyId={property?.id}
         title={t("Zeptejte se dokumentů a manuálu", "Ask the documents and manual")}
-        placeholder={t("Např. Do kdy platí záruka na čerpadlo?", "E.g. When does the pump warranty end?")}
+        placeholder={t(
+          "Např. Do kdy platí záruka na čerpadlo?",
+          "E.g. When does the pump warranty end?",
+        )}
       />
       <div className="mb-4 flex gap-2">
         <label className="field flex items-center gap-2">

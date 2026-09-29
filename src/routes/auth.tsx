@@ -124,7 +124,8 @@ function AuthPage() {
   };
 
   const cleanEmail = email.trim().toLowerCase();
-  const institutePublicEmail = mode === "institute" && !!cleanEmail && isPublicEmailDomain(cleanEmail);
+  const institutePublicEmail =
+    mode === "institute" && !!cleanEmail && isPublicEmailDomain(cleanEmail);
 
   const resendConfirmation = async () => {
     if (!cleanEmail) {
@@ -350,7 +351,11 @@ function AuthPage() {
             <input
               className="field w-full"
               type="password"
-              placeholder={signingUp ? t("Heslo (alespoň 8 znaků)", "Password (at least 8 characters)") : t("Heslo", "Password")}
+              placeholder={
+                signingUp
+                  ? t("Heslo (alespoň 8 znaků)", "Password (at least 8 characters)")
+                  : t("Heslo", "Password")
+              }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={signingUp ? "new-password" : "current-password"}

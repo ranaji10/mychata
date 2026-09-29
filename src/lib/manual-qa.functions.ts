@@ -134,7 +134,6 @@ export const rebuildManualChunks = createServerFn({ method: "POST" })
     return { ok: failed === 0, embedded, failed };
   });
 
-
 // ---------- AI gateway ----------
 
 let listedModels: { at: number; ids: string[] } | null = null;
@@ -142,7 +141,9 @@ let listedModels: { at: number; ids: string[] } | null = null;
 async function gatewayModelIds(apiKey: string): Promise<string[]> {
   if (listedModels && Date.now() - listedModels.at < 60 * 60 * 1000) return listedModels.ids;
   try {
-    const res = await fetch(`${GATEWAY}/models`, { headers: { Authorization: `Bearer ${apiKey}` } });
+    const res = await fetch(`${GATEWAY}/models`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
     if (!res.ok) throw new Error(`models_${res.status}`);
     const json = (await res.json()) as { data?: { id?: string }[] };
     const ids = (json.data ?? []).map((m) => m.id ?? "").filter(Boolean);
@@ -201,7 +202,9 @@ function toBase64(bytes: Uint8Array): string {
 }
 
 async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {
-  const stream = new Blob([data.slice()]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  const stream = new Blob([data.slice()])
+    .stream()
+    .pipeThrough(new DecompressionStream("deflate-raw"));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
@@ -218,11 +221,7 @@ async function extractText(
     const entry = zipEntry(bytes, "word/document.xml");
     if (!entry) throw new Error("docx_unreadable");
     const xml =
-      entry.method === 0
-        ? entry.data
-        : entry.method === 8
-          ? await inflateRaw(entry.data)
-          : null;
+      entry.method === 0 ? entry.data : entry.method === 8 ? await inflateRaw(entry.data) : null;
     if (!xml) throw new Error("docx_unreadable");
     return docxXmlToText(new TextDecoder().decode(xml));
   }
@@ -268,7 +267,12 @@ async function readAndStore(
   supabase: SupabaseLike,
   doc: Pick<DocumentRow, "id" | "file_url">,
   apiKey: string | undefined,
-): Promise<{ text: string | null; status: "ready" | "failed" | "no_file"; error?: string; stored: boolean }> {
+): Promise<{
+  text: string | null;
+  status: "ready" | "failed" | "no_file";
+  error?: string;
+  stored: boolean;
+}> {
   if (!doc.file_url) return { text: null, status: "no_file", stored: false };
   let text: string | null = null;
   let error: string | undefined;

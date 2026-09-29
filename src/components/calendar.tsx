@@ -1,6 +1,13 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { dayNames, monthGrid, monthNames, todayISO, type Booking, type DateRange } from "@/lib/data";
+import {
+  dayNames,
+  monthGrid,
+  monthNames,
+  todayISO,
+  type Booking,
+  type DateRange,
+} from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 /**
@@ -43,8 +50,7 @@ export function CalendarMonth({
           const isToday = d.iso === today;
           const isPending = booking?.status === "PENDING";
           const isConfirmed = booking?.status === "CONFIRMED";
-          const isEndpoint =
-            !!selection && (d.iso === selection.start || d.iso === selection.end);
+          const isEndpoint = !!selection && (d.iso === selection.start || d.iso === selection.end);
           const inRange =
             !!selection?.start &&
             !!selection.end &&
@@ -66,7 +72,9 @@ export function CalendarMonth({
                     ? { boxShadow: "inset 0 0 0 2px var(--color-primary)" }
                     : undefined;
           const label = (
-            <span className={!booking && !d.inMonth && !isEndpoint ? "text-muted-foreground/50" : ""}>
+            <span
+              className={!booking && !d.inMonth && !isEndpoint ? "text-muted-foreground/50" : ""}
+            >
               {d.day}
             </span>
           );

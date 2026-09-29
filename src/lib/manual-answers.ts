@@ -19,8 +19,34 @@ export function fold(text: string): string {
 }
 
 const STOP = new Set([
-  "the", "and", "for", "are", "how", "what", "where", "when", "can", "does", "with", "this", "that",
-  "jak", "kde", "kdy", "jsou", "je", "se", "na", "do", "to", "co", "pro", "nebo", "ale", "jaky", "jaka",
+  "the",
+  "and",
+  "for",
+  "are",
+  "how",
+  "what",
+  "where",
+  "when",
+  "can",
+  "does",
+  "with",
+  "this",
+  "that",
+  "jak",
+  "kde",
+  "kdy",
+  "jsou",
+  "je",
+  "se",
+  "na",
+  "do",
+  "to",
+  "co",
+  "pro",
+  "nebo",
+  "ale",
+  "jaky",
+  "jaka",
 ]);
 
 export function keywords(question: string): string[] {
@@ -196,7 +222,10 @@ export function fileKind(name: string, mime = ""): FileKind {
   if (["txt", "md", "csv", "json"].includes(ext) || mime.startsWith("text/")) return "text";
   if (ext === "docx") return "docx";
   if (ext === "pdf" || mime === "application/pdf") return "pdf";
-  if (["jpg", "jpeg", "png", "webp", "heic", "heif", "gif"].includes(ext) || mime.startsWith("image/"))
+  if (
+    ["jpg", "jpeg", "png", "webp", "heic", "heif", "gif"].includes(ext) ||
+    mime.startsWith("image/")
+  )
     return "image";
   return "unsupported";
 }

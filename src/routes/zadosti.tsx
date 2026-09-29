@@ -164,7 +164,9 @@ function RequestsPage() {
                     disabled={decide.isPending}
                     className="btn-primary disabled:opacity-50"
                   >
-                    {decide.isPending ? t("Ukládám…", "Saving…") : t("Schválit vybrané", "Approve selected")}
+                    {decide.isPending
+                      ? t("Ukládám…", "Saving…")
+                      : t("Schválit vybrané", "Approve selected")}
                   </button>
                   <button
                     onClick={() =>
@@ -320,7 +322,9 @@ function RequestsPage() {
                 disabled={!declineReason || decide.isPending}
                 className="btn-danger flex-1 disabled:opacity-40"
               >
-                {decide.isPending ? t("Ukládám…", "Saving…") : t("Potvrdit zamítnutí", "Confirm decline")}
+                {decide.isPending
+                  ? t("Ukládám…", "Saving…")
+                  : t("Potvrdit zamítnutí", "Confirm decline")}
               </button>
               <button
                 onClick={() => {

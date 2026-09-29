@@ -48,7 +48,11 @@ export function CottageSetup() {
     enabled: isAdmin && ids.length > 0,
     queryFn: async () => {
       const [rules, photos] = await Promise.all([
-        supabase.from("manual_sections").select("property_id").eq("category", "rules").in("property_id", ids),
+        supabase
+          .from("manual_sections")
+          .select("property_id")
+          .eq("category", "rules")
+          .in("property_id", ids),
         supabase.from("property_photos").select("property_id").in("property_id", ids),
       ]);
       if (rules.error) throw rules.error;
@@ -212,7 +216,9 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                     key={s.id}
                     type="button"
                     onClick={() =>
-                      setSeasons((v) => (v.includes(s.id) ? v.filter((x) => x !== s.id) : [...v, s.id]))
+                      setSeasons((v) =>
+                        v.includes(s.id) ? v.filter((x) => x !== s.id) : [...v, s.id],
+                      )
                     }
                     className={`pill min-h-[44px] px-4 ${
                       seasons.includes(s.id)

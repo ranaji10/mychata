@@ -31,7 +31,7 @@ export function CalendarMonth({
   /** Days before this can't be picked (defaults to today when picking). */
   minDate?: string;
   /** Free days worth pointing out (e.g. the next free weekend on the public calendar). */
-  highlight?: string[];
+  highlight?: string[] | undefined;
 }) {
   const { lang, t } = useLang();
   const days = monthGrid(year, month);

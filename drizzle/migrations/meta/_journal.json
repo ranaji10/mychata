@@ -162,6 +162,13 @@
       "when": 1790650022000,
       "tag": "0022_admin_guard_decisions_settlement",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790656073364,
+      "tag": "0023_0022_admin_guard_decisions_settlement",
+      "breakpoints": true
     }
   ]
 }

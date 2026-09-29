@@ -13,6 +13,8 @@ interface AccountState {
   accounts: Account[];
   /** Makes another account active. Row-level security follows the active account. */
   switchAccount: (accountId: string) => Promise<void>;
+  /** This person's membership row in every account — used by the header switcher to show the role in each. */
+  memberships: Member[];
   property: Property | null;
   properties: Property[];
   setActivePropertyId: (id: string) => void;
@@ -209,6 +211,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     account,
     accounts: accounts ?? [],
     switchAccount,
+    memberships: memberships ?? [],
     property,
     properties: properties ?? [],
     setActivePropertyId,

@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { useConsent } from "@/lib/consent";
+import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/soukromi")({
@@ -18,10 +20,24 @@ export const Route = createFileRoute("/soukromi")({
 function PrivacyPage() {
   const { t } = useLang();
   const { choice, reopen } = useConsent();
+  const { user } = useAccount();
 
   return (
     <main className="mx-auto min-h-screen max-w-[420px] bg-background p-4 pb-16">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        {/* Signed-in visitors arrived from Settings; the cookie banner opens this page for
+            everyone, so the back arrow only appears for signed-in members. */}
+        {user ? (
+          <Link
+            to="/vice"
+            aria-label={t("Zpět na Nastavení", "Back to Settings")}
+            className="grid size-11 place-items-center rounded-2xl bg-card text-foreground shadow-sm ring-1 ring-black/5"
+          >
+            <ArrowLeft className="size-5" />
+          </Link>
+        ) : (
+          <span />
+        )}
         <LanguageToggle />
       </div>
       <h1 className="mt-6 text-2xl font-bold">{t("Soukromí a cookies", "Privacy & cookies")}</h1>

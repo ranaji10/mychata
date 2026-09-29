@@ -195,12 +195,16 @@ export type Database = {
           category: string
           created_at: string
           expiry_date: string | null
+          extracted_text: string | null
           file_url: string | null
           id: string
           issue_date: string | null
           linked_task_id: string | null
           notes: string | null
           property_id: string
+          text_error: string | null
+          text_status: string
+          text_updated_at: string | null
           title: string
           updated_at: string
           visibility: string
@@ -209,12 +213,16 @@ export type Database = {
           category?: string
           created_at?: string
           expiry_date?: string | null
+          extracted_text?: string | null
           file_url?: string | null
           id?: string
           issue_date?: string | null
           linked_task_id?: string | null
           notes?: string | null
           property_id: string
+          text_error?: string | null
+          text_status?: string
+          text_updated_at?: string | null
           title: string
           updated_at?: string
           visibility?: string
@@ -223,12 +231,16 @@ export type Database = {
           category?: string
           created_at?: string
           expiry_date?: string | null
+          extracted_text?: string | null
           file_url?: string | null
           id?: string
           issue_date?: string | null
           linked_task_id?: string | null
           notes?: string | null
           property_id?: string
+          text_error?: string | null
+          text_status?: string
+          text_updated_at?: string | null
           title?: string
           updated_at?: string
           visibility?: string
@@ -1399,6 +1411,10 @@ export type Database = {
       }
       current_account_id: { Args: never; Returns: string }
       current_member_id: { Args: never; Returns: string }
+      decide_guest_request: {
+        Args: { _approve: boolean; _request_id: string }
+        Returns: string
+      }
       f_unaccent: { Args: { "": string }; Returns: string }
       feature_enabled: { Args: { _key: string }; Returns: boolean }
       has_account_role: {
@@ -1507,6 +1523,10 @@ export type Database = {
         Args: { _enabled: boolean; _property_id: string }
         Returns: string
       }
+      settle_debt: {
+        Args: { _from: string; _property_id: string; _to: string }
+        Returns: number
+      }
       submit_guest_request: {
         Args: {
           _email: string
@@ -1532,6 +1552,17 @@ export type Database = {
           _token: string
         }
         Returns: string
+      }
+      update_property_details: {
+        Args: {
+          _address?: string
+          _city?: string
+          _overlap_max_guests?: number
+          _property_id: string
+          _rooms?: number
+          _seasons?: string[]
+        }
+        Returns: undefined
       }
     }
     Enums: {

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, Inbox } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, CalendarDays, Inbox, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { LoadingCards, PillDanger, PillOk, PillWarn, StatCard } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,15 +14,14 @@ import {
   taskTitle,
   todayISO,
   type Booking,
-  type Expense,
   type Handover,
-  type ExpenseSplit,
   type InstitutionalRequest,
   type Task,
 } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 import { usePrimaryPhotoUrl } from "@/lib/use-primary-photo";
+import { useExpenseData } from "@/lib/expenses";
 
 export const Route = createFileRoute("/domu")({
   staticData: { sitemap: false },
@@ -93,33 +93,8 @@ function HomePage() {
 
   const isFamily = account?.type === "FAMILY";
 
-  const { data: expenses } = useQuery({
-    queryKey: ["expenses", property?.id],
-    enabled: !!property && isFamily,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("property_id", property!.id);
-      if (error) throw error;
-      return data as Expense[];
-    },
-  });
-
-  const { data: splits } = useQuery({
-    queryKey: ["splits", property?.id],
-    enabled: !!property && isFamily && !!expenses,
-    queryFn: async () => {
-      const ids = expenses!.map((e) => e.id);
-      if (!ids.length) return [] as ExpenseSplit[];
-      const { data, error } = await supabase
-        .from("expense_splits")
-        .select("*")
-        .in("expense_id", ids);
-      if (error) throw error;
-      return data as ExpenseSplit[];
-    },
-  });
+  const { data: expenseData } = useExpenseData(property?.id, isFamily);
+  const splits = expenseData?.splits;
 
   const { data: requests } = useQuery({
     queryKey: ["requests", property?.id],
@@ -148,6 +123,42 @@ function HomePage() {
         .order("start_date");
       if (error) throw error;
       return data;
+    },
+  });
+
+  // One admin-only database step writes the booking and the decision together (T-021).
+  // The card shows progress and disappears as soon as the database confirms.
+  const queryClient = useQueryClient();
+  const decideGuest = useMutation({
+    mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
+      const { error } = await supabase.rpc("decide_guest_request", {
+        _request_id: id,
+        _approve: approve,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async (_d, { approve }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["guest-requests", property?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] }),
+      ]);
+      toast.success(
+        approve
+          ? t("Pobyt potvrzen a zapsán do kalendáře.", "Stay confirmed and added to the calendar.")
+          : t("Žádost odmítnuta.", "Request declined."),
+      );
+    },
+    onError: (error) => {
+      console.error("[domu] decide guest request", error);
+      const m = error.message;
+      toast.error(
+        m.includes("Admin role required")
+          ? t("Žádosti hostů vyřizuje jen správce.", "Only an admin can decide guest requests.")
+          : m.includes("already_decided")
+            ? t("O této žádosti už bylo rozhodnuto.", "This request has already been decided.")
+            : t(`Akce se nepodařila: ${m}`, `That didn't work: ${m}`),
+      );
+      void queryClient.invalidateQueries({ queryKey: ["guest-requests", property?.id] });
     },
   });
 
@@ -249,7 +260,7 @@ function HomePage() {
                   {t("Detail pobytu", "Stay details")}
                 </Link>
                 <Link to="/predani" className="btn-secondary flex-1">
-                  {t("Odjezd", "Leaving")}
+                  {t("Odjezd", "Check Out")}
                 </Link>
               </div>
             </>
@@ -258,7 +269,7 @@ function HomePage() {
               <p className="mt-1 text-[15px] text-muted-foreground">
                 {t("Zatím není naplánovaný žádný pobyt.", "No stay is planned yet.")}
               </p>
-              <Link to="/rezervace/nova" className="btn-primary mt-3 w-full">
+              <Link to="/kalendar" search={{ book: true }} className="btn-primary mt-3 w-full">
                 {t("Rezervovat termín", "Book a date")}
               </Link>
             </>
@@ -357,37 +368,43 @@ function HomePage() {
                   {guestsLabel(g.guests)} · {g.guest_email}
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <button
-                    className="btn-secondary"
-                    onClick={async () => {
-                      await supabase
-                        .from("guest_requests")
-                        .update({ status: "DECLINED" })
-                        .eq("id", g.id);
-                    }}
-                  >
-                    {t("Odmítnout", "Decline")}
-                  </button>
-                  <button
-                    className="btn-primary"
-                    onClick={async () => {
-                      await supabase.from("bookings").insert({
-                        property_id: property!.id,
-                        requester_name: g.guest_name,
-                        start_date: g.start_date,
-                        end_date: g.end_date,
-                        guests: g.guests,
-                        note: g.note,
-                        status: "CONFIRMED",
-                      });
-                      await supabase
-                        .from("guest_requests")
-                        .update({ status: "APPROVED" })
-                        .eq("id", g.id);
-                    }}
-                  >
-                    {t("Potvrdit pobyt", "Confirm stay")}
-                  </button>
+                  {(() => {
+                    const busy = decideGuest.isPending && decideGuest.variables?.id === g.id;
+                    const busyApprove = busy && decideGuest.variables?.approve;
+                    return (
+                      <>
+                        <button
+                          className="btn-secondary disabled:opacity-50"
+                          disabled={decideGuest.isPending}
+                          onClick={() => decideGuest.mutate({ id: g.id, approve: false })}
+                        >
+                          {busy && !busyApprove ? (
+                            <>
+                              <Loader2 className="size-5 animate-spin" />
+                              {t("Odmítám…", "Declining…")}
+                            </>
+                          ) : (
+                            t("Odmítnout", "Decline")
+                          )}
+                        </button>
+                        <button
+                          className="btn-primary disabled:opacity-50"
+                          disabled={decideGuest.isPending}
+                          aria-busy={busyApprove}
+                          onClick={() => decideGuest.mutate({ id: g.id, approve: true })}
+                        >
+                          {busyApprove ? (
+                            <>
+                              <Loader2 className="size-5 animate-spin" />
+                              {t("Potvrzuji…", "Confirming…")}
+                            </>
+                          ) : (
+                            t("Potvrdit pobyt", "Confirm stay")
+                          )}
+                        </button>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             ))}
@@ -442,7 +459,7 @@ function HomePage() {
               {t("Detail pobytu", "Stay details")}
             </Link>
             <Link to="/predani" className="btn-secondary flex-1">
-              {t("Odjezdový checklist", "Leaving checklist")}
+              {t("Odjezdový checklist", "Check-out checklist")}
             </Link>
           </div>
         </section>

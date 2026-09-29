@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, HandCoins } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -7,7 +7,8 @@ import { AppShell } from "@/components/AppShell";
 import { Avatar, EmptyState, LoadingCards } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtKc, type Expense, type ExpenseSplit } from "@/lib/data";
+import { fmtKc, settlementSuggestions } from "@/lib/data";
+import { expenseDataKey, useExpenseData } from "@/lib/expenses";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vydaje/vyrovnani")({
@@ -36,75 +37,46 @@ function SettlementPage() {
   const queryClient = useQueryClient();
   const [settling, setSettling] = useState<string | null>(null);
 
-  const { data: expenses, isLoading: le } = useQuery({
-    queryKey: ["expenses", property?.id],
-    enabled: !!property,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("property_id", property!.id);
-      if (error) throw error;
-      return data as Expense[];
-    },
-  });
+  const { data, isLoading } = useExpenseData(property?.id);
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
 
-  const { data: splits, isLoading: ls } = useQuery({
-    queryKey: ["splits", property?.id],
-    enabled: !!property && !!expenses,
-    queryFn: async () => {
-      const ids = expenses!.map((e) => e.id);
-      if (!ids.length) return [] as ExpenseSplit[];
-      const { data, error } = await supabase
-        .from("expense_splits")
-        .select("*")
-        .in("expense_id", ids);
-      if (error) throw error;
-      return data as ExpenseSplit[];
-    },
-  });
-
-  const suggestions = useMemo(() => {
-    if (!splits || !expenses) return [];
-    const payerOf = new Map(expenses.map((e) => [e.id, e.paid_by_member_id]));
-    const owes = new Map<string, number>(); // "debtor->payer" => amount
-    for (const s of splits) {
-      if (s.paid_back) continue;
-      const payer = payerOf.get(s.expense_id);
-      if (!payer || payer === s.member_id) continue;
-      const key = `${s.member_id}->${payer}`;
-      owes.set(key, (owes.get(key) ?? 0) + Number(s.amount_owed));
-    }
-    const result: { from: string; to: string; amount: number }[] = [];
-    const seen = new Set<string>();
-    for (const [key, amount] of owes) {
-      if (seen.has(key)) continue;
-      const [from = "", to = ""] = key.split("->");
-      const reverseKey = `${to}->${from}`;
-      const reverse = owes.get(reverseKey) ?? 0;
-      seen.add(key);
-      seen.add(reverseKey);
-      const net = Math.round((amount - reverse) * 100) / 100;
-      if (net > 0) result.push({ from, to, amount: net });
-      else if (net < 0) result.push({ from: to, to: from, amount: -net });
-    }
-    return result.filter((r) => r.amount >= 1);
-  }, [splits, expenses]);
+  const suggestions = useMemo(
+    () => (data ? settlementSuggestions(data.expenses, data.splits) : []),
+    [data],
+  );
 
   const name = (id: string) => members.find((m) => m.id === id)?.name ?? "—";
 
+  // One database step marks everything between the two people as paid, in both directions,
+  // and refuses anyone but the receiver or an admin (settle_debt(), T-021).
   const settle = async (from: string, to: string) => {
-    if (!expenses) return;
+    if (!property) return;
     setSettling(`${from}->${to}`);
-    const expenseIds = expenses.filter((e) => e.paid_by_member_id === to).map((e) => e.id);
-    const { error } = await supabase
-      .from("expense_splits")
-      .update({ paid_back: true, paid_back_confirmed_by: currentMember?.id ?? null })
-      .in("expense_id", expenseIds)
-      .eq("member_id", from);
-    setSettling(null);
+    const { data: changed, error } = await supabase.rpc("settle_debt", {
+      _property_id: property.id,
+      _from: from,
+      _to: to,
+    });
     if (error) {
-      toast.error(t("Vyrovnání se nepodařilo uložit.", "The settlement could not be saved."));
+      setSettling(null);
+      console.error("[vyrovnani] settle", error);
+      toast.error(
+        error.message.includes("only_receiver_confirms")
+          ? t(
+              `Přijetí platby potvrzuje ${name(to)} nebo správce.`,
+              `${name(to)} or an admin confirms the payment.`,
+            )
+          : t(
+              `Vyrovnání se nepodařilo uložit: ${error.message}`,
+              `The settlement could not be saved: ${error.message}`,
+            ),
+      );
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: expenseDataKey(property.id) });
+    setSettling(null);
+    if (!changed) {
+      toast.info(t("Nebylo co vyrovnat.", "There was nothing left to settle."));
       return;
     }
     toast.success(
@@ -113,7 +85,6 @@ function SettlementPage() {
         `${name(from)} and ${name(to)} are now settled.`,
       ),
     );
-    queryClient.invalidateQueries({ queryKey: ["splits", property?.id] });
   };
 
   return (
@@ -129,7 +100,7 @@ function SettlementPage() {
         <h1 className="text-2xl font-bold">{t("Vyrovnat dluhy", "Settle debts")}</h1>
       </div>
 
-      {le || ls ? (
+      {isLoading ? (
         <LoadingCards />
       ) : suggestions.length === 0 ? (
         <EmptyState
@@ -151,7 +122,7 @@ function SettlementPage() {
                 </div>
                 <p className="text-xl font-bold">{fmtKc(s.amount)}</p>
               </div>
-              {currentMember?.id === s.to ? (
+              {currentMember?.id === s.to || isAdmin ? (
                 <button
                   onClick={() => settle(s.from, s.to)}
                   disabled={settling === `${s.from}->${s.to}`}
@@ -159,14 +130,24 @@ function SettlementPage() {
                 >
                   {settling === `${s.from}->${s.to}`
                     ? t("Ukládám…", "Saving…")
-                    : t("Potvrdit přijetí platby", "Confirm payment received")}
+                    : currentMember?.id === s.to
+                      ? t("Potvrdit přijetí platby", "Confirm payment received")
+                      : t(
+                          `Potvrdit za ${name(s.to)} (správce)`,
+                          `Confirm for ${name(s.to)} (admin)`,
+                        )}
                 </button>
               ) : (
                 <p className="mt-3 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
-                  {t(
-                    `Přijetí platby potvrzuje ${name(s.to)}.`,
-                    `${name(s.to)} confirms receipt of payment.`,
-                  )}
+                  {currentMember?.id === s.from
+                    ? t(
+                        `Pošlete ${fmtKc(s.amount)} osobě ${name(s.to)}. Jakmile platbu potvrdí, dluh zmizí.`,
+                        `Send ${fmtKc(s.amount)} to ${name(s.to)}. Once they confirm it, the debt disappears.`,
+                      )
+                    : t(
+                        `Přijetí platby potvrzuje ${name(s.to)}.`,
+                        `${name(s.to)} confirms receipt of payment.`,
+                      )}
                 </p>
               )}
             </div>

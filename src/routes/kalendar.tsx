@@ -1,13 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronLeft, ChevronRight, Link2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { CalendarDays, Link2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, Skeleton } from "@/components/bits";
+import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { dayNames, monthNames, fmtDate, monthGrid, todayISO, type Booking } from "@/lib/data";
+import { fmtDate, pickRange, todayISO, type Booking, type DateRange } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/kalendar")({
@@ -26,69 +27,23 @@ export const Route = createFileRoute("/kalendar")({
       },
     ],
   }),
+  // /kalendar?book=1 (from "Book a date"): open straight into picking the dates.
+  validateSearch: (search: Record<string, unknown>): { book?: boolean } =>
+    search["book"] === true || search["book"] === "true" || search["book"] === 1
+      ? { book: true }
+      : {},
   component: CalendarPage,
 });
 
-export function CalendarMonth({
-  year,
-  month,
-  bookings,
-  branches,
-}: {
-  year: number;
-  month: number;
-  bookings: Booking[];
-  branches: string[];
-}) {
-  const { lang } = useLang();
-  const days = monthGrid(year, month);
-  const today = todayISO();
-
-  return (
-    <div>
-      <div className="grid grid-cols-7 gap-1 text-center">
-        {dayNames(lang).map((d) => (
-          <span key={d} className="py-1 text-[12px] font-bold text-muted-foreground">
-            {d}
-          </span>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-1 text-center">
-        {days.map((d) => {
-          const booking = bookings.find((b) => d.iso >= b.start_date && d.iso <= b.end_date);
-          const isToday = d.iso === today;
-          const isPending = booking?.status === "PENDING";
-          const isConfirmed = booking?.status === "CONFIRMED";
-          return (
-            <div
-              key={d.iso}
-              className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold"
-              style={
-                isConfirmed
-                  ? { backgroundColor: "var(--color-ok)", color: "#fff" }
-                  : isPending
-                    ? { backgroundColor: "var(--color-warn-soft)", color: "var(--color-warn)" }
-                    : isToday
-                      ? { boxShadow: "inset 0 0 0 2px var(--color-primary)" }
-                      : undefined
-              }
-            >
-              <span className={!booking && !d.inMonth ? "text-muted-foreground/50" : ""}>
-                {d.day}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function CalendarPage() {
-  const { t, lang } = useLang();
-  const { account, property, members } = useAccount();
-  const now = new Date();
-  const [ym, setYm] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const { t } = useLang();
+  const { account, property } = useAccount();
+  const { book } = Route.useSearch();
+  const navigate = useNavigate();
+  const nav = useMonthNav();
+  const [picking, setPicking] = useState(!!book);
+  const [range, setRange] = useState<DateRange>({ start: null, end: null });
+  const calendarRef = useRef<HTMLElement>(null);
 
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["bookings", property?.id],
@@ -104,22 +59,31 @@ function CalendarPage() {
     },
   });
 
-  const branches = useMemo(() => {
-    if (account?.type === "INSTITUTIONAL")
-      return [...new Set(bookings?.map((b) => b.requester_name) ?? [])];
-    return members.map((m) => m.name);
-  }, [account, members, bookings]);
-
   const isFamily = account?.type === "FAMILY";
 
-  const prev = () =>
-    setYm(({ year, month }) =>
-      month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 },
-    );
-  const next = () =>
-    setYm(({ year, month }) =>
-      month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 },
-    );
+  const startPicking = () => {
+    setPicking(true);
+    calendarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  useEffect(() => {
+    if (book) calendarRef.current?.scrollIntoView({ block: "start" });
+  }, [book]);
+
+  const onPickDay = (iso: string) => {
+    setPicking(true);
+    setRange((r) => pickRange(r, iso));
+  };
+  const clearRange = () => {
+    setRange({ start: null, end: null });
+    setPicking(false);
+  };
+  const continueToBooking = () => {
+    if (!range.start) return;
+    navigate({
+      to: "/rezervace/nova",
+      search: { start: range.start, end: range.end ?? range.start },
+    });
+  };
 
   const copyPublicLink = async () => {
     // Publishing the calendar is an explicit admin action; the link uses the share token.
@@ -146,58 +110,63 @@ function CalendarPage() {
 
   return (
     <AppShell>
-      <section className="card mt-2 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">
-            {monthNames(lang)[ym.month]} {ym.year}
-          </h2>
-          <div className="flex gap-1">
-            <button
-              onClick={prev}
-              aria-label={t("Předchozí měsíc", "Previous month")}
-              className="grid size-11 place-items-center rounded-xl bg-secondary"
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-            <button
-              onClick={next}
-              aria-label={t("Další měsíc", "Next month")}
-              className="grid size-11 place-items-center rounded-xl bg-secondary"
-            >
-              <ChevronRight className="size-5" />
-            </button>
-          </div>
-        </div>
+      <section ref={calendarRef} className="card mt-2 scroll-mt-4 p-4">
+        <MonthHeader {...nav} />
+
+        {isFamily && picking && (
+          <p className="mt-3 rounded-2xl bg-primary-soft p-3 text-[14px] font-semibold text-primary">
+            {!range.start
+              ? t("Klepněte na den příjezdu.", "Tap your arrival day.")
+              : !range.end
+                ? t(
+                    `Příjezd ${fmtDate(range.start)}. Teď klepněte na den odjezdu.`,
+                    `Arrival ${fmtDate(range.start)}. Now tap your departure day.`,
+                  )
+                : t(
+                    `${fmtDate(range.start)} – ${fmtDate(range.end)}. Pokračujte, nebo klepněte znovu pro jiný termín.`,
+                    `${fmtDate(range.start)} – ${fmtDate(range.end)}. Continue, or tap again to choose other dates.`,
+                  )}
+          </p>
+        )}
 
         <div className="mt-3">
           {isLoading ? (
             <Skeleton className="h-64" />
           ) : (
             <CalendarMonth
-              year={ym.year}
-              month={ym.month}
+              year={nav.year}
+              month={nav.month}
               bookings={bookings ?? []}
-              branches={branches}
+              {...(isFamily ? { selection: range, onPickDay } : {})}
             />
           )}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded bg-ok" />
-            {t("Potvrzeno", "Confirmed")}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded bg-warn" />
-            {t("Čeká na schválení", "Awaiting approval")}
-          </span>
-        </div>
+        <CalendarLegend picking={isFamily && !!range.start} />
 
-        {isFamily && (
-          <Link to="/rezervace/nova" className="btn-primary mt-4 w-full">
-            {t("Rezervovat termín", "Book a date")}
-          </Link>
-        )}
+        {isFamily &&
+          (range.start ? (
+            <div className="mt-4 flex gap-2">
+              <button onClick={continueToBooking} className="btn-primary flex-1">
+                {range.end
+                  ? t("Pokračovat k rezervaci", "Continue to booking")
+                  : t("Jen jeden den", "Just this one day")}
+              </button>
+              <button
+                onClick={clearRange}
+                className="grid size-11 shrink-0 place-items-center self-center rounded-xl bg-secondary"
+                aria-label={t("Zrušit výběr", "Clear the dates")}
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+          ) : (
+            !picking && (
+              <button onClick={startPicking} className="btn-primary mt-4 w-full">
+                {t("Rezervovat termín", "Book a date")}
+              </button>
+            )
+          ))}
       </section>
 
       <section className="mt-4">
@@ -215,9 +184,9 @@ function CalendarPage() {
             }
             action={
               isFamily ? (
-                <Link to="/rezervace/nova" className="btn-primary w-full">
+                <button onClick={startPicking} className="btn-primary w-full">
                   {t("Rezervovat termín", "Book a date")}
-                </Link>
+                </button>
               ) : undefined
             }
           />

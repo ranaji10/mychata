@@ -8,6 +8,7 @@ import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { pendingInvite } from "@/lib/pending-invite";
+import { isPublicEmailDomain, signupMetadata } from "@/lib/signup";
 
 export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
@@ -21,16 +22,6 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
 });
 
-const PUBLIC_DOMAINS = [
-  "gmail.com",
-  "seznam.cz",
-  "centrum.cz",
-  "email.cz",
-  "outlook.com",
-  "hotmail.com",
-  "yahoo.com",
-  "icloud.com",
-];
 const SEASONS = [
   { id: "summer", cs: "Léto", en: "Summer" },
   { id: "winter", cs: "Zima", en: "Winter" },
@@ -61,6 +52,16 @@ function OnboardingPage() {
   const [busy, setBusy] = useState(false);
   const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL" | null>(null);
   const [accountName, setAccountName] = useState("");
+  // Name from Google, or from the email sign-up form; always editable (T-021).
+  const [fullName, setFullName] = useState("");
+  const signup = signupMetadata(user?.user_metadata);
+  useEffect(() => {
+    setFullName((current) => current || profile?.display_name || signup.fullName || "");
+    if (signup.kind === "institution") {
+      setType((current) => current ?? "INSTITUTIONAL");
+      setAccountName((current) => current || signup.organisation || "");
+    }
+  }, [profile?.display_name, signup.fullName, signup.kind, signup.organisation]);
   const [chatas, setChatas] = useState<ChataDraft[]>([
     { name: "", address: "", city: "", rooms: "" },
   ]);
@@ -71,8 +72,7 @@ function OnboardingPage() {
   const [houseRules, setHouseRules] = useState("");
 
   const email = user?.email ?? "";
-  const domain = email.split("@")[1]?.toLowerCase() ?? "";
-  const institutionBlocked = type === "INSTITUTIONAL" && PUBLIC_DOMAINS.includes(domain);
+  const institutionBlocked = type === "INSTITUTIONAL" && isPublicEmailDomain(email);
 
   const steps = [
     t("Typ účtu", "Account type"),
@@ -86,6 +86,11 @@ function OnboardingPage() {
     if (!type || !user) return;
     setBusy(true);
     try {
+      // The name goes on the profile first: the database uses it for the new member row.
+      const { error: nameError } = await supabase
+        .from("profiles")
+        .upsert({ user_id: user.id, display_name: fullName.trim() }, { onConflict: "user_id" });
+      if (nameError) throw nameError;
       const first = chatas[0]!;
       // Chatas can be added to the current account only by its admins. Anyone else
       // (new people, or plain members of someone else's account) gets their own account,
@@ -165,7 +170,8 @@ function OnboardingPage() {
 
   const canNext =
     step === 0
-      ? !!type &&
+      ? fullName.trim().length > 1 &&
+        !!type &&
         !institutionBlocked &&
         (type === "INSTITUTIONAL" ? accountName.trim().length > 1 : true)
       : step === 1
@@ -197,7 +203,17 @@ function OnboardingPage() {
       <section className="mt-6 flex-1">
         {step === 0 && (
           <div className="space-y-3">
-            <h1 className="text-2xl font-bold">
+            <label className="block">
+              <span className="text-[14px] font-bold">{t("Vaše jméno", "Your name")}</span>
+              <input
+                className="field mt-1 w-full"
+                placeholder={t("Jméno a příjmení", "First and last name")}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                autoComplete="name"
+              />
+            </label>
+            <h1 className="pt-2 text-2xl font-bold">
               {t("Kdo bude chatu spravovat?", "Who will manage the cottage?")}
             </h1>
             <button

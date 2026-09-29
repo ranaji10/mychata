@@ -155,6 +155,13 @@
       "when": 1790623406694,
       "tag": "0021_apply_journaled_0019_0020",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790650022000,
+      "tag": "0022_admin_guard_decisions_settlement",
+      "breakpoints": true
     }
   ]
 }

@@ -85,9 +85,11 @@ function RequestsPage() {
         }
       }
     },
-    onSuccess: (_d, v) => {
-      queryClient.invalidateQueries({ queryKey: ["requests", property?.id] });
-      queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] });
+    onSuccess: async (_d, v) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["requests", property?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] }),
+      ]);
       setSelected([]);
       setDeclining([]);
       setDeclineReason("");
@@ -100,7 +102,10 @@ function RequestsPage() {
           : t("Žádost zamítnuta.", "Request declined."),
       );
     },
-    onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
+    onError: (error) => {
+      console.error("[zadosti] decide", error);
+      toast.error(t(`Akce se nepodařila: ${error.message}`, `The action failed: ${error.message}`));
+    },
   });
 
   const pending = requests?.filter((r) => r.status === "PENDING") ?? [];
@@ -156,9 +161,12 @@ function RequestsPage() {
                         approve: true,
                       })
                     }
-                    className="btn-primary"
+                    disabled={decide.isPending}
+                    className="btn-primary disabled:opacity-50"
                   >
-                    {t("Schválit vybrané", "Approve selected")}
+                    {decide.isPending
+                      ? t("Ukládám…", "Saving…")
+                      : t("Schválit vybrané", "Approve selected")}
                   </button>
                   <button
                     onClick={() =>
@@ -229,11 +237,18 @@ function RequestsPage() {
                     <div className="mt-3 flex gap-2">
                       <button
                         onClick={() => decide.mutate({ requests: [r], approve: true })}
-                        className="btn-primary flex-1"
+                        disabled={decide.isPending}
+                        className="btn-primary flex-1 disabled:opacity-50"
                       >
-                        {t("Schválit", "Approve")}
+                        {decide.isPending && decide.variables?.requests.some((x) => x.id === r.id)
+                          ? t("Ukládám…", "Saving…")
+                          : t("Schválit", "Approve")}
                       </button>
-                      <button onClick={() => setDeclining([r])} className="btn-danger flex-1">
+                      <button
+                        onClick={() => setDeclining([r])}
+                        disabled={decide.isPending}
+                        className="btn-danger flex-1 disabled:opacity-50"
+                      >
                         {t("Zamítnout", "Decline")}
                       </button>
                     </div>
@@ -304,10 +319,12 @@ function RequestsPage() {
                 onClick={() =>
                   decide.mutate({ requests: declining, approve: false, reason: declineReason })
                 }
-                disabled={!declineReason}
+                disabled={!declineReason || decide.isPending}
                 className="btn-danger flex-1 disabled:opacity-40"
               >
-                {t("Potvrdit zamítnutí", "Confirm decline")}
+                {decide.isPending
+                  ? t("Ukládám…", "Saving…")
+                  : t("Potvrdit zamítnutí", "Confirm decline")}
               </button>
               <button
                 onClick={() => {

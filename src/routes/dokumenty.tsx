@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileText, Plus, Search, Trash2 } from "lucide-react";
+import { Download, FileText, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { AskBox } from "@/components/AskBox";
 import {
   EmptyState,
   LoadingCards,
@@ -16,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, todayISO } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
+import { readDocumentText } from "@/lib/manual-qa.functions";
 
 export const Route = createFileRoute("/dokumenty")({
   staticData: { sitemap: false },
@@ -101,21 +103,29 @@ function DocumentsPage() {
         if (error) throw error;
         fileUrl = path;
       }
-      const { error } = await supabase.from("documents").insert({
-        property_id: property.id,
-        linked_task_id: linkedTaskId || null,
-        title: form.title,
-        category: form.category,
-        notes: form.notes || null,
-        issue_date: form.issueDate || null,
-        expiry_date: form.expiryDate || null,
-        visibility: form.visibility,
-        file_url: fileUrl,
-      });
+      const { data: inserted, error } = await supabase
+        .from("documents")
+        .insert({
+          property_id: property.id,
+          linked_task_id: linkedTaskId || null,
+          title: form.title,
+          category: form.category,
+          notes: form.notes || null,
+          issue_date: form.issueDate || null,
+          expiry_date: form.expiryDate || null,
+          visibility: form.visibility,
+          file_url: fileUrl,
+          text_status: fileUrl ? "pending" : "no_file",
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      return fileUrl ? inserted.id : null;
     },
-    onSuccess: () => {
+    onSuccess: (documentId) => {
       queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
+      // Read the file right away so questions can use it (T-021).
+      if (documentId) readText.mutate(documentId);
       setAdding(false);
       setFile(null);
       setForm({
@@ -136,6 +146,48 @@ function DocumentsPage() {
         ),
       ),
   });
+  const [reading, setReading] = useState<string | null>(null);
+  const readText = useMutation({
+    mutationFn: async (documentId: string) => {
+      setReading(documentId);
+      return readDocumentText({ data: { documentId } });
+    },
+    onSettled: () => {
+      setReading(null);
+      void queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
+    },
+    onSuccess: (r) => {
+      if (r.status === "ready")
+        toast.success(
+          t("Dokument je připravený pro otázky.", "The document is ready for questions."),
+        );
+      else if (r.status === "limit")
+        toast.error(
+          t(
+            "Dnešní limit čtení dokumentů je vyčerpán.",
+            "Today's document reading limit is reached.",
+          ),
+        );
+      else if (r.status === "disabled")
+        toast.error(
+          t("Čtení dokumentů pomocí AI je vypnuté.", "Reading documents with AI is switched off."),
+        );
+      else if (r.status === "failed")
+        toast.error(
+          t(
+            `Text dokumentu se nepodařilo přečíst: ${"error" in r ? r.error : ""}`,
+            `Couldn't read the document's text: ${"error" in r ? r.error : ""}`,
+          ),
+        );
+      else if (r.status === "not_allowed")
+        toast.error(t("Text může uložit jen správce.", "Only an admin can store the text."));
+    },
+    onError: (e) => {
+      console.error("[dokumenty] read text", e);
+      toast.error(t(`Čtení se nepodařilo: ${e.message}`, `Reading failed: ${e.message}`));
+    },
+  });
+
   const openFile = async (path: string | null) => {
     if (!path) return;
     const { data, error } = await supabase.storage.from("my-chata-files").createSignedUrl(path, 60);
@@ -180,6 +232,14 @@ function DocumentsPage() {
           ) : null
         }
       />
+      <AskBox
+        propertyId={property?.id}
+        title={t("Zeptejte se dokumentů a manuálu", "Ask the documents and manual")}
+        placeholder={t(
+          "Např. Do kdy platí záruka na čerpadlo?",
+          "E.g. When does the pump warranty end?",
+        )}
+      />
       <div className="mb-4 flex gap-2">
         <label className="field flex items-center gap-2">
           <Search className="size-5 text-muted-foreground" />
@@ -187,7 +247,7 @@ function DocumentsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="min-w-0 flex-1 bg-transparent outline-none"
-            placeholder={t("Hledat", "Search")}
+            placeholder={t("Filtrovat podle názvu", "Filter by title")}
           />
         </label>
         <select
@@ -237,6 +297,37 @@ function DocumentsPage() {
                 {document.expiry_date && (
                   <p className="mt-2 text-[13px] font-semibold text-muted-foreground">
                     {t("Platnost do", "Expires")} {fmtDate(document.expiry_date)}
+                  </p>
+                )}
+                {document.file_url && (
+                  <p className="mt-2 flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                    {reading === document.id ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        {t("Čtu text dokumentu…", "Reading the document…")}
+                      </>
+                    ) : document.text_status === "ready" ? (
+                      <span className="text-ok">
+                        {t("Připraveno pro otázky", "Ready for questions")}
+                      </span>
+                    ) : document.text_status === "failed" ? (
+                      <span className="text-warn">
+                        {t("Text se nepodařilo přečíst", "Couldn't read the text")}
+                        {document.text_error ? ` (${document.text_error})` : ""}
+                      </span>
+                    ) : (
+                      t("Zatím nepřečteno", "Not read yet")
+                    )}
+                    {isAdmin && document.text_status !== "ready" && reading !== document.id && (
+                      <button
+                        onClick={() => readText.mutate(document.id)}
+                        disabled={readText.isPending}
+                        className="inline-flex min-h-11 items-center gap-1 font-bold text-primary"
+                      >
+                        <RefreshCw className="size-4" />
+                        {t("Přečíst", "Read now")}
+                      </button>
+                    )}
                   </p>
                 )}
                 <div className="mt-3 flex gap-2">
@@ -328,12 +419,20 @@ function DocumentsPage() {
             </select>
             <input
               type="file"
-              accept="application/pdf,image/jpeg,image/png"
+              accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,.docx,.txt,.md,.csv"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="field"
             />
+            <p className="text-[13px] text-muted-foreground">
+              {t(
+                "Text souboru (PDF, Word, fotka, text) se přečte, aby na něj šlo odpovídat v otázkách. Dokumenty jen pro správce vidí v odpovědích jen správci.",
+                "The file's text (PDF, Word, photo, text) is read so questions can be answered from it. Admin-only documents appear in answers for admins only.",
+              )}
+            </p>
             <div className="flex gap-2">
-              <button className="btn-primary flex-1">{t("Uložit", "Save")}</button>
+              <button className="btn-primary flex-1" disabled={save.isPending}>
+                {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
+              </button>
               <button type="button" onClick={() => setAdding(false)} className="btn-secondary">
                 {t("Zrušit", "Cancel")}
               </button>

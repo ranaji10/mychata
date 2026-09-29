@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, Crown, Mail, Share2, ShieldCheck, UserMinus, UserPlus, X } from "lucide-react";
-import { useState } from "react";
+import {
+  Copy,
+  Crown,
+  Loader2,
+  Mail,
+  Share2,
+  ShieldCheck,
+  UserMinus,
+  UserPlus,
+  X,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -51,7 +61,9 @@ function MembersPage() {
     },
   });
 
-  const { data: propertyAdmins } = useQuery({
+  // Stored as a plain array: the offline cache saves query results as JSON, and a Set came
+  // back as {} after a reload, which crashed this page ("I.has is not a function").
+  const { data: propertyAdminIds } = useQuery({
     queryKey: ["property-admins", property?.id],
     enabled: !!property,
     queryFn: async () => {
@@ -60,9 +72,13 @@ function MembersPage() {
         .select("member_id")
         .eq("property_id", property!.id);
       if (error) throw error;
-      return new Set((data as { member_id: string }[]).map((r) => r.member_id));
+      return (data as { member_id: string }[]).map((r) => r.member_id);
     },
   });
+  const propertyAdmins = useMemo(
+    () => new Set(Array.isArray(propertyAdminIds) ? propertyAdminIds : []),
+    [propertyAdminIds],
+  );
 
   // Several people at once, each with their own link. Roles are stored upper case; the
   // database also normalises them (migration 0020), which fixes admin invitations (B-011).
@@ -130,8 +146,14 @@ function MembersPage() {
         throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["members"] });
+    onSuccess: async () => {
+      // Removing admin rights also removes "Admin of this cottage" in the database, so both
+      // lists are re-read before the page shows the new state.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["members"] }),
+        queryClient.invalidateQueries({ queryKey: ["property-admins"] }),
+        queryClient.invalidateQueries({ queryKey: ["identity-members"] }),
+      ]);
       toast.success(t("Oprávnění změněna.", "Permissions updated."));
     },
     onError: (e) =>
@@ -317,7 +339,9 @@ function MembersPage() {
       <div className="mt-4 space-y-2">
         {members.map((m) => {
           const mIsAdmin = m.role === "ADMIN" || m.role === "OWNER";
-          const isPropAdmin = propertyAdmins?.has(m.id);
+          // Only a current admin can be "admin of this cottage" (a stale row must not show).
+          const isPropAdmin = mIsAdmin && propertyAdmins.has(m.id);
+          const changing = toggleRole.isPending && toggleRole.variables?.memberId === m.id;
           return (
             <div key={m.id} className="card flex items-center gap-3 p-4">
               <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary font-bold text-muted-foreground">
@@ -347,7 +371,9 @@ function MembersPage() {
               </div>
               {isAdmin && m.id !== currentMember?.id && m.user_id && (
                 <button
-                  className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
+                  className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary disabled:opacity-50"
+                  disabled={toggleRole.isPending}
+                  aria-busy={changing}
                   aria-label={
                     mIsAdmin
                       ? t("Odebrat správce", "Remove admin")
@@ -355,7 +381,13 @@ function MembersPage() {
                   }
                   onClick={() => toggleRole.mutate({ memberId: m.id, makeAdmin: !mIsAdmin })}
                 >
-                  {mIsAdmin ? <UserMinus className="size-5" /> : <ShieldCheck className="size-5" />}
+                  {changing ? (
+                    <Loader2 className="size-5 animate-spin" />
+                  ) : mIsAdmin ? (
+                    <UserMinus className="size-5" />
+                  ) : (
+                    <ShieldCheck className="size-5" />
+                  )}
                 </button>
               )}
             </div>

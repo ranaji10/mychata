@@ -120,10 +120,7 @@ function PublicCalendar() {
         <LanguageToggle className="shrink-0" />
       </div>
       <p className="mt-1 text-[14px] text-muted-foreground">
-        {t(
-          "Podívejte se, kdy je chata volná.",
-          "See when the cottage is free.",
-        )}
+        {t("Podívejte se, kdy je chata volná.", "See when the cottage is free.")}
       </p>
 
       {!loadingProperty && !property && (
@@ -212,7 +209,10 @@ function PublicCalendar() {
                 <div className="card flex items-center gap-3 p-4">
                   <CalendarPlus className="size-5 shrink-0 text-ok" />
                   <p className="text-[15px] font-semibold">
-                    {t("Chata je zatím volná — pořiďte si termín!", "The cottage is still free — grab a date!")}
+                    {t(
+                      "Chata je zatím volná — pořiďte si termín!",
+                      "The cottage is still free — grab a date!",
+                    )}
                   </p>
                 </div>
               )}

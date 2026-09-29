@@ -104,11 +104,7 @@ function ProfilePage() {
 
   return (
     <AppShell>
-      <PageHeader
-        title={t("Můj profil", "My profile")}
-        subtitle={user?.email ?? ""}
-        back="/vice"
-      />
+      <PageHeader title={t("Můj profil", "My profile")} subtitle={user?.email ?? ""} back="/vice" />
       <div className="card mt-4 flex items-center gap-4 p-4">
         {avatarUrl ? (
           <img

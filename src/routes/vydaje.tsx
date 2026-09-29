@@ -181,6 +181,8 @@ function ExpensesPage() {
   };
 
   const total = expenses?.reduce((s, e) => s + Number(e.amount), 0) ?? 0;
+  // Empty list: one single "Add expense" button — nothing else competes for attention.
+  const isEmpty = !isLoading && !expenses?.length;
 
   return (
     <AppShell>
@@ -189,9 +191,11 @@ function ExpensesPage() {
         subtitle={`${t("Celkem", "Total")}: ${fmtKc(total)}`}
       />
 
-      <Link to="/vydaje/vyrovnani" className="btn-secondary mb-3 w-full">
-        {t("Vyrovnat dluhy", "Settle debts")}
-      </Link>
+      {!isEmpty && (
+        <Link to="/vydaje/vyrovnani" className="btn-secondary mb-3 w-full">
+          {t("Vyrovnat dluhy", "Settle debts")}
+        </Link>
+      )}
 
       {isLoading ? (
         <LoadingCards />
@@ -436,9 +440,11 @@ function ExpensesPage() {
           </div>
         </section>
       ) : (
-        <button onClick={() => setShowForm(true)} className="btn-primary mt-4 w-full">
-          <Plus className="size-5" /> {t("Přidat výdaj", "Add expense")}
-        </button>
+        !isEmpty && (
+          <button onClick={() => setShowForm(true)} className="btn-primary mt-4 w-full">
+            <Plus className="size-5" /> {t("Přidat výdaj", "Add expense")}
+          </button>
+        )
       )}
     </AppShell>
   );

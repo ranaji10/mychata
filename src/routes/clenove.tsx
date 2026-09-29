@@ -211,6 +211,7 @@ function MembersPage() {
       <PageHeader
         title={t("Členové a oprávnění", "Members & permissions")}
         subtitle={account?.name ?? ""}
+        back="/vice"
       />
 
       {isAdmin && (

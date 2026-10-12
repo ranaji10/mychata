@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarDays } from "lucide-react";
 import { getGuestLinkInfo, submitGuestRequest } from "@/lib/guest.functions";
 import { LanguageToggle, useLang } from "@/lib/i18n";
-import { fmtDate } from "@/lib/data";
+import { fmtDate, pickRange, type DateRange } from "@/lib/data";
+import { CalendarMonth, CalendarLegend, MonthHeader, useMonthNav } from "@/components/calendar";
 
 export const Route = createFileRoute("/host/$token")({
   staticData: { sitemap: false },
@@ -16,11 +17,19 @@ export const Route = createFileRoute("/host/$token")({
 
 function GuestBookingPage() {
   const { token } = Route.useParams();
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [range, setRange] = useState<DateRange>({ start: null, end: null });
+  const nav = useMonthNav();
+  const onPickDay = (iso: string) => {
+    const next = pickRange(range, iso);
+    setRange(next);
+    setStart(next.start ?? "");
+    setEnd(next.end ?? "");
+  };
   const [guests, setGuests] = useState("2");
   const [note, setNote] = useState("");
   const [company, setCompany] = useState(""); // honeypot
@@ -74,7 +83,7 @@ function GuestBookingPage() {
       ),
       save: t("Žádost se nepodařilo odeslat.", "The request could not be sent."),
     };
-    setFailure(messages[res.error] ?? messages["save"]!);
+    setFailure(messages[res.error] ?? t("Žádost se nepodařilo odeslat.", "The request could not be sent."));
   };
 
   return (
@@ -85,7 +94,7 @@ function GuestBookingPage() {
       <p className="mt-6 font-bold text-primary">My Chata</p>
       <h1 className="mt-1 text-2xl font-bold">{data.propertyName}</h1>
       {data.propertyAddress && (
-        <p className="text-[15px] text-muted-foreground">{data.propertyAddress}</p>
+        <p className="text-[16px] text-muted-foreground">{data.propertyAddress}</p>
       )}
 
       {done ? (
@@ -93,7 +102,7 @@ function GuestBookingPage() {
           <p className="text-lg font-bold">
             {t("Děkujeme! Žádost byla odeslána.", "Thank you! Your request was sent.")}
           </p>
-          <p className="mt-2 text-[15px] text-muted-foreground">
+          <p className="mt-2 text-[16px] text-muted-foreground">
             {t("Správce chaty se vám ozve.", "The cottage admin will get back to you.")}
           </p>
         </div>
@@ -105,11 +114,11 @@ function GuestBookingPage() {
               {t("Obsazené termíny", "Booked dates")}
             </h2>
             {data.availability.length === 0 ? (
-              <p className="mt-2 text-[15px] text-muted-foreground">
+              <p className="mt-2 text-[16px] text-muted-foreground">
                 {t("Zatím je vše volné.", "Everything is free so far.")}
               </p>
             ) : (
-              <ul className="mt-2 space-y-1 text-[15px]">
+              <ul className="mt-2 space-y-1 text-[16px]">
                 {data.availability.map((b) => (
                   <li key={`${b.start_date}-${b.end_date}`} className="flex justify-between">
                     <span>
@@ -136,33 +145,18 @@ function GuestBookingPage() {
             <input
               className="field w-full"
               type="email"
-              placeholder="E-mail"
+              placeholder={t("E-mail", "Email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <div className="grid grid-cols-2 gap-2">
-              <label className="block">
-                <span className="text-[13px] font-bold text-muted-foreground">
-                  {t("Příjezd", "Arrival")}
-                </span>
-                <input
-                  className="field mt-1 w-full"
-                  type="date"
-                  value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                />
-              </label>
-              <label className="block">
-                <span className="text-[13px] font-bold text-muted-foreground">
-                  {t("Odjezd", "Departure")}
-                </span>
-                <input
-                  className="field mt-1 w-full"
-                  type="date"
-                  value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                />
-              </label>
+            <div className="space-y-3">
+              <MonthHeader {...nav} />
+              <CalendarMonth year={nav.year} month={nav.month} bookings={data.availability} selection={range} onPickDay={onPickDay} />
+              <CalendarLegend picking />
+              <div className="grid grid-cols-2 gap-2">
+                <div><label htmlFor="guest-arrival" className="block font-bold">{t("Příjezd", "Arrival")}</label><input id="guest-arrival" className="field mt-1" readOnly value={start ? fmtDate(start) : ""} /></div>
+                <div><label htmlFor="guest-departure" className="block font-bold">{t("Odjezd", "Departure")}</label><input id="guest-departure" className="field mt-1" readOnly value={end ? fmtDate(end) : ""} /></div>
+              </div>
             </div>
             <input
               className="field w-full"
@@ -195,11 +189,11 @@ function GuestBookingPage() {
               {busy ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}
             </button>
             {failure && (
-              <p role="alert" className="text-center text-[14px] font-semibold text-destructive">
+              <p role="alert" className="text-center text-[16px] font-semibold text-destructive">
                 {failure}
               </p>
             )}
-            <p className="text-center text-[13px] text-muted-foreground">
+            <p className="text-center text-[16px] text-muted-foreground">
               {t("Bez registrace — stačí vyplnit.", "No account needed — just fill it in.")}
             </p>
           </div>

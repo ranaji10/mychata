@@ -48,7 +48,7 @@ interface Invitation {
 
 function MembersPage() {
   const { t } = useLang();
-  const [manualLink, setManualLink] = useState<string | null>(null);
+  const [manualLink, setManualLink] = useState<{ token: string; url: string } | null>(null);
   const { account, property, members, currentMember } = useAccount();
   const queryClient = useQueryClient();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
@@ -181,12 +181,13 @@ function MembersPage() {
   const linkFor = (token: string) => inviteLink(window.location.origin, token);
 
   const copyInvite = async (token: string) => {
+    setManualLink(null);
     try {
       await navigator.clipboard.writeText(linkFor(token));
       setManualLink(null);
       toast.success(t("Odkaz zkopírován.", "Link copied."));
     } catch {
-      setManualLink(linkFor(token));
+      setManualLink({ token, url: linkFor(token) });
     }
   };
 
@@ -221,7 +222,6 @@ function MembersPage() {
 
   return (
     <AppShell>
-      <ManualCopyLink url={manualLink} />
       <PageHeader
         title={t("Členové a oprávnění", "Members & permissions")}
         subtitle={account?.name ?? ""}
@@ -344,6 +344,7 @@ function MembersPage() {
                       <X className="size-5" />
                     </button>
                   </div>
+                  <ManualCopyLink url={manualLink?.token === inv.token ? manualLink.url : null} />
                 </div>
               ))}
             </div>

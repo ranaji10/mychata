@@ -99,6 +99,7 @@ function PublicCalendar() {
           : { cs: "podzim", en: "autumn" };
 
   const share = async () => {
+    setManualLink(null);
     const url = window.location.href;
     if (typeof navigator.share === "function") {
       try {
@@ -119,7 +120,6 @@ function PublicCalendar() {
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
-      <ManualCopyLink url={manualLink} />
       <div className="flex items-start justify-between gap-3">
         <h1 className="text-2xl font-bold">
           {property?.property_name ?? t("Kalendář chaty", "Cottage calendar")}
@@ -165,7 +165,7 @@ function PublicCalendar() {
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="pill bg-secondary text-muted-foreground">
               <Sun className="size-4" />
               {t(`Sezóna: ${season.cs}`, `Season: ${season.en}`)}
@@ -173,6 +173,9 @@ function PublicCalendar() {
             <button onClick={share} className="btn-secondary ml-auto">
               <Share2 className="size-5" /> {t("Sdílet", "Share")}
             </button>
+            <div className="w-full">
+              <ManualCopyLink url={manualLink} />
+            </div>
           </div>
 
           <section className="card mt-3 p-4">

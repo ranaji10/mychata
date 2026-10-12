@@ -163,6 +163,12 @@ function GuestBookingPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <div className="space-y-3">
+              <p className="text-[16px]">
+                {t(
+                  "Klepněte na den příjezdu, pak na den odjezdu.",
+                  "Tap your arrival day, then your departure day.",
+                )}
+              </p>
               <MonthHeader {...nav} />
               <CalendarMonth
                 year={nav.year}
@@ -182,7 +188,7 @@ function GuestBookingPage() {
                   </label>
                   <input
                     id="guest-arrival"
-                    className="field mt-1"
+                    className="mt-1 block w-full min-w-0 border-0 bg-transparent p-0 text-[16px] text-foreground outline-none"
                     readOnly
                     value={start ? fmtDate(start) : ""}
                   />
@@ -193,7 +199,7 @@ function GuestBookingPage() {
                   </label>
                   <input
                     id="guest-departure"
-                    className="field mt-1"
+                    className="mt-1 block w-full min-w-0 border-0 bg-transparent p-0 text-[16px] text-foreground outline-none"
                     readOnly
                     value={end ? fmtDate(end) : ""}
                   />

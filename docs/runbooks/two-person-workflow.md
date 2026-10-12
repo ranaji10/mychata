@@ -54,7 +54,7 @@ These can't be set from a pull request. They need the owner's account, in the Gi
 2. **Protect `main` with a ruleset.** Two rulesets on `main` exist since 3 Oct 2026 and hold the rules below; change them under Settings → Rules → Rulesets.
    - Restrict deletions, block force pushes.
    - Require a pull request before merging, **0 required approvals** (decided 26 Sep: each of you merges your own PRs).
-   - Allowed merge method: merge commits only (squashing or rebasing would rewrite what Lovable sees, AGENTS.md invariant 4).
+   - Allowed merge method: merge commits only.
    - Require status checks to pass: the check named exactly `check` (the job in `.github/workflows/ci.yml`; renaming that job, or giving it a matrix, changes the name and blocks every merge), and tick **Require branches to be up to date before merging**, so nothing merges that was tested against an old main.
    - Bypass list: the **Lovable** GitHub App, so Lovable can keep syncing to `main` under Model A. Without it, Lovable's pushes are rejected and its editor goes out of sync.
    - **Require extra approval for unattributed changes** must stay **off**. Claude's commits aren't linked to a GitHub account, so with it on every agent PR needs an approval, against the 0-approvals decision. If an agent PR asks for an approval before it can merge, this setting is on.

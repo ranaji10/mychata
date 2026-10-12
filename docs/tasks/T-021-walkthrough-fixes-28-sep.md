@@ -1,6 +1,6 @@
 # T-021 Fixes from the 28 Sep walkthrough (after demo data removal)
 
-Owner: Claude Code · Status: review
+Owner: Claude Code · Status: done, live; see STATUS.md for what is untested
 
 Goal: fix the 17 notes from the 28 Sep walkthrough (T019Checks recording and console export) before the first release tag.
 Non-goals: vector search for documents (T-020 stays planned), email notifications (CC-3), institutional request permissions.

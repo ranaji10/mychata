@@ -43,20 +43,27 @@ Skip it once (e.g. offline): `SKIP_SYNC_CHECK=1 git commit …`. Agents run it a
 ## What CI already stops
 
 - Duplicate migration numbers, gaps, a migration missing from `meta/_journal.json`, and edits to a migration that is already on `main` (`scripts/check-migrations.ts`).
-- Lint, types, formatting, all tests, stale generated docs, and a browser bundle without the Supabase settings (B-002).
+- Lint, types, all tests, stale generated docs, and a browser bundle without the Supabase settings (B-002).
+- Formatting, but only of the files your pull request changes. Lovable doesn't run Prettier, so its pushes to `main` get a warning listing the unformatted files instead of a red CI (since T-023; on 29 Sep two such pushes turned every open PR red). `bun run check` on your computer still checks everything; `bun run format` fixes it.
 
 ## GitHub settings the repository owner sets once
 
-These can't be set from a pull request. They need the owner's account, in the GitHub website.
+These can't be set from a pull request. They need the owner's account, in the GitHub website. State on 12 Oct 2026, read through GitHub's API: step 2 is done and the three settings in step 3 are on.
 
 1. **Add the partner.** Settings → Collaborators → Add people → role **Write** (Maintain if they should manage issues and releases too). Admin stays with the owner.
-2. **Protect `main` with a ruleset.** Settings → Rules → Rulesets → New branch ruleset, target `main`:
-   - Restrict deletions, block force pushes (already on).
+2. **Protect `main` with a ruleset.** Two rulesets on `main` hold the rules below (first set up 3 Oct 2026; the current two were created 12 Oct); change them under Settings → Rules → Rulesets.
+   - Restrict deletions, block force pushes.
    - Require a pull request before merging, **0 required approvals** (decided 26 Sep: each of you merges your own PRs).
-   - Require status checks to pass: `check` (the CI job), and tick **Require branches to be up to date before merging**, so nothing merges that was tested against an old main.
+   - Allowed merge method: merge commits only.
+   - Require status checks to pass: the check named exactly `check` (the job in `.github/workflows/ci.yml`; renaming that job, or giving it a matrix, changes the name and blocks every merge), and tick **Require branches to be up to date before merging**, so nothing merges that was tested against an old main.
    - Bypass list: the **Lovable** GitHub App, so Lovable can keep syncing to `main` under Model A. Without it, Lovable's pushes are rejected and its editor goes out of sync.
+   - **Require extra approval for unattributed changes** must stay **off**. Claude's commits aren't linked to a GitHub account, so with it on every agent PR needs an approval, against the 0-approvals decision. If an agent PR asks for an approval before it can merge, this setting is on.
    - Check afterwards: make a tiny text change in Lovable and confirm it appears on `main`.
-3. **Code owners, optional** (after step 1, when both usernames are known). This only auto-requests the other person as a reviewer, so they get notified; it doesn't block merging as long as "Require review from Code Owners" stays off. Create `.github/CODEOWNERS` in a PR with:
+3. **Three repository settings that must be on** (all three were on when checked 12 Oct).
+   - Settings → General → Pull Requests → **Always suggest updating pull request branches**: gives every PR an "Update branch" button, which the up-to-date rule above makes you need whenever `main` moved.
+   - Settings → General → Pull Requests → **Automatically delete head branches**: merged branches disappear by themselves.
+   - Settings → Advanced Security (called "Code security" in some accounts) → secret scanning → **Push protection**: GitHub refuses a push that contains a recognisable key or token. The repository is public, so this is free.
+4. **Code owners, optional** (after step 1, when both usernames are known). This only auto-requests the other person as a reviewer, so they get notified; it doesn't block merging as long as "Require review from Code Owners" stays off. Create `.github/CODEOWNERS` in a PR with:
 
    ```
    /drizzle/migrations/   @ranaji10 @<partner>
@@ -68,7 +75,7 @@ These can't be set from a pull request. They need the owner's account, in the Gi
 
    Leave "Require review from Code Owners" off, in line with the no-approvals decision.
 
-4. **Notifications.** Both maintainers: Watch → All activity, so failed CI and the nightly production check reach both of you.
+5. **Notifications.** Both maintainers: Watch → All activity, so failed CI and the nightly production check reach both of you.
 
 ## Tags
 

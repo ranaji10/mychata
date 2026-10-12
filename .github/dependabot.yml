@@ -1,12 +1,9 @@
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: "/"
-    schedule: { interval: weekly }
-    open-pull-requests-limit: 5
-    groups:
-      minor-and-patch:
-        update-types: [minor, patch]
+  # No npm block for now: bun.lock points at Lovable's private package registry, which
+  # Dependabot can't reach, so its weekly updates failed (2 Oct, 9 Oct). Bring the npm
+  # block back (weekly, minor and patch grouped) with own hosting, T-002, once the
+  # lockfile uses the public registry.
   - package-ecosystem: github-actions
     directory: "/"
     schedule: { interval: monthly }

@@ -1,6 +1,6 @@
 # T-019 Invitations, sign-in and review fixes (28 Sep 2026)
 
-Owner: Claude · Status: review (branch `agent/claude/T-019-invites-signin-demo`)
+Owner: Claude · Status: done, live; see STATUS.md for what is untested (branch `agent/claude/T-019-invites-signin-demo`)
 Goal: fix what the 28 Sep maintainer review found, without changing anything Lovable depends on.
 
 In this branch:

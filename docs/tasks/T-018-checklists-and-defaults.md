@@ -1,6 +1,6 @@
 # T-018 Checklists and defaults (CC-2)
 
-Owner: Claude Code · Status: review · Prompt: CC-2 in `docs/external/claude/2026-09-26-review-prompts.md`
+Owner: Claude Code · Status: done, live; see STATUS.md for what is untested · Prompt: CC-2 in `docs/external/claude/2026-09-26-review-prompts.md`
 
 Goal: the database changes the next Lovable screens (L-2, L-3) need. Migration 0024.
 Non-goals: the screens themselves (grouped checklists, expense detail with "Cover it all") are Lovable's L-2 and L-3.

@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-26
-updated: 2026-09-28
+updated: 2026-10-04
 status: reviewed
 artifact: https://claude.ai/code/artifact/7b07f9c1-14fd-4777-8538-cd684a70538e
 input: private/Raw Agent Suggestions/26092026_Gemini_Feedback_mychata.cz.md (workspace, not in git)
@@ -13,6 +13,8 @@ input: private/Raw Agent Suggestions/26092026_Gemini_Feedback_mychata.cz.md (wor
 # MyChata: agent prompts from the 26 Sep review
 
 The Gemini walkthrough found 5 real bugs and about 25 UX requests. Most of the "strangers in my cottage" findings are the demo family still in production, not a data leak. Send Claude Code's bug batch first. Hold Lovable's batches until the GitHub flow for two maintainers is in place.
+
+**Update 4 Oct.** CC-1, CC-2 (merged as T-018, migration 0024) and L-1 are done and live. The current versions of every remaining prompt (CC-0, L-2, G-1, CP-1, L-E, CC-3, L-3, document-search planning, the review prompts for every PR and the after-publish check) are files on your Mac in `MyChata MVP/prompts/2026-10-04/`, updated for what has changed since: next free migration number 0026, L-2 without what T-018 and T-019 already built, and T-022's leftover rough edges. Use those; the texts below are kept for history. The order is in the critical review's "Next steps".
 
 **Update 28 Sep.** CC-1 is live (PR #8). Branch `agent/claude/T-019-invites-signin-demo` now covers several items below, so skip them in the prompts: invitations (several at once, role, send by email, accept page), email sign-up, main photo on Home, phone check, expandable past departures, "who does these?" for ready-made checklists, new tasks defaulting to me, and the demo-data removal (T-012). CC-2's migration is now 0021. The document vault plan is `docs/tasks/T-020-document-vault-rag.md`.
 

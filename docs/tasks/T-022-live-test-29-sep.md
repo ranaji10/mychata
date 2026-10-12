@@ -1,8 +1,8 @@
 # T-022 Live test of mychata.cz after migration 0022 (29 Sep 2026)
 
-Owner: Claude Code · Status: review
+Owner: Claude Code · Status: done, live; see STATUS.md for what is untested
 
-Tested in the desktop app's browser at phone size (375 px), signed in as ranaji.deb@gmail.com (admin), plus the public pages signed out. A test cottage "Test chata (Claude)" was created through onboarding with a booking, a house-rules section, a text document, an expense and a guest link; delete it when no longer needed.
+Tested in the desktop app's browser at phone size (375 px), signed in with a maintainer's admin account, plus the public pages signed out. A test cottage "Test chata (Claude)" was created through onboarding with a booking, a house-rules section, a text document, an expense and a guest link; delete it when no longer needed.
 
 ## Worked
 

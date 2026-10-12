@@ -17,6 +17,16 @@ As of 2026-10-12. Update this file in every PR that changes behaviour.
 
 ## Open defects
 
+### L-2 UI batch (2026-10-12, preview only)
+
+- Tasks are grouped by the existing checklist ID/title, oldest first; new groups start collapsed at the bottom. Standalone tasks remain above groups. Each group shows completion totals and a collapsed Done section.
+- Pending stays show active-account administrators' names only and the next-step explanation. No messaging, approval rules, auth, migrations, or server functions changed.
+- Clipboard failures show a short explanation and a selectable link field on Calendar, Settings, Members, Manual, and Public calendar. Empty Expenses already has one Add expense action and was left unchanged.
+- Guest booking reuses CalendarMonth and pickRange, with labeled read-only arrival/departure values; submission fields remain unchanged.
+- Verified: latest main present (sync-check, no warnings); preview build OK after edits and package update; changed-file lint has no errors (existing calendar Fast Refresh warning); 28 existing date/task/invitation tests pass; generated docs check passes. Phone-width browser checks at 375px: isolated synthetic checklist expands, shows 3 of 8 done, hides/reveals completed tasks, no horizontal overflow; real guest link picks 20–22 October without submitting or exposing guest names; no browser errors.
+- Not verified: saving/toggling real tasks, adding a real checklist and scroll preservation, pending-stay display with real data, clipboard denial through an authenticated page, or real empty Expenses. The requesting user's minted session reaches onboarding, so these authenticated checks remain blocked. No test bookings or tasks were written.
+- Not published: this batch needs a human-reviewed green CI result and the first release tag; the requested post-publish "file 10" was not supplied.
+
 From the "Open defects" table of the critical review (`docs/external/claude/2026-09-25-critical-review.md`, state of 4 Oct). "CC-", "L-" and "next step" are prompt and step names in that review.
 
 | Defect                                                                                                                                                         | State                                                                                                                                                                | Next                                               |

@@ -1,10 +1,12 @@
 ## L-2 tasks, approvals and rough edges (12 Oct 2026)
 
-- [ ] Group tasks by checklist, with collapsed completed sections and stable scroll after adding.
-- [ ] Show administrator names and next steps for pending stays.
-- [ ] Confirm one empty-expenses action; provide manual-copy fields when copying fails.
-- [ ] Reuse the booking calendar on the guest form without changing its submission.
-- [ ] Verify phone-width flows, update status, and leave publishing pending CI approval.
+- [x] Group tasks by checklist, with collapsed completed sections and scroll restoration after adding.
+- [x] Show administrator names and next steps for pending stays.
+- [x] Confirm one empty-expenses action; provide manual-copy fields when copying fails.
+- [x] Reuse the booking calendar on the guest form without changing its submission.
+- [x] Check synthetic checklist interactions and real guest date selection at 375px; update status.
+- [ ] Verify real task updates/checklist addition, pending stay, clipboard denial and empty Expenses: requesting user's session requires onboarding.
+- [ ] Publish only after human-reviewed green CI and first release tag; then run file 10 (not supplied).
 
 ## UI/wording pass (29 Sep 2026, verified) — UI only, no migrations/SQL/RLS/auth/server functions
 

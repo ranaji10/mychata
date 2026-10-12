@@ -3,7 +3,7 @@
 - [x] Adjacent clipboard fields with focus, selection and persistent status text.
 - [x] Filtered task groups and retryable task errors; account-scoped stay cache and missing state.
 - [x] Guest date guidance and plain-text dates; review housekeeping.
-- [ ] Verify using synthetic data at phone width; no live guest links or member details.
+- [x] Verify using synthetic data at phone width; no live guest links or member details.
 - [ ] Do not publish before PR #16 is merged.
 
 ## L-2 tasks, approvals and rough edges (12 Oct 2026)

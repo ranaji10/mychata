@@ -25,6 +25,15 @@ As of 2026-10-12. Update this file in every PR that changes behaviour.
 - Not verified: saving/toggling real tasks, adding a real checklist and scroll preservation, pending-stay display with real data, clipboard denial through an authenticated page, or real empty Expenses. The requesting user's minted session reaches onboarding, so these authenticated checks remain blocked. No test bookings or tasks were written.
 - Not published: this batch needs a human-reviewed green CI result and the first release tag; the requested post-publish "file 10" was not supplied.
 
+## L-2b PR #16 review fixes (preview only)
+
+- Clipboard denial fields now appear beside the triggering action, focus and select the link, and retain a mounted status region.
+- Task filters hide nonmatching checklist groups, open matching groups and count matching tasks only; failed task reads show a retry action.
+- Stay cache keys include the active account; failed or missing stays show a plain missing-state message. Guest dates have picking guidance and plain-text styling.
+- Verified with isolated synthetic data at 375px: all five clipboard locations, Settings/invitation origin switching, filtered counts/open states/empty states, task error and retry, missing stay and separate account cache keys, guest date selection. No real guest links or member details were accessed; no records were submitted. Browser reported no page errors. Existing date/task/invitation tests: 28 passed. Automatic preview build passed.
+- Not verified: real checklist addition/scroll preservation, pending administrator names with real data, hosted PR CI or merge status. Not published; wait for PR #16 to merge.
+- Changed-file inventory and phone-width checks: `docs/l2b-review-checks.md`.
+
 ## Open defects
 
 From the "Open defects" table of the critical review (`docs/external/claude/2026-09-25-critical-review.md`, state of 4 Oct). "CC-", "L-" and "next step" are prompt and step names in that review.

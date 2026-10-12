@@ -10,7 +10,18 @@ import { CalendarMonth, CalendarLegend, MonthHeader, useMonthNav } from "@/compo
 export const Route = createFileRoute("/host/$token")({
   staticData: { sitemap: false },
   head: () => ({
-    meta: [{ title: "Guest booking — My Chata" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Guest booking — My Chata" },
+      { name: "robots", content: "noindex" },
+      { name: "description", content: "Request a cottage stay with your guest booking link." },
+      { property: "og:title", content: "Guest booking — My Chata" },
+      {
+        property: "og:description",
+        content: "Request a cottage stay with your guest booking link.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
   }),
   component: GuestBookingPage,
 });
@@ -83,7 +94,9 @@ function GuestBookingPage() {
       ),
       save: t("Žádost se nepodařilo odeslat.", "The request could not be sent."),
     };
-    setFailure(messages[res.error] ?? t("Žádost se nepodařilo odeslat.", "The request could not be sent."));
+    setFailure(
+      messages[res.error] ?? t("Žádost se nepodařilo odeslat.", "The request could not be sent."),
+    );
   };
 
   return (
@@ -151,11 +164,37 @@ function GuestBookingPage() {
             />
             <div className="space-y-3">
               <MonthHeader {...nav} />
-              <CalendarMonth year={nav.year} month={nav.month} bookings={data.availability} selection={range} onPickDay={onPickDay} />
+              <CalendarMonth
+                year={nav.year}
+                month={nav.month}
+                bookings={data.availability}
+                selection={range}
+                onPickDay={onPickDay}
+              />
               <CalendarLegend picking />
               <div className="grid grid-cols-2 gap-2">
-                <div><label htmlFor="guest-arrival" className="block font-bold">{t("Příjezd", "Arrival")}</label><input id="guest-arrival" className="field mt-1" readOnly value={start ? fmtDate(start) : ""} /></div>
-                <div><label htmlFor="guest-departure" className="block font-bold">{t("Odjezd", "Departure")}</label><input id="guest-departure" className="field mt-1" readOnly value={end ? fmtDate(end) : ""} /></div>
+                <div>
+                  <label htmlFor="guest-arrival" className="block font-bold">
+                    {t("Příjezd", "Arrival")}
+                  </label>
+                  <input
+                    id="guest-arrival"
+                    className="field mt-1"
+                    readOnly
+                    value={start ? fmtDate(start) : ""}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="guest-departure" className="block font-bold">
+                    {t("Odjezd", "Departure")}
+                  </label>
+                  <input
+                    id="guest-departure"
+                    className="field mt-1"
+                    readOnly
+                    value={end ? fmtDate(end) : ""}
+                  />
+                </div>
               </div>
             </div>
             <input

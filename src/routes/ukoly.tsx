@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useChildMatches,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Plus, Sparkles } from "lucide-react";
@@ -15,17 +10,15 @@ import { EmptyState, LoadingCards, PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import {
-  seasonalTemplates,
-  todayISO,
-  type Task,
-} from "@/lib/data";
+import { seasonalTemplates, todayISO, type Task } from "@/lib/data";
 import { translateTaskText } from "@/lib/task-translation.functions";
 
 export const Route = createFileRoute("/ukoly")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Tasks — My Chata" },
       { name: "description", content: "Tasks and seasonal checklists for your cottage." },
       { property: "og:title", content: "Tasks — My Chata" },
@@ -86,22 +79,30 @@ function TasksPage() {
     },
   });
 
-  const { data: checklists, isLoading: checklistsLoading, error: checklistError } = useQuery({
+  const {
+    data: checklists,
+    isLoading: checklistsLoading,
+    error: checklistError,
+  } = useQuery({
     queryKey: ["checklists", property?.id],
     enabled: !!property,
     queryFn: async () => {
       if (!property) return [];
-      const { data, error } = await supabase.from("checklists")
-        .select("id, title, created_at").eq("property_id", property.id)
-        .order("created_at").order("id");
+      const { data, error } = await supabase
+        .from("checklists")
+        .select("id, title, created_at")
+        .eq("property_id", property.id)
+        .order("created_at")
+        .order("id");
       if (error) throw error;
       return data;
     },
   });
-  const invalidate = () => Promise.all([
-    queryClient.invalidateQueries({ queryKey: ["tasks", property?.id] }),
-    queryClient.invalidateQueries({ queryKey: ["checklists", property?.id] }),
-  ]);
+  const invalidate = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["tasks", property?.id] }),
+      queryClient.invalidateQueries({ queryKey: ["checklists", property?.id] }),
+    ]);
 
   const toggle = useMutation({
     mutationFn: async (t: Task) => {
@@ -188,7 +189,9 @@ function TasksPage() {
     setDuplicateOf(null);
     setAssignEach({});
     await invalidate();
-    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: "instant" })));
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: "instant" })),
+    );
   };
 
   // Open tasks that came from the same template, so a second tap doesn't silently duplicate.
@@ -236,11 +239,44 @@ function TasksPage() {
         <LoadingCards />
       ) : (
         <div className="mt-2 space-y-4">
-          {checklistError && <p role="alert" className="text-[16px] text-destructive">{t("Seznamy se nepodařilo načíst. Zkuste to znovu.", "Could not load the checklists. Please try again.")}</p>}
-          {filtered.length === 0 && <EmptyState icon={CheckCircle2} title={t("Žádné úkoly v tomto filtru.", "No tasks in this filter.")} hint={t("Přidejte nový úkol nebo sezónní seznam.", "Add a new task or a seasonal checklist.")} />}
-          <TaskGroup tasks={filtered.filter((task) => !task.checklist_id || !(checklists ?? []).some((list) => list.id === task.checklist_id))} memberName={memberName} onToggle={(task) => toggle.mutate(task)} busy={toggle.isPending} />
+          {checklistError && (
+            <p role="alert" className="text-[16px] text-destructive">
+              {t(
+                "Seznamy se nepodařilo načíst. Zkuste to znovu.",
+                "Could not load the checklists. Please try again.",
+              )}
+            </p>
+          )}
+          {filtered.length === 0 && (
+            <EmptyState
+              icon={CheckCircle2}
+              title={t("Žádné úkoly v tomto filtru.", "No tasks in this filter.")}
+              hint={t(
+                "Přidejte nový úkol nebo sezónní seznam.",
+                "Add a new task or a seasonal checklist.",
+              )}
+            />
+          )}
+          <TaskGroup
+            tasks={filtered.filter(
+              (task) =>
+                !task.checklist_id ||
+                !(checklists ?? []).some((list) => list.id === task.checklist_id),
+            )}
+            memberName={memberName}
+            onToggle={(task) => toggle.mutate(task)}
+            busy={toggle.isPending}
+          />
           {(checklists ?? []).map((list) => (
-            <TaskGroup key={list.id} title={list.title} tasks={filtered.filter((task) => task.checklist_id === list.id)} totalTasks={(tasks ?? []).filter((task) => task.checklist_id === list.id)} memberName={memberName} onToggle={(task) => toggle.mutate(task)} busy={toggle.isPending} />
+            <TaskGroup
+              key={list.id}
+              title={list.title}
+              tasks={filtered.filter((task) => task.checklist_id === list.id)}
+              totalTasks={(tasks ?? []).filter((task) => task.checklist_id === list.id)}
+              memberName={memberName}
+              onToggle={(task) => toggle.mutate(task)}
+              busy={toggle.isPending}
+            />
           ))}
         </div>
       )}

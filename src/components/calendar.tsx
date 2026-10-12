@@ -25,7 +25,7 @@ export function CalendarMonth({
 }: {
   year: number;
   month: number;
-  bookings: Booking[];
+  bookings: Pick<Booking, "start_date" | "end_date" | "status">[];
   selection?: DateRange;
   onPickDay?: (iso: string) => void;
   /** Days before this can't be picked (defaults to today when picking). */

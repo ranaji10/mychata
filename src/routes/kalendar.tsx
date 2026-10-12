@@ -1,3 +1,4 @@
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, Link2, X } from "lucide-react";
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/kalendar")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Calendar — My Chata" },
       {
         name: "description",
@@ -41,6 +44,7 @@ function CalendarPage() {
   const { book } = Route.useSearch();
   const navigate = useNavigate();
   const nav = useMonthNav();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const [picking, setPicking] = useState(!!book);
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const calendarRef = useRef<HTMLElement>(null);
@@ -100,9 +104,10 @@ function CalendarPage() {
     const url = `${window.location.origin}/verejne/kalendar/${publicToken}`;
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz na veřejný kalendář zkopírován.", "Public calendar link copied."));
     } catch {
-      toast.info(url);
+      setManualLink(url);
     }
   };
 
@@ -110,6 +115,7 @@ function CalendarPage() {
 
   return (
     <AppShell>
+      <ManualCopyLink url={manualLink} />
       <section ref={calendarRef} className="card mt-2 scroll-mt-4 p-4">
         <MonthHeader {...nav} />
 

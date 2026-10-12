@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarPlus, Share2, Sun } from "lucide-react";
@@ -46,6 +48,7 @@ function nextFreeWeekend(bookings: Booking[]): { start: string; end: string } | 
 function PublicCalendar() {
   const { t, lang } = useLang();
   const { token } = Route.useParams();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const nav = useMonthNav();
 
   // Public pages are addressed by the property's share token, never its id (migration 0012).
@@ -105,14 +108,16 @@ function PublicCalendar() {
     }
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován", "Link copied"));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "The link could not be copied."));
+      setManualLink(url);
     }
   };
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
+      <ManualCopyLink url={manualLink} />
       <div className="flex items-start justify-between gap-3">
         <h1 className="text-2xl font-bold">
           {property?.property_name ?? t("Kalendář chaty", "Cottage calendar")}

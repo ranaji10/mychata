@@ -1,3 +1,11 @@
+## L-2 tasks, approvals and rough edges (12 Oct 2026)
+
+- [ ] Group tasks by checklist, with collapsed completed sections and stable scroll after adding.
+- [ ] Show administrator names and next steps for pending stays.
+- [ ] Confirm one empty-expenses action; provide manual-copy fields when copying fails.
+- [ ] Reuse the booking calendar on the guest form without changing its submission.
+- [ ] Verify phone-width flows, update status, and leave publishing pending CI approval.
+
 ## UI/wording pass (29 Sep 2026, verified) — UI only, no migrations/SQL/RLS/auth/server functions
 
 - [x] 1. Chata switcher: header chata name opens sheet listing all chatas+accounts with role, switchAccount; "Add a chata" at bottom; keep Profile switcher

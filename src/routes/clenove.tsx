@@ -23,7 +23,13 @@ import { inviteLink, inviteMailto, parseEmails } from "@/lib/invites";
 
 export const Route = createFileRoute("/clenove")({
   staticData: { sitemap: false },
-  head: () => ({ meta: [{ title: "Members — My Chata" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+    { title: "Members — My Chata" }, { name: "robots", content: "noindex" },
+    { name: "description", content: "Members and invitations for your shared cottage." },
+    { property: "og:title", content: "Members — My Chata" },
+    { property: "og:description", content: "Members and invitations for your shared cottage." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: MembersPage,
 });
 

@@ -167,7 +167,10 @@ function GuestBookingPage() {
               <CalendarMonth
                 year={nav.year}
                 month={nav.month}
-                bookings={data.availability}
+                bookings={data.availability.map((booking) => ({
+                  ...booking,
+                  status: booking.status === "CONFIRMED" ? "CONFIRMED" : "PENDING",
+                }))}
                 selection={range}
                 onPickDay={onPickDay}
               />

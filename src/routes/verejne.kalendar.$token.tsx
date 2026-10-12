@@ -14,6 +14,8 @@ export const Route = createFileRoute("/verejne/kalendar/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Public calendar — My Chata" },
       { name: "description", content: "Public overview of cottage availability — read only." },
       { property: "og:title", content: "Public calendar — My Chata" },

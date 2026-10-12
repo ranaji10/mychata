@@ -90,6 +90,7 @@ function CalendarPage() {
   };
 
   const copyPublicLink = async () => {
+    setManualLink(null);
     // Publishing the calendar is an explicit admin action; the link uses the share token.
     const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
       _property_id: property!.id,

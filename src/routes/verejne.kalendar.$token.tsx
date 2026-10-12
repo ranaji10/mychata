@@ -99,6 +99,7 @@ function PublicCalendar() {
           : { cs: "podzim", en: "autumn" };
 
   const share = async () => {
+    setManualLink(null);
     const url = window.location.href;
     if (typeof navigator.share === "function") {
       try {

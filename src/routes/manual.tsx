@@ -168,6 +168,7 @@ function ManualPage() {
             </div>
             <button
               onClick={async () => {
+                setManualLink(null);
                 try {
                   await navigator.clipboard.writeText(publicUrl);
                   setManualLink(null);

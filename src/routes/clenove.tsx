@@ -181,6 +181,7 @@ function MembersPage() {
   const linkFor = (token: string) => inviteLink(window.location.origin, token);
 
   const copyInvite = async (token: string) => {
+    setManualLink(null);
     try {
       await navigator.clipboard.writeText(linkFor(token));
       setManualLink(null);

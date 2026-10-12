@@ -60,6 +60,7 @@ function MorePage() {
   // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
   // The toast says the link was copied — never the raw URL.
   const shareLink = async (url: string, source: "calendar" | "guest") => {
+    setManualLink(null);
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ url, title: "My Chata" });

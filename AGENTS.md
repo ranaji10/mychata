@@ -65,8 +65,6 @@ Every Claude artifact or doc made for MyChata gets a copy in `docs/external/clau
 
 ## Before you finish
 
-- Task checklist groups are presented by `TaskGroup`; link-copy failures use `ManualCopyLink`, keeping these UI states consistent without changing database rules.
-
 - `bun run check` passes; paste the output in the PR's Verification section.
 - Behaviour changed? Update `docs/STATUS.md`. A decision made? Add an ADR.
 - State what you did not verify.

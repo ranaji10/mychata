@@ -115,7 +115,6 @@ function CalendarPage() {
 
   return (
     <AppShell>
-      <ManualCopyLink url={manualLink} />
       <section ref={calendarRef} className="card mt-2 scroll-mt-4 p-4">
         <MonthHeader {...nav} />
 
@@ -229,25 +228,28 @@ function CalendarPage() {
       </section>
 
       {isFamily && (
-        <button
-          onClick={copyPublicLink}
-          className="card mt-4 flex w-full items-center gap-3 p-4 text-left active:scale-[0.99]"
-        >
-          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-muted-foreground">
-            <Link2 className="size-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[15px] font-bold">
-              {t("Veřejný odkaz na kalendář", "Public calendar link")}
-            </p>
-            <p className="text-[13px] text-muted-foreground">
-              {t(
-                "Pro členy bez aplikace — pouze ke čtení",
-                "For members without the app — read only",
-              )}
-            </p>
-          </div>
-        </button>
+        <>
+          <button
+            onClick={copyPublicLink}
+            className="card mt-4 flex w-full items-center gap-3 p-4 text-left active:scale-[0.99]"
+          >
+            <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-muted-foreground">
+              <Link2 className="size-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[15px] font-bold">
+                {t("Veřejný odkaz na kalendář", "Public calendar link")}
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                {t(
+                  "Pro členy bez aplikace — pouze ke čtení",
+                  "For members without the app — read only",
+                )}
+              </p>
+            </div>
+          </button>
+          <ManualCopyLink url={manualLink} />
+        </>
       )}
     </AppShell>
   );

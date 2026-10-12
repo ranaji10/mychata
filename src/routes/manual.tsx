@@ -131,7 +131,6 @@ function ManualPage() {
 
   return (
     <AppShell>
-      <ManualCopyLink url={manualLink} />
       <PageHeader
         title={t("Manuál chaty", "House Manual")}
         subtitle={property?.name}
@@ -156,31 +155,34 @@ function ManualPage() {
       />
 
       {property && (
-        <section className="card mb-4 flex items-center gap-4 p-4">
-          <div className="rounded-xl bg-card p-1 ring-1 ring-border">
-            <QRCodeSVG value={publicUrl} size={82} />
+        <section className="card mb-4 p-4">
+          <div className="flex items-center gap-4">
+            <div className="rounded-xl bg-card p-1 ring-1 ring-border">
+              <QRCodeSVG value={publicUrl} size={82} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold">{t("Veřejný manuál", "Public manual")}</p>
+              <p className="text-[13px] text-muted-foreground">
+                {t("Hosté jej otevřou bez přihlášení.", "Guests can open it without signing in.")}
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(publicUrl);
+                  setManualLink(null);
+                  toast.success(t("Odkaz zkopírován.", "Link copied."));
+                } catch {
+                  setManualLink(publicUrl);
+                }
+              }}
+              aria-label={t("Kopírovat odkaz", "Copy link")}
+              className="grid size-11 place-items-center rounded-xl bg-secondary"
+            >
+              <Copy className="size-5" />
+            </button>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-bold">{t("Veřejný manuál", "Public manual")}</p>
-            <p className="text-[13px] text-muted-foreground">
-              {t("Hosté jej otevřou bez přihlášení.", "Guests can open it without signing in.")}
-            </p>
-          </div>
-          <button
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(publicUrl);
-                setManualLink(null);
-                toast.success(t("Odkaz zkopírován.", "Link copied."));
-              } catch {
-                setManualLink(publicUrl);
-              }
-            }}
-            aria-label={t("Kopírovat odkaz", "Copy link")}
-            className="grid size-11 place-items-center rounded-xl bg-secondary"
-          >
-            <Copy className="size-5" />
-          </button>
+          <ManualCopyLink url={manualLink} />
         </section>
       )}
       {isAdmin && !!feedback?.length && (

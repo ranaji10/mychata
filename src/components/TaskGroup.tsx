@@ -12,6 +12,7 @@ export function TaskGroup({
   onToggle,
   memberName,
   busy,
+  defaultOpen = false,
 }: {
   title?: string;
   tasks: Task[];
@@ -19,9 +20,10 @@ export function TaskGroup({
   onToggle: (task: Task) => void;
   memberName: (id: string | null) => string | undefined;
   busy: boolean;
+  defaultOpen?: boolean;
 }) {
   const { t, lang } = useLang();
-  const [open, setOpen] = useState(!title);
+  const [open, setOpen] = useState(!title || defaultOpen);
   const [doneOpen, setDoneOpen] = useState(false);
   const completed = tasks.filter((task) => task.status === "DONE");
   const remaining = tasks.filter((task) => task.status !== "DONE");

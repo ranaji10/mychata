@@ -5,6 +5,7 @@ import { CheckCircle2, Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { TaskGroup } from "@/components/TaskGroup";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,7 +65,13 @@ function TasksPage() {
     { key: "seasonal", label: t("Sezónní", "Seasonal") },
   ];
 
-  const { data: tasks, isLoading } = useQuery({
+  const {
+    data: tasks,
+    isLoading,
+    isError: tasksError,
+    refetch: retryTasks,
+    isFetching,
+  } = useQuery({
     queryKey: ["tasks", property?.id],
     enabled: !!property,
     queryFn: async () => {
@@ -235,7 +242,21 @@ function TasksPage() {
         ))}
       </div>
 
-      {isLoading || checklistsLoading ? (
+      {tasksError ? (
+        <div className="mt-4 space-y-3">
+          <p role="alert" className="text-[16px] text-destructive">
+            {t("Úkoly se nepodařilo načíst.", "Could not load the tasks.")}
+          </p>
+          <Button
+            variant="outline"
+            disabled={isFetching}
+            onClick={() => void retryTasks()}
+            className="min-h-11 text-[16px]"
+          >
+            {t("Zkusit znovu", "Try again")}
+          </Button>
+        </div>
+      ) : isLoading || checklistsLoading ? (
         <LoadingCards />
       ) : (
         <div className="mt-2 space-y-4">
@@ -267,17 +288,24 @@ function TasksPage() {
             onToggle={(task) => toggle.mutate(task)}
             busy={toggle.isPending}
           />
-          {(checklists ?? []).map((list) => (
-            <TaskGroup
-              key={list.id}
-              title={list.title}
-              tasks={filtered.filter((task) => task.checklist_id === list.id)}
-              totalTasks={(tasks ?? []).filter((task) => task.checklist_id === list.id)}
-              memberName={memberName}
-              onToggle={(task) => toggle.mutate(task)}
-              busy={toggle.isPending}
-            />
-          ))}
+          {(checklists ?? [])
+            .filter(
+              (list) => filter === "all" || filtered.some((task) => task.checklist_id === list.id),
+            )
+            .map((list) => (
+              <TaskGroup
+                key={`${filter}-${list.id}`}
+                defaultOpen={filter !== "all"}
+                title={list.title}
+                tasks={filtered.filter((task) => task.checklist_id === list.id)}
+                totalTasks={(filter === "all" ? (tasks ?? []) : filtered).filter(
+                  (task) => task.checklist_id === list.id,
+                )}
+                memberName={memberName}
+                onToggle={(task) => toggle.mutate(task)}
+                busy={toggle.isPending}
+              />
+            ))}
         </div>
       )}
 

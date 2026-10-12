@@ -31,8 +31,14 @@ function BookingDetail() {
   const queryClient = useQueryClient();
   const { t, lang } = useLang();
 
-  const { data: booking, isLoading } = useQuery({
-    queryKey: ["booking", id],
+  const bookingKey = ["booking", account?.id, id];
+  const {
+    data: booking,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: bookingKey,
+    enabled: !!account,
     queryFn: async () => {
       const { data, error } = await supabase.from("bookings").select("*").eq("id", id).single();
       if (error) throw error;
@@ -41,7 +47,7 @@ function BookingDetail() {
   });
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["booking", id] });
+    queryClient.invalidateQueries({ queryKey: bookingKey });
     queryClient.invalidateQueries({ queryKey: ["bookings"] });
   };
 
@@ -74,11 +80,19 @@ function BookingDetail() {
     onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
   });
 
-  if (isLoading || !booking) {
+  if (isLoading) {
     return (
       <AppShell>
         <Skeleton className="h-40" />
         <Skeleton className="h-24" />
+      </AppShell>
+    );
+  }
+
+  if (isError || !booking) {
+    return (
+      <AppShell>
+        <p className="text-[16px]">{t("Tento pobyt nenajdeme.", "We can't find this stay.")}</p>
       </AppShell>
     );
   }

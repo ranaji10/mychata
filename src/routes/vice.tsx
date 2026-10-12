@@ -51,12 +51,15 @@ function MorePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isFamily = account?.type === "FAMILY";
-  const [manualLink, setManualLink] = useState<string | null>(null);
+  const [manualLink, setManualLink] = useState<{
+    source: "calendar" | "guest";
+    url: string;
+  } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
 
   // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
   // The toast says the link was copied — never the raw URL.
-  const shareLink = async (url: string) => {
+  const shareLink = async (url: string, source: "calendar" | "guest") => {
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ url, title: "My Chata" });
@@ -70,7 +73,7 @@ function MorePage() {
       setManualLink(null);
       toast.success(t("Odkaz zkopírován", "Link copied"));
     } catch {
-      setManualLink(url);
+      setManualLink({ source, url });
     }
   };
 
@@ -87,7 +90,7 @@ function MorePage() {
       );
       return;
     }
-    await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`);
+    await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`, "calendar");
   };
 
   const createGuestLink = async () => {
@@ -100,12 +103,11 @@ function MorePage() {
       toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
       return;
     }
-    await shareLink(`${window.location.origin}/host/${token}`);
+    await shareLink(`${window.location.origin}/host/${token}`, "guest");
   };
 
   return (
     <AppShell>
-      <ManualCopyLink url={manualLink} />
       <PageHeader title={t("Nastavení", "Settings")} subtitle={account?.name} />
 
       <Link to="/profil" className="card flex items-center gap-3 p-4 active:bg-secondary">
@@ -168,6 +170,9 @@ function MorePage() {
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
+            <div className="px-4">
+              <ManualCopyLink url={manualLink?.source === "calendar" ? manualLink.url : null} />
+            </div>
             <button
               onClick={createGuestLink}
               className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
@@ -178,6 +183,9 @@ function MorePage() {
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
+            <div className="px-4">
+              <ManualCopyLink url={manualLink?.source === "guest" ? manualLink.url : null} />
+            </div>
           </>
         )}
         {!isFamily && (

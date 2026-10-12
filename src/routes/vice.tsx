@@ -1,3 +1,4 @@
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/vice")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Settings — My Chata" },
       {
         name: "description",
@@ -48,6 +51,7 @@ function MorePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isFamily = account?.type === "FAMILY";
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const [langOpen, setLangOpen] = useState(false);
 
   // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
@@ -63,9 +67,10 @@ function MorePage() {
     }
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován", "Link copied"));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "The link could not be copied."));
+      setManualLink(url);
     }
   };
 
@@ -100,6 +105,7 @@ function MorePage() {
 
   return (
     <AppShell>
+      <ManualCopyLink url={manualLink} />
       <PageHeader title={t("Nastavení", "Settings")} subtitle={account?.name} />
 
       <Link to="/profil" className="card flex items-center gap-3 p-4 active:bg-secondary">

@@ -1,3 +1,4 @@
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Check, Copy, Flag, Plus } from "lucide-react";
@@ -39,6 +40,7 @@ function ManualPage() {
   const { property, currentMember } = useAccount();
   const { t, lang } = useLang();
   const queryClient = useQueryClient();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     titleCs: "",
@@ -129,6 +131,7 @@ function ManualPage() {
 
   return (
     <AppShell>
+      <ManualCopyLink url={manualLink} />
       <PageHeader
         title={t("Manuál chaty", "House Manual")}
         subtitle={property?.name}
@@ -165,8 +168,13 @@ function ManualPage() {
           </div>
           <button
             onClick={async () => {
-              await navigator.clipboard.writeText(publicUrl);
-              toast.success(t("Odkaz zkopírován.", "Link copied."));
+              try {
+                await navigator.clipboard.writeText(publicUrl);
+                setManualLink(null);
+                toast.success(t("Odkaz zkopírován.", "Link copied."));
+              } catch {
+                setManualLink(publicUrl);
+              }
             }}
             aria-label={t("Kopírovat odkaz", "Copy link")}
             className="grid size-11 place-items-center rounded-xl bg-secondary"

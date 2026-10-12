@@ -1,3 +1,4 @@
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Copy,
@@ -22,7 +23,17 @@ import { inviteLink, inviteMailto, parseEmails } from "@/lib/invites";
 
 export const Route = createFileRoute("/clenove")({
   staticData: { sitemap: false },
-  head: () => ({ meta: [{ title: "Members — My Chata" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: "Members — My Chata" },
+      { name: "robots", content: "noindex" },
+      { name: "description", content: "Members and invitations for your shared cottage." },
+      { property: "og:title", content: "Members — My Chata" },
+      { property: "og:description", content: "Members and invitations for your shared cottage." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: MembersPage,
 });
 
@@ -37,6 +48,7 @@ interface Invitation {
 
 function MembersPage() {
   const { t } = useLang();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const { account, property, members, currentMember } = useAccount();
   const queryClient = useQueryClient();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
@@ -171,9 +183,10 @@ function MembersPage() {
   const copyInvite = async (token: string) => {
     try {
       await navigator.clipboard.writeText(linkFor(token));
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován.", "Link copied."));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "Could not copy the link."));
+      setManualLink(linkFor(token));
     }
   };
 
@@ -208,6 +221,7 @@ function MembersPage() {
 
   return (
     <AppShell>
+      <ManualCopyLink url={manualLink} />
       <PageHeader
         title={t("Členové a oprávnění", "Members & permissions")}
         subtitle={account?.name ?? ""}

@@ -13,6 +13,8 @@ export const Route = createFileRoute("/rezervace/$id")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Stay detail — My Chata" },
       { name: "description", content: "Details of a cottage stay booking." },
       { property: "og:title", content: "Stay detail — My Chata" },
@@ -24,7 +26,7 @@ export const Route = createFileRoute("/rezervace/$id")({
 
 function BookingDetail() {
   const { id } = Route.useParams();
-  const { account, currentMember } = useAccount();
+  const { account, currentMember, members } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, lang } = useLang();
@@ -139,6 +141,27 @@ function BookingDetail() {
           {t("Vytvořeno", "Created")} {fmtDateTime(booking.created_at)}
         </p>
       </section>
+
+      {pending && (
+        <section
+          className="mt-4 space-y-2 text-[16px]"
+          aria-label={t("Schválení pobytu", "Stay approval")}
+        >
+          <p className="break-words font-semibold">
+            {t("Schvaluje:", "Approved by:")}{" "}
+            {members
+              .filter((member) => member.role === "ADMIN" || member.role === "OWNER")
+              .map((member) => member.name)
+              .join(", ") || t("Správce chaty", "The cottage administrator")}
+          </p>
+          <p>
+            {t(
+              "Správce rozhodne a uvidíte to tady.",
+              "The administrator decides and you'll see it here.",
+            )}
+          </p>
+        </section>
+      )}
 
       {pending && isAdmin && (
         <div className="mt-4 flex gap-2">

@@ -16,6 +16,7 @@ test("an unknown share token shows no calendar data", async ({ page }) => {
   await page.goto("/verejne/kalendar/not-a-real-token");
   // Since T-022 an unknown link shows a clear message instead of an empty calendar.
   await expect(page.getByText(/not valid|neplatí/)).toBeVisible();
+  await expect(page.getByText(/Upcoming stays|Nadcházející pobyty/)).toHaveCount(0);
   await expect(page.locator(".card .rounded-full")).toHaveCount(0);
 });
 

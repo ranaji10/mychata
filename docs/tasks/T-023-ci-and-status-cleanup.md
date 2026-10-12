@@ -4,7 +4,7 @@ Owner: Claude Code · Status: review · Prompt: CC-0 (`prompts/2026-10-04/01-CC-
 
 Goal: the nightly production check is green again, Lovable's unformatted pushes no longer turn CI red, and the docs say what is live.
 Non-goals: migrations; application code under `src/`; rewriting history; GitHub settings (the owner sets them on the website).
-Invariants touched (AGENTS.md): 3 (first PR under the 3 Oct ruleset), 4 (the old text of step 6 stays in history), 7 (personal data removed from a doc).
+Invariants touched (AGENTS.md): 3 (first PR under the rulesets on `main`), 4 (the old text of step 6 stays in history), 7 (personal data removed from a doc).
 Context: `docs/STATUS.md`, `docs/external/claude/2026-09-25-critical-review.md` ("Open defects"), `docs/runbooks/two-person-workflow.md`, `docs/tasks/T-022-live-test-29-sep.md`, ADR-0007.
 
 Background (checked 4 Oct, confirmed 12 Oct): production runs `main` up to PR #14 plus Lovable's L-1 commits of 29 Sep. The nightly check has failed every night since 29 Sep because `tests/e2e/public.spec.ts` "an unknown share token shows no calendar data" expects "Upcoming stays|Nadcházející pobyty", while since T-022 an unknown calendar link says "Tento odkaz na kalendář neplatí" / "This calendar link is not valid".

@@ -48,10 +48,10 @@ Skip it once (e.g. offline): `SKIP_SYNC_CHECK=1 git commit …`. Agents run it a
 
 ## GitHub settings the repository owner sets once
 
-These can't be set from a pull request. They need the owner's account, in the GitHub website. State on 12 Oct 2026: step 2 is done (two rulesets on `main` since 3 Oct); the settings in step 3 are the ones to check.
+These can't be set from a pull request. They need the owner's account, in the GitHub website. State on 12 Oct 2026, read through GitHub's API: step 2 is done and the three settings in step 3 are on.
 
 1. **Add the partner.** Settings → Collaborators → Add people → role **Write** (Maintain if they should manage issues and releases too). Admin stays with the owner.
-2. **Protect `main` with a ruleset.** Two rulesets on `main` exist since 3 Oct 2026 and hold the rules below; change them under Settings → Rules → Rulesets.
+2. **Protect `main` with a ruleset.** Two rulesets on `main` hold the rules below (first set up 3 Oct 2026; the current two were created 12 Oct); change them under Settings → Rules → Rulesets.
    - Restrict deletions, block force pushes.
    - Require a pull request before merging, **0 required approvals** (decided 26 Sep: each of you merges your own PRs).
    - Allowed merge method: merge commits only.
@@ -59,9 +59,9 @@ These can't be set from a pull request. They need the owner's account, in the Gi
    - Bypass list: the **Lovable** GitHub App, so Lovable can keep syncing to `main` under Model A. Without it, Lovable's pushes are rejected and its editor goes out of sync.
    - **Require extra approval for unattributed changes** must stay **off**. Claude's commits aren't linked to a GitHub account, so with it on every agent PR needs an approval, against the 0-approvals decision. If an agent PR asks for an approval before it can merge, this setting is on.
    - Check afterwards: make a tiny text change in Lovable and confirm it appears on `main`.
-3. **Three repository settings to turn on.**
+3. **Three repository settings that must be on** (all three were on when checked 12 Oct).
    - Settings → General → Pull Requests → **Always suggest updating pull request branches**: gives every PR an "Update branch" button, which the up-to-date rule above makes you need whenever `main` moved.
-   - Settings → General → Pull Requests → **Automatically delete head branches**: merged branches disappear by themselves (on when checked 12 Oct).
+   - Settings → General → Pull Requests → **Automatically delete head branches**: merged branches disappear by themselves.
    - Settings → Advanced Security (called "Code security" in some accounts) → secret scanning → **Push protection**: GitHub refuses a push that contains a recognisable key or token. The repository is public, so this is free.
 4. **Code owners, optional** (after step 1, when both usernames are known). This only auto-requests the other person as a reviewer, so they get notified; it doesn't block merging as long as "Require review from Code Owners" stays off. Create `.github/CODEOWNERS` in a PR with:
 

@@ -1,3 +1,4 @@
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/vice")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Settings — My Chata" },
       {
         name: "description",
@@ -48,11 +51,16 @@ function MorePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isFamily = account?.type === "FAMILY";
+  const [manualLink, setManualLink] = useState<{
+    source: "calendar" | "guest";
+    url: string;
+  } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
 
   // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
   // The toast says the link was copied — never the raw URL.
-  const shareLink = async (url: string) => {
+  const shareLink = async (url: string, source: "calendar" | "guest") => {
+    setManualLink(null);
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ url, title: "My Chata" });
@@ -63,9 +71,10 @@ function MorePage() {
     }
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován", "Link copied"));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "The link could not be copied."));
+      setManualLink({ source, url });
     }
   };
 
@@ -82,7 +91,7 @@ function MorePage() {
       );
       return;
     }
-    await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`);
+    await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`, "calendar");
   };
 
   const createGuestLink = async () => {
@@ -95,7 +104,7 @@ function MorePage() {
       toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
       return;
     }
-    await shareLink(`${window.location.origin}/host/${token}`);
+    await shareLink(`${window.location.origin}/host/${token}`, "guest");
   };
 
   return (
@@ -162,6 +171,9 @@ function MorePage() {
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
+            <div className="px-4">
+              <ManualCopyLink url={manualLink?.source === "calendar" ? manualLink.url : null} />
+            </div>
             <button
               onClick={createGuestLink}
               className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
@@ -172,6 +184,9 @@ function MorePage() {
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
+            <div className="px-4">
+              <ManualCopyLink url={manualLink?.source === "guest" ? manualLink.url : null} />
+            </div>
           </>
         )}
         {!isFamily && (

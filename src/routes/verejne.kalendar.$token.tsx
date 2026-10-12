@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarPlus, Share2, Sun } from "lucide-react";
@@ -12,6 +14,8 @@ export const Route = createFileRoute("/verejne/kalendar/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Public calendar — My Chata" },
       { name: "description", content: "Public overview of cottage availability — read only." },
       { property: "og:title", content: "Public calendar — My Chata" },
@@ -46,6 +50,7 @@ function nextFreeWeekend(bookings: Booking[]): { start: string; end: string } | 
 function PublicCalendar() {
   const { t, lang } = useLang();
   const { token } = Route.useParams();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const nav = useMonthNav();
 
   // Public pages are addressed by the property's share token, never its id (migration 0012).
@@ -94,6 +99,7 @@ function PublicCalendar() {
           : { cs: "podzim", en: "autumn" };
 
   const share = async () => {
+    setManualLink(null);
     const url = window.location.href;
     if (typeof navigator.share === "function") {
       try {
@@ -105,9 +111,10 @@ function PublicCalendar() {
     }
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován", "Link copied"));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "The link could not be copied."));
+      setManualLink(url);
     }
   };
 
@@ -158,7 +165,7 @@ function PublicCalendar() {
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="pill bg-secondary text-muted-foreground">
               <Sun className="size-4" />
               {t(`Sezóna: ${season.cs}`, `Season: ${season.en}`)}
@@ -166,6 +173,9 @@ function PublicCalendar() {
             <button onClick={share} className="btn-secondary ml-auto">
               <Share2 className="size-5" /> {t("Sdílet", "Share")}
             </button>
+            <div className="w-full">
+              <ManualCopyLink url={manualLink} />
+            </div>
           </div>
 
           <section className="card mt-3 p-4">

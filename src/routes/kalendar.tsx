@@ -1,3 +1,4 @@
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, Link2, X } from "lucide-react";
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/kalendar")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Calendar — My Chata" },
       {
         name: "description",
@@ -41,6 +44,7 @@ function CalendarPage() {
   const { book } = Route.useSearch();
   const navigate = useNavigate();
   const nav = useMonthNav();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const [picking, setPicking] = useState(!!book);
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const calendarRef = useRef<HTMLElement>(null);
@@ -86,6 +90,7 @@ function CalendarPage() {
   };
 
   const copyPublicLink = async () => {
+    setManualLink(null);
     // Publishing the calendar is an explicit admin action; the link uses the share token.
     const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
       _property_id: property!.id,
@@ -100,9 +105,10 @@ function CalendarPage() {
     const url = `${window.location.origin}/verejne/kalendar/${publicToken}`;
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz na veřejný kalendář zkopírován.", "Public calendar link copied."));
     } catch {
-      toast.info(url);
+      setManualLink(url);
     }
   };
 
@@ -223,25 +229,28 @@ function CalendarPage() {
       </section>
 
       {isFamily && (
-        <button
-          onClick={copyPublicLink}
-          className="card mt-4 flex w-full items-center gap-3 p-4 text-left active:scale-[0.99]"
-        >
-          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-muted-foreground">
-            <Link2 className="size-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[15px] font-bold">
-              {t("Veřejný odkaz na kalendář", "Public calendar link")}
-            </p>
-            <p className="text-[13px] text-muted-foreground">
-              {t(
-                "Pro členy bez aplikace — pouze ke čtení",
-                "For members without the app — read only",
-              )}
-            </p>
-          </div>
-        </button>
+        <>
+          <button
+            onClick={copyPublicLink}
+            className="card mt-4 flex w-full items-center gap-3 p-4 text-left active:scale-[0.99]"
+          >
+            <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-muted-foreground">
+              <Link2 className="size-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[15px] font-bold">
+                {t("Veřejný odkaz na kalendář", "Public calendar link")}
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                {t(
+                  "Pro členy bez aplikace — pouze ke čtení",
+                  "For members without the app — read only",
+                )}
+              </p>
+            </div>
+          </button>
+          <ManualCopyLink url={manualLink} />
+        </>
       )}
     </AppShell>
   );

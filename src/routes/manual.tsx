@@ -1,3 +1,4 @@
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Check, Copy, Flag, Plus } from "lucide-react";
@@ -39,6 +40,7 @@ function ManualPage() {
   const { property, currentMember } = useAccount();
   const { t, lang } = useLang();
   const queryClient = useQueryClient();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     titleCs: "",
@@ -153,26 +155,35 @@ function ManualPage() {
       />
 
       {property && (
-        <section className="card mb-4 flex items-center gap-4 p-4">
-          <div className="rounded-xl bg-card p-1 ring-1 ring-border">
-            <QRCodeSVG value={publicUrl} size={82} />
+        <section className="card mb-4 p-4">
+          <div className="flex items-center gap-4">
+            <div className="rounded-xl bg-card p-1 ring-1 ring-border">
+              <QRCodeSVG value={publicUrl} size={82} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold">{t("Veřejný manuál", "Public manual")}</p>
+              <p className="text-[13px] text-muted-foreground">
+                {t("Hosté jej otevřou bez přihlášení.", "Guests can open it without signing in.")}
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                setManualLink(null);
+                try {
+                  await navigator.clipboard.writeText(publicUrl);
+                  setManualLink(null);
+                  toast.success(t("Odkaz zkopírován.", "Link copied."));
+                } catch {
+                  setManualLink(publicUrl);
+                }
+              }}
+              aria-label={t("Kopírovat odkaz", "Copy link")}
+              className="grid size-11 place-items-center rounded-xl bg-secondary"
+            >
+              <Copy className="size-5" />
+            </button>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-bold">{t("Veřejný manuál", "Public manual")}</p>
-            <p className="text-[13px] text-muted-foreground">
-              {t("Hosté jej otevřou bez přihlášení.", "Guests can open it without signing in.")}
-            </p>
-          </div>
-          <button
-            onClick={async () => {
-              await navigator.clipboard.writeText(publicUrl);
-              toast.success(t("Odkaz zkopírován.", "Link copied."));
-            }}
-            aria-label={t("Kopírovat odkaz", "Copy link")}
-            className="grid size-11 place-items-center rounded-xl bg-secondary"
-          >
-            <Copy className="size-5" />
-          </button>
+          <ManualCopyLink url={manualLink} />
         </section>
       )}
       {isAdmin && !!feedback?.length && (

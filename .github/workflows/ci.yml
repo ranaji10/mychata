@@ -9,6 +9,10 @@ on:
         description: "Run smoke tests against this URL (e.g. staging)"
         required: false
 
+# Nothing here writes to the repository.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -31,7 +35,44 @@ jobs:
       - run: bun install
       - run: bun run lint
       - run: bun run typecheck
-      - run: bun run format:check
+      # Lovable pushes to main without running Prettier. On 29 Sep that turned main and every
+      # open PR red twice (fixed by hand in PR #14). So a PR answers only for the files it
+      # changes, and on main the full check warns instead of failing. `bun run check` on your
+      # own computer and a manual run of this workflow still check everything strictly.
+      - name: Formatting of the files this pull request changes
+        if: github.event_name == 'pull_request'
+        run: |
+          # NUL-separated, so names with spaces or a "$" (src/routes/verejne.zadost.$token.tsx)
+          # reach Prettier untouched. Deleted files are left out (ACMR). Prettier skips what it
+          # can't format (--ignore-unknown) and what .prettierignore lists.
+          git diff -z --name-only --diff-filter=ACMR origin/main...HEAD > "$RUNNER_TEMP/changed-files"
+          if [ ! -s "$RUNNER_TEMP/changed-files" ]; then
+            echo "This pull request changes no files that exist; nothing to check."
+            exit 0
+          fi
+          xargs -0 bunx prettier --check --ignore-unknown < "$RUNNER_TEMP/changed-files"
+      - name: Formatting of everything (warning only, push to main)
+        if: github.event_name == 'push'
+        run: |
+          # --list-different exits 0 when all is formatted, 1 when files need formatting and
+          # 2 when Prettier itself failed. Only the last one fails the job.
+          status=0
+          files=$(bunx prettier --list-different .) || status=$?
+          if [ "$status" -ge 2 ]; then
+            echo "$files"
+            echo "Prettier failed (exit $status); this is not a formatting warning."
+            exit "$status"
+          fi
+          if [ -n "$files" ]; then
+            echo "$files"
+            # %0A is a line break inside a GitHub annotation.
+            echo "::warning title=Unformatted files on main::Run 'bun run format' in a pull request. Files:%0A${files//$'\n'/%0A}"
+          else
+            echo "All files are formatted."
+          fi
+      - name: Formatting of everything (strict, manual run)
+        if: github.event_name == 'workflow_dispatch'
+        run: bun run format:check
       - name: Unit, database security and policy-lint tests
         run: bun run test
       - name: Generated docs are up to date

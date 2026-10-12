@@ -15,6 +15,25 @@ As of 2026-10-12. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Approving a guest request as admin, inviting and demoting a second member, Settle debts with two people (needs a second account), PDF and photo reading in Document Vault. T-022 (29 Sep) tested the live site and lost the computer before these; what it did test is in `docs/tasks/T-022-live-test-29-sep.md`.                                                                                                                                                                                                                                                                                                                                                                                       |
 | Open tasks               | T-020 document vault search (planned), T-014 performance, T-015/T-016 missing tests, T-001–T-013 as listed below (T-012's migration 0019 is applied; its brief is not closed yet). Done and live: T-017, T-018, T-019, T-021, T-022.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
+## L-2 UI batch (2026-10-12, preview only)
+
+- Tasks are grouped by the existing checklist ID/title, oldest first; new groups start collapsed at the bottom. Standalone tasks remain above groups. Each group shows completion totals and a collapsed Done section.
+- Pending stays show active-account administrators' names only and the next-step explanation. No messaging, approval rules, auth, migrations, or server functions changed.
+- Clipboard failures show a short explanation and a selectable link field on Calendar, Settings, Members, Manual, and Public calendar. Empty Expenses already has one Add expense action and was left unchanged.
+- Guest booking reuses CalendarMonth and pickRange, with labeled read-only arrival/departure values; submission fields remain unchanged.
+- Verified: latest main present (sync-check, no warnings); preview build OK after edits and package update; changed-file lint has no errors (existing calendar Fast Refresh warning); 28 existing date/task/invitation tests pass; generated docs check passes. Phone-width browser checks at 375px: isolated synthetic checklist expands, shows 3 of 8 done, hides/reveals completed tasks, no horizontal overflow; real guest link picks 20–22 October without submitting or exposing guest names; no browser errors.
+- Not verified: saving/toggling real tasks, adding a real checklist and scroll preservation, pending-stay display with real data, clipboard denial through an authenticated page, or real empty Expenses. The requesting user's minted session reaches onboarding, so these authenticated checks remain blocked. No test bookings or tasks were written.
+- Not published: this batch needs a human-reviewed green CI result and the first release tag; the requested post-publish "file 10" was not supplied.
+
+## L-2b PR #16 review fixes (preview only)
+
+- Clipboard denial fields now appear beside the triggering action, focus and select the link, and retain a mounted status region.
+- Task filters hide nonmatching checklist groups, open matching groups and count matching tasks only; failed task reads show a retry action.
+- Stay cache keys include the active account; failed or missing stays show a plain missing-state message. Guest dates have picking guidance and plain-text styling.
+- Verified with isolated synthetic data at 375px: all five clipboard locations, Settings/invitation origin switching, filtered counts/open states/empty states, task error and retry, missing stay and separate account cache keys, guest date selection. No real guest links or member details were accessed; no records were submitted. Browser reported no page errors. Existing date/task/invitation tests: 28 passed. Automatic preview build passed.
+- Not verified: real checklist addition/scroll preservation, pending administrator names with real data, hosted PR CI or merge status. Not published; wait for PR #16 to merge.
+- Changed-file inventory and phone-width checks: `docs/l2b-review-checks.md`.
+
 ## Open defects
 
 From the "Open defects" table of the critical review (`docs/external/claude/2026-09-25-critical-review.md`, state of 4 Oct). "CC-", "L-" and "next step" are prompt and step names in that review.

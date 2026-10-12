@@ -25,7 +25,7 @@ export function CalendarMonth({
 }: {
   year: number;
   month: number;
-  bookings: Booking[];
+  bookings: Pick<Booking, "start_date" | "end_date" | "status">[];
   selection?: DateRange;
   onPickDay?: (iso: string) => void;
   /** Days before this can't be picked (defaults to today when picking). */
@@ -40,14 +40,14 @@ export function CalendarMonth({
 
   return (
     <div>
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div className="grid grid-cols-7 text-center">
         {dayNames(lang).map((d) => (
           <span key={d} className="py-1 text-[12px] font-bold text-muted-foreground">
             {d}
           </span>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div className="grid grid-cols-7 text-center">
         {days.map((d) => {
           const booking = bookings.find((b) => d.iso >= b.start_date && d.iso <= b.end_date);
           const isToday = d.iso === today;

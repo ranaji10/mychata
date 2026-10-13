@@ -15,7 +15,12 @@ As of 2026-10-13. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024, `docs/tasks/T-024-release-check-13-oct.md`): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Still open: the demoted member's and the debtor's own views and a member's pending stay (need a second person signed in), the empty Expenses page, iPhone clipboard, and the new layout on the live site.                                                                                                                                                                                                                                                                                    |
 | Open tasks               | T-020 document vault search (planned), T-014 performance, T-015/T-016 missing tests, T-001–T-013 as listed below (T-012's migration 0019 is applied; its brief is not closed yet). Done and live: T-017, T-018, T-019, T-021, T-022.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
-## T-024 (2026-10-13, this PR)
+## L-4 and T-025 (2026-10-13)
+
+- L-4 (Lovable, PR #19, live): admins can delete a task after a confirmation; the expense form starts with the current member selected and explains when nobody is picked.
+- T-025 (this PR): a deleted or unknown task page says so instead of staying blank; a delete that row-level security refuses is reported instead of shown as success; rounded confirmation on phones. Record: `docs/tasks/T-025-l4-followups.md`.
+
+## T-024 (2026-10-13, merged in PR #18)
 
 - Layout follows the screen: phones unchanged; tablets (768px+) get a 720px column; computers (1024px+) get the tabs in a left sidebar and content up to 820px. Sign-in shows picture and form side by side on computers; public pages widen to 640–720px. Design rules updated (`docs/product/design.md`).
 - Onboarding no longer asks "Family or Institution?". Institution sign-ups (signup_kind "institution") get the organisation step; Google and personal email sign-ups become families.

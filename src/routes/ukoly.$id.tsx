@@ -1,7 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, FileBadge, User } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AppShell } from "@/components/AppShell";
 import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +42,9 @@ export const Route = createFileRoute("/ukoly/$id")({
 
 function TaskDetail() {
   const { id } = Route.useParams();
-  const { property, members } = useAccount();
+  const { property, members, currentMember } = useAccount();
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { t, lang } = useLang();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -61,6 +74,23 @@ function TaskDetail() {
     },
     onSuccess: invalidate,
     onError: () => toast.error(t("Změnu se nepodařilo uložit.", "Could not save the change.")),
+  });
+
+  const remove = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("tasks").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(t("Úkol smazán.", "Task deleted."));
+      queryClient.removeQueries({ queryKey: ["task", id] });
+      void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      void navigate({ to: "/ukoly" });
+    },
+    onError: (e: Error) => {
+      setConfirmOpen(false);
+      toast.error(e.message);
+    },
   });
 
   if (isLoading || !task) {
@@ -184,6 +214,46 @@ function TaskDetail() {
           <FileBadge className="size-5" />
           {t("Uložit záruku k úkolu", "File a warranty for this task")}
         </Link>
+      )}
+      {isAdmin && (
+        <>
+          <button
+            onClick={() => setConfirmOpen(true)}
+            className="btn-secondary mt-6 min-h-11 w-full text-destructive"
+          >
+            {t("Smazat úkol", "Delete task")}
+          </button>
+          <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {t(
+                    `Smazat úkol „${taskTitle(task, lang)}“?`,
+                    `Delete the task “${taskTitle(task, lang)}”?`,
+                  )}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-[16px]">
+                  {t("Tuto akci nelze vrátit.", "This can't be undone.")}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="min-h-11 text-[16px]">
+                  {t("Zrušit", "Cancel")}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={remove.isPending}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    remove.mutate();
+                  }}
+                  className="min-h-11 bg-destructive text-[16px] text-destructive-foreground"
+                >
+                  {t("Smazat", "Delete")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
       )}
     </AppShell>
   );

@@ -27,7 +27,7 @@ function ResetPasswordPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4">
+    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4 md:max-w-[480px] md:py-10">
       <div className="flex justify-end">
         <LanguageToggle />
       </div>

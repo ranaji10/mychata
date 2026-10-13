@@ -39,6 +39,7 @@ bun run docs:gen       # after any migration or route change
 5. **Language.** All user-facing text through `t("česky", "English")`; Czech first. Users are 45–68: 44px targets, plain words.
 6. **Errors.** Every Supabase call handles `error`. Nothing fails silently.
 7. **Secrets and data.** No keys in code or docs; no production personal data in tests, prompts or fixtures.
+8. **Testing on mychata.cz.** Only in a test cottage (`docs/runbooks/test-cottages.md`). Never open or submit another cottage's public, guest or invitation links.
 
 ## Where things are
 

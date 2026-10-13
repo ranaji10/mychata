@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Building2, Check, Home } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -50,7 +49,9 @@ function OnboardingPage() {
 
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL" | null>(null);
+  // Family or institution is decided at sign-up (T-021): "Sign up as an Institute" stores
+  // signup_kind "institution"; every other sign-up (Google, personal email) is a family.
+  const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL">("FAMILY");
   const [accountName, setAccountName] = useState("");
   // Name from Google, or from the email sign-up form; always editable (T-021).
   const [fullName, setFullName] = useState("");
@@ -58,7 +59,7 @@ function OnboardingPage() {
   useEffect(() => {
     setFullName((current) => current || profile?.display_name || signup.fullName || "");
     if (signup.kind === "institution") {
-      setType((current) => current ?? "INSTITUTIONAL");
+      setType("INSTITUTIONAL");
       setAccountName((current) => current || signup.organisation || "");
     }
   }, [profile?.display_name, signup.fullName, signup.kind, signup.organisation]);
@@ -75,7 +76,7 @@ function OnboardingPage() {
   const institutionBlocked = type === "INSTITUTIONAL" && isPublicEmailDomain(email);
 
   const steps = [
-    t("Typ účtu", "Account type"),
+    type === "INSTITUTIONAL" ? t("Organizace", "Organisation") : t("O vás", "About you"),
     t("Vaše chaty", "Your cottages"),
     t("Kdo ji používá", "Who uses it"),
     t("Pravidla rezervací", "Booking rules"),
@@ -83,7 +84,7 @@ function OnboardingPage() {
   ];
 
   const finish = async () => {
-    if (!type || !user) return;
+    if (!user) return;
     setBusy(true);
     try {
       // The name goes on the profile first: the database uses it for the new member row.
@@ -171,7 +172,6 @@ function OnboardingPage() {
   const canNext =
     step === 0
       ? fullName.trim().length > 1 &&
-        !!type &&
         !institutionBlocked &&
         (type === "INSTITUTIONAL" ? accountName.trim().length > 1 : true)
       : step === 1
@@ -181,7 +181,7 @@ function OnboardingPage() {
           : true;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4">
+    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4 md:max-w-[560px] md:py-10">
       <div className="flex items-center justify-between">
         <p className="font-bold text-primary">My Chata</p>
         <LanguageToggle />
@@ -203,6 +203,14 @@ function OnboardingPage() {
       <section className="mt-6 flex-1">
         {step === 0 && (
           <div className="space-y-3">
+            <h1 className="text-2xl font-bold">
+              {type === "INSTITUTIONAL"
+                ? t(
+                    "Vítejte! Nastavíme vaši organizaci.",
+                    "Welcome! Let's set up your organisation.",
+                  )
+                : t("Vítejte! Jak se jmenujete?", "Welcome! What's your name?")}
+            </h1>
             <label className="block">
               <span className="text-[14px] font-bold">{t("Vaše jméno", "Your name")}</span>
               <input
@@ -213,45 +221,19 @@ function OnboardingPage() {
                 autoComplete="name"
               />
             </label>
-            <h1 className="pt-2 text-2xl font-bold">
-              {t("Kdo bude chatu spravovat?", "Who will manage the cottage?")}
-            </h1>
-            <button
-              onClick={() => setType("FAMILY")}
-              className={`card flex w-full items-center gap-3 p-4 text-left ${type === "FAMILY" ? "ring-2 ring-primary" : ""}`}
-            >
-              <Home className="size-6 text-primary" />
-              <div>
-                <p className="font-bold">{t("Rodina", "Family")}</p>
-                <p className="text-[14px] text-muted-foreground">
-                  {t(
-                    "Sdílená chata pro rodinu a přátele.",
-                    "A shared cottage for family and friends.",
-                  )}
-                </p>
-              </div>
-              {type === "FAMILY" && <Check className="ml-auto size-5 text-primary" />}
-            </button>
-            <button
-              onClick={() => setType("INSTITUTIONAL")}
-              className={`card flex w-full items-center gap-3 p-4 text-left ${type === "INSTITUTIONAL" ? "ring-2 ring-primary" : ""}`}
-            >
-              <Building2 className="size-6 text-primary" />
-              <div>
-                <p className="font-bold">{t("Organizace", "Institution")}</p>
-                <p className="text-[14px] text-muted-foreground">
-                  {t("Škola, firma nebo spolek.", "A school, company or club.")}
-                </p>
-              </div>
-              {type === "INSTITUTIONAL" && <Check className="ml-auto size-5 text-primary" />}
-            </button>
             {type === "INSTITUTIONAL" && (
-              <input
-                className="field mt-2 w-full"
-                placeholder={t("Název organizace", "Organisation name")}
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-              />
+              <label className="block">
+                <span className="text-[14px] font-bold">
+                  {t("Název organizace", "Organisation name")}
+                </span>
+                <input
+                  className="field mt-1 w-full"
+                  placeholder={t("Např. ZŠ Lipová", "E.g. Lipová Primary School")}
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  autoComplete="organization"
+                />
+              </label>
             )}
             {institutionBlocked && (
               <p className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">

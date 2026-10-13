@@ -23,7 +23,7 @@ function PrivacyPage() {
   const { user } = useAccount();
 
   return (
-    <main className="mx-auto min-h-screen max-w-[420px] bg-background p-4 pb-16">
+    <main className="mx-auto min-h-screen max-w-[420px] bg-background p-4 pb-16 md:max-w-[720px] md:py-10">
       <div className="flex items-center justify-between">
         {/* Signed-in visitors arrived from Settings; the cookie banner opens this page for
             everyone, so the back arrow only appears for signed-in members. */}

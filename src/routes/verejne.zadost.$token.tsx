@@ -109,7 +109,7 @@ function PublicRequest() {
   };
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
+    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8 md:max-w-[640px] md:py-8">
       <div className="mb-2 flex justify-end">
         <LanguageToggle />
       </div>

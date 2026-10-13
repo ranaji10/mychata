@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Users } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PillNeutral, PillOk, PillWarn, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, fmtDateTime, type Booking } from "@/lib/data";
+import { fmtDate, fmtDateTime, todayISO, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/rezervace/$id")({
@@ -32,6 +34,7 @@ function BookingDetail() {
   const { t, lang } = useLang();
 
   const bookingKey = ["booking", account?.id, id];
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const {
     data: booking,
     isLoading,
@@ -53,32 +56,50 @@ function BookingDetail() {
 
   const confirm = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("bookings")
         .update({ status: "CONFIRMED" })
-        .eq("id", id);
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("nothing_changed");
     },
     onSuccess: () => {
       invalidate();
       toast.success(t("Pobyt schválen.", "Stay approved."));
       navigate({ to: "/kalendar" });
     },
-    onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
+    onError: (e: Error) => toast.error(failure(e)),
   });
 
   const remove = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("bookings").delete().eq("id", id);
+      // Row-level security turns a refused delete into "0 rows", not an error (T-026: it said
+      // "removed" while the stay stayed in the calendar).
+      const { data, error } = await supabase.from("bookings").delete().eq("id", id).select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("nothing_changed");
     },
     onSuccess: () => {
+      setConfirmRemove(false);
       invalidate();
       toast.success(t("Rezervace byla odstraněna.", "The booking has been removed."));
       navigate({ to: "/kalendar" });
     },
-    onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
+    onError: (e: Error) => {
+      setConfirmRemove(false);
+      toast.error(failure(e));
+    },
   });
+
+  function failure(e: Error) {
+    return e.message === "nothing_changed"
+      ? t(
+          "Nic se nezměnilo: měnit nebo rušit pobyt může jen ten, kdo ho zapsal, nebo správce.",
+          "Nothing changed: only the person who booked the stay or an admin can change or cancel it.",
+        )
+      : t("Akce se nepodařila.", "The action failed.");
+  }
 
   if (isLoading) {
     return (
@@ -101,6 +122,12 @@ function BookingDetail() {
     account?.type === "INSTITUTIONAL" &&
     (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
   const pending = booking.status === "PENDING";
+  // Who may cancel: the person who booked it, or an admin (the database policy says the same).
+  // A stay that has already ended stays in the history (T-026: anyone saw "Cancel stay" on
+  // every stay, past ones included, and one tap deleted it).
+  const isAnyAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+  const isBooker = !!currentMember && booking.requester_member_id === currentMember.id;
+  const canCancel = (isBooker || isAnyAdmin) && booking.end_date >= todayISO();
 
   const guestsLabel =
     lang === "en"
@@ -182,17 +209,34 @@ function BookingDetail() {
           <button onClick={() => confirm.mutate()} className="btn-primary flex-1">
             {t("Schválit", "Approve")}
           </button>
-          <button onClick={() => remove.mutate()} className="btn-danger flex-1">
+          <button onClick={() => setConfirmRemove(true)} className="btn-danger flex-1">
             {t("Zamítnout", "Decline")}
           </button>
         </div>
       )}
 
-      {!pending && (
-        <button onClick={() => remove.mutate()} className="btn-danger mt-4 w-full">
+      {!pending && canCancel && (
+        <button onClick={() => setConfirmRemove(true)} className="btn-danger mt-4 w-full">
           {t("Zrušit pobyt", "Cancel stay")}
         </button>
       )}
+
+      <ConfirmDialog
+        open={confirmRemove}
+        onOpenChange={setConfirmRemove}
+        title={
+          pending
+            ? t("Zamítnout tuto žádost o pobyt?", "Decline this stay request?")
+            : t("Zrušit tento pobyt?", "Cancel this stay?")
+        }
+        description={t(
+          `${booking.requester_name}, ${fmtDate(booking.start_date)} – ${fmtDate(booking.end_date)}. Pobyt zmizí z kalendáře a nelze ho vrátit.`,
+          `${booking.requester_name}, ${fmtDate(booking.start_date)} – ${fmtDate(booking.end_date)}. The stay will disappear from the calendar; this can't be undone.`,
+        )}
+        confirmLabel={pending ? t("Zamítnout", "Decline") : t("Zrušit pobyt", "Cancel stay")}
+        busy={remove.isPending}
+        onConfirm={() => remove.mutate()}
+      />
 
       {pending && !isAdmin && (
         <p className="mt-4 text-center text-[14px] font-semibold text-muted-foreground">

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
@@ -54,6 +55,7 @@ function MembersPage() {
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [emails, setEmails] = useState("");
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
+  const [cancelling, setCancelling] = useState<Invitation | null>(null);
   const parsed = parseEmails(emails);
   const isAdminRole = (role: string) =>
     role.toUpperCase() === "ADMIN" || role.toUpperCase() === "OWNER";
@@ -137,12 +139,31 @@ function MembersPage() {
       id: string;
       patch: { role?: string; status?: string };
     }) => {
-      const { error } = await supabase.from("invitations").update(patch).eq("id", id);
+      // Row-level security turns a refused change into "0 rows", not an error: check it.
+      const { data, error } = await supabase
+        .from("invitations")
+        .update(patch)
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!data?.length)
+        throw new Error(
+          t(
+            "nic se nezměnilo (pozvánky spravuje jen správce)",
+            "nothing changed (only an admin manages invitations)",
+          ),
+        );
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invitations"] }),
-    onError: (error) =>
-      toast.error(t(`Změna se nepodařila: ${error.message}`, `Change failed: ${error.message}`)),
+    onSuccess: (_d, v) => {
+      setCancelling(null);
+      if (v.patch.status === "REVOKED")
+        toast.success(t("Pozvánka zrušena.", "Invitation cancelled."));
+      return queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
+    onError: (error) => {
+      setCancelling(null);
+      toast.error(t(`Změna se nepodařila: ${error.message}`, `Change failed: ${error.message}`));
+    },
   });
 
   const toggleRole = useMutation({
@@ -340,9 +361,7 @@ function MembersPage() {
                     <button
                       className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1 text-muted-foreground"
                       aria-label={t("Zrušit pozvánku", "Cancel invitation")}
-                      onClick={() =>
-                        updateInvite.mutate({ id: inv.id, patch: { status: "REVOKED" } })
-                      }
+                      onClick={() => setCancelling(inv)}
                     >
                       <X className="size-5" />
                       <span className="text-[12px] font-bold">{t("Zrušit", "Cancel")}</span>
@@ -412,6 +431,23 @@ function MembersPage() {
           );
         })}
       </div>
+      <ConfirmDialog
+        open={!!cancelling}
+        onOpenChange={(open) => !open && setCancelling(null)}
+        title={t(
+          `Zrušit pozvánku pro ${cancelling?.email ?? ""}?`,
+          `Cancel the invitation for ${cancelling?.email ?? ""}?`,
+        )}
+        description={t(
+          "Odkaz z pozvánky přestane fungovat. Kdo ho už má, se nepřipojí; pak musíte poslat novou pozvánku.",
+          "The invitation link will stop working. Anyone who already has it can't join; you would need to send a new invitation.",
+        )}
+        confirmLabel={t("Zrušit pozvánku", "Cancel invitation")}
+        busy={updateInvite.isPending}
+        onConfirm={() =>
+          cancelling && updateInvite.mutate({ id: cancelling.id, patch: { status: "REVOKED" } })
+        }
+      />
     </AppShell>
   );
 }

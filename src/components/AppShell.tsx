@@ -28,6 +28,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     user,
     loading,
     needsOnboarding,
+    identityError,
+    retryIdentity,
   } = useAccount();
   const navigate = useNavigate();
   const { t } = useLang();
@@ -45,6 +47,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [loading, user, needsOnboarding, navigate]);
 
   if (loading || !user || needsOnboarding) return <div className="min-h-screen bg-background" />;
+
+  if (identityError) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-4">
+        <div role="alert" className="card w-full max-w-[420px] p-5 text-center">
+          <p className="text-lg font-bold">
+            {online
+              ? t("Vaši chatu se nepodařilo načíst.", "Your cottage could not be loaded.")
+              : t("Jste offline.", "You are offline.")}
+          </p>
+          <p className="mt-2 text-[15px] text-muted-foreground">
+            {online
+              ? t(
+                  "Zkontrolujte připojení a zkuste to znovu.",
+                  "Check your connection and try again.",
+                )
+              : t(
+                  "Jakmile budete online, klepněte na Zkusit znovu.",
+                  "Once you are online, tap Try again.",
+                )}
+          </p>
+          <button onClick={retryIdentity} className="btn-primary mt-4 w-full">
+            {t("Zkusit znovu", "Try again")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const FAMILY_TABS = [
     { to: "/domu", label: t("Domů", "Home"), icon: Home },

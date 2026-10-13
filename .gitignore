@@ -38,6 +38,8 @@ dist-ssr
 !.env.example
 # Public build values only (see the file's header). Secrets never go here.
 !.env.production
+# The same public values for the development server (Lovable's preview). See docs/bugs/B-018.
+!.env.development
 
 # Test output
 test-results/

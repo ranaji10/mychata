@@ -1,6 +1,6 @@
 # B-005 Firefox desktop session (26 Sep): what's real and what to do
 
-Source: full report and raw captures in the workspace, `private/Screenshots/Brave macbook Firefox/` (not in the repo: the captures contain session data). Status: triaged; fixes in T-014.
+Source: full report and raw captures in the workspace, `private/Screenshots/Brave macbook Firefox/` (not in the repo: the captures contain session data). Status: triaged; three fixes done in T-026 (13 Oct: claim once per page load, `createSignedUrls`, AI time limits), the rest in T-014.
 
 | Finding                                                                                   | Verdict                                                                                         | Action                                                            |
 | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |

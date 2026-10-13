@@ -185,9 +185,16 @@ function RootComponent() {
           removeClient: async () => undefined,
         },
         maxAge: 1000 * 60 * 60 * 24 * 7,
+        // Signed photo links expire after an hour, so a saved copy is useless offline and
+        // shows a broken picture after a reload; keep them out of the offline cache (T-026).
+        dehydrateOptions: {
+          shouldDehydrateQuery: (query) =>
+            query.state.status === "success" &&
+            !["property-photo-urls", "primary-photo"].includes(String(query.queryKey[0])),
+        },
         // Bump when a cached query changes shape, so old saved copies are dropped instead of
         // crashing a page (29 Sep: the members page cached a Set, which JSON turns into {}).
-        buster: "2026-09-29",
+        buster: "2026-10-13",
       }}
     >
       <LanguageProvider>

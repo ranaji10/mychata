@@ -581,3 +581,9 @@ export function normalizePhone(input: string): { value: string | null } | null {
   if (!/^\+[1-9]\d{7,14}$/.test(digits)) return null;
   return { value: digits };
 }
+
+/** "1 guest", "3 guests" / "1 host", "3 hosté", "5 hostů" (T-026: lists said "1 guests"). */
+export function guestCount(n: number, lang: "cs" | "en"): string {
+  if (lang === "en") return `${n} ${n === 1 ? "guest" : "guests"}`;
+  return `${n} ${n === 1 ? "host" : n >= 2 && n <= 4 ? "hosté" : "hostů"}`;
+}

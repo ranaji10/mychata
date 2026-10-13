@@ -18,6 +18,7 @@ import {
   type InstitutionalRequest,
   type Task,
 } from "@/lib/data";
+import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { useLang } from "@/lib/i18n";
 import chataImg from "@/assets/chata.jpg";
 import { usePrimaryPhotoUrl } from "@/lib/use-primary-photo";
@@ -65,7 +66,12 @@ function HomePage() {
     },
   });
 
-  const { data: bookings, isLoading: lb } = useQuery({
+  const {
+    data: bookings,
+    isLoading: lb,
+    isError: eb,
+    refetch: refetchBookings,
+  } = useQuery({
     queryKey: ["bookings", property?.id],
     enabled: !!property,
     queryFn: async () => {
@@ -79,14 +85,21 @@ function HomePage() {
     },
   });
 
-  const { data: tasks, isLoading: lt } = useQuery({
+  const {
+    data: tasks,
+    isLoading: lt,
+    isError: et,
+    refetch: refetchTasks,
+  } = useQuery({
     queryKey: ["tasks", property?.id],
     enabled: !!property,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
-        .eq("property_id", property!.id);
+        .eq("property_id", property!.id)
+        // Same order as the Tasks page: both pages share this cache entry (T-026).
+        .order("due_date", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data as Task[];
     },
@@ -112,20 +125,7 @@ function HomePage() {
   });
 
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
-  const { data: guestRequests } = useQuery({
-    queryKey: ["guest-requests", property?.id],
-    enabled: !!property && isAdmin,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("guest_requests")
-        .select("*")
-        .eq("property_id", property!.id)
-        .eq("status", "PENDING")
-        .order("start_date");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: guestRequests } = usePendingGuestRequests(property?.id, isAdmin);
 
   // One admin-only database step writes the booking and the decision together (T-021).
   // The card shows progress and disappears as soon as the database confirms.
@@ -189,8 +189,30 @@ function HomePage() {
     return n === 1 ? "host" : n < 5 ? "hosté" : "hostů";
   };
 
+  // A failed read used to look like "no stays, no tasks" (invariant 6, T-026).
+  const loadFailed = (eb && !bookings) || (et && !tasks);
+
   return (
     <AppShell>
+      {loadFailed && (
+        <div role="alert" className="card mb-3 p-4">
+          <p className="font-bold">
+            {t(
+              "Některé údaje se nepodařilo načíst, přehled nemusí být úplný.",
+              "Some information could not be loaded; this overview may be incomplete.",
+            )}
+          </p>
+          <button
+            onClick={() => {
+              void refetchBookings();
+              void refetchTasks();
+            }}
+            className="btn-secondary mt-3 w-full"
+          >
+            {t("Zkusit znovu", "Try again")}
+          </button>
+        </div>
+      )}
       {/* Property hero */}
       <section>
         <div className="relative overflow-hidden rounded-3xl">

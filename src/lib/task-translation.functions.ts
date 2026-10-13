@@ -27,24 +27,32 @@ export const translateTaskText = createServerFn({ method: "POST" })
     });
     if (!allowed) return { translation: data.text };
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          {
-            role: "system",
-            content: `Translate short cottage-maintenance task text into ${targetLanguage}. Return only the natural translation without quotes or commentary.`,
-          },
-          { role: "user", content: data.text },
-        ],
-        temperature: 0.1,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        // A slow gateway must not hold up saving a task (B-005, T-014): keep the text as typed.
+        signal: AbortSignal.timeout(10_000),
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [
+            {
+              role: "system",
+              content: `Translate short cottage-maintenance task text into ${targetLanguage}. Return only the natural translation without quotes or commentary.`,
+            },
+            { role: "user", content: data.text },
+          ],
+          temperature: 0.1,
+        }),
+      });
+    } catch (e) {
+      console.error("[task-translation] gateway", (e as Error).name, (e as Error).message);
+      return { translation: data.text };
+    }
 
     if (!response.ok) return { translation: data.text };
     const payload = (await response.json()) as {

@@ -68,7 +68,9 @@ function NewBooking() {
       const { data, error } = await supabase
         .from("bookings")
         .select("*")
-        .eq("property_id", property!.id);
+        .eq("property_id", property!.id)
+        // Same order as Home and Calendar: all three share this cache entry (T-026).
+        .order("start_date");
       if (error) throw error;
       return data as Booking[];
     },

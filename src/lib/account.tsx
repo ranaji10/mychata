@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { User } from "@supabase/supabase-js";
+import { isAuthRetryableFetchError, type User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account, Member, Profile, Property } from "@/lib/data";
 import { signupMetadata } from "@/lib/signup";
 
 const LS_PROPERTY = "mychata.property";
+const claimedThisLoad = new Set<string>();
 
 interface AccountState {
   account: Account | null;
@@ -26,6 +27,9 @@ interface AccountState {
   profile: Profile | null;
   /** True when the signed-in user must complete onboarding before using the app. */
   needsOnboarding: boolean;
+  /** The person's memberships could not be read (offline, server error). Never means "no account". */
+  identityError: Error | null;
+  retryIdentity: () => void;
   user: User | null;
 }
 
@@ -44,8 +48,17 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
+    void supabase.auth.getUser().then(async ({ data, error }) => {
+      // getUser asks the server. Offline (or a network hiccup after sleep) it fails without
+      // saying anything about the session, and treating that as "signed out" sent people to the
+      // sign-in page while their saved session and offline cache were fine (T-026). Fall back to
+      // the session saved on this device; a real 401/403 still signs out.
+      if (error && isAuthRetryableFetchError(error)) {
+        const { data: saved } = await supabase.auth.getSession();
+        setUser(saved.session?.user ?? null);
+      } else {
+        setUser(data.user);
+      }
       setAuthLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -56,12 +69,24 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // All member rows for this person, one per account (migration 0011).
-  const { data: memberships, isLoading: loadingIdentity } = useQuery({
+  const {
+    data: memberships,
+    isLoading: loadingIdentity,
+    isSuccess: identityLoaded,
+    error: identityError,
+    refetch: refetchIdentity,
+  } = useQuery({
     queryKey: ["identity-members", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { error: claimError } = await supabase.rpc("claim_initial_membership");
-      if (claimError) console.error("[account] claim_initial_membership", claimError.message);
+      // Links an invited person to their member row. Once per person per page load is enough;
+      // it used to run on every refetch of this query (17 writes in 25 minutes, B-005/T-014).
+      // Profile changes (new invitation accepted) go through accept_invitation, not this.
+      if (user && !claimedThisLoad.has(user.id)) {
+        const { error: claimError } = await supabase.rpc("claim_initial_membership");
+        if (claimError) console.error("[account] claim_initial_membership", claimError.message);
+        else claimedThisLoad.add(user.id);
+      }
       const { data, error } = await supabase
         .from("members")
         .select("*")
@@ -204,8 +229,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   // Anyone who belongs to no account needs onboarding, even if they finished it once: their
   // only account may have been removed (the demo family, 28 Sep), which left them on an empty
   // Home with no cottage and no admin rights (T-022).
+  // Only a successful read that returned no rows means "no account". A failed read (offline,
+  // timeout) used to look the same and sent existing members into onboarding, where a member
+  // gets a new account of their own (T-026).
   const needsOnboarding =
-    !!user && !loadingIdentity && !loadingProfile && (memberships?.length ?? 0) === 0;
+    !!user && identityLoaded && !loadingProfile && (memberships?.length ?? 0) === 0;
 
   const value: AccountState = {
     account,
@@ -225,6 +253,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     currentMemberId: identityMember?.id ?? null,
     profile: profile ?? null,
     needsOnboarding,
+    identityError: !memberships?.length && identityError ? identityError : null,
+    retryIdentity: () => void refetchIdentity(),
     user,
   };
 

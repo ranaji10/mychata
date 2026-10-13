@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Avatar, EmptyState, LoadingCards, PageHeader } from "@/components/bits";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, type Booking } from "@/lib/data";
+import { fmtDate, guestCount, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/schvalovani")({
@@ -33,8 +34,18 @@ function ApprovalsPage() {
     if (account?.type === "FAMILY") navigate({ to: "/kalendar", replace: true });
   }, [account?.type, navigate]);
 
-  const { data: pending, isLoading } = useQuery({
-    queryKey: ["bookings", property?.id],
+  const [declining, setDeclining] = useState<Booking | null>(null);
+
+  // Own cache entry: Home and Calendar keep ALL stays under ["bookings", id]. Sharing that key
+  // made this page list confirmed stays as "awaiting approval" (and Decline deletes), or made
+  // Calendar show only the pending ones, depending on which page was opened first (T-026).
+  const {
+    data: pending,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["bookings", property?.id, "pending"],
     enabled: !!property && account?.type !== "FAMILY",
     queryFn: async () => {
       const { data, error } = await supabase
@@ -44,24 +55,31 @@ function ApprovalsPage() {
         .eq("status", "PENDING")
         .order("start_date");
       if (error) throw error;
-      return data as Booking[];
+      return (data as Booking[]).filter((b) => b.status === "PENDING");
     },
   });
 
   const decide = useMutation({
     mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
-      if (approve) {
-        const { error } = await supabase
-          .from("bookings")
-          .update({ status: "CONFIRMED" })
-          .eq("id", id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("bookings").delete().eq("id", id);
-        if (error) throw error;
-      }
+      // Row-level security turns a refused change into "0 rows", not an error: check it.
+      const { data, error } = approve
+        ? await supabase
+            .from("bookings")
+            .update({ status: "CONFIRMED" })
+            .eq("id", id)
+            .eq("status", "PENDING")
+            .select("id")
+        : await supabase
+            .from("bookings")
+            .delete()
+            .eq("id", id)
+            .eq("status", "PENDING")
+            .select("id");
+      if (error) throw error;
+      if (!data?.length) throw new Error("nothing_changed");
     },
     onSuccess: (_d, v) => {
+      setDeclining(null);
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       toast.success(
         v.approve
@@ -69,7 +87,18 @@ function ApprovalsPage() {
           : t("Rezervace zamítnuta.", "Booking declined."),
       );
     },
-    onError: () => toast.error(t("Akce se nepodařila.", "The action failed.")),
+    onError: (e: Error) => {
+      setDeclining(null);
+      void queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      toast.error(
+        e.message === "nothing_changed"
+          ? t(
+              "Nic se nezměnilo: o rezervaci už bylo rozhodnuto, nebo k tomu nemáte oprávnění.",
+              "Nothing changed: the booking was already decided, or you are not allowed to.",
+            )
+          : t("Akce se nepodařila.", "The action failed."),
+      );
+    },
   });
 
   if (account?.type === "FAMILY") return null;
@@ -88,6 +117,15 @@ function ApprovalsPage() {
 
       {isLoading ? (
         <LoadingCards />
+      ) : isError && !pending ? (
+        <div role="alert" className="card p-4">
+          <p className="font-bold">
+            {t("Rezervace se nepodařilo načíst.", "Could not load the bookings.")}
+          </p>
+          <button onClick={() => void refetch()} className="btn-secondary mt-3 w-full">
+            {t("Zkusit znovu", "Try again")}
+          </button>
+        </div>
       ) : !pending?.length ? (
         <EmptyState
           icon={Inbox}
@@ -103,8 +141,7 @@ function ApprovalsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-bold">{b.requester_name}</p>
                   <p className="text-[14px] text-muted-foreground">
-                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests}{" "}
-                    {lang === "en" ? "guests" : "hostů"}
+                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {guestCount(b.guests, lang)}
                   </p>
                 </div>
               </div>
@@ -115,14 +152,12 @@ function ApprovalsPage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => decide.mutate({ id: b.id, approve: true })}
+                    disabled={decide.isPending}
                     className="btn-primary flex-1"
                   >
                     {t("Schválit", "Approve")}
                   </button>
-                  <button
-                    onClick={() => decide.mutate({ id: b.id, approve: false })}
-                    className="btn-danger flex-1"
-                  >
+                  <button onClick={() => setDeclining(b)} className="btn-danger flex-1">
                     {t("Zamítnout", "Decline")}
                   </button>
                 </div>
@@ -135,6 +170,25 @@ function ApprovalsPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog
+        open={!!declining}
+        onOpenChange={(open) => !open && setDeclining(null)}
+        title={t(
+          `Zamítnout rezervaci ${declining?.requester_name ?? ""}?`,
+          `Decline ${declining?.requester_name ?? ""}'s booking?`,
+        )}
+        description={
+          declining
+            ? t(
+                `${fmtDate(declining.start_date)} – ${fmtDate(declining.end_date)}. Rezervace bude smazána a nelze ji vrátit.`,
+                `${fmtDate(declining.start_date)} – ${fmtDate(declining.end_date)}. The booking will be deleted; this can't be undone.`,
+              )
+            : ""
+        }
+        confirmLabel={t("Zamítnout", "Decline")}
+        busy={decide.isPending}
+        onConfirm={() => declining && decide.mutate({ id: declining.id, approve: false })}
+      />
     </AppShell>
   );
 }

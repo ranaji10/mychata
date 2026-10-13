@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { declineReasons, fmtDate, fmtDateTime, type InstitutionalRequest } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
+import { useInstitutionOnly } from "@/lib/use-institution-only";
 
 export const Route = createFileRoute("/zadosti")({
   staticData: { sitemap: false },
@@ -37,10 +38,17 @@ function RequestsPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [declining, setDeclining] = useState<InstitutionalRequest[]>([]);
   const [declineReason, setDeclineReason] = useState("");
+  const hidden = useInstitutionOnly();
 
-  const { data: requests, isLoading } = useQuery({
-    queryKey: ["requests", property?.id],
-    enabled: !!property,
+  // Newest first here; Home and the export keep the start-date order under ["requests", id].
+  const {
+    data: requests,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["requests", property?.id, "newest"],
+    enabled: !!property && !hidden,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutional_requests")
@@ -63,27 +71,53 @@ function RequestsPage() {
       reason?: string;
     }) => {
       for (const req of requests) {
-        const { error } = await supabase
+        // Approve writes the stay first and marks the request only when that worked; if the
+        // request can't be marked (already decided, or refused by row-level security, which
+        // returns 0 rows instead of an error), the stay is taken back. Before T-026 the request
+        // was marked first, so a failed insert left it "Approved" with no stay in the calendar.
+        let bookingId: string | null = null;
+        if (approve) {
+          const { data: booking, error: bErr } = await supabase
+            .from("bookings")
+            .insert({
+              property_id: req.property_id,
+              // The applicant is not a member: don't make the approver the booker (0024 default).
+              requester_member_id: null,
+              requester_name: req.requester_name,
+              start_date: req.start_date,
+              end_date: req.end_date,
+              guests: req.guests,
+              note: req.note,
+              status: "CONFIRMED",
+            })
+            .select("id")
+            .single();
+          if (bErr) throw bErr;
+          bookingId = booking.id;
+        }
+        const { data: marked, error } = await supabase
           .from("institutional_requests")
           .update({
             status: approve ? "APPROVED" : "DECLINED",
             decline_reason: approve ? null : (reason ?? null),
           })
-          .eq("id", req.id);
-        if (error) throw error;
-        if (approve) {
-          const { error: bErr } = await supabase.from("bookings").insert({
-            property_id: req.property_id,
-            // The applicant is not a member: don't make the approver the booker (0024 default).
-            requester_member_id: null,
-            requester_name: req.requester_name,
-            start_date: req.start_date,
-            end_date: req.end_date,
-            guests: req.guests,
-            note: req.note,
-            status: "CONFIRMED",
-          });
-          if (bErr) throw bErr;
+          .eq("id", req.id)
+          .eq("status", "PENDING")
+          .select("id");
+        if (error || !marked?.length) {
+          if (bookingId) {
+            const { error: undoErr } = await supabase.from("bookings").delete().eq("id", bookingId);
+            if (undoErr) console.error("[zadosti] undo booking", undoErr);
+          }
+          throw (
+            error ??
+            new Error(
+              t(
+                `Žádost ${req.requester_name} už byla vyřízena, nebo k tomu nemáte oprávnění.`,
+                `${req.requester_name}'s request was already decided, or you are not allowed to.`,
+              ),
+            )
+          );
         }
       }
     },
@@ -106,12 +140,16 @@ function RequestsPage() {
     },
     onError: (error) => {
       console.error("[zadosti] decide", error);
+      void queryClient.invalidateQueries({ queryKey: ["requests", property?.id] });
+      void queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] });
       toast.error(t(`Akce se nepodařila: ${error.message}`, `The action failed: ${error.message}`));
     },
   });
 
   const pending = requests?.filter((r) => r.status === "PENDING") ?? [];
   const processed = requests?.filter((r) => r.status !== "PENDING") ?? [];
+
+  if (hidden) return null;
 
   return (
     <AppShell>
@@ -122,6 +160,15 @@ function RequestsPage() {
 
       {isLoading ? (
         <LoadingCards />
+      ) : isError && !requests ? (
+        <div role="alert" className="card p-4">
+          <p className="font-bold">
+            {t("Žádosti se nepodařilo načíst.", "Could not load the requests.")}
+          </p>
+          <button onClick={() => void refetch()} className="btn-secondary mt-3 w-full">
+            {t("Zkusit znovu", "Try again")}
+          </button>
+        </div>
       ) : pending.length === 0 && processed.length === 0 ? (
         <EmptyState
           icon={Inbox}

@@ -12,7 +12,7 @@ Rules for this project (full version in AGENTS.md in the repository):
 5. All user-facing text goes through `t("Czech", "English")`, Czech first. Users are 45–68: at least 16px text, 44px tap targets, light mode only. Full design rules: `docs/product/design.md`.
 6. Don't edit files under `supabase/tests`, `docs/decisions`, `.github` or `.claude`.
 7. Keep `main` working: the app is published from it.
-8. Never delete or empty `.env.production`. It holds only public values the browser build needs; without it the published app crashes (B-002).
+8. Never delete or empty `.env.production` or `.env.development`. They hold only public values the browser needs: without the first the published app crashes (B-002), without the second your own preview does (B-018). Don't add a `.env` file instead.
 9. Don't store project or product rules in your memory; they live in the repository.
 10. Test only in your own test account and its cottage "Testovací chata (Lovable)" (`docs/runbooks/test-cottages.md`). Never open, tap through or submit a guest, calendar, manual, form or invitation link of any other cottage, and never read or change a real family's data. If your test session has no cottage, stop and say so; don't borrow a real link. Test records use invented names and `@example.com` emails.
 11. Don't change package versions (`package.json`, `bun.lock`) unless the prompt asks. If your tooling updates them anyway, put that in its own commit whose message starts with `deps:`, and list the packages and versions in your reply.

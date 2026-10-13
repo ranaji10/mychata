@@ -4,6 +4,7 @@ import { Download, FileText, Loader2, Plus, RefreshCw, Search, Trash2 } from "lu
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { AskBox } from "@/components/AskBox";
 import {
   EmptyState,
@@ -21,9 +22,10 @@ import { readDocumentText } from "@/lib/manual-qa.functions";
 
 export const Route = createFileRoute("/dokumenty")({
   staticData: { sitemap: false },
-  validateSearch: (search: Record<string, unknown>) => ({
-    task: typeof search["task"] === "string" ? search["task"] : "",
-  }),
+  // ?task=<id> only when filing a warranty for a task; plain /dokumenty otherwise (T-026:
+  // every visit used to end in "?task=").
+  validateSearch: (search: Record<string, unknown>): { task?: string } =>
+    typeof search["task"] === "string" && search["task"] ? { task: search["task"] } : {},
   head: () => ({
     meta: [
       { title: "Document Vault — My Chata" },
@@ -59,6 +61,12 @@ function DocumentsPage() {
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("ALL");
+  const [deleting, setDeleting] = useState<{
+    id: string;
+    title: string;
+    path: string | null;
+  } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [adding, setAdding] = useState(!!linkedTaskId);
   const [form, setForm] = useState({
     title: "",
@@ -200,21 +208,50 @@ function DocumentsPage() {
 
   const openFile = async (path: string | null) => {
     if (!path) return;
+    // Safari (iPhone, Mac) blocks window.open() that happens after an await, so "Open" did
+    // nothing there (T-026). Open the tab during the tap, then point it at the file.
+    const tab = window.open("", "_blank");
     const { data, error } = await supabase.storage.from("my-chata-files").createSignedUrl(path, 60);
     if (error) {
+      tab?.close();
       toast.error(t("Soubor nelze otevřít.", "Could not open the file."));
       return;
     }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    if (tab) {
+      tab.opener = null;
+      tab.location.href = data.signedUrl;
+    } else {
+      window.location.assign(data.signedUrl);
+    }
   };
   const remove = async (id: string, path: string | null) => {
-    if (path) await supabase.storage.from("my-chata-files").remove([path]);
-    const { error } = await supabase.from("documents").delete().eq("id", id);
-    if (error) {
-      toast.error(t("Dokument nelze smazat.", "Could not delete the document."));
-      return;
+    setDeleteBusy(true);
+    try {
+      // The record first, the file after: the other way round, a refused delete left a
+      // document whose file was already gone (T-026). Row-level security turns a refused
+      // delete into "0 rows", not an error, so that is checked too.
+      const { data, error } = await supabase.from("documents").delete().eq("id", id).select("id");
+      if (error || !data?.length) {
+        if (error) console.error("[dokumenty] delete", error);
+        toast.error(
+          t(
+            "Dokument nelze smazat. Mazat dokumenty může jen správce.",
+            "Could not delete the document. Only an admin can delete documents.",
+          ),
+        );
+        return;
+      }
+      if (path) {
+        const { error: fileError } = await supabase.storage.from("my-chata-files").remove([path]);
+        // The document is gone from the app; a leftover file is only logged.
+        if (fileError) console.error("[dokumenty] remove file", fileError);
+      }
+      toast.success(t("Dokument smazán.", "Document deleted."));
+      void queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
+    } finally {
+      setDeleteBusy(false);
+      setDeleting(null);
     }
-    queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
   };
   const daysUntil = (date: string) =>
     Math.ceil(
@@ -357,7 +394,13 @@ function DocumentsPage() {
                   )}
                   {isAdmin && (
                     <button
-                      onClick={() => remove(document.id, document.file_url)}
+                      onClick={() =>
+                        setDeleting({
+                          id: document.id,
+                          title: document.title,
+                          path: document.file_url,
+                        })
+                      }
                       className="grid size-11 place-items-center rounded-xl bg-primary-soft text-primary"
                       aria-label={t("Smazat", "Delete")}
                     >
@@ -457,6 +500,21 @@ function DocumentsPage() {
           </form>
         </div>
       )}
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={t(
+          `Smazat dokument „${deleting?.title ?? ""}“?`,
+          `Delete the document “${deleting?.title ?? ""}”?`,
+        )}
+        description={t(
+          "Smaže se i nahraný soubor. Nelze to vrátit.",
+          "The uploaded file is deleted too. This can't be undone.",
+        )}
+        confirmLabel={t("Smazat", "Delete")}
+        busy={deleteBusy}
+        onConfirm={() => deleting && void remove(deleting.id, deleting.path)}
+      />
     </AppShell>
   );
 }

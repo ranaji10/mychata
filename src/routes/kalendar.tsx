@@ -9,7 +9,8 @@ import { EmptyState, Skeleton } from "@/components/bits";
 import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, pickRange, todayISO, type Booking, type DateRange } from "@/lib/data";
+import { fmtDate, guestCount, pickRange, todayISO, type Booking, type DateRange } from "@/lib/data";
+import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/kalendar")({
@@ -39,8 +40,9 @@ export const Route = createFileRoute("/kalendar")({
 });
 
 function CalendarPage() {
-  const { t } = useLang();
-  const { account, property } = useAccount();
+  const { t, lang } = useLang();
+  const { account, property, currentMember } = useAccount();
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const { book } = Route.useSearch();
   const navigate = useNavigate();
   const nav = useMonthNav();
@@ -49,7 +51,12 @@ function CalendarPage() {
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const calendarRef = useRef<HTMLElement>(null);
 
-  const { data: bookings, isLoading } = useQuery({
+  const {
+    data: bookings,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["bookings", property?.id],
     enabled: !!property,
     queryFn: async () => {
@@ -64,6 +71,19 @@ function CalendarPage() {
   });
 
   const isFamily = account?.type === "FAMILY";
+
+  // Guest requests are not bookings until an admin approves them, but the admin should see
+  // them on the calendar as "Awaiting approval", as the legend says (T-026). Members don't
+  // see guest requests at all (row-level security), so nothing changes for them.
+  const { data: guestRequests } = usePendingGuestRequests(property?.id, isAdmin);
+  const calendarStays = [
+    ...(bookings ?? []),
+    ...(guestRequests ?? []).map((g) => ({
+      start_date: g.start_date,
+      end_date: g.end_date,
+      status: "PENDING" as const,
+    })),
+  ];
 
   const startPicking = () => {
     setPicking(true);
@@ -138,11 +158,20 @@ function CalendarPage() {
         <div className="mt-3">
           {isLoading ? (
             <Skeleton className="h-64" />
+          ) : isError && !bookings ? (
+            <div role="alert" className="rounded-2xl bg-secondary p-4">
+              <p className="font-bold">
+                {t("Kalendář se nepodařilo načíst.", "Could not load the calendar.")}
+              </p>
+              <button onClick={() => void refetch()} className="btn-secondary mt-3 w-full">
+                {t("Zkusit znovu", "Try again")}
+              </button>
+            </div>
           ) : (
             <CalendarMonth
               year={nav.year}
               month={nav.month}
-              bookings={bookings ?? []}
+              bookings={calendarStays}
               {...(isFamily ? { selection: range, onPickDay } : {})}
             />
           )}
@@ -208,8 +237,7 @@ function CalendarPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-bold">{b.requester_name}</p>
                   <p className="text-[13px] text-muted-foreground">
-                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {b.guests}{" "}
-                    {t("hostů", "guests")}
+                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {guestCount(b.guests, lang)}
                   </p>
                 </div>
                 {b.status === "PENDING" && (

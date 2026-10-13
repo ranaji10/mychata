@@ -44,6 +44,9 @@ function TasksPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>("all");
   const [title, setTitle] = useState("");
+  // Adding waits for the translation, which can take a few seconds; a second tap meanwhile
+  // used to create the task (or the whole checklist) twice (T-026).
+  const [adding, setAdding] = useState(false);
   // null = not chosen yet: new tasks default to the person adding them (T-019).
   const [assignee, setAssignee] = useState<string | null>(null);
   const chosenAssignee = assignee ?? currentMember?.id ?? "";
@@ -124,7 +127,16 @@ function TasksPage() {
   });
 
   const addTask = async () => {
-    if (!property || !currentMember || !title.trim()) return;
+    if (adding || !property || !currentMember || !title.trim()) return;
+    setAdding(true);
+    try {
+      await saveTask();
+    } finally {
+      setAdding(false);
+    }
+  };
+  const saveTask = async () => {
+    if (!property || !currentMember) return;
     const translated = await translate({
       data: { text: title.trim(), sourceLanguage: lang },
     }).catch(() => ({ translation: title.trim() }));
@@ -153,6 +165,15 @@ function TasksPage() {
   };
 
   const addChecklist = async (templateId: string, force = false) => {
+    if (adding || !property || !currentMember) return;
+    setAdding(true);
+    try {
+      await saveChecklist(templateId, force);
+    } finally {
+      setAdding(false);
+    }
+  };
+  const saveChecklist = async (templateId: string, force: boolean) => {
     if (!property || !currentMember) return;
     const template = seasonalTemplates(lang).find((tpl) => tpl.id === templateId);
     const csTemplate = seasonalTemplates("cs").find((tpl) => tpl.id === templateId);
@@ -360,10 +381,10 @@ function TasksPage() {
           <div className="flex gap-2">
             <button
               onClick={addTask}
-              disabled={!title.trim()}
+              disabled={adding || !title.trim()}
               className="btn-primary flex-1 disabled:opacity-40"
             >
-              {t("Přidat úkol", "Add task")}
+              {adding ? t("Ukládám…", "Saving…") : t("Přidat úkol", "Add task")}
             </button>
             <button onClick={() => setShowForm(false)} className="btn-secondary">
               {t("Zrušit", "Cancel")}
@@ -474,7 +495,8 @@ function TasksPage() {
                   )}
                   <div className="flex gap-2">
                     <button
-                      className="btn-primary flex-1"
+                      className="btn-primary flex-1 disabled:opacity-40"
+                      disabled={adding}
                       onClick={() => addChecklist(tpl.id, duplicateOf === tpl.id)}
                     >
                       {duplicateOf === tpl.id

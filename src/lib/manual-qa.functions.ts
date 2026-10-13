@@ -35,10 +35,16 @@ const DAILY_QUESTIONS_PER_USER = 30;
 const DAILY_DOCUMENT_READS_PER_USER = 40;
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
+// Time limits for AI gateway calls (B-005, T-014). A document read sends whole files, so the
+// chat limit is generous; the rest are short.
+const CHAT_TIMEOUT_MS = 45_000;
+const EMBED_TIMEOUT_MS = 15_000;
+const MODELS_TIMEOUT_MS = 8_000;
 
 async function embed(text: string, apiKey: string): Promise<number[]> {
   const res = await fetch(`${GATEWAY}/embeddings`, {
     method: "POST",
+    signal: AbortSignal.timeout(EMBED_TIMEOUT_MS),
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ model: EMBED_MODEL, input: text, dimensions: EMBED_DIMS }),
   });
@@ -142,6 +148,7 @@ async function gatewayModelIds(apiKey: string): Promise<string[]> {
   if (listedModels && Date.now() - listedModels.at < 60 * 60 * 1000) return listedModels.ids;
   try {
     const res = await fetch(`${GATEWAY}/models`, {
+      signal: AbortSignal.timeout(MODELS_TIMEOUT_MS),
       headers: { Authorization: `Bearer ${apiKey}` },
     });
     if (!res.ok) throw new Error(`models_${res.status}`);
@@ -172,11 +179,22 @@ async function chat(apiKey: string, messages: ChatMessage[]): Promise<string> {
   if (configured) models.unshift(configured);
   let last = "no_model";
   for (const model of [...new Set(models)]) {
-    const res = await fetch(`${GATEWAY}/chat/completions`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, temperature: 0.2, messages }),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${GATEWAY}/chat/completions`, {
+        method: "POST",
+        // A hung model used to keep the question spinning for ever (B-005, T-014). On a
+        // timeout the caller falls back to the best-matching excerpt, as for any AI failure.
+        signal: AbortSignal.timeout(CHAT_TIMEOUT_MS),
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, temperature: 0.2, messages }),
+      });
+    } catch (e) {
+      last = `ai_network_${model}: ${(e as Error).name} ${(e as Error).message}`;
+      console.error("[manual-qa] chat failed", last);
+      // A timeout means the gateway is slow; trying the next model would only double the wait.
+      break;
+    }
     if (res.ok) {
       const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
       const content = json.choices?.[0]?.message?.content?.trim();

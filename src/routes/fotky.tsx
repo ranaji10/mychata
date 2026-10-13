@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
@@ -29,8 +30,13 @@ function PhotosPage() {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState<PropertyPhoto | null>(null);
 
-  const { data: photos } = useQuery({
+  const {
+    data: photos,
+    isError: photosFailed,
+    refetch: refetchPhotos,
+  } = useQuery({
     queryKey: ["property-photos", property?.id],
     enabled: !!property,
     queryFn: async () => {
@@ -123,8 +129,20 @@ function PhotosPage() {
 
   const remove = useMutation({
     mutationFn: async (photo: PropertyPhoto) => {
-      const { error } = await supabase.from("property_photos").delete().eq("id", photo.id);
+      // Row-level security turns a refused delete into "0 rows", not an error: check it.
+      const { data, error } = await supabase
+        .from("property_photos")
+        .delete()
+        .eq("id", photo.id)
+        .select("id");
       if (error) throw error;
+      if (!data?.length)
+        throw new Error(
+          t(
+            "nic se nesmazalo (fotku může smazat ten, kdo ji nahrál, nebo správce)",
+            "nothing was deleted (the person who added it or an admin can delete it)",
+          ),
+        );
       const { error: fileError } = await supabase.storage
         .from("my-chata-files")
         .remove([photo.storage_path]);
@@ -132,10 +150,13 @@ function PhotosPage() {
       if (fileError) console.error("[fotky] remove file", fileError);
     },
     onSuccess: () => {
+      setDeleting(null);
+      toast.success(t("Fotka smazána.", "Photo deleted."));
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
       queryClient.invalidateQueries({ queryKey: ["primary-photo"] });
     },
     onError: (error) => {
+      setDeleting(null);
       console.error("[fotky] remove", error);
       toast.error(
         t(
@@ -150,15 +171,25 @@ function PhotosPage() {
     queryKey: ["property-photo-urls", property?.id, photos?.map((p) => p.id).join(",")],
     enabled: !!photos?.length,
     queryFn: async () => {
-      const map = new Map<string, string>();
-      for (const p of photos!) {
-        const { data, error } = await supabase.storage
-          .from("my-chata-files")
-          .createSignedUrl(p.storage_path, 3600);
-        if (error) console.error("[fotky] signed url", p.storage_path, error);
-        if (data?.signedUrl) map.set(p.id, data.signedUrl);
+      // One request for all photos instead of one per photo (B-005, T-014).
+      // A plain object, not a Map: the offline cache stores queries as JSON, which turns a Map
+      // into {} and crashed this page after a reload (T-026).
+      const urlsById: Record<string, string> = {};
+      const { data, error } = await supabase.storage.from("my-chata-files").createSignedUrls(
+        photos!.map((p) => p.storage_path),
+        3600,
+      );
+      if (error) throw error;
+      const byPath = new Map<string, string>();
+      for (const row of data ?? []) {
+        if (row.error) console.error("[fotky] signed url", row.path, row.error);
+        if (row.path && row.signedUrl) byPath.set(row.path, row.signedUrl);
       }
-      return map;
+      for (const p of photos!) {
+        const url = byPath.get(p.storage_path);
+        if (url) urlsById[p.id] = url;
+      }
+      return urlsById;
     },
   });
 
@@ -190,8 +221,8 @@ function PhotosPage() {
             key={p.id}
             className={`card overflow-hidden ${p.is_primary ? "ring-2 ring-primary" : ""}`}
           >
-            {urls?.get(p.id) ? (
-              <img src={urls.get(p.id)} alt="" className="aspect-square w-full object-cover" />
+            {urls?.[p.id] ? (
+              <img src={urls[p.id]} alt="" className="aspect-square w-full object-cover" />
             ) : (
               <div className="aspect-square w-full bg-secondary" />
             )}
@@ -206,7 +237,7 @@ function PhotosPage() {
               <button
                 className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
                 aria-label={t("Smazat", "Delete")}
-                onClick={() => remove.mutate(p)}
+                onClick={() => setDeleting(p)}
               >
                 <Trash2 className="size-5" />
               </button>
@@ -214,7 +245,17 @@ function PhotosPage() {
           </figure>
         ))}
       </div>
-      {!photos?.length && (
+      {photosFailed && !photos ? (
+        <div role="alert" className="card mt-6 p-4">
+          <p className="font-bold">
+            {t("Fotky se nepodařilo načíst.", "Could not load the photos.")}
+          </p>
+          <button onClick={() => void refetchPhotos()} className="btn-secondary mt-3 w-full">
+            {t("Zkusit znovu", "Try again")}
+          </button>
+        </div>
+      ) : null}
+      {!photos?.length && !photosFailed && (
         <p className="mt-6 text-center text-muted-foreground">
           {t("Zatím žádné fotky. Přidejte první!", "No photos yet. Add the first one!")}
         </p>
@@ -225,6 +266,22 @@ function PhotosPage() {
           "Use the star to pick the cottage's main photo.",
         )}
       </p>
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={t("Smazat tuto fotku?", "Delete this photo?")}
+        description={
+          deleting?.is_primary
+            ? t(
+                "Je to hlavní fotka chaty. Domovská stránka pak ukáže výchozí obrázek. Smazání nelze vrátit.",
+                "This is the cottage's main photo; Home will show the default picture. This can't be undone.",
+              )
+            : t("Smazání nelze vrátit.", "This can't be undone.")
+        }
+        confirmLabel={t("Smazat", "Delete")}
+        busy={remove.isPending}
+        onConfirm={() => deleting && remove.mutate(deleting)}
+      />
     </AppShell>
   );
 }

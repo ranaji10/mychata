@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, FileBadge, User } from "lucide-react";
+import { ArrowLeft, CalendarDays, ClipboardList, FileBadge, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AppShell } from "@/components/AppShell";
-import { PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
+import { EmptyState, PillDanger, PillNeutral, PillOk, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
@@ -49,12 +49,19 @@ function TaskDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: task, isLoading } = useQuery({
+  // maybeSingle: a deleted task, or one from another account, is "not found", not an error
+  // that leaves the page loading forever (T-025).
+  const {
+    data: task,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["task", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("tasks").select("*").eq("id", id).single();
+      const { data, error } = await supabase.from("tasks").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
-      return data as Task;
+      return (data as Task | null) ?? null;
     },
   });
 
@@ -78,14 +85,22 @@ function TaskDetail() {
 
   const remove = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("tasks").delete().eq("id", id);
+      // Row-level security turns a refused delete into "0 rows", not an error: check it.
+      const { data, error } = await supabase.from("tasks").delete().eq("id", id).select("id");
       if (error) throw error;
+      if (!data?.length)
+        throw new Error(
+          t(
+            "Úkol se nepodařilo smazat. Mazat úkoly může jen správce.",
+            "The task could not be deleted. Only an admin can delete tasks.",
+          ),
+        );
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success(t("Úkol smazán.", "Task deleted."));
+      await navigate({ to: "/ukoly" });
       queryClient.removeQueries({ queryKey: ["task", id] });
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      void navigate({ to: "/ukoly" });
     },
     onError: (e: Error) => {
       setConfirmOpen(false);
@@ -93,10 +108,44 @@ function TaskDetail() {
     },
   });
 
-  if (isLoading || !task) {
+  if (isLoading) {
     return (
       <AppShell>
         <Skeleton className="h-48" />
+      </AppShell>
+    );
+  }
+
+  if (isError || !task) {
+    return (
+      <AppShell>
+        <EmptyState
+          icon={ClipboardList}
+          title={
+            isError
+              ? t("Úkol se nepodařilo načíst.", "The task could not be loaded.")
+              : t("Tento úkol už neexistuje.", "This task no longer exists.")
+          }
+          hint={
+            isError
+              ? t(
+                  "Zkontrolujte připojení a zkuste to znovu.",
+                  "Check your connection and try again.",
+                )
+              : t("Mohl být smazán.", "It may have been deleted.")
+          }
+          action={
+            isError ? (
+              <button onClick={() => void refetch()} className="btn-primary w-full">
+                {t("Zkusit znovu", "Try again")}
+              </button>
+            ) : (
+              <Link to="/ukoly" className="btn-primary w-full">
+                {t("Zpět na úkoly", "Back to tasks")}
+              </Link>
+            )
+          }
+        />
       </AppShell>
     );
   }
@@ -224,7 +273,7 @@ function TaskDetail() {
             {t("Smazat úkol", "Delete task")}
           </button>
           <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-            <AlertDialogContent>
+            <AlertDialogContent className="w-[calc(100%-2rem)] rounded-3xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>
                   {t(

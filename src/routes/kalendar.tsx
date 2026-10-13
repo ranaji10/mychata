@@ -188,13 +188,6 @@ function CalendarPage() {
                 ? t("Buďte první, kdo naplánuje pobyt.", "Be the first to plan a stay.")
                 : t("Schválené žádosti se zde zobrazí.", "Approved requests will appear here.")
             }
-            action={
-              isFamily ? (
-                <button onClick={startPicking} className="btn-primary w-full">
-                  {t("Rezervovat termín", "Book a date")}
-                </button>
-              ) : undefined
-            }
           />
         ) : (
           <div className="space-y-2.5">

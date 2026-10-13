@@ -51,7 +51,7 @@ function PublicManual() {
       ),
   });
   return (
-    <main className="mx-auto min-h-screen max-w-[400px] bg-background px-4 py-6 text-foreground">
+    <main className="mx-auto min-h-screen max-w-[420px] bg-background px-4 py-6 text-foreground md:max-w-[720px] md:py-10">
       <header className="mb-5 flex items-start justify-between gap-3">
         <div>
           <p className="text-[13px] font-bold uppercase text-primary">My Chata</p>

@@ -74,6 +74,13 @@ function ExpensesPage() {
     const shares = equalShares(total, ids.length);
     setCustomAmounts(Object.fromEntries(ids.map((id, i) => [id, String(shares[i] ?? 0)])));
   };
+  // First names keep the chips short, unless two people share one (then the full name).
+  const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? name;
+  const chipName = (name: string) =>
+    members.filter((x) => firstName(x.name).toLowerCase() === firstName(name).toLowerCase())
+      .length > 1
+      ? name
+      : firstName(name);
   const toggleMember = (id: string) => {
     const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
     setSelected(next);
@@ -314,6 +321,7 @@ function ExpensesPage() {
               ).map(([method, label]) => (
                 <button
                   key={method}
+                  aria-pressed={splitMethod === method}
                   onClick={() => chooseMethod(method)}
                   className={
                     splitMethod === method
@@ -334,6 +342,7 @@ function ExpensesPage() {
               {members.map((m) => (
                 <button
                   key={m.id}
+                  aria-pressed={selected.includes(m.id)}
                   onClick={() => toggleMember(m.id)}
                   className={`h-11 rounded-full px-4 text-[14px] font-bold ${
                     selected.includes(m.id)
@@ -341,7 +350,7 @@ function ExpensesPage() {
                       : "bg-card ring-1 ring-black/10"
                   }`}
                 >
-                  {m.name.split(" ")[0]}
+                  {chipName(m.name)}
                 </button>
               ))}
             </div>

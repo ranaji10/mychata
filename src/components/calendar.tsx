@@ -91,7 +91,7 @@ export function CalendarMonth({
             return (
               <div
                 key={d.iso}
-                className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold"
+                className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold md:h-14 md:text-[16px]"
                 style={style}
               >
                 {label}
@@ -109,7 +109,7 @@ export function CalendarMonth({
               aria-label={`${d.day}. ${monthNames(lang)[Number(d.iso.slice(5, 7)) - 1]}${
                 booking ? ` · ${t("obsazeno", "booked")}` : ""
               }`}
-              className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
+              className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold md:h-14 md:text-[16px] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
               style={style}
             >
               {label}

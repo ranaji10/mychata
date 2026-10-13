@@ -244,16 +244,16 @@ function AuthPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4">
-      <div className="flex justify-end">
+    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4 md:max-w-[480px] md:py-8 lg:grid lg:max-w-[1080px] lg:grid-cols-2 lg:content-center lg:gap-x-14 lg:px-8">
+      <div className="flex justify-end lg:col-span-2">
         <LanguageToggle />
       </div>
       <img
         src={chataImg}
         alt={t("Dřevěná chata", "Wooden cottage")}
-        className="mt-4 aspect-[16/10] w-full rounded-3xl object-cover"
+        className="mt-4 aspect-[16/10] w-full rounded-3xl object-cover lg:aspect-[4/5] lg:max-h-[640px]"
       />
-      <section className="py-8">
+      <section className="py-8 lg:self-center">
         <p className="font-bold text-primary">My Chata</p>
         <h1 className="mt-1 text-3xl font-bold">
           {t("Přihlaste se ke své chatě", "Sign in to your cottage")}

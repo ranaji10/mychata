@@ -298,7 +298,7 @@ function MembersPage() {
                       {inv.email ?? t("kdokoli s odkazem", "anyone with the link")}
                     </span>
                     <button
-                      className="pill bg-card text-muted-foreground"
+                      className="pill min-h-11 bg-card px-3 text-muted-foreground"
                       aria-label={t("Změnit roli", "Change role")}
                       onClick={() =>
                         updateInvite.mutate({
@@ -313,35 +313,39 @@ function MembersPage() {
                   <div className="grid grid-cols-4 gap-2">
                     {inv.email && (
                       <a
-                        className="grid h-11 place-items-center rounded-xl bg-card"
+                        className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                         href={mailInvite(inv)}
                         aria-label={t("Poslat e-mailem", "Send by email")}
                       >
                         <Mail className="size-5" />
+                        <span className="text-[12px] font-bold">{t("E-mail", "Email")}</span>
                       </a>
                     )}
                     <button
-                      className="grid h-11 place-items-center rounded-xl bg-card"
+                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                       aria-label={t("Sdílet", "Share")}
                       onClick={() => shareInvite(inv)}
                     >
                       <Share2 className="size-5" />
+                      <span className="text-[12px] font-bold">{t("Sdílet", "Share")}</span>
                     </button>
                     <button
-                      className="grid h-11 place-items-center rounded-xl bg-card"
+                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                       aria-label={t("Zkopírovat odkaz", "Copy link")}
                       onClick={() => copyInvite(inv.token)}
                     >
                       <Copy className="size-5" />
+                      <span className="text-[12px] font-bold">{t("Kopírovat", "Copy")}</span>
                     </button>
                     <button
-                      className="grid h-11 place-items-center rounded-xl bg-card text-muted-foreground"
+                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1 text-muted-foreground"
                       aria-label={t("Zrušit pozvánku", "Cancel invitation")}
                       onClick={() =>
                         updateInvite.mutate({ id: inv.id, patch: { status: "REVOKED" } })
                       }
                     >
                       <X className="size-5" />
+                      <span className="text-[12px] font-bold">{t("Zrušit", "Cancel")}</span>
                     </button>
                   </div>
                   <ManualCopyLink url={manualLink?.token === inv.token ? manualLink.url : null} />
@@ -387,23 +391,21 @@ function MembersPage() {
               </div>
               {isAdmin && m.id !== currentMember?.id && m.user_id && (
                 <button
-                  className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary disabled:opacity-50"
+                  className="flex min-h-11 max-w-[8.5rem] shrink-0 items-center gap-1.5 rounded-xl bg-secondary px-3 py-1.5 text-left text-[13px] font-bold leading-tight disabled:opacity-50"
                   disabled={toggleRole.isPending}
                   aria-busy={changing}
-                  aria-label={
-                    mIsAdmin
-                      ? t("Odebrat správce", "Remove admin")
-                      : t("Udělat správcem", "Make admin")
-                  }
                   onClick={() => toggleRole.mutate({ memberId: m.id, makeAdmin: !mIsAdmin })}
                 >
                   {changing ? (
-                    <Loader2 className="size-5 animate-spin" />
+                    <Loader2 className="size-5 shrink-0 animate-spin" />
                   ) : mIsAdmin ? (
-                    <UserMinus className="size-5" />
+                    <UserMinus className="size-5 shrink-0" />
                   ) : (
-                    <ShieldCheck className="size-5" />
+                    <ShieldCheck className="size-5 shrink-0" />
                   )}
+                  {mIsAdmin
+                    ? t("Odebrat správce", "Remove admin")
+                    : t("Udělat správcem", "Make admin")}
                 </button>
               )}
             </div>

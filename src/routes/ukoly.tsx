@@ -230,6 +230,7 @@ function TasksPage() {
         {FILTERS.map((f) => (
           <button
             key={f.key}
+            aria-pressed={filter === f.key}
             onClick={() => setFilter(f.key)}
             className={`h-11 shrink-0 rounded-full px-4 text-[16px] font-bold ${
               filter === f.key

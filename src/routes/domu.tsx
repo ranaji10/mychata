@@ -197,7 +197,7 @@ function HomePage() {
           <img
             src={mainPhoto ?? chataImg}
             alt={property?.name ?? t("Chata", "Cottage")}
-            className="aspect-[16/10] w-full object-cover"
+            className="aspect-[16/10] w-full object-cover md:aspect-[21/9]"
             width={1024}
             height={640}
           />
@@ -511,10 +511,15 @@ function HomePage() {
         <div className="card mt-4 p-4 text-center">
           <PillWarn>{t("Tip", "Tip")}</PillWarn>
           <p className="mt-2 text-[15px] font-semibold">
-            {t(
-              "Všechny úkoly jsou hotové. Chatu máte pod kontrolou.",
-              "All tasks are done. You have the cottage under control.",
-            )}
+            {(tasks?.length ?? 0) > 0
+              ? t(
+                  "Všechny úkoly jsou hotové. Chatu máte pod kontrolou.",
+                  "All tasks are done. You have the cottage under control.",
+                )
+              : t(
+                  "Zatím tu nejsou žádné úkoly. Přidejte první nebo sezónní seznam v Úkolech.",
+                  "No tasks yet. Add the first one, or a seasonal checklist, in Tasks.",
+                )}
           </p>
         </div>
       )}

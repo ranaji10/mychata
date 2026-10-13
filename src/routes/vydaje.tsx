@@ -81,6 +81,10 @@ function ExpensesPage() {
       .length > 1
       ? name
       : firstName(name);
+  const openForm = () => {
+    setSelected(currentMember ? [currentMember.id] : []);
+    setShowForm(true);
+  };
   const toggleMember = (id: string) => {
     const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
     setSelected(next);
@@ -172,7 +176,7 @@ function ExpensesPage() {
       );
       setDesc("");
       setAmount("");
-      setSelected([]);
+      setSelected(currentMember ? [currentMember.id] : []);
       setCustomAmounts({});
       setSplitMethod("EQUAL");
       setShowForm(false);
@@ -215,7 +219,7 @@ function ExpensesPage() {
             "Add the first expense and split it between members.",
           )}
           action={
-            <button onClick={() => setShowForm(true)} className="btn-primary w-full">
+            <button onClick={openForm} className="btn-primary w-full">
               {t("Přidat výdaj", "Add expense")}
             </button>
           }
@@ -354,6 +358,11 @@ function ExpensesPage() {
                 </button>
               ))}
             </div>
+            {selected.length === 0 && (
+              <p role="status" className="mt-2 text-[16px] font-semibold text-destructive">
+                {t("Vyberte alespoň jednoho člověka.", "Pick at least one person.")}
+              </p>
+            )}
             <p className="mt-1 text-[12px] text-muted-foreground">
               {splitMethod === "EQUAL"
                 ? t(
@@ -450,7 +459,7 @@ function ExpensesPage() {
         </section>
       ) : (
         !isEmpty && (
-          <button onClick={() => setShowForm(true)} className="btn-primary mt-4 w-full">
+          <button onClick={openForm} className="btn-primary mt-4 w-full">
             <Plus className="size-5" /> {t("Přidat výdaj", "Add expense")}
           </button>
         )

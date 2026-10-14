@@ -19,6 +19,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CONSENT_REGIONS } from "../lib/consent-regions";
 import { brandAssets } from "../lib/brand-assets";
+import { BUILD_SHA, BUILD_TIME } from "../lib/build-info";
 
 const GA_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as
   string | undefined;
@@ -121,6 +122,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "google-site-verification", content: "hWHZFgtJQ226BHwT__LZOK4_EErIe_jdWwb21NqiElk" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      // Which commit is live (T-033); release.md tells how to read it.
+      { name: "build-sha", content: BUILD_SHA },
+      { name: "build-time", content: BUILD_TIME },
       { title: "My Chata — správa sdílené chaty" },
       {
         name: "description",

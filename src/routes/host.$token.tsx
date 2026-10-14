@@ -58,11 +58,13 @@ function GuestBookingPage() {
 
   if (isLoading)
     return (
-      <main className="page-fresh mx-auto min-h-screen max-w-[420px] px-5 py-5 md:max-w-[640px]">
-        <div className="flex justify-end">
+      // Same frame as the "link not valid" screen below, so nothing jumps when it appears.
+      <main className="mx-auto flex min-h-screen max-w-[420px] md:max-w-[640px] flex-col items-center justify-center page-fresh px-5 py-5 text-center">
+        <div className="mb-8 flex w-full justify-end">
           <LanguageToggle />
         </div>
-        <p className="mt-8" role="status">
+        <p className="mb-4 font-extrabold text-primary">My Chata</p>
+        <p className="text-[18px]" role="status">
           {t("Načítám chatu…", "Loading cottage…")}
         </p>
       </main>

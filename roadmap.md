@@ -1,3 +1,11 @@
+## Fresh air signed-in pages (14 Oct 2026)
+
+- [ ] Replace seasonal asset pointers with ordinary bundled photos and verify autumn.
+- [ ] Restyle Tasks, Expenses, Stays, Cottage, People/settings and used shared UI, preserving behaviour.
+- [ ] Capture before/after examples and verify pages at 375px/1280px in the test cottage.
+- [ ] Verify the requested end-to-end flows and checks; document blockers.
+- [ ] Grouped commits to lovable-sync: blocked by the platform-managed workspace branch; no manual Git writes allowed.
+
 ## Fresh air foundation (14 Oct 2026)
 
 - [x] Replace design rules, tokens, font and brand switching.

@@ -17,8 +17,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CONSENT_REGIONS } from "../lib/consent-regions";
 
 const GA_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as
-  | string
-  | undefined;
+  string | undefined;
 
 /** Runs before gtag.js loads: region-scoped Consent Mode v2 defaults + saved choice. */
 function gtagBootstrap(id: string) {

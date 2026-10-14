@@ -15,6 +15,10 @@
 
 Czech-first app for families and institutions that share a chata: calendar, tasks, expenses, handover, manual, documents. Live at mychata.cz. This file is the only always-loaded context; keep it under 150 lines and link out instead of copying.
 
+## UI module boundaries
+
+- Keep brand propagation in `src/lib/brand.ts` and stock-photo selection in `src/lib/season.ts`; shared hooks keep portals and seasonal fallbacks consistent without duplicating rules in screens.
+
 ## Stack
 
 TanStack Start 1.168 (SSR on Cloudflare via Nitro) · React 19 · TanStack Router/Query · Tailwind 4 + shadcn · Supabase (Auth, Postgres + pgvector, Storage) · Bun · TypeScript strict. **Not Next.js**, no Supabase Edge Functions: server code is `createServerFn` in `src/lib/*.functions.ts` (ADR-0001).

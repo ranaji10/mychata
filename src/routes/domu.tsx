@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, Inbox, Loader2 } from "lucide-react";
@@ -20,7 +21,7 @@ import {
 } from "@/lib/data";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { useLang } from "@/lib/i18n";
-import chataImg from "@/assets/chata.jpg";
+import { useDefaultChataPhoto } from "@/lib/season";
 import { usePrimaryPhotoUrl } from "@/lib/use-primary-photo";
 import { useExpenseData } from "@/lib/expenses";
 
@@ -28,6 +29,8 @@ export const Route = createFileRoute("/domu")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Home — My Chata" },
       {
         name: "description",
@@ -44,6 +47,7 @@ export const Route = createFileRoute("/domu")({
 });
 
 function HomePage() {
+  const defaultPhoto = useDefaultChataPhoto();
   const { t, lang } = useLang();
   const { account, property, currentMember, loading } = useAccount();
   const navigate = useNavigate();
@@ -202,7 +206,9 @@ function HomePage() {
               "Some information could not be loaded; this overview may be incomplete.",
             )}
           </p>
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             onClick={() => {
               void refetchBookings();
               void refetchTasks();
@@ -210,28 +216,46 @@ function HomePage() {
             className="btn-secondary mt-3 w-full"
           >
             {t("Zkusit znovu", "Try again")}
-          </button>
+          </Button>
         </div>
       )}
+      <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <h2 className="text-[32px] font-extrabold leading-[1.12] lg:text-[40px]">
+          {nextBooking && nextBooking.start_date > today
+            ? t(
+                `Chata je volná do ${fmtDate(nextBooking.start_date)}.`,
+                `The chata is free until ${fmtDate(nextBooking.start_date)}.`,
+              )
+            : t(
+                `Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`,
+                `Hello, ${currentMember?.name?.split(" ")[0] ?? ""}`,
+              )}
+        </h2>
+        <Link to="/kalendar" search={{ book: true }} className="btn-primary shrink-0">
+          <CalendarDays className="size-5" />
+          {t("Přidat pobyt", "Add booking")}
+        </Link>
+      </div>
       {/* Property hero */}
       <section>
-        <div className="relative overflow-hidden rounded-3xl">
+        <div className="relative overflow-hidden rounded-[28px]">
           <img
-            src={mainPhoto ?? chataImg}
-            alt={property?.name ?? t("Chata", "Cottage")}
-            className="aspect-[16/10] w-full object-cover md:aspect-[21/9]"
-            width={1024}
+            src={mainPhoto ?? defaultPhoto.src}
+            alt={mainPhoto ? (property?.name ?? t("Chata", "Cottage")) : defaultPhoto.alt}
+            className="aspect-[16/10] w-full object-cover object-[50%_42%] md:aspect-[21/9]"
+            loading="lazy"
+            width={1200}
             height={640}
           />
-          <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 ring-1 ring-black/5">
+          <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 shadow-chip">
             <span className="size-2 rounded-full bg-ok" />
-            <span className="text-[13px] font-bold">
+            <span className="text-[16px] font-bold">
               {nextBooking ? t("Připravená", "Ready") : t("Volná", "Free")}
             </span>
           </div>
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-2xl bg-card/95 px-4 py-3 ring-1 ring-black/5">
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-2xl bg-card/95 px-4 py-3 shadow-chip">
             <div>
-              <p className="text-[12px] font-semibold text-muted-foreground">
+              <p className="text-[16px] font-semibold text-muted-foreground">
                 {t("Nejbližší pobyt", "Next stay")}
               </p>
               {nextBooking ? (
@@ -253,16 +277,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Greeting */}
-      <p className="mt-4 text-[15px] font-semibold text-muted-foreground">
-        {t("Dobrý den", "Hello")}, {currentMember?.name?.split(" ")[0] ?? ""}
-      </p>
-
-      {/* Add a booking: always one tap away (the calendar opens with date picking). */}
-      <Link to="/kalendar" search={{ book: true }} className="btn-primary mt-3 w-full">
-        <CalendarDays className="size-5" /> {t("Přidat pobyt", "Add booking")}
-      </Link>
-
       {/* Family: next stay is the first actionable card — the whole card opens the stay */}
       {isFamily && (
         <section
@@ -280,11 +294,11 @@ function HomePage() {
               <p className="mt-1 text-xl font-bold">
                 {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
               </p>
-              <p className="mt-1 text-[15px] text-muted-foreground">
+              <p className="mt-1 text-[16px] text-muted-foreground">
                 {nextBooking.requester_name} · {nextBooking.guests}{" "}
                 {guestsLabel(nextBooking.guests)}
               </p>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   to="/rezervace/$id"
                   params={{ id: nextBooking.id }}
@@ -304,7 +318,7 @@ function HomePage() {
             </>
           ) : (
             <>
-              <p className="mt-1 text-[15px] text-muted-foreground">
+              <p className="mt-1 text-[16px] text-muted-foreground">
                 {t("Zatím není naplánovaný žádný pobyt.", "No stay is planned yet.")}
               </p>
             </>
@@ -313,7 +327,7 @@ function HomePage() {
       )}
 
       {/* Stats */}
-      <section className="mt-3 grid grid-cols-2 gap-3">
+      <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] lg:gap-4">
         {isFamily ? (
           <>
             <Link to="/vydaje/vyrovnani">
@@ -378,7 +392,7 @@ function HomePage() {
             <p className="text-base font-bold leading-tight">
               {t("Zpracovat žádosti", "Process requests")}
             </p>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {pendingRequests.length} {t("čeká", "waiting")} · {conflictRequests.length}{" "}
               {t("v kolizi", "in conflict")}
             </p>
@@ -393,12 +407,12 @@ function HomePage() {
           <h3 className="text-lg font-bold">{t("Žádosti hostů", "Guest requests")}</h3>
           <div className="mt-2 space-y-2.5">
             {guestRequests.map((g) => (
-              <div key={g.id} className="rounded-2xl bg-background p-3">
+              <div key={g.id} className="border-b border-divider py-3 last:border-0">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-[15px] font-bold">{g.guest_name}</p>
+                  <p className="truncate text-[16px] font-bold">{g.guest_name}</p>
                   <PillWarn>{t("Čeká", "Pending")}</PillWarn>
                 </div>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[16px] text-muted-foreground">
                   {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests}{" "}
                   {guestsLabel(g.guests)} · {g.guest_email}
                 </p>
@@ -408,7 +422,9 @@ function HomePage() {
                     const busyApprove = busy && decideGuest.variables?.approve;
                     return (
                       <>
-                        <button
+                        <Button
+                          variant="fresh"
+                          size="fresh"
                           className="btn-secondary disabled:opacity-50"
                           disabled={decideGuest.isPending}
                           onClick={() => decideGuest.mutate({ id: g.id, approve: false })}
@@ -421,8 +437,10 @@ function HomePage() {
                           ) : (
                             t("Odmítnout", "Decline")
                           )}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="fresh"
+                          size="fresh"
                           className="btn-primary disabled:opacity-50"
                           disabled={decideGuest.isPending}
                           aria-busy={busyApprove}
@@ -436,7 +454,7 @@ function HomePage() {
                           ) : (
                             t("Potvrdit pobyt", "Confirm stay")
                           )}
-                        </button>
+                        </Button>
                       </>
                     );
                   })()}
@@ -447,92 +465,95 @@ function HomePage() {
         </section>
       )}
 
-      {/* Overdue task highlight */}
-      {overdueTasks.length > 0 && (
-        <section className="card mt-4 p-4">
-          <h3 className="text-lg font-bold">{t("Úkoly po termínu", "Overdue tasks")}</h3>
-          <div className="mt-2 space-y-2.5">
-            {overdueTasks.map((t2) => (
+      <div className="lg:grid lg:grid-cols-2 lg:gap-5">
+        {/* Overdue task highlight */}
+        {overdueTasks.length > 0 && (
+          <section className="card mt-4 p-4">
+            <h3 className="text-lg font-bold">{t("Úkoly po termínu", "Overdue tasks")}</h3>
+            <div className="mt-2 space-y-2.5">
+              {overdueTasks.map((t2) => (
+                <Link
+                  key={t2.id}
+                  to="/ukoly/$id"
+                  params={{ id: t2.id }}
+                  className="flex min-h-[60px] items-center gap-3 border-b border-divider py-3 last:border-0 active:scale-[0.99]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[16px] font-bold">{taskTitle(t2, lang)}</p>
+                    <p className="text-[16px] text-muted-foreground">
+                      {t("Termín", "Due")}: {fmtDate(t2.due_date)}
+                    </p>
+                  </div>
+                  <PillDanger>{t("Zpožděno", "Overdue")}</PillDanger>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Next booking card (institutional) — the whole card opens the stay */}
+        {!isFamily && nextBooking && (
+          <section
+            className="card mt-4 cursor-pointer p-4 active:scale-[0.99]"
+            onClick={() => navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
+              <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
+            </div>
+            <p className="mt-1 text-xl font-bold">
+              {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
+            </p>
+            <p className="mt-1 text-[16px] text-muted-foreground">
+              {nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
               <Link
-                key={t2.id}
-                to="/ukoly/$id"
-                params={{ id: t2.id }}
-                className="flex items-center gap-3 rounded-2xl bg-background p-3 active:scale-[0.99]"
+                to="/rezervace/$id"
+                params={{ id: nextBooking.id }}
+                onClick={(e) => e.stopPropagation()}
+                className="btn-primary flex-1"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-bold">{taskTitle(t2, lang)}</p>
-                  <p className="text-[13px] text-muted-foreground">
-                    {t("Termín", "Due")}: {fmtDate(t2.due_date)}
-                  </p>
-                </div>
-                <PillDanger>{t("Zpožděno", "Overdue")}</PillDanger>
+                {t("Detail pobytu", "Stay details")}
               </Link>
-            ))}
-          </div>
-        </section>
-      )}
+              <Link
+                to="/predani"
+                onClick={(e) => e.stopPropagation()}
+                className="btn-secondary flex-1"
+              >
+                {t("Odjezdový checklist", "Check-out checklist")}
+              </Link>
+            </div>
+          </section>
+        )}
 
-      {/* Next booking card (institutional) — the whole card opens the stay */}
-      {!isFamily && nextBooking && (
-        <section
-          className="card mt-4 cursor-pointer p-4 active:scale-[0.99]"
-          onClick={() => navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })}
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
-            <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
-          </div>
-          <p className="mt-1 text-xl font-bold">
-            {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
-          </p>
-          <p className="mt-1 text-[15px] text-muted-foreground">
-            {nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}
-          </p>
-          <div className="mt-3 flex gap-2">
-            <Link
-              to="/rezervace/$id"
-              params={{ id: nextBooking.id }}
-              onClick={(e) => e.stopPropagation()}
-              className="btn-primary flex-1"
-            >
-              {t("Detail pobytu", "Stay details")}
-            </Link>
-            <Link
-              to="/predani"
-              onClick={(e) => e.stopPropagation()}
-              className="btn-secondary flex-1"
-            >
-              {t("Odjezdový checklist", "Check-out checklist")}
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {lastDeparture &&
-        (() => {
-          const { done, total } = checklistProgress(lastDeparture.checklist_state);
-          return (
-            <Link to="/predani" className="card mt-4 block p-4">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-lg font-bold">{t("Poslední odjezd", "Last departure")}</h3>
-                {done === total ? (
-                  <PillOk>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillOk>
-                ) : (
-                  <PillWarn>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillWarn>
-                )}
-              </div>
-              <p className="mt-1 text-[15px] text-muted-foreground">
-                {fmtDateTime(lastDeparture.submitted_at)}
-                {lastDeparture.note ? ` · „${lastDeparture.note}“` : ""}
-              </p>
-            </Link>
-          );
-        })()}
-
+        {lastDeparture &&
+          (() => {
+            const { done, total } = checklistProgress(lastDeparture.checklist_state);
+            return (
+              <Link to="/predani" className="card mt-4 block p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-lg font-bold">{t("Poslední odjezd", "Last departure")}</h3>
+                  {done === total ? (
+                    <PillOk>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillOk>
+                  ) : (
+                    <PillWarn>
+                      {t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}
+                    </PillWarn>
+                  )}
+                </div>
+                <p className="mt-1 text-[16px] text-muted-foreground">
+                  {fmtDateTime(lastDeparture.submitted_at)}
+                  {lastDeparture.note ? ` · „${lastDeparture.note}“` : ""}
+                </p>
+              </Link>
+            );
+          })()}
+      </div>
       {openTasks.length === 0 && overdueTasks.length === 0 && (
         <div className="card mt-4 p-4 text-center">
           <PillWarn>{t("Tip", "Tip")}</PillWarn>
-          <p className="mt-2 text-[15px] font-semibold">
+          <p className="mt-2 text-[16px] font-semibold">
             {(tasks?.length ?? 0) > 0
               ? t(
                   "Všechny úkoly jsou hotové. Chatu máte pod kontrolou.",

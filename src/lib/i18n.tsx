@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 export type Lang = "cs" | "en";
@@ -50,27 +51,27 @@ export function useLang(): LangState {
 }
 
 export function LanguageToggle({ className = "" }: { className?: string }) {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, t } = useLang();
   return (
     <div
-      className={`flex items-center gap-1 rounded-full bg-secondary p-1 ${className}`}
+      className={`flex items-center gap-0.5 rounded-full bg-card p-1 ${className}`}
       role="group"
-      aria-label="Language"
+      aria-label={t("Jazyk", "Language")}
     >
       {(["cs", "en"] as const).map((l) => (
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           key={l}
           type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
           className={`min-h-11 min-w-11 rounded-full px-3 text-[14px] font-bold ${
-            lang === l
-              ? "bg-card text-foreground shadow-sm ring-1 ring-black/5"
-              : "text-muted-foreground"
+            lang === l ? "bg-foreground text-primary-foreground" : "text-muted-foreground"
           }`}
         >
           {l === "cs" ? "CZ" : "EN"}
-        </button>
+        </Button>
       ))}
     </div>
   );

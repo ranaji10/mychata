@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Home, LogIn } from "lucide-react";
 import { useAccount } from "@/lib/account";
 import { useEffect } from "react";
@@ -73,17 +72,7 @@ function Index() {
       <p className="mt-1 text-[16px] text-muted-foreground">
         {t("Bezpečně načítám váš účet.", "Securely loading your account.")}
       </p>
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Button asChild variant="fresh" size="fresh" className="btn-primary">
-          <Link to="/auth">
-            <LogIn className="size-5" />
-            {t("Přihlásit se", "Sign in")}
-          </Link>
-        </Button>
-        <Button asChild variant="fresh" size="fresh" className="btn-secondary">
-          <Link to="/reset-password">{t("Obnovení hesla", "Reset password")}</Link>
-        </Button>
-      </div>
+      <LogIn className="mt-5 size-8 text-primary" aria-hidden="true" />
     </div>
   );
 }

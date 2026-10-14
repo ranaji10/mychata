@@ -55,6 +55,13 @@ function PublicManual() {
       toast.success(
         t("Děkujeme, správce dostal upozornění.", "Thank you, the manager has been notified."),
       ),
+    onError: () =>
+      toast.error(
+        t(
+          "Upozornění se nepodařilo odeslat. Zkuste to prosím znovu.",
+          "The note could not be sent. Please try again.",
+        ),
+      ),
   });
   return (
     <main className="mx-auto min-h-screen max-w-[420px] page-fresh px-5 py-6 text-foreground md:max-w-[720px] md:py-10">

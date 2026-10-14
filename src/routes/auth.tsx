@@ -277,7 +277,7 @@ function AuthPage() {
           {mode === "main"
             ? t("Společná chata, bez zmatků.", "One shared chata, no muddle.")
             : mode === "institute"
-              ? t("Registrace instituce", "Sign up as an Institute")
+              ? t("Registrace instituce", "Sign up as an institution")
               : t("Přihlaste se ke své chatě", "Sign in to your cottage")}
         </h1>
         <p className="mt-2 text-muted-foreground">
@@ -324,7 +324,7 @@ function AuthPage() {
             <Button
               variant="fresh"
               size="fresh"
-              className="btn-secondary min-h-[56px] w-full border-[var(--cat-tasks)] text-[17px]"
+              className="btn-secondary min-h-[56px] w-full text-[17px]"
               onClick={() => open("institute", true)}
             >
               <Building2 className="size-5 text-[var(--cat-tasks)]" />
@@ -346,7 +346,7 @@ function AuthPage() {
           <div className="mt-6 space-y-3">
             <h2 className="text-lg font-bold">
               {mode === "institute"
-                ? t("Registrace instituce", "Sign up as an Institute")
+                ? t("Registrace instituce", "Sign up as an institution")
                 : isSignUp
                   ? t("Registrace e-mailem", "Sign up with email")
                   : t("Přihlášení e-mailem", "Sign in with email")}

@@ -145,7 +145,7 @@ function OnboardingPage() {
         { onConflict: "user_id" },
       );
       if (profileError) throw profileError;
-      await supabase.from("onboarding_answers").upsert({
+      const { error: answersError } = await supabase.from("onboarding_answers").upsert({
         user_id: user.id,
         answers: {
           type,
@@ -157,6 +157,9 @@ function OnboardingPage() {
         },
         updated_at: new Date().toISOString(),
       });
+      // The cottage and profile are already saved at this point, so a failed answers save
+      // must not stop the user (a retry would create a second cottage). Log it instead.
+      if (answersError) console.error("onboarding_answers upsert failed", answersError);
       track("onboarding_completed", {
         account_type: type === "FAMILY" ? "family" : "institution",
         property_count: chatas.length,

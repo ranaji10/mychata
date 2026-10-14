@@ -31,14 +31,23 @@ function ResetPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const send = async () => {
     setBusy(true);
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/auth",
-    });
-    setBusy(false);
-    setSent(true);
+    setFailed(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/auth",
+      });
+      if (error) throw error;
+      setSent(true);
+    } catch (e) {
+      console.error("resetPasswordForEmail failed", e);
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -64,6 +73,17 @@ function ResetPasswordPage() {
         </p>
       ) : (
         <div className="mt-6 space-y-3">
+          {failed && (
+            <p
+              role="alert"
+              className="rounded-2xl bg-destructive-soft p-3 font-semibold text-destructive"
+            >
+              {t(
+                "Odkaz se nepodařilo odeslat. Zkontrolujte e-mail a zkuste to znovu za pár minut.",
+                "The link could not be sent. Check the email address and try again in a few minutes.",
+              )}
+            </p>
+          )}
           <input
             className="field w-full"
             type="email"

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
-import { LanguageToggle, useLang } from "@/lib/i18n";
+import { LanguageProvider, LanguageToggle, useLang } from "@/lib/i18n";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -173,7 +173,6 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 import { AccountProvider } from "../lib/account";
-import { LanguageProvider } from "../lib/i18n";
 import { ConsentBanner, ConsentProvider } from "../lib/consent";
 import { trackPageView } from "../lib/analytics";
 import { Toaster } from "../components/ui/sonner";

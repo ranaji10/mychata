@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, CheckCircle2, Circle, ClipboardCheck, History, Wrench } from "lucide-react";
+import { Camera, Check, CheckCircle2, Circle, ClipboardCheck, History, Wrench } from "lucide-react";
 import { useState } from "react";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -198,7 +198,7 @@ function HandoverPage() {
             {doneCount}/{items.length}
           </span>
         </div>
-        <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
+        <div className="mt-1 h-2 overflow-hidden rounded-full bg-track">
           <div
             className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${(doneCount / items.length) * 100}%` }}
@@ -212,15 +212,17 @@ function HandoverPage() {
               size="fresh"
               key={item}
               onClick={() => setChecked((c) => c.map((v, j) => (j === i ? !v : v)))}
-              className="flex w-full items-center gap-3 rounded-2xl p-2 text-left active:bg-secondary"
+              className="flex min-h-[60px] w-full justify-start gap-3 whitespace-normal rounded-none border-b border-divider py-3 text-left last:border-0 active:bg-secondary"
             >
               {checked[i] ? (
-                <CheckCircle2 className="size-7 shrink-0 text-ok" />
+                <span className="grid size-[26px] shrink-0 place-items-center rounded-[8px] bg-primary text-primary-foreground">
+                  <Check className="size-[18px]" strokeWidth={3} />
+                </span>
               ) : (
-                <Circle className="size-7 shrink-0 text-muted-foreground" />
+                <Circle className="size-6 shrink-0 text-control-border" />
               )}
               <span
-                className={`text-[16px] font-semibold ${checked[i] ? "text-muted-foreground line-through" : ""}`}
+                className={`text-[16px] font-semibold ${checked[i] ? "text-subtle line-through" : ""}`}
               >
                 {item}
               </span>

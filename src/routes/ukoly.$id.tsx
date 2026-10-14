@@ -266,7 +266,7 @@ function TaskDetail() {
             size="fresh"
             key={status}
             onClick={() => update.mutate({ status })}
-            className={task.status === status ? "btn-primary px-2" : "btn-secondary px-2"}
+            className={task.status === status ? "btn-dark px-2" : "btn-secondary px-2"}
           >
             {label}
           </Button>

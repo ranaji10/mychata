@@ -256,9 +256,7 @@ function TasksPage() {
             aria-pressed={filter === f.key}
             onClick={() => setFilter(f.key)}
             className={`h-11 shrink-0 rounded-full px-4 text-[16px] font-bold ${
-              filter === f.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-foreground ring-1 ring-border"
+              filter === f.key ? "bg-foreground text-primary-foreground" : "bg-card text-foreground"
             }`}
           >
             {f.label}
@@ -422,7 +420,7 @@ function TasksPage() {
             "Ready-made checklists for the season.",
           )}
         </p>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 divide-y divide-divider">
           {seasonalTemplates(lang).map((tpl) => (
             <div key={tpl.id}>
               <Button
@@ -434,7 +432,7 @@ function TasksPage() {
                   setAssignAll(null);
                   setAssignEach({});
                 }}
-                className={`btn-secondary w-full ${pendingTemplate === tpl.id ? "ring-2 ring-primary" : ""}`}
+                className={`min-h-[60px] w-full justify-between whitespace-normal rounded-none py-3 text-left text-[16px] font-semibold ${pendingTemplate === tpl.id ? "text-primary" : "text-foreground"}`}
               >
                 {tpl.title} ({tpl.tasks.length})
               </Button>

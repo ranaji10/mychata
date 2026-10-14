@@ -50,7 +50,7 @@ export function ConfirmDialog({
               e.preventDefault();
               onConfirm();
             }}
-            className="min-h-11 bg-destructive text-[16px] text-destructive-foreground"
+            className="btn-danger-soft min-h-11 text-[16px]"
           >
             {confirmLabel}
           </AlertDialogAction>

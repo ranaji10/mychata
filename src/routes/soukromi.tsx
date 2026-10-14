@@ -13,6 +13,7 @@ export const Route = createFileRoute("/soukromi")({
       { title: "Privacy & cookies — My Chata" },
       { name: "description", content: "How My Chata handles your data and cookies." },
       { property: "og:title", content: "Privacy & cookies — My Chata" },
+      { property: "og:description", content: "How My Chata handles your data and cookies." },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -25,7 +26,7 @@ function PrivacyPage() {
   const { user } = useAccount();
 
   return (
-    <main className="mx-auto min-h-screen max-w-[420px] bg-background p-4 pb-16 md:max-w-[720px] md:py-10">
+    <main className="mx-auto min-h-screen max-w-[420px] bg-background p-5 pb-16 lg:max-w-[820px] lg:p-6 md:max-w-[720px] md:py-10">
       <div className="flex items-center justify-between">
         {/* Signed-in visitors arrived from Settings; the cookie banner opens this page for
             everyone, so the back arrow only appears for signed-in members. */}
@@ -33,7 +34,7 @@ function PrivacyPage() {
           <Link
             to="/vice"
             aria-label={t("Zpět na Nastavení", "Back to Settings")}
-            className="grid size-11 place-items-center rounded-2xl bg-card text-foreground shadow-sm ring-1 ring-border"
+            className="grid size-11 place-items-center rounded-full bg-card text-foreground shadow-sm ring-1 ring-border"
           >
             <ArrowLeft className="size-5" />
           </Link>

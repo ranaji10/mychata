@@ -20,6 +20,12 @@ export const Route = createFileRoute("/fotky")({
       { name: "twitter:card", content: "summary" },
       { title: "Photos — My Chata" },
       { name: "robots", content: "noindex" },
+      { name: "description", content: "Shared cottage photos and the main cottage picture." },
+      { property: "og:title", content: "Photos — My Chata" },
+      {
+        property: "og:description",
+        content: "Shared cottage photos and the main cottage picture.",
+      },
     ],
   }),
   component: PhotosPage,

@@ -227,30 +227,6 @@ function OnboardingPage() {
                   )
                 : t("Vítejte! Jak se jmenujete?", "Welcome! What's your name?")}
             </h1>
-            <div
-              className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-              role="group"
-              aria-label={t("Typ účtu", "Account type")}
-            >
-              <Button
-                variant="fresh"
-                size="fresh"
-                className={`btn-secondary ${type === "FAMILY" ? "ring-2 ring-primary" : ""}`}
-                aria-pressed={type === "FAMILY"}
-                onClick={() => setType("FAMILY")}
-              >
-                {t("Rodina", "Family")}
-              </Button>
-              <Button
-                variant="fresh"
-                size="fresh"
-                className={`btn-secondary ${type === "INSTITUTIONAL" ? "ring-2 ring-primary" : ""}`}
-                aria-pressed={type === "INSTITUTIONAL"}
-                onClick={() => setType("INSTITUTIONAL")}
-              >
-                {t("Instituce / Organizace", "Institution / Organisation")}
-              </Button>
-            </div>
             <label className="block">
               <span className="text-[16px] font-bold">{t("Vaše jméno", "Your name")}</span>
               <input

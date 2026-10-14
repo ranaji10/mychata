@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Home, LogIn, Mail } from "lucide-react";
+import { Building2, Home, LogIn, Mail } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
@@ -321,6 +321,15 @@ function AuthPage() {
               <Mail className="size-5" />
               {t("Registrovat se e-mailem", "Sign up with email")}
             </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-secondary min-h-[56px] w-full border-[var(--cat-tasks)] text-[17px]"
+              onClick={() => open("institute", true)}
+            >
+              <Building2 className="size-5 text-[var(--cat-tasks)]" />
+              {t("Registrovat instituci", "Sign up as an institution")}
+            </Button>
             <p className="pt-1 text-center text-[16px] text-muted-foreground">
               {t("Už máte účet?", "Already have an account?")}{" "}
               <Button
@@ -330,17 +339,6 @@ function AuthPage() {
                 onClick={() => open("email", false)}
               >
                 {t("Přihlásit se", "Sign in")}
-              </Button>
-            </p>
-            <p className="text-center text-[16px] text-muted-foreground">
-              {t("Škola nebo firma?", "School or company?")}{" "}
-              <Button
-                variant="fresh"
-                size="fresh"
-                className="min-h-11 font-bold text-primary hover:text-primary-hover"
-                onClick={() => open("institute", true)}
-              >
-                {t("Registrovat instituci", "Sign up as an Institute")}
               </Button>
             </p>
           </div>

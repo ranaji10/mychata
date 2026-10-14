@@ -133,3 +133,52 @@ Screenshots are not committed. Chat attachments show representative frames; loca
 - `auth-1280.png`, `auth-signin-375.png`, and width variants: auth and form views.
 
 Metadata changes reach the live URL only after a future publish; this task did not publish.
+
+
+> Combined by Claude on 14 Oct 2026: Lovable made this follow-up on a branch based on `main` (lovable-sync-1792000663), without the L-5c edits. It was merged onto PR #28's branch. Lovable's checkout had no onboarding selector, so Claude removed it in the combined branch (see section 1).
+
+## Follow-up: three requested changes (17:33 UTC, 14 Oct 2026)
+
+Branch in this workspace: `edit/edt-6216b886-235d-4ec3-8390-614763a739fd` (PR #28 content). The
+original L-5c report file was not present in this checkout; the earlier L-5c edits exist only on
+the backup branch (`origin/lovable-backup-main-1791996871`). Only the three requested changes were
+made here; everything else was left as found.
+
+### 1. Onboarding: account-type buttons removed
+
+Lovable's follow-up checkout was based on `main`, which never had the selector, so Lovable changed nothing here. Claude removed the "Rodina" / "Instituce / Organizace" button group from step 0 of `src/routes/onboarding.tsx` in the combined branch. The type again comes only from sign-up metadata (`signup_kind "institution"` → INSTITUTIONAL, else FAMILY). The `setType` calls in the sign-up effect are unchanged. This supersedes the sentence above saying that onboarding exposes the account type through a selector.
+
+### 2. Sign-in page: institution sign-up as a third full-width button
+
+`src/routes/auth.tsx`, main view:
+
+- Removed the small text link "Škola nebo firma? Registrovat instituci" at the bottom.
+- Added a third full-width button directly under "Registrovat se e-mailem", same shape as the
+  other two (`variant="fresh" size="fresh"`, `min-h-[56px] w-full text-[17px]`), with the
+  `Building2` icon from lucide-react.
+- Label: `t("Registrovat instituci", "Sign up as an institution")` — the "(škola, firma, spolek)"
+  parenthetical was removed on request; still calls `open("institute", true)`.
+- Style: `btn-secondary` plus the existing blue token `var(--cat-tasks)` on the `Building2` icon
+  (no new CSS, `styles.css` untouched). Note: `btn-secondary` draws its ring with an inset
+  box-shadow, so a `border-[var(--cat-tasks)]` class has no visible effect — the blue accent shows
+  in the icon only.
+- "Už máte účet? Přihlásit se" now sits below all three buttons, unchanged in wording.
+
+Verified in the preview at 375×812, 768×1024 and 1280×900: the three buttons are all visible
+without scrolling (at 375px the institution button's bottom edge is at 752px of the 812px
+viewport), tap targets are 56px tall, Czech text first, and the old small link is gone.
+Screenshots: `/tmp/browser/l5c/screenshots/auth_375_clean.png`, `auth_768.png`, `auth_1280.png`.
+
+### 3. roadmap.md
+
+This checkout had no "T-028 Fresh air public pages" section, so it was added at the top with the
+item "Check contrast, brands, cookie position and write the scoped report" unticked and marked
+"(partial: see report)".
+
+### Not verified
+
+- No sign-up flow was exercised (no new accounts created); the button's behaviour is the same
+  `open("institute", true)` call the old link used.
+- `bun run check` was not run (manual builds/typechecks are restricted in this workspace); the
+  preview build after the edits reports "build OK" in /tmp/observability/build-errors.log.
+- No test records were created.

@@ -319,10 +319,7 @@ function AuthPage() {
               onClick={() => open("institute", true)}
             >
               <Building2 className="size-5 text-[var(--cat-tasks)]" />
-              {t(
-                "Registrovat instituci (škola, firma, spolek)",
-                "Sign up as an institution (school, company, club)",
-              )}
+              {t("Registrovat instituci", "Sign up as an institution")}
             </Button>
             <p className="pt-1 text-center text-[16px] text-muted-foreground">
               {t("Už máte účet?", "Already have an account?")}{" "}

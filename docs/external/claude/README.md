@@ -13,7 +13,8 @@ Rule (AGENTS.md): every new artifact gets a row here, a copy with frontmatter `a
 
 ## Reviews and site checks
 
-| Date       | Report                      | What was checked                               | Verdict                 | Open follow-ups                                                  |
-| ---------- | --------------------------- | ---------------------------------------------- | ----------------------- | ---------------------------------------------------------------- |
-| 2026-10-14 | `2026-10-14-site-check.md`  | Live site (mychata.cz), build 12627b5 or newer | 6/6 e2e pass, no errors | Version marker, signed-in release checks, Czech titles           |
-| 2026-10-14 | `2026-10-14-pr25-review.md` | PR #25 (L-5b pages), last commit 72ab3ea       | Merge yes, after fixes  | Link previews (L-5c), season photo recheck, process improvements |
+| Date       | Report                      | What was checked                                    | Verdict                 | Open follow-ups                                                                                                                               |
+| ---------- | --------------------------- | --------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-14 | `2026-10-14-site-check.md`  | Live site (mychata.cz), build 12627b5 or newer      | 6/6 e2e pass, no errors | Version marker, signed-in release checks, Czech titles                                                                                        |
+| 2026-10-14 | `2026-10-14-pr25-review.md` | PR #25 (L-5b pages), last commit 72ab3ea            | Merge yes, after fixes  | Link previews (L-5c), season photo recheck, process improvements                                                                              |
+| 2026-10-14 | `2026-10-14-pr26-review.md` | PR #26 (T-027 L-5b follow-ups), last commit aa1e5c7 | Merge yes, after fixes  | STATUS.md live claims and dropped untested items, T-027 tick criterion 24/26px, icon sizes app-wide not verified, has-tabbar on early returns |

@@ -241,6 +241,8 @@ function HomePage() {
         <div className="relative overflow-hidden rounded-[28px]">
           <img
             src={mainPhoto ?? defaultPhoto.src}
+            srcSet={mainPhoto ? undefined : defaultPhoto.srcSet}
+            sizes={mainPhoto ? undefined : defaultPhoto.sizes}
             alt={mainPhoto ? (property?.name ?? t("Chata", "Cottage")) : defaultPhoto.alt}
             className="aspect-[16/10] w-full object-cover object-[50%_42%] md:aspect-[21/9]"
             loading="lazy"

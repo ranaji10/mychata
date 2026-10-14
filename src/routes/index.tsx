@@ -52,6 +52,8 @@ function Index() {
       <div className="relative mt-3 overflow-hidden rounded-[28px]">
         <img
           src={defaultPhoto.src}
+          srcSet={defaultPhoto.srcSet}
+          sizes={defaultPhoto.sizes}
           alt={defaultPhoto.alt}
           className="aspect-[16/10] w-full object-cover object-[50%_42%]"
           fetchPriority="high"

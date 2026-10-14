@@ -1,9 +1,11 @@
 ## Fresh air foundation (14 Oct 2026)
 
-- [ ] Replace design rules, tokens, font and brand switching.
-- [ ] Add supplied seasonal photos and Prague season tests.
-- [ ] Restyle shell, shared bits, sign-in, Home and Calendar only.
-- [ ] Verify 375px/1280px in the test cottage; record limitations and checks.
+- [x] Replace design rules, tokens, font and brand switching.
+- [x] Add supplied seasonal photos and Prague season tests.
+- [x] Restyle shell, shared bits, sign-in, Home and Calendar only.
+- [x] Verify 375px/1280px in the test cottage; record limitations and checks.
+- [ ] Full check gate: supplied design text fails Prettier; exact preservation prevents formatting it.
+- [ ] Maintainers verify signed-in institution/account switching; no institutional test account.
 - [ ] Human review and green CI before publishing (not requested).
 
 ## L-2b PR #16 review fixes (12 Oct 2026)

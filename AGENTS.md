@@ -18,6 +18,7 @@ Czech-first app for families and institutions that share a chata: calendar, task
 ## UI module boundaries
 
 - Keep brand propagation in `src/lib/brand.ts` and stock-photo selection in `src/lib/season.ts`; shared hooks keep portals and seasonal fallbacks consistent without duplicating rules in screens.
+- Logo, tab icon and link-preview image come only from `brand/` via `bun run brand` (`brand/README.md`); never hand-edit `public/brand/`, `public/favicon.ico` or `src/lib/brand-assets.ts`.
 
 ## Stack
 

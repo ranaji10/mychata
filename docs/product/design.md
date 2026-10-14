@@ -185,8 +185,10 @@ Whenever a cottage has no main photo (`usePrimaryPhotoUrl` returns null), and on
 | Winter | December – February  | `src/assets/seasons/chata-winter.webp` |
 
 - Seasons are meteorological (whole months), decided by the date in `Europe/Prague`, so the picture changes automatically on 1 March, 1 June, 1 September and 1 December.
+- The season is worked out from the current date each time a page renders (on the server and in the browser). No timer or polling: someone who opens or reloads a page on 1 December gets the winter picture.
 - Code: `src/lib/season.ts` exports `seasonFor(date = new Date()): "spring" | "summer" | "autumn" | "winter"` (month from `Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Prague", month: "numeric" })`), and `useDefaultChataPhoto()` returning `{ src, alt }`. Alt text: "Chata na jaře" / "The chata in spring", "Chata v létě" / "…in summer", "Chata na podzim" / "…in autumn", "Chata v zimě" / "…in winter".
 - Used in: `/` (landing), `/auth` (sign-in hero), `/verejne/zadost/$token`, and `/domu` as the fallback (`mainPhoto ?? defaultPhoto.src`). Any new place that needs a stock cottage picture uses the hook too. `src/assets/chata.jpg` is deleted once nothing imports it.
+- The four images are ordinary files committed in the repo at the paths above and imported directly (`import spring from "@/assets/seasons/chata-spring.webp"`), so the build bundles them with hashed names and long caching, and they work on any hosting, local dev included. Do not use Lovable's asset storage (`*.asset.json` / `/__l5e/` URLs) for them.
 - A cottage's own main photo always wins over the seasonal picture.
 - Images are 1200 × 1200 WebP (≈ 240–380 KB). Show with `object-fit: cover; object-position: 50% 42%` so the house stays in frame in wide crops. Sign-in hero: full width, 250px tall, radius 28. Home hero: keep today's 16:10 (phone) / 21:9 (md+) crop, radius 28. Add `loading="lazy"` except on the sign-in hero.
 

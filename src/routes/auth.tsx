@@ -1,3 +1,4 @@
+import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, LogIn, Mail } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -6,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { pendingInvite } from "@/lib/pending-invite";
 import { authLinkError, isPublicEmailDomain } from "@/lib/signup";
-import chataImg from "@/assets/chata.jpg";
+import { useDefaultChataPhoto } from "@/lib/season";
 
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: true },
@@ -28,12 +29,14 @@ export const Route = createFileRoute("/auth")({
 type Mode = "main" | "email" | "institute";
 
 function AuthPage() {
+  const defaultPhoto = useDefaultChataPhoto();
   const { t } = useLang();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [mode, setMode] = useState<Mode>("main");
+  useBrand(mode === "institute" ? "institution" : "family");
   const [isSignUp, setIsSignUp] = useState(true);
   const [name, setName] = useState("");
   const [organisation, setOrganisation] = useState("");
@@ -249,7 +252,7 @@ function AuthPage() {
         <LanguageToggle />
       </div>
       <img
-        src={chataImg}
+        src={defaultPhoto.src}
         alt={t("Dřevěná chata", "Wooden cottage")}
         className="mt-4 aspect-[16/10] w-full rounded-3xl object-cover lg:aspect-[4/5] lg:max-h-[640px]"
       />

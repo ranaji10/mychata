@@ -1,3 +1,4 @@
+import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,6 +53,7 @@ function OnboardingPage() {
   // Family or institution is decided at sign-up (T-021): "Sign up as an Institute" stores
   // signup_kind "institution"; every other sign-up (Google, personal email) is a family.
   const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL">("FAMILY");
+  useBrand(type === "INSTITUTIONAL" ? "institution" : "family");
   const [accountName, setAccountName] = useState("");
   // Name from Google, or from the email sign-up form; always editable (T-021).
   const [fullName, setFullName] = useState("");

@@ -1,3 +1,4 @@
+import { useBrand } from "@/lib/brand";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { BookOpen, Flag } from "lucide-react";
@@ -37,6 +38,7 @@ function PublicManual() {
       return { property: property?.[0] ?? null, sections: sections ?? [] };
     },
   });
+  useBrand(data?.property?.is_institution ? "institution" : "family");
   const flag = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.rpc("public_flag_manual_section", {

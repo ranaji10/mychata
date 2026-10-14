@@ -465,7 +465,7 @@ export function declineReasons(lang: "cs" | "en") {
 }
 
 // Family branch colors for the calendar legend.
-export const BRANCH_COLORS = ["#FF5A5F", "#2E6FB0", "#16A34A", "#B45309", "#7C5CBF"];
+export const BRANCH_COLORS = ["#1F7A4D", "#2E6FB0", "#0F766E", "#B45309", "#7C5CBF"];
 export function branchColor(branch: string, branches: string[]): string {
   const i = Math.max(0, branches.indexOf(branch));
   return BRANCH_COLORS[i % BRANCH_COLORS.length] ?? "#FF5A5F";

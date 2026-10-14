@@ -1,3 +1,4 @@
+import { useBrand } from "@/lib/brand";
 import { useState } from "react";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
@@ -63,6 +64,7 @@ function PublicCalendar() {
     },
   });
 
+  useBrand(property?.is_institution ? "institution" : "family");
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["public-cal-bookings", token],
     queryFn: async () => {

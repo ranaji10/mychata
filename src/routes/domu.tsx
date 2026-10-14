@@ -20,7 +20,7 @@ import {
 } from "@/lib/data";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { useLang } from "@/lib/i18n";
-import chataImg from "@/assets/chata.jpg";
+import { useDefaultChataPhoto } from "@/lib/season";
 import { usePrimaryPhotoUrl } from "@/lib/use-primary-photo";
 import { useExpenseData } from "@/lib/expenses";
 
@@ -44,6 +44,7 @@ export const Route = createFileRoute("/domu")({
 });
 
 function HomePage() {
+  const defaultPhoto = useDefaultChataPhoto();
   const { t, lang } = useLang();
   const { account, property, currentMember, loading } = useAccount();
   const navigate = useNavigate();
@@ -217,7 +218,7 @@ function HomePage() {
       <section>
         <div className="relative overflow-hidden rounded-3xl">
           <img
-            src={mainPhoto ?? chataImg}
+            src={mainPhoto ?? defaultPhoto.src}
             alt={property?.name ?? t("Chata", "Cottage")}
             className="aspect-[16/10] w-full object-cover md:aspect-[21/9]"
             width={1024}

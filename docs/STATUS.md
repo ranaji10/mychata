@@ -15,6 +15,10 @@ As of 2026-10-14. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-028 L-5c public pages (merged and live, partial: see below), T-020 document vault search (planned), T-014 performance, T-015/T-016 missing tests, T-001–T-013 as listed below (T-012's migration 0019 is applied; its brief is not closed yet). Done: T-017, T-018, T-019, T-021, T-022, T-024, T-025, T-026, T-027, T-029.                                                                                                                                                                                                                                                                                      |
 
+## Public calendar can be switched off (T-032, 15 Oct 2026)
+
+- Settings shows "Vypnout veřejný kalendář" while a cottage's public calendar is on; after a confirmation the link stops working. The database function existed since 0012; only the button was missing. Not live until merged and published.
+
 ## lovable-sync kept current (T-031, 14 Oct 2026)
 
 - Lovable follows `lovable-sync` only. A new workflow, `.github/workflows/sync-lovable.yml`, fast-forwards `lovable-sync` to `main` after every merge, and leaves it alone with a warning when Lovable has unmerged commits there. Runbook: `docs/runbooks/two-person-workflow.md` (Branches).

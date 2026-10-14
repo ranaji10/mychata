@@ -1,3 +1,5 @@
+import { useBrand } from "@/lib/brand";
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -11,13 +13,13 @@ export const Route = createFileRoute("/host/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Guest booking — My Chata" },
+      { title: "Pobyt pro hosty — My Chata" },
       { name: "robots", content: "noindex" },
-      { name: "description", content: "Request a cottage stay with your guest booking link." },
-      { property: "og:title", content: "Guest booking — My Chata" },
+      { name: "description", content: "Požádejte o pobyt na chatě pomocí odkazu pro hosty." },
+      { property: "og:title", content: "Pobyt pro hosty — My Chata" },
       {
         property: "og:description",
-        content: "Request a cottage stay with your guest booking link.",
+        content: "Požádejte o pobyt na chatě pomocí odkazu pro hosty.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -29,6 +31,7 @@ export const Route = createFileRoute("/host/$token")({
 function GuestBookingPage() {
   const { token } = Route.useParams();
   const { t } = useLang();
+  useBrand("family");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [start, setStart] = useState("");
@@ -48,17 +51,33 @@ function GuestBookingPage() {
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["guest-link", token],
     queryFn: () => getGuestLinkInfo({ data: { token } }),
   });
 
-  if (isLoading) return <main className="mx-auto min-h-screen max-w-[420px] bg-background p-4" />;
+  if (isLoading)
+    return (
+      <main className="page-fresh mx-auto min-h-screen max-w-[420px] px-5 py-5 md:max-w-[640px]">
+        <div className="flex justify-end">
+          <LanguageToggle />
+        </div>
+        <p className="mt-8" role="status">
+          {t("Načítám chatu…", "Loading cottage…")}
+        </p>
+      </main>
+    );
   if (!data)
     return (
-      <main className="mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center bg-background p-4 text-center">
-        <h1 className="text-2xl font-bold">
-          {t("Tento odkaz už neplatí.", "This link is no longer valid.")}
+      <main className="mx-auto flex min-h-screen max-w-[420px] md:max-w-[640px] flex-col items-center justify-center page-fresh px-5 py-5 text-center">
+        <div className="mb-8 flex w-full justify-end">
+          <LanguageToggle />
+        </div>
+        <p className="mb-4 font-extrabold text-primary">My Chata</p>
+        <h1 className="text-[28px] font-extrabold leading-[1.15]">
+          {isError
+            ? t("Chatu se nepodařilo načíst.", "The cottage could not be loaded.")
+            : t("Tento odkaz už neplatí.", "This link is no longer valid.")}
         </h1>
         <p className="mt-2 text-[16px] text-muted-foreground">
           {t(
@@ -110,12 +129,12 @@ function GuestBookingPage() {
   };
 
   return (
-    <main className="mx-auto min-h-screen max-w-[420px] bg-background p-4 pb-16 md:max-w-[640px] md:py-8">
+    <main className="mx-auto min-h-screen max-w-[420px] page-fresh px-5 py-5 pb-16 md:max-w-[640px] md:py-8">
       <div className="flex justify-end">
         <LanguageToggle />
       </div>
       <p className="mt-6 font-bold text-primary">My Chata</p>
-      <h1 className="mt-1 text-2xl font-bold">{data.propertyName}</h1>
+      <h1 className="mt-1 text-[28px] font-extrabold leading-[1.15]">{data.propertyName}</h1>
       {data.propertyAddress && (
         <p className="text-[16px] text-muted-foreground">{data.propertyAddress}</p>
       )}
@@ -148,7 +167,7 @@ function GuestBookingPage() {
                       {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
                     </span>
                     <span
-                      className={`pill ${b.status === "CONFIRMED" ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn"}`}
+                      className={`pill ${b.status === "CONFIRMED" ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn-foreground"}`}
                     >
                       {b.status === "CONFIRMED" ? t("Obsazeno", "Booked") : t("Čeká", "Pending")}
                     </span>
@@ -217,7 +236,7 @@ function GuestBookingPage() {
               </div>
             </div>
             <label className="block">
-              <span className="text-[14px] font-bold">{t("Počet hostů", "Number of guests")}</span>
+              <span className="text-[16px] font-bold">{t("Počet hostů", "Number of guests")}</span>
               <input
                 className="field mt-1 w-full"
                 type="number"
@@ -242,13 +261,15 @@ function GuestBookingPage() {
               value={company}
               onChange={(e) => setCompany(e.target.value)}
             />
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className="btn-primary w-full"
               disabled={busy || name.trim().length < 2 || !email.includes("@") || !start || !end}
               onClick={submit}
             >
               {busy ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}
-            </button>
+            </Button>
             {failure && (
               <p role="alert" className="text-center text-[16px] font-semibold text-destructive">
                 {failure}

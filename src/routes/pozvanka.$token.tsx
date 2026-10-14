@@ -1,3 +1,5 @@
+import { useBrand } from "@/lib/brand";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Home, LogIn, LogOut, ShieldCheck, UserRound } from "lucide-react";
@@ -15,12 +17,12 @@ export const Route = createFileRoute("/pozvanka/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Invitation — My Chata" },
-      { name: "description", content: "Join your shared cottage with a My Chata invitation." },
-      { property: "og:title", content: "Invitation — My Chata" },
+      { title: "Pozvánka do chaty — My Chata" },
+      { name: "description", content: "Připojte se ke sdílené chatě pomocí pozvánky My Chata." },
+      { property: "og:title", content: "Pozvánka do chaty — My Chata" },
       {
         property: "og:description",
-        content: "Join your shared cottage with a My Chata invitation.",
+        content: "Připojte se ke sdílené chatě pomocí pozvánky My Chata.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -46,6 +48,7 @@ interface Preview {
 function InvitePage() {
   const { token } = Route.useParams();
   const { t } = useLang();
+  useBrand("family");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
@@ -160,7 +163,7 @@ function InvitePage() {
             </Row>
           )}
           {preview?.email_hint && (
-            <p className="text-[14px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {t(
                 `Pozvánka je pro ${preview.email_hint}.`,
                 `This invitation is for ${preview.email_hint}.`,
@@ -177,10 +180,15 @@ function InvitePage() {
                 "Sign in or create an account. You'll come back here to accept.",
               )}
             </p>
-            <button className="btn-primary mt-3 w-full" onClick={signIn}>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-primary mt-3 w-full"
+              onClick={signIn}
+            >
               <LogIn className="size-5" />
               {t("Přihlásit se a přijmout", "Sign in to accept")}
-            </button>
+            </Button>
           </>
         ) : wrongAccount ? (
           <>
@@ -190,11 +198,16 @@ function InvitePage() {
                 `You're signed in as ${userEmail}, but this invitation is for ${preview?.email_hint ?? "another email"}.`,
               )}
             </Explain>
-            <button className="btn-primary mt-3 w-full" onClick={switchAccount}>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-primary mt-3 w-full"
+              onClick={switchAccount}
+            >
               <LogOut className="size-5" />
               {t("Odhlásit a přihlásit se správným účtem", "Sign out and use the invited account")}
-            </button>
-            <p className="mt-3 text-[14px] text-muted-foreground">
+            </Button>
+            <p className="mt-3 text-[16px] text-muted-foreground">
               {t(
                 `Nebo požádejte správce o pozvánku pro ${userEmail}.`,
                 `Or ask the admin for an invitation to ${userEmail}.`,
@@ -206,10 +219,16 @@ function InvitePage() {
             <p className="mt-4 text-muted-foreground">
               {t(`Přihlášeni jako ${userEmail}.`, `Signed in as ${userEmail}.`)}
             </p>
-            <button className="btn-primary mt-3 w-full" disabled={busy} onClick={accept}>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-primary mt-3 w-full"
+              disabled={busy}
+              onClick={accept}
+            >
               <CheckCircle2 className="size-5" />
               {busy ? t("Přijímám…", "Accepting…") : t("Přijmout pozvánku", "Accept invitation")}
-            </button>
+            </Button>
           </>
         )}
       </>
@@ -217,12 +236,17 @@ function InvitePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col justify-center bg-background p-4 text-center">
-      <div className="absolute right-4 top-4">
+    <main className="mx-auto flex min-h-screen max-w-[420px] md:max-w-[560px] flex-col page-fresh px-5 py-5 text-center">
+      <div className="mb-8 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
+            <Home className="size-6" />
+          </span>
+          <span className="text-lg font-extrabold">My Chata</span>
+        </div>
         <LanguageToggle />
       </div>
-      <p className="font-bold text-primary">My Chata</p>
-      <h1 className="mt-1 text-2xl font-bold">
+      <h1 className="mt-1 text-[28px] font-extrabold leading-[1.15]">
         {accepted
           ? t("Vítejte v chatě!", "Welcome to the cottage!")
           : t("Pozvánka do chaty", "Invitation to a cottage")}

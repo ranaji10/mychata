@@ -19,7 +19,7 @@ _How this doc is kept: open work on top, reference sections in the middle, every
 
 ## Next steps, in order (14 Oct, evening)
 
-- [ ] 1\. **Merge the docs PR from tonight's site check** (`agent/claude/docs-release-2026-10-14`): STATUS.md records the live commit and the tag, the release runbook says where to read the live commit, and the reports table gets the evening check. Docs only, so no publish and no new tag.
+- [ ] 1\. **Merge PR #35, the docs PR from tonight's site check,** (`agent/claude/docs-release-2026-10-14`): STATUS.md records the live commit and the tag, the release runbook says where to read the live commit, and the reports table gets the evening check. Docs only, so no publish and no new tag.
 - [ ] 2\. **Finish the Mac cleanup** if not done yet: `git worktree remove ../mychata-T-023`, then `git branch -d agent/claude/T-023-ci-and-status-cleanup`; delete `archive/T-028-combined.bundle` and `private/t018.bundle` in Finder.
 - [ ] 3\. **Look at mychata.cz on your phone, in Czechia**: the cookie banner should sit at the bottom edge and must not hide the "Registrovat instituci" button for good (it covers it until dismissed). The site check ran from the US, where the banner is not shown.
 - [ ] 4\. **Create an institutional test account**: a test e-mail on a work-style domain plus an institutional test property, added to `docs/runbooks/test-cottages.md` and Lovable's Knowledge. It blocks L-5b's approvals, requests and export with data, L-5c's blue public pages, and the onboarding check for an institution sign-up.

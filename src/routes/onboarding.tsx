@@ -183,7 +183,7 @@ function OnboardingPage() {
           : true;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4 md:max-w-[560px] md:py-10">
+    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh p-4 md:max-w-[560px] md:py-10">
       <div className="flex items-center justify-between">
         <p className="font-bold text-primary">My Chata</p>
         <LanguageToggle />

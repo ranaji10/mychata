@@ -42,7 +42,7 @@ export function CalendarMonth({
     <div>
       <div className="grid grid-cols-7 text-center">
         {dayNames(lang).map((d) => (
-          <span key={d} className="py-1 text-[12px] font-bold text-muted-foreground">
+          <span key={d} className="py-2 text-[13px] font-bold text-nav-foreground">
             {d}
           </span>
         ))}
@@ -60,40 +60,40 @@ export function CalendarMonth({
             d.iso > selection.start &&
             d.iso < selection.end;
           const isHighlighted = !booking && !!highlight?.includes(d.iso);
-          const style = isEndpoint
-            ? { backgroundColor: "var(--color-primary)", color: "var(--color-primary-foreground)" }
+          const stateClass = isEndpoint
+            ? "bg-primary text-primary-foreground rounded-full font-extrabold"
             : inRange
-              ? {
-                  backgroundColor: "var(--color-primary-soft)",
-                  color: "var(--color-primary)",
-                  boxShadow: booking ? "inset 0 -4px 0 var(--color-ok)" : undefined,
-                }
+              ? "bg-primary-soft text-primary"
               : isConfirmed
-                ? { backgroundColor: "var(--color-ok)", color: "#fff" }
+                ? "bg-primary text-primary-foreground font-extrabold"
                 : isPending
-                  ? { backgroundColor: "var(--color-warn-soft)", color: "var(--color-warn)" }
+                  ? "bg-warn-soft text-warn-foreground"
                   : isHighlighted
-                    ? {
-                        backgroundColor: "var(--color-ok-soft)",
-                        boxShadow: "inset 0 0 0 2px var(--color-ok)",
-                      }
-                    : isToday
-                      ? { boxShadow: "inset 0 0 0 2px var(--color-primary)" }
-                      : undefined;
+                    ? "bg-primary-soft text-primary ring-2 ring-primary rounded-[14px]"
+                    : !d.inMonth
+                      ? "text-faint"
+                      : d.iso < today
+                        ? "text-subtle"
+                        : "text-foreground";
+          const startBand =
+            !!booking &&
+            (d.iso === booking.start_date ||
+              d.iso.slice(8) === "01" ||
+              new Date(`${d.iso}T12:00:00`).getDay() === 1);
+          const endBand =
+            !!booking &&
+            (d.iso === booking.end_date || new Date(`${d.iso}T12:00:00`).getDay() === 0);
+          const cellClass = `grid h-[44px] min-w-0 place-items-center text-[15px] font-semibold ${stateClass} ${startBand ? "rounded-l-[14px]" : ""} ${endBand ? "rounded-r-[14px]" : ""}`;
           const label = (
             <span
-              className={!booking && !d.inMonth && !isEndpoint ? "text-muted-foreground/50" : ""}
+              className={`grid size-[42px] place-items-center ${isToday ? "rounded-full font-extrabold ring-2 ring-inset ring-foreground" : ""}`}
             >
               {d.day}
             </span>
           );
           if (!onPickDay) {
             return (
-              <div
-                key={d.iso}
-                className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold md:h-14 md:text-[16px]"
-                style={style}
-              >
+              <div key={d.iso} className={cellClass}>
                 {label}
               </div>
             );
@@ -109,8 +109,7 @@ export function CalendarMonth({
               aria-label={`${d.day}. ${monthNames(lang)[Number(d.iso.slice(5, 7)) - 1]}${
                 booking ? ` · ${t("obsazeno", "booked")}` : ""
               }`}
-              className="grid h-11 place-items-center rounded-xl text-[15px] font-semibold md:h-14 md:text-[16px] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
-              style={style}
+              className={`${cellClass} active:scale-95 disabled:cursor-not-allowed`}
             >
               {label}
             </button>
@@ -149,16 +148,16 @@ export function MonthHeader({
 }) {
   const { t, lang } = useLang();
   return (
-    <div className="flex items-center justify-between">
-      <h2 className="text-lg font-bold">
+    <div className="relative flex items-center justify-between">
+      <h2 className="absolute inset-x-11 text-center text-[18px] font-extrabold">
         {monthNames(lang)[month]} {year}
       </h2>
-      <div className="flex gap-1">
+      <div className="flex w-full justify-between">
         <button
           type="button"
           onClick={prev}
           aria-label={t("Předchozí měsíc", "Previous month")}
-          className="grid size-11 place-items-center rounded-xl bg-secondary"
+          className="grid size-11 place-items-center rounded-full bg-secondary"
         >
           <ChevronLeft className="size-5" />
         </button>
@@ -166,7 +165,7 @@ export function MonthHeader({
           type="button"
           onClick={next}
           aria-label={t("Další měsíc", "Next month")}
-          className="grid size-11 place-items-center rounded-xl bg-secondary"
+          className="grid size-11 place-items-center rounded-full bg-secondary"
         >
           <ChevronRight className="size-5" />
         </button>
@@ -178,13 +177,13 @@ export function MonthHeader({
 export function CalendarLegend({ picking = false }: { picking?: boolean }) {
   const { t } = useLang();
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-muted-foreground">
+    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-semibold text-muted-foreground">
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded bg-ok" />
+        <span className="size-3 rounded-[4px] bg-primary" />
         {t("Potvrzeno", "Confirmed")}
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded bg-warn" />
+        <span className="size-3 rounded-[4px] border border-warn-border bg-warn-soft" />
         {t("Čeká na schválení", "Awaiting approval")}
       </span>
       {picking && (

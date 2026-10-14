@@ -248,7 +248,13 @@ function AuthPage() {
 
   return (
     <main className="page-fresh mx-auto flex min-h-screen max-w-[480px] flex-col px-5 py-5 md:py-8">
-      <div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground"><Home className="size-6" strokeWidth={2} /></span><span className="text-lg font-extrabold">My Chata</span></div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
+            <Home className="size-6" strokeWidth={2} />
+          </span>
+          <span className="text-lg font-extrabold">My Chata</span>
+        </div>
         <LanguageToggle />
       </div>
       <img
@@ -258,29 +264,46 @@ function AuthPage() {
       />
       <section className="py-6">
         <h1 className="mt-1 text-[32px] font-extrabold leading-[1.12]">
-          {mode === "main" ? t("Společná chata, bez zmatků.", "One shared chata, no muddle.") : mode === "institute" ? t("Registrace instituce", "Sign up as an Institute") : t("Přihlaste se ke své chatě", "Sign in to your cottage")}
+          {mode === "main"
+            ? t("Společná chata, bez zmatků.", "One shared chata, no muddle.")
+            : mode === "institute"
+              ? t("Registrace instituce", "Sign up as an Institute")
+              : t("Přihlaste se ke své chatě", "Sign in to your cottage")}
         </h1>
         <p className="mt-2 text-muted-foreground">
           {t(
-            mode === "main" ? "Kalendář, úkoly, výdaje a návod k chatě na jednom místě." : "Vaše pobyty, úkoly, výdaje a dokumenty zůstávají soukromé.",
-            mode === "main" ? "Calendar, tasks, expenses and the house manual in one place." : "Your stays, tasks, expenses, and documents stay private.",
+            mode === "main"
+              ? "Kalendář, úkoly, výdaje a návod k chatě na jednom místě."
+              : "Vaše pobyty, úkoly, výdaje a dokumenty zůstávají soukromé.",
+            mode === "main"
+              ? "Calendar, tasks, expenses and the house manual in one place."
+              : "Your stays, tasks, expenses, and documents stay private.",
           )}
         </p>
 
         {error && (
-          <p className="mt-4 rounded-2xl bg-destructive-soft p-3 font-semibold text-destructive">{error}</p>
+          <p className="mt-4 rounded-2xl bg-destructive-soft p-3 font-semibold text-destructive">
+            {error}
+          </p>
         )}
         {info && <p className="mt-4 rounded-2xl bg-ok-soft p-3 font-semibold text-ok">{info}</p>}
 
         {mode === "main" ? (
           <div className="mt-6 space-y-3">
-            <button onClick={signInGoogle} disabled={busy} className="btn-primary min-h-[56px] w-full text-[17px]">
+            <button
+              onClick={signInGoogle}
+              disabled={busy}
+              className="btn-primary min-h-[56px] w-full text-[17px]"
+            >
               <LogIn className="size-5" />
               {busy
                 ? t("Přihlašuji…", "Signing in…")
                 : t("Pokračovat přes Google", "Continue with Google")}
             </button>
-            <button className="btn-secondary min-h-[56px] w-full text-[17px]" onClick={() => open("email", true)}>
+            <button
+              className="btn-secondary min-h-[56px] w-full text-[17px]"
+              onClick={() => open("email", true)}
+            >
               <Mail className="size-5" />
               {t("Registrovat se e-mailem", "Sign up with email")}
             </button>
@@ -293,7 +316,15 @@ function AuthPage() {
                 {t("Přihlásit se", "Sign in")}
               </button>
             </p>
-            <p className="text-center text-[16px] text-muted-foreground">{t("Škola nebo firma?", "School or company?")} <button className="min-h-11 font-bold text-primary hover:text-primary-hover" onClick={() => open("institute", true)}>{t("Registrovat instituci", "Sign up as an Institute")}</button></p>
+            <p className="text-center text-[16px] text-muted-foreground">
+              {t("Škola nebo firma?", "School or company?")}{" "}
+              <button
+                className="min-h-11 font-bold text-primary hover:text-primary-hover"
+                onClick={() => open("institute", true)}
+              >
+                {t("Registrovat instituci", "Sign up as an Institute")}
+              </button>
+            </p>
           </div>
         ) : (
           <div className="card mt-6 space-y-3 p-4">
@@ -359,7 +390,11 @@ function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={signingUp ? "new-password" : "current-password"}
             />
-            <button className="btn-primary min-h-[56px] w-full text-[17px]" disabled={!canSubmit} onClick={submit}>
+            <button
+              className="btn-primary min-h-[56px] w-full text-[17px]"
+              disabled={!canSubmit}
+              onClick={submit}
+            >
               {busy
                 ? t("Pracuji…", "Working…")
                 : signingUp

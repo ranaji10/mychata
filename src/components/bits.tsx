@@ -49,7 +49,18 @@ export function StatCard({
 }) {
   return (
     <div className="card h-full p-4 lg:p-5">
-      <div className="flex items-start justify-between gap-2"><p className="text-[14px] font-semibold text-muted-foreground">{label}</p><span className={`grid size-[34px] shrink-0 place-items-center rounded-full ${typeof value === "string" && value.includes("Kč") ? "bg-warn-soft text-cat-expenses" : "bg-primary-soft text-primary"}`}>{typeof value === "string" && value.includes("Kč") ? <Wallet className="size-[18px]" /> : <CalendarDays className="size-[18px]" />}</span></div>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[14px] font-semibold text-muted-foreground">{label}</p>
+        <span
+          className={`grid size-[34px] shrink-0 place-items-center rounded-full ${typeof value === "string" && value.includes("Kč") ? "bg-warn-soft text-cat-expenses" : "bg-primary-soft text-primary"}`}
+        >
+          {typeof value === "string" && value.includes("Kč") ? (
+            <Wallet className="size-[18px]" />
+          ) : (
+            <CalendarDays className="size-[18px]" />
+          )}
+        </span>
+      </div>
       <p
         className={`mt-2 text-xl font-extrabold leading-tight lg:text-2xl ${tone === "danger" ? "text-destructive" : ""}`}
       >

@@ -41,15 +41,16 @@ function Index() {
   }, [account, loading, user, navigate]);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col bg-background px-4 pb-8">
+    <div className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col page-fresh px-4 pb-8">
       <div className="mt-4 flex justify-end">
         <LanguageToggle />
       </div>
       <div className="relative mt-3 overflow-hidden rounded-3xl">
         <img
           src={defaultPhoto.src}
-          alt={t("Dřevěná chata v přírodě", "Wooden cottage in nature")}
-          className="aspect-[16/10] w-full object-cover"
+          alt={defaultPhoto.alt}
+          className="aspect-[16/10] w-full object-cover object-[50%_42%]"
+          loading="lazy"
           width={1024}
           height={640}
         />

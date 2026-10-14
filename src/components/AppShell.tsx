@@ -185,18 +185,27 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <header className="sticky top-0 z-20 flex items-center gap-3 px-5 pb-4 pt-5 md:px-6 lg:px-0">
-            {pathname === "/domu" ? <Avatar name={currentMember?.name ?? ""} className="size-12 shadow-floating" /> : <Link
-              to="/domu"
-              aria-label={t("Domů", "Home")}
-              className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-primary text-primary-foreground lg:hidden"
-            >
-              <Home className="size-6" strokeWidth={2} />
-            </Link>}
+            {pathname === "/domu" ? (
+              <Avatar name={currentMember?.name ?? ""} className="size-12 shadow-floating" />
+            ) : (
+              <Link
+                to="/domu"
+                aria-label={t("Domů", "Home")}
+                className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-primary text-primary-foreground lg:hidden"
+              >
+                <Home className="size-6" strokeWidth={2} />
+              </Link>
+            )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-medium text-muted-foreground">
-                {pathname === "/domu" ? t(`Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`, `Hello, ${currentMember?.name?.split(" ")[0] ?? ""}`) : account?.type === "INSTITUTIONAL"
-                  ? t("Organizační správa", "Organisation workspace")
-                  : (account?.name ?? "My Chata")}
+                {pathname === "/domu"
+                  ? t(
+                      `Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`,
+                      `Hello, ${currentMember?.name?.split(" ")[0] ?? ""}`,
+                    )
+                  : account?.type === "INSTITUTIONAL"
+                    ? t("Organizační správa", "Organisation workspace")
+                    : (account?.name ?? "My Chata")}
               </p>
               {/* Chata switcher: the cottage name is always tappable and opens the sheet below. */}
               <button
@@ -234,7 +243,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                   active ? "text-primary" : "text-nav-foreground"
                 }`}
               >
-                <Icon className={`size-[26px] ${active ? to === "/domu" ? "fill-primary" : "fill-primary-soft" : ""}`} strokeWidth={1.7} />
+                <Icon
+                  className={`size-[26px] ${active ? (to === "/domu" ? "fill-primary" : "fill-primary-soft") : ""}`}
+                  strokeWidth={1.7}
+                />
                 <span className="text-[12px] font-bold">{label}</span>
               </Link>
             );

@@ -1,7 +1,7 @@
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Link2, X } from "lucide-react";
+import { CalendarDays, Link2, Plus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -46,6 +46,7 @@ function CalendarPage() {
   const { book } = Route.useSearch();
   const navigate = useNavigate();
   const nav = useMonthNav();
+  const [view, setView] = useState<"month" | "list">("month");
   const [manualLink, setManualLink] = useState<string | null>(null);
   const [picking, setPicking] = useState(!!book);
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
@@ -87,6 +88,7 @@ function CalendarPage() {
 
   const startPicking = () => {
     setPicking(true);
+    setView("month");
     calendarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   useEffect(() => {
@@ -136,11 +138,40 @@ function CalendarPage() {
 
   return (
     <AppShell>
-      <section ref={calendarRef} className="card mt-2 scroll-mt-4 p-4">
+      <div className="mb-5 mt-2 flex items-center justify-between gap-3">
+        <h2 className="text-[28px] font-extrabold leading-[1.15]">{t("Kalendář", "Calendar")}</h2>
+        {isFamily && (
+          <button onClick={startPicking} className="btn-primary min-h-[44px] px-4 py-2 text-[16px]">
+            <Plus className="size-[18px]" />
+            {t("Pobyt", "Stay")}
+          </button>
+        )}
+      </div>
+      <div
+        role="group"
+        aria-label={t("Zobrazení kalendáře", "Calendar view")}
+        className="mb-4 flex gap-2"
+      >
+        {(["month", "list"] as const).map((v) => (
+          <button
+            key={v}
+            aria-pressed={view === v}
+            onClick={() => setView(v)}
+            className={`min-h-11 rounded-full px-5 text-[14px] ${view === v ? "bg-foreground text-primary-foreground font-bold" : "bg-card text-foreground font-semibold"}`}
+          >
+            {v === "month" ? t("Měsíc", "Month") : t("Seznam", "List")}
+          </button>
+        ))}
+      </div>
+      <section
+        ref={calendarRef}
+        hidden={view !== "month"}
+        className="card mt-2 scroll-mt-4 rounded-[24px] p-4"
+      >
         <MonthHeader {...nav} />
 
         {isFamily && picking && (
-          <p className="mt-3 rounded-2xl bg-primary-soft p-3 text-[14px] font-semibold text-primary">
+          <p className="mt-3 rounded-2xl bg-primary-soft p-3 text-[16px] font-semibold text-primary">
             {!range.start
               ? t("Klepněte na den příjezdu.", "Tap your arrival day.")
               : !range.end
@@ -189,13 +220,14 @@ function CalendarPage() {
               </button>
               <button
                 onClick={clearRange}
-                className="grid size-11 shrink-0 place-items-center self-center rounded-xl bg-secondary"
+                className="grid size-11 shrink-0 place-items-center self-center rounded-full bg-secondary"
                 aria-label={t("Zrušit výběr", "Clear the dates")}
               >
                 <X className="size-5" />
               </button>
             </div>
           ) : (
+            false &&
             !picking && (
               <button onClick={startPicking} className="btn-primary mt-4 w-full">
                 {t("Rezervovat termín", "Book a date")}
@@ -225,23 +257,23 @@ function CalendarPage() {
                 key={b.id}
                 to="/rezervace/$id"
                 params={{ id: b.id }}
-                className="card flex items-center gap-3 p-3 active:scale-[0.99]"
+                className="card flex items-center gap-3 rounded-[20px] p-[14px] active:scale-[0.99]"
               >
                 <span
-                  className="size-3 shrink-0 rounded-full"
-                  style={{
-                    backgroundColor:
-                      b.status === "PENDING" ? "var(--color-warn)" : "var(--color-ok)",
-                  }}
-                />
+                  className={`grid size-11 shrink-0 place-items-center rounded-[14px] font-extrabold ${b.status === "PENDING" ? "bg-warn-soft text-warn-foreground" : "bg-primary-soft text-primary"}`}
+                >
+                  {Number(b.start_date.slice(8))}
+                </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-bold">{b.requester_name}</p>
-                  <p className="text-[13px] text-muted-foreground">
+                  <p className="truncate text-[16px] font-bold">{b.requester_name}</p>
+                  <p className="text-[16px] text-muted-foreground">
                     {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {guestCount(b.guests, lang)}
                   </p>
                 </div>
                 {b.status === "PENDING" && (
-                  <span className="pill bg-warn-soft text-warn">{t("Čeká", "Waiting")}</span>
+                  <span className="pill bg-warn-soft text-warn-foreground">
+                    {t("Čeká", "Waiting")}
+                  </span>
                 )}
               </Link>
             ))}
@@ -259,10 +291,10 @@ function CalendarPage() {
               <Link2 className="size-5" />
             </div>
             <div className="flex-1">
-              <p className="text-[15px] font-bold">
+              <p className="text-[16px] font-bold">
                 {t("Veřejný odkaz na kalendář", "Public calendar link")}
               </p>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-[16px] text-muted-foreground">
                 {t(
                   "Pro členy bez aplikace — pouze ke čtení",
                   "For members without the app — read only",

@@ -121,7 +121,7 @@ function PublicCalendar() {
   };
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8 md:max-w-[640px] md:py-8">
+    <div className="mx-auto min-h-screen w-full max-w-[420px] page-fresh px-4 py-4 pb-8 md:max-w-[640px] md:py-8">
       <div className="flex items-start justify-between gap-3">
         <h1 className="text-2xl font-bold">
           {property?.property_name ?? t("Kalendář chaty", "Cottage calendar")}

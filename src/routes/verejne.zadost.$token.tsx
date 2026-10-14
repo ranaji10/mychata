@@ -112,7 +112,7 @@ function PublicRequest() {
   };
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8 md:max-w-[640px] md:py-8">
+    <div className="mx-auto min-h-screen w-full max-w-[420px] page-fresh px-4 py-4 pb-8 md:max-w-[640px] md:py-8">
       <div className="mb-2 flex justify-end">
         <LanguageToggle />
       </div>
@@ -120,8 +120,9 @@ function PublicRequest() {
       <div className="relative overflow-hidden rounded-3xl">
         <img
           src={defaultPhoto.src}
-          alt={property?.name ?? t("Firemní chata", "Company cottage")}
-          className="aspect-[16/9] w-full object-cover"
+          alt={defaultPhoto.alt}
+          className="aspect-[16/9] w-full object-cover object-[50%_42%]"
+          loading="lazy"
           width={1024}
           height={576}
         />

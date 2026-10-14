@@ -64,9 +64,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
           className={`min-h-11 min-w-11 rounded-full px-3 text-[14px] font-bold ${
-            lang === l
-              ? "bg-foreground text-primary-foreground"
-              : "text-muted-foreground"
+            lang === l ? "bg-foreground text-primary-foreground" : "text-muted-foreground"
           }`}
         >
           {l === "cs" ? "CZ" : "EN"}

@@ -217,15 +217,28 @@ function HomePage() {
         </div>
       )}
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <h2 className="text-[32px] font-extrabold leading-[1.12] lg:text-[40px]">{nextBooking && nextBooking.start_date > today ? t(`Chata je volná do ${fmtDate(nextBooking.start_date)}.`, `The chata is free until ${fmtDate(nextBooking.start_date)}.`) : t(`Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`, `Hello, ${currentMember?.name?.split(" ")[0] ?? ""}`)}</h2>
-        <Link to="/kalendar" search={{ book: true }} className="btn-primary shrink-0"><CalendarDays className="size-5" />{t("Přidat pobyt", "Add booking")}</Link>
+        <h2 className="text-[32px] font-extrabold leading-[1.12] lg:text-[40px]">
+          {nextBooking && nextBooking.start_date > today
+            ? t(
+                `Chata je volná do ${fmtDate(nextBooking.start_date)}.`,
+                `The chata is free until ${fmtDate(nextBooking.start_date)}.`,
+              )
+            : t(
+                `Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`,
+                `Hello, ${currentMember?.name?.split(" ")[0] ?? ""}`,
+              )}
+        </h2>
+        <Link to="/kalendar" search={{ book: true }} className="btn-primary shrink-0">
+          <CalendarDays className="size-5" />
+          {t("Přidat pobyt", "Add booking")}
+        </Link>
       </div>
       {/* Property hero */}
       <section>
         <div className="relative overflow-hidden rounded-[28px]">
           <img
             src={mainPhoto ?? defaultPhoto.src}
-            alt={mainPhoto ? property?.name ?? t("Chata", "Cottage") : defaultPhoto.alt}
+            alt={mainPhoto ? (property?.name ?? t("Chata", "Cottage")) : defaultPhoto.alt}
             className="aspect-[16/10] w-full object-cover object-[50%_42%] md:aspect-[21/9]"
             loading="lazy"
             width={1200}
@@ -446,88 +459,89 @@ function HomePage() {
       )}
 
       <div className="lg:grid lg:grid-cols-2 lg:gap-5">
-      {/* Overdue task highlight */}
-      {overdueTasks.length > 0 && (
-        <section className="card mt-4 p-4">
-          <h3 className="text-lg font-bold">{t("Úkoly po termínu", "Overdue tasks")}</h3>
-          <div className="mt-2 space-y-2.5">
-            {overdueTasks.map((t2) => (
+        {/* Overdue task highlight */}
+        {overdueTasks.length > 0 && (
+          <section className="card mt-4 p-4">
+            <h3 className="text-lg font-bold">{t("Úkoly po termínu", "Overdue tasks")}</h3>
+            <div className="mt-2 space-y-2.5">
+              {overdueTasks.map((t2) => (
+                <Link
+                  key={t2.id}
+                  to="/ukoly/$id"
+                  params={{ id: t2.id }}
+                  className="flex min-h-[60px] items-center gap-3 border-b border-divider py-3 last:border-0 active:scale-[0.99]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[16px] font-bold">{taskTitle(t2, lang)}</p>
+                    <p className="text-[16px] text-muted-foreground">
+                      {t("Termín", "Due")}: {fmtDate(t2.due_date)}
+                    </p>
+                  </div>
+                  <PillDanger>{t("Zpožděno", "Overdue")}</PillDanger>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Next booking card (institutional) — the whole card opens the stay */}
+        {!isFamily && nextBooking && (
+          <section
+            className="card mt-4 cursor-pointer p-4 active:scale-[0.99]"
+            onClick={() => navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
+              <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
+            </div>
+            <p className="mt-1 text-xl font-bold">
+              {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
+            </p>
+            <p className="mt-1 text-[16px] text-muted-foreground">
+              {nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}
+            </p>
+            <div className="mt-3 flex gap-2">
               <Link
-                key={t2.id}
-                to="/ukoly/$id"
-                params={{ id: t2.id }}
-                className="flex min-h-[60px] items-center gap-3 border-b border-divider py-3 last:border-0 active:scale-[0.99]"
+                to="/rezervace/$id"
+                params={{ id: nextBooking.id }}
+                onClick={(e) => e.stopPropagation()}
+                className="btn-primary flex-1"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[16px] font-bold">{taskTitle(t2, lang)}</p>
-                  <p className="text-[16px] text-muted-foreground">
-                    {t("Termín", "Due")}: {fmtDate(t2.due_date)}
-                  </p>
-                </div>
-                <PillDanger>{t("Zpožděno", "Overdue")}</PillDanger>
+                {t("Detail pobytu", "Stay details")}
               </Link>
-            ))}
-          </div>
-        </section>
-      )}
+              <Link
+                to="/predani"
+                onClick={(e) => e.stopPropagation()}
+                className="btn-secondary flex-1"
+              >
+                {t("Odjezdový checklist", "Check-out checklist")}
+              </Link>
+            </div>
+          </section>
+        )}
 
-      {/* Next booking card (institutional) — the whole card opens the stay */}
-      {!isFamily && nextBooking && (
-        <section
-          className="card mt-4 cursor-pointer p-4 active:scale-[0.99]"
-          onClick={() => navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })}
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
-            <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
-          </div>
-          <p className="mt-1 text-xl font-bold">
-            {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
-          </p>
-          <p className="mt-1 text-[16px] text-muted-foreground">
-            {nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}
-          </p>
-          <div className="mt-3 flex gap-2">
-            <Link
-              to="/rezervace/$id"
-              params={{ id: nextBooking.id }}
-              onClick={(e) => e.stopPropagation()}
-              className="btn-primary flex-1"
-            >
-              {t("Detail pobytu", "Stay details")}
-            </Link>
-            <Link
-              to="/predani"
-              onClick={(e) => e.stopPropagation()}
-              className="btn-secondary flex-1"
-            >
-              {t("Odjezdový checklist", "Check-out checklist")}
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {lastDeparture &&
-        (() => {
-          const { done, total } = checklistProgress(lastDeparture.checklist_state);
-          return (
-            <Link to="/predani" className="card mt-4 block p-4">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-lg font-bold">{t("Poslední odjezd", "Last departure")}</h3>
-                {done === total ? (
-                  <PillOk>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillOk>
-                ) : (
-                  <PillWarn>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillWarn>
-                )}
-              </div>
-              <p className="mt-1 text-[16px] text-muted-foreground">
-                {fmtDateTime(lastDeparture.submitted_at)}
-                {lastDeparture.note ? ` · „${lastDeparture.note}“` : ""}
-              </p>
-            </Link>
-          );
-        })()}
-
+        {lastDeparture &&
+          (() => {
+            const { done, total } = checklistProgress(lastDeparture.checklist_state);
+            return (
+              <Link to="/predani" className="card mt-4 block p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-lg font-bold">{t("Poslední odjezd", "Last departure")}</h3>
+                  {done === total ? (
+                    <PillOk>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillOk>
+                  ) : (
+                    <PillWarn>
+                      {t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}
+                    </PillWarn>
+                  )}
+                </div>
+                <p className="mt-1 text-[16px] text-muted-foreground">
+                  {fmtDateTime(lastDeparture.submitted_at)}
+                  {lastDeparture.note ? ` · „${lastDeparture.note}“` : ""}
+                </p>
+              </Link>
+            );
+          })()}
       </div>
       {openTasks.length === 0 && overdueTasks.length === 0 && (
         <div className="card mt-4 p-4 text-center">

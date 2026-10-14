@@ -59,14 +59,14 @@ Fallback overflow False
 
 Measured rendered CSS tokens in Chromium using canvas conversion to RGB and WCAG relative luminance, not a DevTools audit panel. Auth and calendar measurements produced the same palette values. Blue calendar was a token-only preview, **not** a genuine institution account/property check.
 
-| Pair | Green | Blue |
-| --- | ---: | ---: |
-| Foreground / page | 15.69 | 16.14 |
-| Muted foreground / gradient top | 5.73 | 5.88 |
-| Muted foreground / page | 6.35 | 6.60 |
-| Enabled primary button text / primary | 5.32 | 6.48 |
-| Subtle / white calendar card | 4.52 | 4.56 |
-| Faint / white calendar card | **2.25** | **2.28** |
+| Pair                                  |    Green |     Blue |
+| ------------------------------------- | -------: | -------: |
+| Foreground / page                     |    15.69 |    16.14 |
+| Muted foreground / gradient top       |     5.73 |     5.88 |
+| Muted foreground / page               |     6.35 |     6.60 |
+| Enabled primary button text / primary |     5.32 |     6.48 |
+| Subtle / white calendar card          |     4.52 |     4.56 |
+| Faint / white calendar card           | **2.25** | **2.28** |
 
 The shared calendar's other-month dates use `--faint` and fail the requested 4.5:1. Tokens and shared calendar are prohibited here; no shared change was made. Exhaustive element-level contrast across all states, including disabled buttons and image overlays, is not certified.
 

@@ -1,3 +1,10 @@
+---
+source: lovable
+date: 2026-10-14
+status: reviewed
+task: T-026
+---
+
 # Fresh air foundation review
 
 Preview only; no publishing. Check only `Testovací chata (Lovable)`.

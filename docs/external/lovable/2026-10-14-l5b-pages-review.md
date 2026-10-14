@@ -1,3 +1,10 @@
+---
+source: lovable
+date: 2026-10-14
+status: reviewed
+task: T-026
+---
+
 # Fresh air signed-in pages review
 
 Preview-only presentation pass, 14 October 2026. No publishing, package, migration, policy, auth or server-function changes. No new colour tokens or brand-specific screen styling.

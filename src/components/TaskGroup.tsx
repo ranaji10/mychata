@@ -35,6 +35,7 @@ export function TaskGroup({
     >
       <Button
         variant="ghost"
+        size="icon"
         disabled={busy}
         onClick={() => onToggle(task)}
         aria-label={t(

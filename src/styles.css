@@ -245,8 +245,20 @@
   font-size: 16px;
   padding: 0.75rem 1.5rem;
   cursor: pointer;
+  &:hover,
+  &:active {
+    background: var(--destructive-soft);
+  }
   &:active {
     transform: scale(0.98);
+  }
+}
+
+/* Push the consent banner above the mobile tab bar (84px) when AppShell is mounted.
+   The tab bar itself is lg:hidden, so at lg+ this rule doesn't matter. */
+@media (max-width: 1023px) {
+  .has-tabbar [data-consent-banner] {
+    bottom: 84px;
   }
 }
 

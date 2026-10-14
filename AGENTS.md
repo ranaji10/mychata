@@ -66,7 +66,7 @@ Files marked "automatically generated" in `src/integrations/` and `src/routeTree
 
 ## Claude artifacts and docs
 
-Every Claude artifact or doc made for MyChata gets a copy in `docs/external/claude/YYYY-MM-DD-<topic>.md` (frontmatter `artifact:` = its link) and a "Source file:" line at its end naming that path. Refresh the copy whenever you edit the artifact. Index: `docs/external/claude/README.md`.
+Every Claude artifact or doc made for MyChata gets a copy in `docs/external/claude/YYYY-MM-DD-<topic>.md` (frontmatter `artifact:` = its link) and a "Source file:" line at its end naming that path. Refresh the copy whenever you edit the artifact. Reviewer, RLS-auditor and site-check reports are saved in `docs/external/claude/` as `YYYY-MM-DD-pr<N>-review.md` / `YYYY-MM-DD-site-check.md` and get a row in that file's "Reviews and site checks" table. Index: `docs/external/claude/README.md`.
 
 ## Before you finish
 

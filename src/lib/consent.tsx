@@ -104,7 +104,10 @@ export function ConsentBanner() {
   if (choice) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-[84px] z-50 mx-auto w-full max-w-[420px] p-3 md:max-w-[640px] lg:inset-x-auto lg:bottom-4 lg:right-4 lg:max-w-[440px]">
+    <div
+      data-consent-banner
+      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[420px] p-3 md:max-w-[640px] lg:inset-x-auto lg:bottom-4 lg:right-4 lg:max-w-[440px]"
+    >
       <div className="rounded-[28px] bg-card p-5 shadow-2xl">
         <div className="flex items-center gap-3">
           <div className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">

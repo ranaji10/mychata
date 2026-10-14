@@ -3,7 +3,7 @@
 - [x] Replace seasonal asset pointers with ordinary bundled photos and verify autumn in development.
 - [x] Restyle Tasks, Expenses, Stays, Cottage, People/settings and used shared UI, preserving behaviour.
 - [x] Capture before/after examples and check accessible family pages at 375px/1280px in the test cottage.
-- [x] Verify stay, task, expense creation, checkout, main photo and manual-question flows; record evidence in docs/fresh-air-pages-review.md.
+- [x] Verify stay, task, expense creation, checkout, main photo and manual-question flows; record evidence in docs/external/lovable/2026-10-14-l5b-pages-review.md.
 - [ ] Verify settlement between two people and populated institution pages: no second member or institutional test account.
 - [ ] Full bun run check and production hashed-image request: manual builds/typechecks prohibited in this workspace; CI/maintainer verification required.
 - [ ] Grouped commits to lovable-sync: blocked by the platform-managed workspace branch; no manual Git writes allowed.

@@ -1,3 +1,10 @@
+## T-028 Fresh air public pages (14 Oct 2026)
+
+- [x] Restyle only allowed public routes and fallback pages; Czech link previews and priority seasonal heroes.
+- [ ] Verify public states at 375px, 768px and 1280px with test-cottage links only.
+- [ ] Check contrast, brands, cookie position and write the scoped report (partial: see report).
+- [ ] Institutional live-data checks: requires an institutional test account.
+
 ## Fresh air signed-in pages (14 Oct 2026)
 
 - [x] Replace seasonal asset pointers with ordinary bundled photos and verify autumn in development.

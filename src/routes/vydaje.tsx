@@ -244,7 +244,7 @@ function ExpensesPage() {
               key={e.id}
               className="flex min-h-[60px] flex-wrap items-center gap-3 border-b border-divider py-3 last:border-0"
             >
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[160px] flex-1">
                 <p className="break-words text-[16px] font-semibold">
                   {e.description ?? expenseCategoryLabel(e.category, lang)}
                 </p>
@@ -253,7 +253,7 @@ function ExpensesPage() {
                   {expenseCategoryLabel(e.category, lang)}
                 </p>
               </div>
-              <div className="max-w-full text-right [&_.pill]:whitespace-normal">
+              <div className="flex w-full flex-wrap items-center justify-between gap-2 text-right sm:w-auto sm:flex-col sm:items-end [&_.pill]:whitespace-normal">
                 <p className="text-[16px] font-bold">{fmtKc(Number(e.amount))}</p>
                 {splits &&
                   (() => {

@@ -13,6 +13,8 @@ export const Route = createFileRoute("/verejne/zadost/$token")({
   head: () => ({
     meta: [
       { title: "Stay request — My Chata" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Public request form for a stay at the company cottage." },
       { property: "og:title", content: "Stay request — My Chata" },

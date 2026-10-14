@@ -6,7 +6,15 @@ import { LanguageToggle, useLang } from "@/lib/i18n";
 export const Route = createFileRoute("/reset-password")({
   staticData: { sitemap: false },
   head: () => ({
-    meta: [{ title: "Reset password — My Chata" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Reset password — My Chata" },
+      { name: "description", content: "Request a password reset for your My Chata account." },
+      { property: "og:title", content: "Reset password — My Chata" },
+      { property: "og:description", content: "Request a password reset for your My Chata account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: ResetPasswordPage,
 });

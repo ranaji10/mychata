@@ -1,3 +1,11 @@
+## Fresh air foundation (14 Oct 2026)
+
+- [ ] Replace design rules, tokens, font and brand switching.
+- [ ] Add supplied seasonal photos and Prague season tests.
+- [ ] Restyle shell, shared bits, sign-in, Home and Calendar only.
+- [ ] Verify 375px/1280px in the test cottage; record limitations and checks.
+- [ ] Human review and green CI before publishing (not requested).
+
 ## L-2b PR #16 review fixes (12 Oct 2026)
 
 - [x] Adjacent clipboard fields with focus, selection and persistent status text.

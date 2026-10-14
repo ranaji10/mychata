@@ -4,7 +4,7 @@ Owner: Claude · Status: review
 
 Goal: replace Lovable's heart favicon and Lovable's screenshot link-preview image with MyChata's own logo, generated from two source images in `brand/` by one command.
 Non-goals: no change to the in-app header mark, no migrations, server functions or runtime dependencies. Lovable's hosting settings (visitor analytics, badge, social image) are changed by a maintainer, not in code.
-Files allowed: `brand/*`, `scripts/brand-assets.ts`, `package.json` (script entry only), `.gitignore`, `public/favicon.ico`, `public/brand/*`, `public/og-image.jpg` (removed), `public/manifest.webmanifest`, `src/lib/brand-assets.ts`, `src/lib/brand-assets.test.ts`, `src/routes/__root.tsx` (head links and meta only), `AGENTS.md`, `docs/external/lovable/KNOWLEDGE.md`, `docs/STATUS.md`, this brief.
+Files allowed: `brand/*`, `scripts/brand-assets.ts`, `package.json` (script entry only), `.gitignore`, `public/favicon.ico`, `public/brand/*`, `public/og-image.jpg` (removed), `public/manifest.webmanifest`, `src/lib/brand-assets.ts`, `src/lib/brand-assets.test.ts`, `src/routes/__root.tsx` (head links and meta only), `AGENTS.md`, `docs/external/lovable/KNOWLEDGE.md`, `docs/STATUS.md`, `docs/external/claude/2026-09-25-critical-review.md` (copy of the Claude doc), this brief.
 Invariants touched (AGENTS.md): none.
 Context: `brand/README.md`, `docs/external/claude/2026-10-14-site-check-2.md` (og:image from Lovable's storage).
 

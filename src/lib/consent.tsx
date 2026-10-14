@@ -75,7 +75,9 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
         void supabase
           .from("consent_log")
           .insert({ analytics, version: CONSENT_VERSION, anonymous_id: null, user_id: null })
-          .then(() => undefined);
+          .then(({ error }) => {
+            if (error) console.error("consent_log insert failed", error);
+          });
       },
       reopen: () => setChoice(null),
     }),

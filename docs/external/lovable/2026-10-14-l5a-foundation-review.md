@@ -1,8 +1,9 @@
 ---
 source: lovable
+model: not stated by Lovable
 date: 2026-10-14
 status: reviewed
-task: T-026
+task: none (no brief for this batch; follow-ups in T-027)
 ---
 
 # Fresh air foundation review

@@ -44,11 +44,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
 
-  // Tell the consent banner (rendered at root) that the mobile tab bar is present.
+  // Tell the consent banner (rendered at root) that the mobile tab bar is present. Only when
+  // the shell actually draws it: the loading and error screens below return early without it.
+  const showsTabbar = !loading && !!user && !needsOnboarding && !identityError;
   useEffect(() => {
+    if (!showsTabbar) return;
     document.documentElement.classList.add("has-tabbar");
     return () => document.documentElement.classList.remove("has-tabbar");
-  }, []);
+  }, [showsTabbar]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });

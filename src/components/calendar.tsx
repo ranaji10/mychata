@@ -72,7 +72,7 @@ export function CalendarMonth({
                   : isHighlighted
                     ? "bg-primary-soft text-primary ring-2 ring-primary rounded-[14px]"
                     : !d.inMonth
-                      ? "text-faint"
+                      ? "text-subtle"
                       : d.iso < today
                         ? "text-subtle"
                         : "text-foreground";

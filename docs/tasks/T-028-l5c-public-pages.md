@@ -29,6 +29,7 @@ Files allowed:
   Acceptance (runnable):
 - `bun run lint` passes (0 errors)
 - `bun run format:check` passes
+- `bun run typecheck` and `bun run check` pass on the PR's last commit (CI or a maintainer; Lovable cannot run them)
 - `bun run test` passes (all existing tests)
 - `bun run docs:check` passes
 - `grep -rn "chata.jpg\|asset.json\|__l5e" src` returns empty

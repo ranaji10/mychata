@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, ChevronDown, Circle } from "lucide-react";
+import { Check, ChevronDown, Circle } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fmtDate, taskCategoryLabel, taskTitle, todayISO, type Task } from "@/lib/data";
@@ -29,7 +29,7 @@ export function TaskGroup({
   const remaining = tasks.filter((task) => task.status !== "DONE");
   const count = totalTasks.filter((task) => task.status === "DONE").length;
   const tile = (task: Task) => (
-    <div key={task.id} className="card relative flex items-center gap-2 p-3">
+    <div key={task.id} className="relative flex min-h-[60px] items-center gap-2 border-b border-divider py-3 last:border-0">
       <Button
         variant="ghost"
         disabled={busy}
@@ -38,19 +38,19 @@ export function TaskGroup({
           `${task.status === "DONE" ? "Označit jako nesplněné" : "Označit jako hotové"}: ${taskTitle(task, "cs")}`,
           `${task.status === "DONE" ? "Mark as not done" : "Mark as done"}: ${taskTitle(task, "en")}`,
         )}
-        className="relative z-10 size-11 shrink-0 p-0 [&_svg]:size-7"
+        className="relative z-10 size-11 shrink-0 rounded-full p-0"
       >
         {task.status === "DONE" ? (
-          <CheckCircle2 className="text-ok" />
+          <span className="grid size-[26px] place-items-center rounded-[8px] bg-primary text-primary-foreground"><Check className="size-[18px]" strokeWidth={3} /></span>
         ) : (
-          <Circle className="text-muted-foreground" />
+          <Circle className="size-6 text-control-border" strokeWidth={2} />
         )}
       </Button>
       <div className="min-w-0 flex-1 text-[16px]">
         <Link
           to="/ukoly/$id"
           params={{ id: task.id }}
-          className={`block font-bold after:absolute after:inset-0 after:rounded-3xl ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}
+          className={`block font-semibold after:absolute after:inset-0 after:rounded-[8px] ${task.status === "DONE" ? "text-subtle line-through" : ""}`}
         >
           {taskTitle(task, lang)}
         </Link>
@@ -67,7 +67,7 @@ export function TaskGroup({
   );
   return (
     <section
-      className="min-w-0 space-y-2"
+      className="card min-w-0 px-4 py-1"
       aria-label={title ?? t("Samostatné úkoly", "Standalone tasks")}
     >
       {title && (
@@ -75,10 +75,10 @@ export function TaskGroup({
           variant="ghost"
           aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
-          className="grid h-auto min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] gap-2 whitespace-normal rounded-xl border border-border bg-card p-3 text-left text-[16px]"
+          className="grid h-auto min-h-[60px] w-full grid-cols-[minmax(0,1fr)_auto] gap-2 whitespace-normal rounded-none border-b border-divider px-0 py-3 text-left text-[16px]"
         >
           <span className="min-w-0">
-            <span className="block break-words font-bold">{title}</span>
+            <span className="block break-words text-[18px] font-bold">{title}</span>
             <span className="block text-muted-foreground">
               {t(`${count} z ${totalTasks.length} hotovo`, `${count} of ${totalTasks.length} done`)}
             </span>
@@ -87,7 +87,7 @@ export function TaskGroup({
         </Button>
       )}
       {open && (
-        <div className="space-y-2">
+        <div>
           {remaining.map(tile)}
           {completed.length > 0 && (
             <div>
@@ -95,14 +95,14 @@ export function TaskGroup({
                 variant="ghost"
                 onClick={() => setDoneOpen((value) => !value)}
                 aria-expanded={doneOpen}
-                className="flex min-h-11 w-full justify-between whitespace-normal text-[16px] font-bold"
+                className="flex min-h-[60px] w-full justify-between whitespace-normal rounded-none px-0 text-[16px] font-bold"
               >
                 <span>
                   {t("Hotovo", "Done")} ({completed.length})
                 </span>
                 <ChevronDown className={doneOpen ? "rotate-180" : ""} />
               </Button>
-              {doneOpen && <div className="space-y-2">{completed.map(tile)}</div>}
+              {doneOpen && <div>{completed.map(tile)}</div>}
             </div>
           )}
         </div>

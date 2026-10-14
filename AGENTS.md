@@ -15,6 +15,10 @@
 
 Czech-first app for families and institutions that share a chata: calendar, tasks, expenses, handover, manual, documents. Live at mychata.cz. This file is the only always-loaded context; keep it under 150 lines and link out instead of copying.
 
+## UI module boundaries
+
+- Keep brand propagation in `src/lib/brand.ts` and stock-photo selection in `src/lib/season.ts`; shared hooks keep portals and seasonal fallbacks consistent without duplicating rules in screens.
+
 ## Stack
 
 TanStack Start 1.168 (SSR on Cloudflare via Nitro) · React 19 · TanStack Router/Query · Tailwind 4 + shadcn · Supabase (Auth, Postgres + pgvector, Storage) · Bun · TypeScript strict. **Not Next.js**, no Supabase Edge Functions: server code is `createServerFn` in `src/lib/*.functions.ts` (ADR-0001).
@@ -39,6 +43,7 @@ bun run docs:gen       # after any migration or route change
 5. **Language.** All user-facing text through `t("česky", "English")`; Czech first. Users are 45–68: 44px targets, plain words.
 6. **Errors.** Every Supabase call handles `error`. Nothing fails silently.
 7. **Secrets and data.** No keys in code or docs; no production personal data in tests, prompts or fixtures.
+8. **Testing on mychata.cz.** Only in a test cottage (`docs/runbooks/test-cottages.md`). Never open or submit another cottage's public, guest or invitation links.
 
 ## Where things are
 
@@ -61,7 +66,7 @@ Files marked "automatically generated" in `src/integrations/` and `src/routeTree
 
 ## Claude artifacts and docs
 
-Every Claude artifact or doc made for MyChata gets a copy in `docs/external/claude/YYYY-MM-DD-<topic>.md` (frontmatter `artifact:` = its link) and a "Source file:" line at its end naming that path. Refresh the copy whenever you edit the artifact. Index: `docs/external/claude/README.md`.
+Every Claude artifact or doc made for MyChata gets a copy in `docs/external/claude/YYYY-MM-DD-<topic>.md` (frontmatter `artifact:` = its link) and a "Source file:" line at its end naming that path. Refresh the copy whenever you edit the artifact. Reviewer, RLS-auditor and site-check reports are saved in `docs/external/claude/` as `YYYY-MM-DD-pr<N>-review.md` / `YYYY-MM-DD-site-check.md` and get a row in that file's "Reviews and site checks" table. Index: `docs/external/claude/README.md`.
 
 ## Before you finish
 

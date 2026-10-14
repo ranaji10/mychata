@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { useBrand } from "@/lib/brand";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
@@ -5,19 +7,21 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { findConflicts, fmtDate, todayISO, type Booking } from "@/lib/data";
 import { LanguageToggle, useLang } from "@/lib/i18n";
-import chataImg from "@/assets/chata.jpg";
+import { useDefaultChataPhoto } from "@/lib/season";
 
 export const Route = createFileRoute("/verejne/zadost/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Stay request — My Chata" },
+      { title: "Žádost o pobyt — My Chata" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
-      { name: "description", content: "Public request form for a stay at the company cottage." },
-      { property: "og:title", content: "Stay request — My Chata" },
+      { name: "description", content: "Pošlete žádost o pobyt na chatě vaší organizace." },
+      { property: "og:title", content: "Žádost o pobyt — My Chata" },
       {
         property: "og:description",
-        content: "Public request form for a stay at the company cottage.",
+        content: "Pošlete žádost o pobyt na chatě vaší organizace.",
       },
     ],
   }),
@@ -25,10 +29,16 @@ export const Route = createFileRoute("/verejne/zadost/$token")({
 });
 
 function PublicRequest() {
+  const defaultPhoto = useDefaultChataPhoto();
   const { t } = useLang();
+  useBrand("institution");
   const { token } = Route.useParams();
   // Each institution shares its own link: /verejne/zadost/<property share token> (migration 0012).
-  const { data: property, isLoading: loadingProperty } = useQuery({
+  const {
+    data: property,
+    isLoading: loadingProperty,
+    isError,
+  } = useQuery({
     queryKey: ["institutional-property", token],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("public_property", { _token: token });
@@ -109,21 +119,22 @@ function PublicRequest() {
   };
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
+    <div className="mx-auto min-h-screen w-full max-w-[420px] page-fresh px-5 py-4 pb-8 md:max-w-[640px] md:py-8">
       <div className="mb-2 flex justify-end">
         <LanguageToggle />
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl">
+      <div className="relative overflow-hidden rounded-[28px]">
         <img
-          src={chataImg}
-          alt={property?.name ?? t("Firemní chata", "Company cottage")}
-          className="aspect-[16/9] w-full object-cover"
+          src={defaultPhoto.src}
+          alt={defaultPhoto.alt}
+          className="aspect-[16/9] w-full object-cover object-[50%_42%]"
+          loading="lazy"
           width={1024}
           height={576}
         />
-        <div className="absolute bottom-3 left-3 right-3 rounded-2xl bg-card/95 px-4 py-3 ring-1 ring-black/5">
-          <p className="text-[12px] font-semibold text-muted-foreground">
+        <div className="absolute bottom-3 left-3 right-3 rounded-2xl bg-card/95 px-4 py-3 ring-1 ring-border">
+          <p className="text-[16px] font-semibold text-muted-foreground">
             {t("Žádost o pobyt", "Stay request")}
           </p>
           <p className="text-lg font-bold leading-tight">
@@ -132,13 +143,24 @@ function PublicRequest() {
         </div>
       </div>
 
-      {!loadingProperty && !property ? (
+      {loadingProperty ? (
+        <p className="mt-6" role="status">
+          {t("Načítám chatu…", "Loading cottage…")}
+        </p>
+      ) : isError ? (
+        <p className="mt-6 text-destructive" role="alert">
+          {t(
+            "Chatu se nepodařilo načíst. Zkuste stránku obnovit.",
+            "The cottage could not be loaded. Try refreshing the page.",
+          )}
+        </p>
+      ) : !property ? (
         // An unknown or family link: say so instead of showing a form that can't be sent.
         <section className="card mt-4 p-4">
-          <p className="text-[15px] font-semibold">
+          <p className="text-[16px] font-semibold">
             {t("Tento odkaz na formulář neplatí.", "This form link is not valid.")}
           </p>
-          <p className="mt-1 text-[14px] text-muted-foreground">
+          <p className="mt-1 text-[16px] text-muted-foreground">
             {t(
               "Požádejte správce chaty o aktuální odkaz.",
               "Ask the cottage's administrator for the current link.",
@@ -148,8 +170,10 @@ function PublicRequest() {
       ) : sent ? (
         <div className="card mt-4 p-6 text-center">
           <CheckCircle2 className="mx-auto size-14 text-ok" />
-          <h1 className="mt-3 text-2xl font-bold">{t("Žádost odeslána", "Request sent")}</h1>
-          <p className="mt-2 text-[15px] text-muted-foreground">
+          <h1 className="mt-3 text-[28px] font-extrabold leading-[1.15]">
+            {t("Žádost odeslána", "Request sent")}
+          </h1>
+          <p className="mt-2 text-[16px] text-muted-foreground">
             {t(
               `Vaši žádost o termín ${fmtDate(start)} – ${fmtDate(end)} jsme přijali. O výsledku vás budeme informovat e-mailem.`,
               `We have received your request for ${fmtDate(start)} – ${fmtDate(end)}. We will let you know the outcome by email.`,
@@ -164,7 +188,7 @@ function PublicRequest() {
           <h1 className="text-xl font-bold">{t("Vyplňte žádost", "Fill in the request")}</h1>
 
           <div>
-            <label htmlFor="req-name" className="mb-1 block text-[13px] font-bold">
+            <label htmlFor="req-name" className="mb-1 block label-text">
               {t("Jméno a příjmení", "Full name")}
             </label>
             <input
@@ -177,7 +201,7 @@ function PublicRequest() {
           </div>
 
           <div>
-            <label htmlFor="req-email" className="mb-1 block text-[13px] font-bold">
+            <label htmlFor="req-email" className="mb-1 block label-text">
               {t("E-mail", "Email")}
             </label>
             <input
@@ -189,14 +213,14 @@ function PublicRequest() {
               className="field"
             />
             {email && !emailOk && (
-              <p className="mt-1 text-[13px] font-semibold text-danger">
+              <p className="mt-1 text-[16px] font-semibold text-destructive">
                 {t("Zadejte platný e-mail.", "Please enter a valid email address.")}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="req-aff" className="mb-1 block text-[13px] font-bold">
+            <label htmlFor="req-aff" className="mb-1 block label-text">
               {t("Oddělení (nepovinné)", "Department (optional)")}
             </label>
             <input
@@ -210,7 +234,7 @@ function PublicRequest() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="req-start" className="mb-1 block text-[13px] font-bold">
+              <label htmlFor="req-start" className="mb-1 block label-text">
                 {t("Příjezd", "Arrival")}
               </label>
               <input
@@ -223,7 +247,7 @@ function PublicRequest() {
               />
             </div>
             <div>
-              <label htmlFor="req-end" className="mb-1 block text-[13px] font-bold">
+              <label htmlFor="req-end" className="mb-1 block label-text">
                 {t("Odjezd", "Departure")}
               </label>
               <input
@@ -238,30 +262,34 @@ function PublicRequest() {
           </div>
 
           <div>
-            <span className="mb-1 block text-[13px] font-bold">
-              {t("Počet hostů", "Number of guests")}
-            </span>
+            <span className="mb-1 block label-text">{t("Počet hostů", "Number of guests")}</span>
             <div className="flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-2">
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 onClick={() => setGuests((g) => Math.max(1, g - 1))}
                 aria-label={t("Odebrat hosta", "Remove guest")}
-                className="grid size-11 place-items-center rounded-xl bg-secondary"
+                className="grid size-11 place-items-center rounded-full bg-secondary"
               >
                 <Minus className="size-5" />
-              </button>
-              <span className="flex-1 text-center text-2xl font-bold">{guests}</span>
-              <button
+              </Button>
+              <span className="flex-1 text-center text-[28px] font-extrabold leading-[1.15]">
+                {guests}
+              </span>
+              <Button
+                variant="fresh"
+                size="fresh"
                 onClick={() => setGuests((g) => Math.min(20, g + 1))}
                 aria-label={t("Přidat hosta", "Add guest")}
-                className="grid size-11 place-items-center rounded-xl bg-secondary"
+                className="grid size-11 place-items-center rounded-full bg-secondary"
               >
                 <Plus className="size-5" />
-              </button>
+              </Button>
             </div>
           </div>
 
           <div>
-            <label htmlFor="req-note" className="mb-1 block text-[13px] font-bold">
+            <label htmlFor="req-note" className="mb-1 block label-text">
               {t("Poznámka (nepovinné)", "Note (optional)")}
             </label>
             <textarea
@@ -274,7 +302,7 @@ function PublicRequest() {
           </div>
 
           {invalid && (
-            <p className="rounded-2xl bg-danger-soft p-3 text-[14px] font-semibold text-danger">
+            <p className="rounded-2xl bg-destructive-soft p-3 text-[16px] font-semibold text-destructive">
               {t(
                 "Odjezd musí být po příjezdu.",
                 "The departure date must be after the arrival date.",
@@ -282,7 +310,7 @@ function PublicRequest() {
             </p>
           )}
           {hasConflict && !invalid && (
-            <p className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+            <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
               {t(
                 "Tento termín je již částečně obsazený. Žádost odešlete, správce posoudí kolizi.",
                 "These dates are already partly booked. You can still send the request; the manager will review the conflict.",
@@ -290,15 +318,17 @@ function PublicRequest() {
             </p>
           )}
 
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             onClick={submit}
             disabled={saving || !name.trim() || !emailOk || invalid || !property}
             className="btn-primary w-full disabled:opacity-40"
           >
             {saving ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}
-          </button>
+          </Button>
           {failure && (
-            <p role="alert" className="text-center text-[14px] font-semibold text-destructive">
+            <p role="alert" className="text-center text-[16px] font-semibold text-destructive">
               {failure}
             </p>
           )}

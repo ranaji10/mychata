@@ -1,3 +1,6 @@
+import { Home } from "lucide-react";
+import { useBrand } from "@/lib/brand";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,32 +9,61 @@ import { LanguageToggle, useLang } from "@/lib/i18n";
 export const Route = createFileRoute("/reset-password")({
   staticData: { sitemap: false },
   head: () => ({
-    meta: [{ title: "Reset password — My Chata" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Obnovení hesla — My Chata" },
+      { name: "description", content: "Požádejte o odkaz pro obnovení hesla k účtu My Chata." },
+      { property: "og:title", content: "Obnovení hesla — My Chata" },
+      {
+        property: "og:description",
+        content: "Požádejte o odkaz pro obnovení hesla k účtu My Chata.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: ResetPasswordPage,
 });
 
 function ResetPasswordPage() {
   const { t } = useLang();
+  useBrand("family");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const send = async () => {
     setBusy(true);
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/auth",
-    });
-    setBusy(false);
-    setSent(true);
+    setFailed(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/auth",
+      });
+      if (error) throw error;
+      setSent(true);
+    } catch (e) {
+      console.error("resetPasswordForEmail failed", e);
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4">
-      <div className="flex justify-end">
+    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh px-5 py-5 md:max-w-[480px] md:py-10">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
+            <Home className="size-6" />
+          </span>
+          <span className="text-lg font-extrabold">My Chata</span>
+        </div>
         <LanguageToggle />
       </div>
-      <h1 className="mt-10 text-2xl font-bold">{t("Obnovení hesla", "Reset password")}</h1>
+      <h1 className="mt-10 text-[28px] font-extrabold leading-[1.15]">
+        {t("Obnovení hesla", "Reset password")}
+      </h1>
       {sent ? (
         <p className="mt-4 rounded-2xl bg-ok-soft p-3 font-semibold text-ok">
           {t(
@@ -40,20 +72,40 @@ function ResetPasswordPage() {
           )}
         </p>
       ) : (
-        <div className="card mt-4 space-y-3 p-4">
+        <div className="mt-6 space-y-3">
+          {failed && (
+            <p
+              role="alert"
+              className="rounded-2xl bg-destructive-soft p-3 font-semibold text-destructive"
+            >
+              {t(
+                "Odkaz se nepodařilo odeslat. Zkontrolujte e-mail a zkuste to znovu za pár minut.",
+                "The link could not be sent. Check the email address and try again in a few minutes.",
+              )}
+            </p>
+          )}
           <input
             className="field w-full"
             type="email"
-            placeholder="E-mail"
+            placeholder={t("E-mail", "Email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <button className="btn-primary w-full" disabled={busy || !email} onClick={send}>
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-primary w-full"
+            disabled={busy || !email}
+            onClick={send}
+          >
             {t("Poslat odkaz", "Send link")}
-          </button>
+          </Button>
         </div>
       )}
-      <Link to="/auth" className="mt-4 text-center text-[14px] font-semibold text-primary">
+      <Link
+        to="/auth"
+        className="mt-4 inline-flex min-h-11 items-center justify-center text-center text-[16px] font-semibold text-primary"
+      >
         {t("Zpět na přihlášení", "Back to sign in")}
       </Link>
     </main>

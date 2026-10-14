@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
@@ -11,7 +13,6 @@ import {
   Link2,
   LogOut,
   Shield,
-  User,
   Users,
 } from "lucide-react";
 import { useState } from "react";
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/vice")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Settings — My Chata" },
       {
         name: "description",
@@ -48,11 +51,16 @@ function MorePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isFamily = account?.type === "FAMILY";
+  const [manualLink, setManualLink] = useState<{
+    source: "calendar" | "guest";
+    url: string;
+  } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
 
   // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
   // The toast says the link was copied — never the raw URL.
-  const shareLink = async (url: string) => {
+  const shareLink = async (url: string, source: "calendar" | "guest") => {
+    setManualLink(null);
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ url, title: "My Chata" });
@@ -63,9 +71,10 @@ function MorePage() {
     }
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován", "Link copied"));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "The link could not be copied."));
+      setManualLink({ source, url });
     }
   };
 
@@ -82,7 +91,7 @@ function MorePage() {
       );
       return;
     }
-    await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`);
+    await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`, "calendar");
   };
 
   const createGuestLink = async () => {
@@ -95,83 +104,123 @@ function MorePage() {
       toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
       return;
     }
-    await shareLink(`${window.location.origin}/host/${token}`);
+    await shareLink(`${window.location.origin}/host/${token}`, "guest");
   };
 
   return (
     <AppShell>
       <PageHeader title={t("Nastavení", "Settings")} subtitle={account?.name} />
 
-      <Link to="/profil" className="card flex items-center gap-3 p-4 active:bg-secondary">
+      <Link
+        to="/profil"
+        className="card flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+      >
         <Avatar name={members.find((m) => m.id === currentMemberId)?.name ?? ""} />
         <div className="min-w-0 flex-1">
           <h3 className="font-bold">{members.find((m) => m.id === currentMemberId)?.name}</h3>
-          <p className="text-[13px] text-muted-foreground">{t("Můj profil", "My profile")}</p>
+          <p className="text-[16px] text-muted-foreground">{t("Můj profil", "My profile")}</p>
         </div>
-        <User className="size-5 text-muted-foreground" />
+        <ChevronRight className="size-5 text-muted-foreground" />
       </Link>
 
-      <section className="card mt-4 divide-y divide-border p-0">
-        <Link to="/clenove" className="flex items-center gap-3 p-4 active:bg-secondary">
-          <Users className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">
+      <section className="card mt-4 divide-y divide-divider overflow-hidden px-4 py-1">
+        <Link
+          to="/clenove"
+          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+        >
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <Users className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">
             {t("Členové a oprávnění", "Members & permissions")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <Link to="/chata/nova" className="flex items-center gap-3 p-4 active:bg-secondary">
-          <Home className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Přidat chatu", "Add a cottage")}</span>
+        <Link
+          to="/chata/nova"
+          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+        >
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <Home className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">{t("Přidat chatu", "Add a cottage")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <Link to="/fotky" className="flex items-center gap-3 p-4 active:bg-secondary">
-          <Camera className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Fotky chaty", "Cottage photos")}</span>
+        <Link to="/fotky" className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary">
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <Camera className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">{t("Fotky chaty", "Cottage photos")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <Link to="/manual" className="flex items-center gap-3 p-4 active:bg-secondary">
-          <BookOpen className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Manuál chaty", "House Manual")}</span>
+        <Link
+          to="/manual"
+          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+        >
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <BookOpen className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">{t("Manuál chaty", "House Manual")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link
           to="/dokumenty"
-          search={{ task: "" }}
-          className="flex items-center gap-3 p-4 active:bg-secondary"
+          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
         >
-          <FileText className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Dokumenty", "Document Vault")}</span>
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <FileText className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">{t("Dokumenty", "Document Vault")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <Link to="/predani" className="flex items-center gap-3 p-4 active:bg-secondary">
-          <ClipboardCheck className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">
+        <Link
+          to="/predani"
+          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+        >
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <ClipboardCheck className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">
             {t("Odjezdový checklist", "Check-out checklist")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         {isFamily && (
           <>
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={copyPublicLink}
-              className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
+              className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
             >
-              <Link2 className="size-5 text-muted-foreground" />
-              <span className="flex-1 text-[15px] font-bold">
+              <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                <Link2 className="size-[22px]" />
+              </span>
+              <span className="flex-1 text-[16px] font-bold">
                 {t("Veřejný odkaz na kalendář", "Public calendar link")}
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
-            </button>
-            <button
+            </Button>
+            <div className="px-4">
+              <ManualCopyLink url={manualLink?.source === "calendar" ? manualLink.url : null} />
+            </div>
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={createGuestLink}
-              className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
+              className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
             >
-              <Link2 className="size-5 text-muted-foreground" />
-              <span className="flex-1 text-[15px] font-bold">
+              <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                <Link2 className="size-[22px]" />
+              </span>
+              <span className="flex-1 text-[16px] font-bold">
                 {t("Odkaz pro hosta bez účtu", "Guest booking link (no account)")}
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
-            </button>
+            </Button>
+            <div className="px-4">
+              <ManualCopyLink url={manualLink?.source === "guest" ? manualLink.url : null} />
+            </div>
           </>
         )}
         {!isFamily && (
@@ -179,10 +228,12 @@ function MorePage() {
             to="/verejne/zadost/$token"
             params={{ token: property?.public_token ?? "" }}
             disabled={!property}
-            className="flex items-center gap-3 p-4 active:bg-secondary"
+            className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
           >
-            <Link2 className="size-5 text-muted-foreground" />
-            <span className="flex-1 text-[15px] font-bold">
+            <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+              <Link2 className="size-[22px]" />
+            </span>
+            <span className="flex-1 text-[16px] font-bold">
               {t("Veřejný formulář žádosti", "Public request form")}
             </span>
             <ChevronRight className="size-5 text-muted-foreground" />
@@ -192,47 +243,62 @@ function MorePage() {
 
       {/* Language: collapsed row near the bottom */}
       <section className="card mt-4 p-0">
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => setLangOpen((v) => !v)}
-          className="flex w-full items-center gap-3 p-4 text-left"
+          className="flex min-h-[60px] w-full justify-start gap-3 px-4 py-3 text-left"
           aria-expanded={langOpen}
         >
-          <Globe className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Jazyk", "Language")}</span>
-          <span className="text-[14px] font-semibold text-muted-foreground">
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <Globe className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">{t("Jazyk", "Language")}</span>
+          <span className="text-[16px] font-semibold text-muted-foreground">
             {lang === "cs" ? "Čeština" : "English"}
           </span>
           <ChevronDown
             className={`size-5 text-muted-foreground transition-transform ${langOpen ? "rotate-180" : ""}`}
           />
-        </button>
+        </Button>
         {langOpen && (
           <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${lang === "cs" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setLang("cs")}
             >
-              Čeština
-            </button>
-            <button
+              {t("Čeština", "Czech")}
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${lang === "en" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setLang("en")}
             >
-              English
-            </button>
+              {t("Angličtina", "English")}
+            </Button>
           </div>
         )}
       </section>
 
-      <section className="card mt-4 divide-y divide-border p-0">
-        <Link to="/soukromi" className="flex items-center gap-3 p-4 active:bg-secondary">
-          <Shield className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">
+      <section className="card mt-4 divide-y divide-divider overflow-hidden px-4 py-1">
+        <Link
+          to="/soukromi"
+          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+        >
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <Shield className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">
             {t("Soukromí a cookies", "Privacy & cookies")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => {
             supabase.auth.signOut().then(() => {
               queryClient.clear();
@@ -240,11 +306,13 @@ function MorePage() {
               navigate({ to: "/auth", replace: true });
             });
           }}
-          className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
+          className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
         >
-          <LogOut className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Odhlásit se", "Sign out")}</span>
-        </button>
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <LogOut className="size-[22px]" />
+          </span>
+          <span className="flex-1 text-[16px] font-bold">{t("Odhlásit se", "Sign out")}</span>
+        </Button>
       </section>
     </AppShell>
   );

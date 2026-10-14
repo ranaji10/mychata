@@ -1,34 +1,25 @@
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useChildMatches,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Circle, Plus, Sparkles } from "lucide-react";
+import { CheckCircle2, Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { TaskGroup } from "@/components/TaskGroup";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, LoadingCards, PageHeader, PillDanger, PillNeutral } from "@/components/bits";
+import { EmptyState, LoadingCards, PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import {
-  fmtDate,
-  seasonalTemplates,
-  taskCategoryLabel,
-  taskTitle,
-  todayISO,
-  type Task,
-} from "@/lib/data";
+import { seasonalTemplates, todayISO, type Task } from "@/lib/data";
 import { translateTaskText } from "@/lib/task-translation.functions";
 
 export const Route = createFileRoute("/ukoly")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Tasks — My Chata" },
       { name: "description", content: "Tasks and seasonal checklists for your cottage." },
       { property: "og:title", content: "Tasks — My Chata" },
@@ -50,10 +41,12 @@ function TasksRoute() {
 function TasksPage() {
   const { property, currentMember, members } = useAccount();
   const { t, lang } = useLang();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>("all");
   const [title, setTitle] = useState("");
+  // Adding waits for the translation, which can take a few seconds; a second tap meanwhile
+  // used to create the task (or the whole checklist) twice (T-026).
+  const [adding, setAdding] = useState(false);
   // null = not chosen yet: new tasks default to the person adding them (T-019).
   const [assignee, setAssignee] = useState<string | null>(null);
   const chosenAssignee = assignee ?? currentMember?.id ?? "";
@@ -75,21 +68,51 @@ function TasksPage() {
     { key: "seasonal", label: t("Sezónní", "Seasonal") },
   ];
 
-  const { data: tasks, isLoading } = useQuery({
+  const {
+    data: tasks,
+    isLoading,
+    isError: tasksError,
+    refetch: retryTasks,
+    isFetching,
+  } = useQuery({
     queryKey: ["tasks", property?.id],
     enabled: !!property,
     queryFn: async () => {
+      if (!property) return [];
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
-        .eq("property_id", property!.id)
+        .eq("property_id", property.id)
         .order("due_date", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data as Task[];
     },
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["tasks", property?.id] });
+  const {
+    data: checklists,
+    isLoading: checklistsLoading,
+    error: checklistError,
+  } = useQuery({
+    queryKey: ["checklists", property?.id],
+    enabled: !!property,
+    queryFn: async () => {
+      if (!property) return [];
+      const { data, error } = await supabase
+        .from("checklists")
+        .select("id, title, created_at")
+        .eq("property_id", property.id)
+        .order("created_at")
+        .order("id");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const invalidate = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["tasks", property?.id] }),
+      queryClient.invalidateQueries({ queryKey: ["checklists", property?.id] }),
+    ]);
 
   const toggle = useMutation({
     mutationFn: async (t: Task) => {
@@ -104,7 +127,16 @@ function TasksPage() {
   });
 
   const addTask = async () => {
-    if (!property || !currentMember || !title.trim()) return;
+    if (adding || !property || !currentMember || !title.trim()) return;
+    setAdding(true);
+    try {
+      await saveTask();
+    } finally {
+      setAdding(false);
+    }
+  };
+  const saveTask = async () => {
+    if (!property || !currentMember) return;
     const translated = await translate({
       data: { text: title.trim(), sourceLanguage: lang },
     }).catch(() => ({ translation: title.trim() }));
@@ -133,6 +165,15 @@ function TasksPage() {
   };
 
   const addChecklist = async (templateId: string, force = false) => {
+    if (adding || !property || !currentMember) return;
+    setAdding(true);
+    try {
+      await saveChecklist(templateId, force);
+    } finally {
+      setAdding(false);
+    }
+  };
+  const saveChecklist = async (templateId: string, force: boolean) => {
     if (!property || !currentMember) return;
     const template = seasonalTemplates(lang).find((tpl) => tpl.id === templateId);
     const csTemplate = seasonalTemplates("cs").find((tpl) => tpl.id === templateId);
@@ -148,6 +189,7 @@ function TasksPage() {
           ? (assignAll ?? currentMember.id)
           : (assignEach[index] ?? currentMember.id)) || null,
     }));
+    const scrollY = window.scrollY;
     const { error } = await supabase.rpc("add_checklist", {
       _property_id: property.id,
       _template_id: templateId,
@@ -174,7 +216,10 @@ function TasksPage() {
     setPendingTemplate(null);
     setDuplicateOf(null);
     setAssignEach({});
-    invalidate();
+    await invalidate();
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: "instant" })),
+    );
   };
 
   // Open tasks that came from the same template, so a second tap doesn't silently duplicate.
@@ -204,79 +249,85 @@ function TasksPage() {
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             key={f.key}
+            aria-pressed={filter === f.key}
             onClick={() => setFilter(f.key)}
-            className={`h-11 shrink-0 rounded-full px-4 text-[14px] font-bold ${
-              filter === f.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-foreground ring-1 ring-black/5"
+            className={`h-11 shrink-0 rounded-full px-4 text-[16px] font-bold ${
+              filter === f.key ? "bg-foreground text-primary-foreground" : "bg-card text-foreground"
             }`}
           >
             {f.label}
-          </button>
+          </Button>
         ))}
       </div>
 
-      {isLoading ? (
+      {tasksError ? (
+        <div className="mt-4 space-y-3">
+          <p role="alert" className="text-[16px] text-destructive">
+            {t("Úkoly se nepodařilo načíst.", "Could not load the tasks.")}
+          </p>
+          <Button
+            variant="outline"
+            disabled={isFetching}
+            onClick={() => void retryTasks()}
+            className="min-h-11 text-[16px]"
+          >
+            {t("Zkusit znovu", "Try again")}
+          </Button>
+        </div>
+      ) : isLoading || checklistsLoading ? (
         <LoadingCards />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={CheckCircle2}
-          title={t("Žádné úkoly v tomto filtru.", "No tasks in this filter.")}
-          hint={t(
-            "Přidejte nový úkol nebo sezónní seznam.",
-            "Add a new task or a seasonal checklist.",
-          )}
-        />
       ) : (
-        <div className="mt-2 space-y-2.5">
-          {filtered.map((task) => {
-            const overdue = task.status !== "DONE" && task.due_date && task.due_date < today;
-            return (
-              <div
-                key={task.id}
-                className="card flex cursor-pointer items-center gap-3 p-3 active:scale-[0.99]"
-                onClick={() => navigate({ to: "/ukoly/$id", params: { id: task.id } })}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggle.mutate(task);
-                  }}
-                  aria-label={
-                    task.status === "DONE"
-                      ? t("Označit jako nesplněné", "Mark as not done")
-                      : t("Označit jako hotové", "Mark as done")
-                  }
-                  className="grid size-11 shrink-0 place-items-center"
-                >
-                  {task.status === "DONE" ? (
-                    <CheckCircle2 className="size-7 text-ok" />
-                  ) : (
-                    <Circle className="size-7 text-muted-foreground" />
-                  )}
-                </button>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`truncate text-[15px] font-bold ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}
-                  >
-                    {taskTitle(task, lang)}
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    {memberName(task.assignee_member_id) ?? t("Nepřiřazeno", "Unassigned")}
-                    {task.due_date ? ` · ${fmtDate(task.due_date)}` : ""} ·{" "}
-                    {taskCategoryLabel(task.category, lang)}
-                  </p>
-                </div>
-                {task.status === "DONE" ? (
-                  <PillNeutral>{t("Hotovo", "Done")}</PillNeutral>
-                ) : overdue ? (
-                  <PillDanger>{t("Po termínu", "Overdue")}</PillDanger>
-                ) : null}
-              </div>
-            );
-          })}
+        <div className="mt-2 space-y-4">
+          {checklistError && (
+            <p role="alert" className="text-[16px] text-destructive">
+              {t(
+                "Seznamy se nepodařilo načíst. Zkuste to znovu.",
+                "Could not load the checklists. Please try again.",
+              )}
+            </p>
+          )}
+          {filtered.length === 0 && (
+            <EmptyState
+              icon={CheckCircle2}
+              title={t("Žádné úkoly v tomto filtru.", "No tasks in this filter.")}
+              hint={t(
+                "Přidejte nový úkol nebo sezónní seznam.",
+                "Add a new task or a seasonal checklist.",
+              )}
+            />
+          )}
+          <TaskGroup
+            tasks={filtered.filter(
+              (task) =>
+                !task.checklist_id ||
+                !(checklists ?? []).some((list) => list.id === task.checklist_id),
+            )}
+            memberName={memberName}
+            onToggle={(task) => toggle.mutate(task)}
+            busy={toggle.isPending}
+          />
+          {(checklists ?? [])
+            .filter(
+              (list) => filter === "all" || filtered.some((task) => task.checklist_id === list.id),
+            )
+            .map((list) => (
+              <TaskGroup
+                key={`${filter}-${list.id}`}
+                defaultOpen={filter !== "all"}
+                title={list.title}
+                tasks={filtered.filter((task) => task.checklist_id === list.id)}
+                totalTasks={(filter === "all" ? (tasks ?? []) : filtered).filter(
+                  (task) => task.checklist_id === list.id,
+                )}
+                memberName={memberName}
+                onToggle={(task) => toggle.mutate(task)}
+                busy={toggle.isPending}
+              />
+            ))}
         </div>
       )}
 
@@ -284,7 +335,7 @@ function TasksPage() {
         <section className="card mt-4 space-y-3 p-4">
           <h3 className="text-lg font-bold">{t("Nový úkol", "New task")}</h3>
           <div>
-            <label htmlFor="task-title" className="mb-1 block text-[13px] font-bold">
+            <label htmlFor="task-title" className="label-text text-[16px]">
               {t("Název", "Title")}
             </label>
             <input
@@ -297,7 +348,7 @@ function TasksPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="task-assignee" className="mb-1 block text-[13px] font-bold">
+              <label htmlFor="task-assignee" className="label-text text-[16px]">
                 {t("Odpovědná osoba", "Assignee")}
               </label>
               <select
@@ -315,7 +366,7 @@ function TasksPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="task-due" className="mb-1 block text-[13px] font-bold">
+              <label htmlFor="task-due" className="label-text text-[16px]">
                 {t("Termín", "Due date")}
               </label>
               <input
@@ -328,22 +379,34 @@ function TasksPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={addTask}
-              disabled={!title.trim()}
+              disabled={adding || !title.trim()}
               className="btn-primary flex-1 disabled:opacity-40"
             >
-              {t("Přidat úkol", "Add task")}
-            </button>
-            <button onClick={() => setShowForm(false)} className="btn-secondary">
+              {adding ? t("Ukládám…", "Saving…") : t("Přidat úkol", "Add task")}
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              onClick={() => setShowForm(false)}
+              className="btn-secondary"
+            >
               {t("Zrušit", "Cancel")}
-            </button>
+            </Button>
           </div>
         </section>
       ) : (
-        <button onClick={() => setShowForm(true)} className="btn-primary mt-4 w-full">
+        <Button
+          variant="fresh"
+          size="fresh"
+          onClick={() => setShowForm(true)}
+          className="btn-primary mt-4 w-full"
+        >
           <Plus className="size-5" /> {t("Přidat úkol", "Add task")}
-        </button>
+        </Button>
       )}
 
       <section className="card mt-4 p-4">
@@ -351,50 +414,56 @@ function TasksPage() {
           <Sparkles className="size-5 text-primary" />
           <h3 className="text-lg font-bold">{t("Sezónní seznamy", "Seasonal checklists")}</h3>
         </div>
-        <p className="mt-1 text-[14px] text-muted-foreground">
+        <p className="mt-1 text-[16px] text-muted-foreground">
           {t(
             "Připravené kontrolní seznamy podle ročního období.",
             "Ready-made checklists for the season.",
           )}
         </p>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 divide-y divide-divider">
           {seasonalTemplates(lang).map((tpl) => (
             <div key={tpl.id}>
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 onClick={() => {
                   setPendingTemplate(pendingTemplate === tpl.id ? null : tpl.id);
                   setAssignMode("all");
                   setAssignAll(null);
                   setAssignEach({});
                 }}
-                className={`btn-secondary w-full ${pendingTemplate === tpl.id ? "ring-2 ring-primary" : ""}`}
+                className={`min-h-[60px] w-full justify-between whitespace-normal rounded-none py-3 text-left text-[16px] font-semibold ${pendingTemplate === tpl.id ? "text-primary" : "text-foreground"}`}
               >
                 {tpl.title} ({tpl.tasks.length})
-              </button>
+              </Button>
               {pendingTemplate === tpl.id && (
                 <div className="mt-2 space-y-3 rounded-2xl bg-secondary p-3">
                   {alreadyOpen(tpl.id) > 0 && (
-                    <p className="text-[14px] font-semibold text-warn">
+                    <p className="text-[16px] font-semibold text-warn-foreground">
                       {t(
                         `Z tohoto seznamu už máte ${alreadyOpen(tpl.id)} nesplněných úkolů. Přidat znovu?`,
                         `You already have ${alreadyOpen(tpl.id)} open tasks from this checklist. Add again?`,
                       )}
                     </p>
                   )}
-                  <p className="text-[15px] font-bold">{t("Kdo je udělá?", "Who does them?")}</p>
+                  <p className="text-[16px] font-bold">{t("Kdo je udělá?", "Who does them?")}</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className={`btn-secondary ${assignMode === "all" ? "ring-2 ring-primary" : ""}`}
                       onClick={() => setAssignMode("all")}
                     >
                       {t("Všechny jeden člověk", "All to one person")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className={`btn-secondary ${assignMode === "each" ? "ring-2 ring-primary" : ""}`}
                       onClick={() => setAssignMode("each")}
                     >
                       {t("Každý úkol zvlášť", "Each task separately")}
-                    </button>
+                    </Button>
                   </div>
                   {assignMode === "all" ? (
                     <select
@@ -414,7 +483,7 @@ function TasksPage() {
                     <ul className="space-y-2">
                       {tpl.tasks.map((taskTitle, index) => (
                         <li key={taskTitle} className="space-y-1">
-                          <p className="text-[14px]">{taskTitle}</p>
+                          <p className="text-[16px]">{taskTitle}</p>
                           <select
                             className="field"
                             aria-label={taskTitle}
@@ -435,7 +504,7 @@ function TasksPage() {
                     </ul>
                   )}
                   {duplicateOf === tpl.id && (
-                    <p className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+                    <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                       {t(
                         "Tento seznam už letos máte. Opravdu ho přidat znovu?",
                         "You already added this checklist this season. Add it again anyway?",
@@ -443,15 +512,20 @@ function TasksPage() {
                     </p>
                   )}
                   <div className="flex gap-2">
-                    <button
-                      className="btn-primary flex-1"
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      className="btn-primary flex-1 disabled:opacity-40"
+                      disabled={adding}
                       onClick={() => addChecklist(tpl.id, duplicateOf === tpl.id)}
                     >
                       {duplicateOf === tpl.id
                         ? t("Ano, přidat znovu", "Yes, add again")
                         : t(`Přidat ${tpl.tasks.length} úkolů`, `Add ${tpl.tasks.length} tasks`)}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className="btn-secondary"
                       onClick={() => {
                         setPendingTemplate(null);
@@ -459,7 +533,7 @@ function TasksPage() {
                       }}
                     >
                       {t("Zrušit", "Cancel")}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

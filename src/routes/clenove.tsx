@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Copy,
@@ -12,6 +14,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
@@ -22,7 +25,17 @@ import { inviteLink, inviteMailto, parseEmails } from "@/lib/invites";
 
 export const Route = createFileRoute("/clenove")({
   staticData: { sitemap: false },
-  head: () => ({ meta: [{ title: "Members — My Chata" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: "Members — My Chata" },
+      { name: "robots", content: "noindex" },
+      { name: "description", content: "Members and invitations for your shared cottage." },
+      { property: "og:title", content: "Members — My Chata" },
+      { property: "og:description", content: "Members and invitations for your shared cottage." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: MembersPage,
 });
 
@@ -37,11 +50,13 @@ interface Invitation {
 
 function MembersPage() {
   const { t } = useLang();
+  const [manualLink, setManualLink] = useState<{ token: string; url: string } | null>(null);
   const { account, property, members, currentMember } = useAccount();
   const queryClient = useQueryClient();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [emails, setEmails] = useState("");
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
+  const [cancelling, setCancelling] = useState<Invitation | null>(null);
   const parsed = parseEmails(emails);
   const isAdminRole = (role: string) =>
     role.toUpperCase() === "ADMIN" || role.toUpperCase() === "OWNER";
@@ -125,12 +140,31 @@ function MembersPage() {
       id: string;
       patch: { role?: string; status?: string };
     }) => {
-      const { error } = await supabase.from("invitations").update(patch).eq("id", id);
+      // Row-level security turns a refused change into "0 rows", not an error: check it.
+      const { data, error } = await supabase
+        .from("invitations")
+        .update(patch)
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!data?.length)
+        throw new Error(
+          t(
+            "nic se nezměnilo (pozvánky spravuje jen správce)",
+            "nothing changed (only an admin manages invitations)",
+          ),
+        );
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invitations"] }),
-    onError: (error) =>
-      toast.error(t(`Změna se nepodařila: ${error.message}`, `Change failed: ${error.message}`)),
+    onSuccess: (_d, v) => {
+      setCancelling(null);
+      if (v.patch.status === "REVOKED")
+        toast.success(t("Pozvánka zrušena.", "Invitation cancelled."));
+      return queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
+    onError: (error) => {
+      setCancelling(null);
+      toast.error(t(`Změna se nepodařila: ${error.message}`, `Change failed: ${error.message}`));
+    },
   });
 
   const toggleRole = useMutation({
@@ -169,11 +203,13 @@ function MembersPage() {
   const linkFor = (token: string) => inviteLink(window.location.origin, token);
 
   const copyInvite = async (token: string) => {
+    setManualLink(null);
     try {
       await navigator.clipboard.writeText(linkFor(token));
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován.", "Link copied."));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "Could not copy the link."));
+      setManualLink({ token, url: linkFor(token) });
     }
   };
 
@@ -221,7 +257,7 @@ function MembersPage() {
             {t("Pozvat nového člena", "Invite a new member")}
           </h2>
           <label className="block">
-            <span className="text-[14px] font-bold">
+            <span className="text-[16px] font-bold">
               {t("E-maily (jeden nebo více)", "Emails (one or more)")}
             </span>
             <textarea
@@ -233,7 +269,7 @@ function MembersPage() {
             />
           </label>
           {parsed.invalid.length > 0 && (
-            <p className="text-[14px] font-semibold text-warn">
+            <p className="text-[16px] font-semibold text-warn-foreground">
               {t(
                 `Zkontrolujte: ${parsed.invalid.join(", ")}`,
                 `Please check: ${parsed.invalid.join(", ")}`,
@@ -241,20 +277,26 @@ function MembersPage() {
             </p>
           )}
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${inviteRole === "MEMBER" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setInviteRole("MEMBER")}
             >
               {t("Člen", "Member")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${inviteRole === "ADMIN" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setInviteRole("ADMIN")}
             >
               {t("Správce", "Admin")}
-            </button>
+            </Button>
           </div>
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             className="btn-primary w-full"
             disabled={parsed.valid.length === 0 || parsed.invalid.length > 0 || invite.isPending}
             onClick={() => invite.mutate()}
@@ -265,8 +307,8 @@ function MembersPage() {
                   `Create ${parsed.valid.length} invitations`,
                 )
               : t("Vytvořit pozvánku", "Create invitation")}
-          </button>
-          <p className="text-[13px] text-muted-foreground">
+          </Button>
+          <p className="text-[16px] text-muted-foreground">
             {t(
               "Každý dostane vlastní odkaz, platný 7 dní, jen pro svůj e-mail. Roli můžete změnit i později.",
               "Everyone gets their own link, valid 7 days, for their email only. You can change the role later.",
@@ -274,17 +316,19 @@ function MembersPage() {
           </p>
           {!!invites?.length && (
             <div className="space-y-2">
-              <p className="text-[14px] font-bold text-muted-foreground">
+              <p className="text-[16px] font-bold text-muted-foreground">
                 {t("Čekající pozvánky", "Pending invitations")}
               </p>
               {invites.map((inv) => (
                 <div key={inv.id} className="space-y-2 rounded-2xl bg-secondary p-3">
                   <div className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+                    <span className="min-w-0 flex-1 truncate text-[16px] font-semibold">
                       {inv.email ?? t("kdokoli s odkazem", "anyone with the link")}
                     </span>
-                    <button
-                      className="pill bg-card text-muted-foreground"
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      className="pill min-h-11 bg-card px-3 text-muted-foreground"
                       aria-label={t("Změnit roli", "Change role")}
                       onClick={() =>
                         updateInvite.mutate({
@@ -294,42 +338,51 @@ function MembersPage() {
                       }
                     >
                       {isAdminRole(inv.role) ? t("Správce", "Admin") : t("Člen", "Member")} ⇄
-                    </button>
+                    </Button>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {inv.email && (
                       <a
-                        className="grid h-11 place-items-center rounded-xl bg-card"
+                        className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                         href={mailInvite(inv)}
                         aria-label={t("Poslat e-mailem", "Send by email")}
                       >
                         <Mail className="size-5" />
+                        <span className="text-[16px] font-bold">{t("E-mail", "Email")}</span>
                       </a>
                     )}
-                    <button
-                      className="grid h-11 place-items-center rounded-xl bg-card"
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                       aria-label={t("Sdílet", "Share")}
                       onClick={() => shareInvite(inv)}
                     >
                       <Share2 className="size-5" />
-                    </button>
-                    <button
-                      className="grid h-11 place-items-center rounded-xl bg-card"
+                      <span className="text-[16px] font-bold">{t("Sdílet", "Share")}</span>
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                       aria-label={t("Zkopírovat odkaz", "Copy link")}
                       onClick={() => copyInvite(inv.token)}
                     >
                       <Copy className="size-5" />
-                    </button>
-                    <button
-                      className="grid h-11 place-items-center rounded-xl bg-card text-muted-foreground"
+                      <span className="text-[16px] font-bold">{t("Kopírovat", "Copy")}</span>
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1 text-muted-foreground"
                       aria-label={t("Zrušit pozvánku", "Cancel invitation")}
-                      onClick={() =>
-                        updateInvite.mutate({ id: inv.id, patch: { status: "REVOKED" } })
-                      }
+                      onClick={() => setCancelling(inv)}
                     >
                       <X className="size-5" />
-                    </button>
+                      <span className="text-[16px] font-bold">{t("Zrušit", "Cancel")}</span>
+                    </Button>
                   </div>
+                  <ManualCopyLink url={manualLink?.token === inv.token ? manualLink.url : null} />
                 </div>
               ))}
             </div>
@@ -350,7 +403,7 @@ function MembersPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold">{m.name}</p>
-                <p className="truncate text-[14px] text-muted-foreground">{m.email}</p>
+                <p className="truncate text-[16px] text-muted-foreground">{m.email}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {mIsAdmin && (
                     <span className="pill bg-primary-soft text-primary">
@@ -364,37 +417,54 @@ function MembersPage() {
                     </span>
                   )}
                   {!m.user_id && (
-                    <span className="pill bg-warn-soft text-warn">
+                    <span className="pill bg-warn-soft text-warn-foreground">
                       {t("Zatím nepřihlášen", "Not signed in yet")}
                     </span>
                   )}
                 </div>
               </div>
               {isAdmin && m.id !== currentMember?.id && m.user_id && (
-                <button
-                  className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary disabled:opacity-50"
+                <Button
+                  variant="fresh"
+                  size="fresh"
+                  className="flex min-h-11 max-w-[8.5rem] shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-left text-[16px] font-bold leading-tight disabled:opacity-50"
                   disabled={toggleRole.isPending}
                   aria-busy={changing}
-                  aria-label={
-                    mIsAdmin
-                      ? t("Odebrat správce", "Remove admin")
-                      : t("Udělat správcem", "Make admin")
-                  }
                   onClick={() => toggleRole.mutate({ memberId: m.id, makeAdmin: !mIsAdmin })}
                 >
                   {changing ? (
-                    <Loader2 className="size-5 animate-spin" />
+                    <Loader2 className="size-5 shrink-0 animate-spin" />
                   ) : mIsAdmin ? (
-                    <UserMinus className="size-5" />
+                    <UserMinus className="size-5 shrink-0" />
                   ) : (
-                    <ShieldCheck className="size-5" />
+                    <ShieldCheck className="size-5 shrink-0" />
                   )}
-                </button>
+                  {mIsAdmin
+                    ? t("Odebrat správce", "Remove admin")
+                    : t("Udělat správcem", "Make admin")}
+                </Button>
               )}
             </div>
           );
         })}
       </div>
+      <ConfirmDialog
+        open={!!cancelling}
+        onOpenChange={(open) => !open && setCancelling(null)}
+        title={t(
+          `Zrušit pozvánku pro ${cancelling?.email ?? ""}?`,
+          `Cancel the invitation for ${cancelling?.email ?? ""}?`,
+        )}
+        description={t(
+          "Odkaz z pozvánky přestane fungovat. Kdo ho už má, se nepřipojí; pak musíte poslat novou pozvánku.",
+          "The invitation link will stop working. Anyone who already has it can't join; you would need to send a new invitation.",
+        )}
+        confirmLabel={t("Zrušit pozvánku", "Cancel invitation")}
+        busy={updateInvite.isPending}
+        onConfirm={() =>
+          cancelling && updateInvite.mutate({ id: cancelling.id, patch: { status: "REVOKED" } })
+        }
+      />
     </AppShell>
   );
 }

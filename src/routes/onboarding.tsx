@@ -1,5 +1,7 @@
+import { Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Building2, Check, Home } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,8 +16,15 @@ export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Welcome — My Chata" },
-      { name: "description", content: "Set up your cottage in a few simple steps." },
+      { title: "Nastavení chaty — My Chata" },
+      { property: "og:title", content: "Nastavení chaty — My Chata" },
+      {
+        property: "og:description",
+        content: "Nastavte svou chatu v několika jednoduchých krocích.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "description", content: "Nastavte svou chatu v několika jednoduchých krocích." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -50,7 +59,10 @@ function OnboardingPage() {
 
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL" | null>(null);
+  // Family or institution is decided at sign-up (T-021): "Sign up as an Institute" stores
+  // signup_kind "institution"; every other sign-up (Google, personal email) is a family.
+  const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL">("FAMILY");
+  useBrand(type === "INSTITUTIONAL" ? "institution" : "family");
   const [accountName, setAccountName] = useState("");
   // Name from Google, or from the email sign-up form; always editable (T-021).
   const [fullName, setFullName] = useState("");
@@ -58,7 +70,7 @@ function OnboardingPage() {
   useEffect(() => {
     setFullName((current) => current || profile?.display_name || signup.fullName || "");
     if (signup.kind === "institution") {
-      setType((current) => current ?? "INSTITUTIONAL");
+      setType("INSTITUTIONAL");
       setAccountName((current) => current || signup.organisation || "");
     }
   }, [profile?.display_name, signup.fullName, signup.kind, signup.organisation]);
@@ -75,7 +87,7 @@ function OnboardingPage() {
   const institutionBlocked = type === "INSTITUTIONAL" && isPublicEmailDomain(email);
 
   const steps = [
-    t("Typ účtu", "Account type"),
+    type === "INSTITUTIONAL" ? t("Organizace", "Organisation") : t("O vás", "About you"),
     t("Vaše chaty", "Your cottages"),
     t("Kdo ji používá", "Who uses it"),
     t("Pravidla rezervací", "Booking rules"),
@@ -83,7 +95,7 @@ function OnboardingPage() {
   ];
 
   const finish = async () => {
-    if (!type || !user) return;
+    if (!user) return;
     setBusy(true);
     try {
       // The name goes on the profile first: the database uses it for the new member row.
@@ -133,7 +145,7 @@ function OnboardingPage() {
         { onConflict: "user_id" },
       );
       if (profileError) throw profileError;
-      await supabase.from("onboarding_answers").upsert({
+      const { error: answersError } = await supabase.from("onboarding_answers").upsert({
         user_id: user.id,
         answers: {
           type,
@@ -145,6 +157,9 @@ function OnboardingPage() {
         },
         updated_at: new Date().toISOString(),
       });
+      // The cottage and profile are already saved at this point, so a failed answers save
+      // must not stop the user (a retry would create a second cottage). Log it instead.
+      if (answersError) console.error("onboarding_answers upsert failed", answersError);
       track("onboarding_completed", {
         account_type: type === "FAMILY" ? "family" : "institution",
         property_count: chatas.length,
@@ -171,7 +186,6 @@ function OnboardingPage() {
   const canNext =
     step === 0
       ? fullName.trim().length > 1 &&
-        !!type &&
         !institutionBlocked &&
         (type === "INSTITUTIONAL" ? accountName.trim().length > 1 : true)
       : step === 1
@@ -181,9 +195,14 @@ function OnboardingPage() {
           : true;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4">
+    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh px-5 py-5 md:max-w-[560px] md:py-10">
       <div className="flex items-center justify-between">
-        <p className="font-bold text-primary">My Chata</p>
+        <div className="flex items-center gap-2">
+          <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
+            <Home className="size-6" />
+          </span>
+          <span className="text-lg font-extrabold">My Chata</span>
+        </div>
         <LanguageToggle />
       </div>
 
@@ -196,15 +215,23 @@ function OnboardingPage() {
           />
         ))}
       </ol>
-      <p className="mt-3 text-[14px] font-semibold text-muted-foreground">
+      <p className="mt-3 text-[16px] font-semibold text-muted-foreground">
         {t("Krok", "Step")} {step + 1} / {steps.length} — {steps[step]}
       </p>
 
       <section className="mt-6 flex-1">
         {step === 0 && (
           <div className="space-y-3">
+            <h1 className="text-[28px] font-extrabold leading-[1.15]">
+              {type === "INSTITUTIONAL"
+                ? t(
+                    "Vítejte! Nastavíme vaši organizaci.",
+                    "Welcome! Let's set up your organisation.",
+                  )
+                : t("Vítejte! Jak se jmenujete?", "Welcome! What's your name?")}
+            </h1>
             <label className="block">
-              <span className="text-[14px] font-bold">{t("Vaše jméno", "Your name")}</span>
+              <span className="text-[16px] font-bold">{t("Vaše jméno", "Your name")}</span>
               <input
                 className="field mt-1 w-full"
                 placeholder={t("Jméno a příjmení", "First and last name")}
@@ -213,48 +240,22 @@ function OnboardingPage() {
                 autoComplete="name"
               />
             </label>
-            <h1 className="pt-2 text-2xl font-bold">
-              {t("Kdo bude chatu spravovat?", "Who will manage the cottage?")}
-            </h1>
-            <button
-              onClick={() => setType("FAMILY")}
-              className={`card flex w-full items-center gap-3 p-4 text-left ${type === "FAMILY" ? "ring-2 ring-primary" : ""}`}
-            >
-              <Home className="size-6 text-primary" />
-              <div>
-                <p className="font-bold">{t("Rodina", "Family")}</p>
-                <p className="text-[14px] text-muted-foreground">
-                  {t(
-                    "Sdílená chata pro rodinu a přátele.",
-                    "A shared cottage for family and friends.",
-                  )}
-                </p>
-              </div>
-              {type === "FAMILY" && <Check className="ml-auto size-5 text-primary" />}
-            </button>
-            <button
-              onClick={() => setType("INSTITUTIONAL")}
-              className={`card flex w-full items-center gap-3 p-4 text-left ${type === "INSTITUTIONAL" ? "ring-2 ring-primary" : ""}`}
-            >
-              <Building2 className="size-6 text-primary" />
-              <div>
-                <p className="font-bold">{t("Organizace", "Institution")}</p>
-                <p className="text-[14px] text-muted-foreground">
-                  {t("Škola, firma nebo spolek.", "A school, company or club.")}
-                </p>
-              </div>
-              {type === "INSTITUTIONAL" && <Check className="ml-auto size-5 text-primary" />}
-            </button>
             {type === "INSTITUTIONAL" && (
-              <input
-                className="field mt-2 w-full"
-                placeholder={t("Název organizace", "Organisation name")}
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-              />
+              <label className="block">
+                <span className="text-[16px] font-bold">
+                  {t("Název organizace", "Organisation name")}
+                </span>
+                <input
+                  className="field mt-1 w-full"
+                  placeholder={t("Např. ZŠ Lipová", "E.g. Lipová Primary School")}
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  autoComplete="organization"
+                />
+              </label>
             )}
             {institutionBlocked && (
-              <p className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+              <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                 {t(
                   "Pro organizaci se přihlaste pracovním e-mailem (např. @vase-skola.cz), ne veřejnou schránkou.",
                   "For an institution, sign in with a work email (e.g. @your-school.cz), not a public mailbox.",
@@ -266,10 +267,10 @@ function OnboardingPage() {
 
         {step === 1 && (
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-[28px] font-extrabold leading-[1.15]">
               {t("Jak se vaše chaty jmenují?", "What are your cottages called?")}
             </h1>
-            <p className="text-[14px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {t(
                 "Kdo chatu přidá, stává se jejím správcem.",
                 "Whoever adds a cottage becomes its admin.",
@@ -321,18 +322,20 @@ function OnboardingPage() {
                 </div>
               </div>
             ))}
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className="btn-secondary w-full"
               onClick={() => setChatas([...chatas, { name: "", address: "", city: "", rooms: "" }])}
             >
               {t("+ Přidat další chatu", "+ Add another cottage")}
-            </button>
+            </Button>
           </div>
         )}
 
         {step === 2 && (
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-[28px] font-extrabold leading-[1.15]">
               {t("Kolik lidí chatu používá?", "About how many people use it?")}
             </h1>
             <input
@@ -346,7 +349,9 @@ function OnboardingPage() {
             <p className="font-bold">{t("Máte rušná období?", "Any busy seasons?")}</p>
             <div className="flex flex-wrap gap-2">
               {SEASONS.map((s) => (
-                <button
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   key={s.id}
                   onClick={() =>
                     setSeasons(
@@ -358,7 +363,7 @@ function OnboardingPage() {
                   className={`pill min-h-[44px] px-4 ${seasons.includes(s.id) ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
                 >
                   {lang === "cs" ? s.cs : s.en}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -366,24 +371,28 @@ function OnboardingPage() {
 
         {step === 3 && (
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-[28px] font-extrabold leading-[1.15]">
               {t("Mohou se pobyty překrývat?", "May stays overlap?")}
             </h1>
             {chatas.some((c) => c.rooms && Number(c.rooms) > 3) ? (
               <>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     className={`btn-secondary ${overlapAllowed === true ? "ring-2 ring-primary" : ""}`}
                     onClick={() => setOverlapAllowed(true)}
                   >
                     {t("Ano", "Yes")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     className={`btn-secondary ${overlapAllowed === false ? "ring-2 ring-primary" : ""}`}
                     onClick={() => setOverlapAllowed(false)}
                   >
                     {t("Ne", "No")}
-                  </button>
+                  </Button>
                 </div>
                 {overlapAllowed && (
                   <input
@@ -400,7 +409,7 @@ function OnboardingPage() {
                 )}
               </>
             ) : (
-              <p className="text-[15px] text-muted-foreground">
+              <p className="text-[16px] text-muted-foreground">
                 {t(
                   "U menších chat se překryvy povolují automaticky — rodina se domluví sama.",
                   "For smaller cottages overlaps are allowed automatically — the family works it out.",
@@ -412,7 +421,9 @@ function OnboardingPage() {
 
         {step === 4 && (
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold">{t("Pravidla domu", "House rules")}</h1>
+            <h1 className="text-[28px] font-extrabold leading-[1.15]">
+              {t("Pravidla domu", "House rules")}
+            </h1>
             <textarea
               className="field min-h-40 w-full"
               placeholder={t(
@@ -422,7 +433,7 @@ function OnboardingPage() {
               value={houseRules}
               onChange={(e) => setHouseRules(e.target.value)}
             />
-            <p className="text-[14px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {t(
                 "Můžete doplnit i později v Manuálu chaty.",
                 "You can also add them later in the House Manual.",
@@ -432,17 +443,25 @@ function OnboardingPage() {
         )}
       </section>
 
-      <div className="grid grid-cols-2 gap-2 pb-6">
+      <div className="mt-6 flex flex-wrap justify-end gap-2 pb-6">
         {step > 0 ? (
-          <button className="btn-secondary" onClick={() => setStep(step - 1)} disabled={busy}>
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary"
+            onClick={() => setStep(step - 1)}
+            disabled={busy}
+          >
             {t("Zpět", "Back")}
-          </button>
+          </Button>
         ) : (
           <span />
         )}
         {step < steps.length - 1 ? (
-          <button
-            className="btn-primary"
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-primary min-h-14 flex-1"
             disabled={!canNext}
             onClick={() => {
               track("onboarding_step", { step: step + 1 });
@@ -450,13 +469,19 @@ function OnboardingPage() {
             }}
           >
             {t("Pokračovat", "Continue")}
-          </button>
+          </Button>
         ) : (
-          <button className="btn-primary" disabled={busy || !canNext} onClick={finish}>
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-primary min-h-14 flex-1"
+            disabled={busy || !canNext}
+            onClick={finish}
+          >
             {busy
               ? t("Zakládám…", "Setting up…")
               : t("Hotovo — otevřít chatu", "Done — open my cottage")}
-          </button>
+          </Button>
         )}
       </div>
     </main>

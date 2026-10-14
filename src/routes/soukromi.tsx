@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useConsent } from "@/lib/consent";
@@ -8,9 +9,11 @@ export const Route = createFileRoute("/soukromi")({
   staticData: { sitemap: true },
   head: () => ({
     meta: [
+      { name: "twitter:card", content: "summary" },
       { title: "Privacy & cookies — My Chata" },
       { name: "description", content: "How My Chata handles your data and cookies." },
       { property: "og:title", content: "Privacy & cookies — My Chata" },
+      { property: "og:description", content: "How My Chata handles your data and cookies." },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -23,7 +26,7 @@ function PrivacyPage() {
   const { user } = useAccount();
 
   return (
-    <main className="mx-auto min-h-screen max-w-[420px] bg-background p-4 pb-16">
+    <main className="mx-auto min-h-screen max-w-[420px] bg-background p-5 pb-16 lg:max-w-[820px] lg:p-6 md:max-w-[720px] md:py-10">
       <div className="flex items-center justify-between">
         {/* Signed-in visitors arrived from Settings; the cookie banner opens this page for
             everyone, so the back arrow only appears for signed-in members. */}
@@ -31,7 +34,7 @@ function PrivacyPage() {
           <Link
             to="/vice"
             aria-label={t("Zpět na Nastavení", "Back to Settings")}
-            className="grid size-11 place-items-center rounded-2xl bg-card text-foreground shadow-sm ring-1 ring-black/5"
+            className="grid size-11 place-items-center rounded-full bg-card text-foreground shadow-sm ring-1 ring-border"
           >
             <ArrowLeft className="size-5" />
           </Link>
@@ -40,11 +43,13 @@ function PrivacyPage() {
         )}
         <LanguageToggle />
       </div>
-      <h1 className="mt-6 text-2xl font-bold">{t("Soukromí a cookies", "Privacy & cookies")}</h1>
+      <h1 className="mt-6 text-[28px] font-extrabold leading-[1.15]">
+        {t("Soukromí a cookies", "Privacy & cookies")}
+      </h1>
 
       <section className="card mt-4 space-y-2 p-4">
         <h2 className="text-lg font-bold">{t("Co sbíráme", "What we collect")}</h2>
-        <ul className="list-disc space-y-1 pl-5 text-[15px] text-muted-foreground">
+        <ul className="list-disc space-y-1 pl-5 text-[16px] text-muted-foreground">
           <li>
             {t(
               "Jméno a e-mail, které zadáte při registraci, nebo jméno, e-mail a fotka z vašeho Google účtu.",
@@ -74,7 +79,7 @@ function PrivacyPage() {
 
       <section className="card mt-4 space-y-2 p-4">
         <h2 className="text-lg font-bold">{t("Cookies", "Cookies")}</h2>
-        <ul className="list-disc space-y-1 pl-5 text-[15px] text-muted-foreground">
+        <ul className="list-disc space-y-1 pl-5 text-[16px] text-muted-foreground">
           <li>
             <strong>{t("Nezbytné", "Essential")}</strong> —{" "}
             {t(
@@ -90,7 +95,7 @@ function PrivacyPage() {
             )}
           </li>
         </ul>
-        <p className="text-[15px] text-muted-foreground">
+        <p className="text-[16px] text-muted-foreground">
           {t("Aktuální volba:", "Current choice:")}{" "}
           <strong>
             {choice
@@ -100,14 +105,14 @@ function PrivacyPage() {
               : t("Zatím nevybráno", "Not chosen yet")}
           </strong>
         </p>
-        <button className="btn-secondary w-full" onClick={reopen}>
+        <Button variant="fresh" size="fresh" className="btn-secondary w-full" onClick={reopen}>
           {t("Změnit nastavení cookies", "Change cookie settings")}
-        </button>
+        </Button>
       </section>
 
       <section className="card mt-4 space-y-2 p-4">
         <h2 className="text-lg font-bold">{t("Vaše práva (GDPR)", "Your rights (GDPR)")}</h2>
-        <p className="text-[15px] text-muted-foreground">
+        <p className="text-[16px] text-muted-foreground">
           {t(
             "Máte právo na přístup, opravu, výmaz a přenositelnost svých dat. Souhlas můžete kdykoli odvolat výše. Kontakt: správce vaší chaty.",
             "You have the right to access, correct, delete and export your data. You can withdraw consent above anytime. Contact: your cottage admin.",

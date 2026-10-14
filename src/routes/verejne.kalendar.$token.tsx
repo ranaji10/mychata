@@ -1,3 +1,7 @@
+import { Button } from "@/components/ui/button";
+import { useBrand } from "@/lib/brand";
+import { useState } from "react";
+import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarPlus, Share2, Sun } from "lucide-react";
@@ -12,12 +16,14 @@ export const Route = createFileRoute("/verejne/kalendar/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Public calendar — My Chata" },
-      { name: "description", content: "Public overview of cottage availability — read only." },
-      { property: "og:title", content: "Public calendar — My Chata" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Kalendář chaty — My Chata" },
+      { name: "description", content: "Veřejný přehled volných a obsazených termínů chaty." },
+      { property: "og:title", content: "Kalendář chaty — My Chata" },
       {
         property: "og:description",
-        content: "Public overview of cottage availability — read only.",
+        content: "Veřejný přehled volných a obsazených termínů chaty.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -46,10 +52,15 @@ function nextFreeWeekend(bookings: Booking[]): { start: string; end: string } | 
 function PublicCalendar() {
   const { t, lang } = useLang();
   const { token } = Route.useParams();
+  const [manualLink, setManualLink] = useState<string | null>(null);
   const nav = useMonthNav();
 
   // Public pages are addressed by the property's share token, never its id (migration 0012).
-  const { data: property, isLoading: loadingProperty } = useQuery({
+  const {
+    data: property,
+    isLoading: loadingProperty,
+    isError: propertyError,
+  } = useQuery({
     queryKey: ["public-property", token],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("public_property", { _token: token });
@@ -58,7 +69,12 @@ function PublicCalendar() {
     },
   });
 
-  const { data: bookings, isLoading } = useQuery({
+  useBrand(property?.is_institution ? "institution" : "family");
+  const {
+    data: bookings,
+    isLoading,
+    isError: calendarError,
+  } = useQuery({
     queryKey: ["public-cal-bookings", token],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("public_calendar", { _token: token });
@@ -94,6 +110,7 @@ function PublicCalendar() {
           : { cs: "podzim", en: "autumn" };
 
   const share = async () => {
+    setManualLink(null);
     const url = window.location.href;
     if (typeof navigator.share === "function") {
       try {
@@ -105,26 +122,40 @@ function PublicCalendar() {
     }
     try {
       await navigator.clipboard.writeText(url);
+      setManualLink(null);
       toast.success(t("Odkaz zkopírován", "Link copied"));
     } catch {
-      toast.error(t("Odkaz se nepodařilo zkopírovat.", "The link could not be copied."));
+      setManualLink(url);
     }
   };
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8">
+    <div className="mx-auto min-h-screen w-full max-w-[420px] page-fresh px-5 py-4 pb-8 md:max-w-[640px] md:py-8">
       <div className="flex items-start justify-between gap-3">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-[28px] font-extrabold leading-[1.15]">
           {property?.property_name ?? t("Kalendář chaty", "Cottage calendar")}
         </h1>
         <LanguageToggle className="shrink-0" />
       </div>
-      <p className="mt-1 text-[14px] text-muted-foreground">
+      <p className="mt-1 text-[16px] text-muted-foreground">
         {t("Podívejte se, kdy je chata volná.", "See when the cottage is free.")}
       </p>
 
-      {!loadingProperty && !property && (
-        <p className="card mt-4 p-4 text-[15px]">
+      {loadingProperty && (
+        <p className="mt-6" role="status">
+          {t("Načítám kalendář…", "Loading calendar…")}
+        </p>
+      )}
+      {(propertyError || calendarError) && (
+        <p className="mt-6 text-destructive" role="alert">
+          {t(
+            "Kalendář se nepodařilo načíst. Zkuste stránku obnovit.",
+            "The calendar could not be loaded. Try refreshing the page.",
+          )}
+        </p>
+      )}
+      {!loadingProperty && !propertyError && !property && (
+        <p className="card mt-4 p-4 text-[16px]">
           {t(
             "Tento odkaz na kalendář neplatí. Požádejte správce chaty o aktuální odkaz.",
             "This calendar link is not valid. Ask the cottage's administrator for the current link.",
@@ -132,7 +163,7 @@ function PublicCalendar() {
         </p>
       )}
       {property && !property.calendar_enabled && (
-        <p className="card mt-4 p-4 text-[15px]">
+        <p className="card mt-4 p-4 text-[16px]">
           {t(
             "Správce tento kalendář nezveřejnil.",
             "The cottage admin has not made this calendar public.",
@@ -143,29 +174,32 @@ function PublicCalendar() {
       {property?.calendar_enabled && (
         <>
           {freeWeekend && (
-            <div className="card mt-4 flex items-center gap-3 bg-ok-soft p-4">
-              <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-ok text-white">
+            <div className="card mt-4 flex items-center gap-3 bg-primary-soft p-4">
+              <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
                 <Sun className="size-6" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-semibold text-muted-foreground">
                   {t("Nejbližší volný víkend", "Next free weekend")}
                 </p>
-                <p className="text-[15px] font-bold">
+                <p className="text-[16px] font-bold">
                   {fmtDate(freeWeekend.start)} – {fmtDate(freeWeekend.end)}
                 </p>
               </div>
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="pill bg-secondary text-muted-foreground">
               <Sun className="size-4" />
               {t(`Sezóna: ${season.cs}`, `Season: ${season.en}`)}
             </span>
-            <button onClick={share} className="btn-secondary ml-auto">
+            <Button variant="fresh" size="fresh" onClick={share} className="btn-secondary ml-auto">
               <Share2 className="size-5" /> {t("Sdílet", "Share")}
-            </button>
+            </Button>
+            <div className="w-full">
+              <ManualCopyLink url={manualLink} />
+            </div>
           </div>
 
           <section className="card mt-3 p-4">
@@ -194,21 +228,17 @@ function PublicCalendar() {
               {upcoming.map((b) => (
                 <div key={b.id} className="card flex items-center gap-3 p-3">
                   <span
-                    className="size-3 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor:
-                        b.status === "PENDING" ? "var(--color-warn)" : "var(--color-ok)",
-                    }}
+                    className={`size-3 shrink-0 rounded-full ${b.status === "PENDING" ? "bg-warn" : "bg-primary"}`}
                   />
-                  <p className="text-[15px] font-semibold">
+                  <p className="text-[16px] font-semibold">
                     {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
                   </p>
                 </div>
               ))}
               {upcoming.length === 0 && (
                 <div className="card flex items-center gap-3 p-4">
-                  <CalendarPlus className="size-5 shrink-0 text-ok" />
-                  <p className="text-[15px] font-semibold">
+                  <CalendarPlus className="size-5 shrink-0 text-primary" />
+                  <p className="text-[16px] font-semibold">
                     {t(
                       "Chata je zatím volná — pořiďte si termín!",
                       "The cottage is still free — grab a date!",

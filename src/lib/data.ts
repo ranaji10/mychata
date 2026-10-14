@@ -465,10 +465,10 @@ export function declineReasons(lang: "cs" | "en") {
 }
 
 // Family branch colors for the calendar legend.
-export const BRANCH_COLORS = ["#FF5A5F", "#2E6FB0", "#16A34A", "#B45309", "#7C5CBF"];
+export const BRANCH_COLORS = ["#1F7A4D", "#2E6FB0", "#0F766E", "#B45309", "#7C5CBF"];
 export function branchColor(branch: string, branches: string[]): string {
   const i = Math.max(0, branches.indexOf(branch));
-  return BRANCH_COLORS[i % BRANCH_COLORS.length] ?? "#FF5A5F";
+  return BRANCH_COLORS[i % BRANCH_COLORS.length] ?? "#1F7A4D";
 }
 
 // Seasonal checklist templates (J2)
@@ -580,4 +580,10 @@ export function normalizePhone(input: string): { value: string | null } | null {
   if (/^\d{9}$/.test(digits)) digits = "+420" + digits;
   if (!/^\+[1-9]\d{7,14}$/.test(digits)) return null;
   return { value: digits };
+}
+
+/** "1 guest", "3 guests" / "1 host", "3 hosté", "5 hostů" (T-026: lists said "1 guests"). */
+export function guestCount(n: number, lang: "cs" | "en"): string {
+  if (lang === "en") return `${n} ${n === 1 ? "guest" : "guests"}`;
+  return `${n} ${n === 1 ? "host" : n >= 2 && n <= 4 ? "hosté" : "hostů"}`;
 }

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Inbox } from "lucide-react";
@@ -16,11 +17,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { declineReasons, fmtDate, fmtDateTime, type InstitutionalRequest } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
+import { useInstitutionOnly } from "@/lib/use-institution-only";
 
 export const Route = createFileRoute("/zadosti")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Requests — My Chata" },
       { name: "description", content: "Employee cottage stay requests awaiting approval." },
       { property: "og:title", content: "Requests — My Chata" },
@@ -37,10 +41,17 @@ function RequestsPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [declining, setDeclining] = useState<InstitutionalRequest[]>([]);
   const [declineReason, setDeclineReason] = useState("");
+  const hidden = useInstitutionOnly();
 
-  const { data: requests, isLoading } = useQuery({
-    queryKey: ["requests", property?.id],
-    enabled: !!property,
+  // Newest first here; Home and the export keep the start-date order under ["requests", id].
+  const {
+    data: requests,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["requests", property?.id, "newest"],
+    enabled: !!property && !hidden,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutional_requests")
@@ -63,27 +74,53 @@ function RequestsPage() {
       reason?: string;
     }) => {
       for (const req of requests) {
-        const { error } = await supabase
+        // Approve writes the stay first and marks the request only when that worked; if the
+        // request can't be marked (already decided, or refused by row-level security, which
+        // returns 0 rows instead of an error), the stay is taken back. Before T-026 the request
+        // was marked first, so a failed insert left it "Approved" with no stay in the calendar.
+        let bookingId: string | null = null;
+        if (approve) {
+          const { data: booking, error: bErr } = await supabase
+            .from("bookings")
+            .insert({
+              property_id: req.property_id,
+              // The applicant is not a member: don't make the approver the booker (0024 default).
+              requester_member_id: null,
+              requester_name: req.requester_name,
+              start_date: req.start_date,
+              end_date: req.end_date,
+              guests: req.guests,
+              note: req.note,
+              status: "CONFIRMED",
+            })
+            .select("id")
+            .single();
+          if (bErr) throw bErr;
+          bookingId = booking.id;
+        }
+        const { data: marked, error } = await supabase
           .from("institutional_requests")
           .update({
             status: approve ? "APPROVED" : "DECLINED",
             decline_reason: approve ? null : (reason ?? null),
           })
-          .eq("id", req.id);
-        if (error) throw error;
-        if (approve) {
-          const { error: bErr } = await supabase.from("bookings").insert({
-            property_id: req.property_id,
-            // The applicant is not a member: don't make the approver the booker (0024 default).
-            requester_member_id: null,
-            requester_name: req.requester_name,
-            start_date: req.start_date,
-            end_date: req.end_date,
-            guests: req.guests,
-            note: req.note,
-            status: "CONFIRMED",
-          });
-          if (bErr) throw bErr;
+          .eq("id", req.id)
+          .eq("status", "PENDING")
+          .select("id");
+        if (error || !marked?.length) {
+          if (bookingId) {
+            const { error: undoErr } = await supabase.from("bookings").delete().eq("id", bookingId);
+            if (undoErr) console.error("[zadosti] undo booking", undoErr);
+          }
+          throw (
+            error ??
+            new Error(
+              t(
+                `Žádost ${req.requester_name} už byla vyřízena, nebo k tomu nemáte oprávnění.`,
+                `${req.requester_name}'s request was already decided, or you are not allowed to.`,
+              ),
+            )
+          );
         }
       }
     },
@@ -106,12 +143,16 @@ function RequestsPage() {
     },
     onError: (error) => {
       console.error("[zadosti] decide", error);
+      void queryClient.invalidateQueries({ queryKey: ["requests", property?.id] });
+      void queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] });
       toast.error(t(`Akce se nepodařila: ${error.message}`, `The action failed: ${error.message}`));
     },
   });
 
   const pending = requests?.filter((r) => r.status === "PENDING") ?? [];
   const processed = requests?.filter((r) => r.status !== "PENDING") ?? [];
+
+  if (hidden) return null;
 
   return (
     <AppShell>
@@ -122,6 +163,20 @@ function RequestsPage() {
 
       {isLoading ? (
         <LoadingCards />
+      ) : isError && !requests ? (
+        <div role="alert" className="card p-4">
+          <p className="font-bold">
+            {t("Žádosti se nepodařilo načíst.", "Could not load the requests.")}
+          </p>
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={() => void refetch()}
+            className="btn-secondary mt-3 w-full"
+          >
+            {t("Zkusit znovu", "Try again")}
+          </Button>
+        </div>
       ) : pending.length === 0 && processed.length === 0 ? (
         <EmptyState
           icon={Inbox}
@@ -139,7 +194,9 @@ function RequestsPage() {
                 <h3 className="text-lg font-bold">
                   {t("Čekající", "Pending")} ({pending.length})
                 </h3>
-                <button
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   onClick={() =>
                     setSelected(
                       selected.length === pending.length
@@ -147,16 +204,18 @@ function RequestsPage() {
                         : pending.map((request) => request.id),
                     )
                   }
-                  className="min-h-11 text-[14px] font-bold text-primary"
+                  className="min-h-11 text-[16px] font-bold text-primary"
                 >
                   {selected.length === pending.length
                     ? t("Zrušit výběr", "Clear")
                     : t("Vybrat vše", "Select all")}
-                </button>
+                </Button>
               </div>
               {selected.length > 0 && (
                 <div className="card mb-3 grid grid-cols-2 gap-2 p-3">
-                  <button
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     onClick={() =>
                       decide.mutate({
                         requests: pending.filter((request) => selected.includes(request.id)),
@@ -164,25 +223,27 @@ function RequestsPage() {
                       })
                     }
                     disabled={decide.isPending}
-                    className="btn-primary disabled:opacity-50"
+                    className="btn-dark disabled:opacity-50"
                   >
                     {decide.isPending
                       ? t("Ukládám…", "Saving…")
                       : t("Schválit vybrané", "Approve selected")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     onClick={() =>
                       setDeclining(pending.filter((request) => selected.includes(request.id)))
                     }
-                    className="btn-danger"
+                    className="btn-secondary"
                   >
                     {t("Zamítnout vybrané", "Decline selected")}
-                  </button>
+                  </Button>
                 </div>
               )}
               <div className="space-y-3">
                 {pending.map((r) => (
-                  <article key={r.id} className="card p-4">
+                  <article key={r.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
                     <div className="flex items-start justify-between gap-2">
                       <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3">
                         <input
@@ -197,16 +258,16 @@ function RequestsPage() {
                         />
                         <div className="min-w-0">
                           <p className="truncate text-lg font-bold">{r.requester_name}</p>
-                          <p className="text-[13px] text-muted-foreground">{r.requester_email}</p>
+                          <p className="text-[16px] text-muted-foreground">{r.requester_email}</p>
                         </div>
                       </label>
                       {r.has_conflict && (
-                        <span className="pill bg-warn-soft text-warn">
+                        <span className="pill bg-warn-soft text-warn-foreground">
                           <AlertTriangle className="size-3.5" /> {t("Kolize", "Conflict")}
                         </span>
                       )}
                     </div>
-                    <div className="mt-2 space-y-1 text-[14px]">
+                    <div className="mt-2 space-y-1 text-[16px]">
                       <p>
                         <span className="font-bold">{t("Termín:", "Dates:")}</span>{" "}
                         {fmtDate(r.start_date)} – {fmtDate(r.end_date)}
@@ -221,12 +282,12 @@ function RequestsPage() {
                         </p>
                       )}
                       {r.note && <p className="rounded-2xl bg-background p-2.5">„{r.note}“</p>}
-                      <p className="text-[12px] text-muted-foreground">
+                      <p className="text-[16px] text-muted-foreground">
                         {t("Odesláno", "Sent")} {fmtDateTime(r.created_at)}
                       </p>
                     </div>
                     {r.has_conflict && (
-                      <div className="mt-2 rounded-2xl bg-warn-soft p-3 text-[13px] font-semibold text-warn">
+                      <div className="mt-2 rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                         <p>
                           {t(
                             "Termín se překrývá s jiným pobytem:",
@@ -237,22 +298,26 @@ function RequestsPage() {
                       </div>
                     )}
                     <div className="mt-3 flex gap-2">
-                      <button
+                      <Button
+                        variant="fresh"
+                        size="fresh"
                         onClick={() => decide.mutate({ requests: [r], approve: true })}
                         disabled={decide.isPending}
-                        className="btn-primary flex-1 disabled:opacity-50"
+                        className="btn-dark flex-1 disabled:opacity-50"
                       >
                         {decide.isPending && decide.variables?.requests.some((x) => x.id === r.id)
                           ? t("Ukládám…", "Saving…")
                           : t("Schválit", "Approve")}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="fresh"
+                        size="fresh"
                         onClick={() => setDeclining([r])}
                         disabled={decide.isPending}
-                        className="btn-danger flex-1 disabled:opacity-50"
+                        className="btn-secondary flex-1 disabled:opacity-50"
                       >
                         {t("Zamítnout", "Decline")}
-                      </button>
+                      </Button>
                     </div>
                   </article>
                 ))}
@@ -267,8 +332,8 @@ function RequestsPage() {
                 {processed.map((r) => (
                   <div key={r.id} className="card flex items-center gap-3 p-4">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[15px] font-bold">{r.requester_name}</p>
-                      <p className="text-[13px] text-muted-foreground">
+                      <p className="truncate text-[16px] font-bold">{r.requester_name}</p>
+                      <p className="text-[16px] text-muted-foreground">
                         {fmtDate(r.start_date)} – {fmtDate(r.end_date)}
                       </p>
                     </div>
@@ -293,7 +358,7 @@ function RequestsPage() {
       {declining.length > 0 && (
         <div className="fixed inset-0 z-50 grid place-items-end bg-foreground/35 p-4 sm:place-items-center">
           <section
-            className="card w-full max-w-[400px] p-4"
+            className="w-full max-w-[400px] rounded-[28px] bg-card p-5 shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="decline-title"
@@ -301,7 +366,7 @@ function RequestsPage() {
             <h2 id="decline-title" className="text-xl font-bold">
               {t("Důvod zamítnutí", "Decline reason")}
             </h2>
-            <p className="mt-1 text-[14px] text-muted-foreground">
+            <p className="mt-1 text-[16px] text-muted-foreground">
               {declining.length} {t("žádostí bude zamítnuto.", "request(s) will be declined.")}
             </p>
             <select
@@ -317,18 +382,22 @@ function RequestsPage() {
               ))}
             </select>
             <div className="mt-4 flex gap-2">
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 onClick={() =>
                   decide.mutate({ requests: declining, approve: false, reason: declineReason })
                 }
                 disabled={!declineReason || decide.isPending}
-                className="btn-danger flex-1 disabled:opacity-40"
+                className="btn-danger-soft flex-1 disabled:opacity-40"
               >
                 {decide.isPending
                   ? t("Ukládám…", "Saving…")
                   : t("Potvrdit zamítnutí", "Confirm decline")}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="fresh"
+                size="fresh"
                 onClick={() => {
                   setDeclining([]);
                   setDeclineReason("");
@@ -336,7 +405,7 @@ function RequestsPage() {
                 className="btn-secondary"
               >
                 {t("Zrušit", "Cancel")}
-              </button>
+              </Button>
             </div>
           </section>
         </div>

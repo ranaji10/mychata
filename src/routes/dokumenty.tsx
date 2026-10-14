@@ -1,9 +1,11 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { AskBox } from "@/components/AskBox";
 import {
   EmptyState,
@@ -21,9 +23,10 @@ import { readDocumentText } from "@/lib/manual-qa.functions";
 
 export const Route = createFileRoute("/dokumenty")({
   staticData: { sitemap: false },
-  validateSearch: (search: Record<string, unknown>) => ({
-    task: typeof search["task"] === "string" ? search["task"] : "",
-  }),
+  // ?task=<id> only when filing a warranty for a task; plain /dokumenty otherwise (T-026:
+  // every visit used to end in "?task=").
+  validateSearch: (search: Record<string, unknown>): { task?: string } =>
+    typeof search["task"] === "string" && search["task"] ? { task: search["task"] } : {},
   head: () => ({
     meta: [
       { title: "Document Vault — My Chata" },
@@ -59,6 +62,12 @@ function DocumentsPage() {
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("ALL");
+  const [deleting, setDeleting] = useState<{
+    id: string;
+    title: string;
+    path: string | null;
+  } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [adding, setAdding] = useState(!!linkedTaskId);
   const [form, setForm] = useState({
     title: "",
@@ -200,21 +209,50 @@ function DocumentsPage() {
 
   const openFile = async (path: string | null) => {
     if (!path) return;
+    // Safari (iPhone, Mac) blocks window.open() that happens after an await, so "Open" did
+    // nothing there (T-026). Open the tab during the tap, then point it at the file.
+    const tab = window.open("", "_blank");
     const { data, error } = await supabase.storage.from("my-chata-files").createSignedUrl(path, 60);
     if (error) {
+      tab?.close();
       toast.error(t("Soubor nelze otevřít.", "Could not open the file."));
       return;
     }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    if (tab) {
+      tab.opener = null;
+      tab.location.href = data.signedUrl;
+    } else {
+      window.location.assign(data.signedUrl);
+    }
   };
   const remove = async (id: string, path: string | null) => {
-    if (path) await supabase.storage.from("my-chata-files").remove([path]);
-    const { error } = await supabase.from("documents").delete().eq("id", id);
-    if (error) {
-      toast.error(t("Dokument nelze smazat.", "Could not delete the document."));
-      return;
+    setDeleteBusy(true);
+    try {
+      // The record first, the file after: the other way round, a refused delete left a
+      // document whose file was already gone (T-026). Row-level security turns a refused
+      // delete into "0 rows", not an error, so that is checked too.
+      const { data, error } = await supabase.from("documents").delete().eq("id", id).select("id");
+      if (error || !data?.length) {
+        if (error) console.error("[dokumenty] delete", error);
+        toast.error(
+          t(
+            "Dokument nelze smazat. Mazat dokumenty může jen správce.",
+            "Could not delete the document. Only an admin can delete documents.",
+          ),
+        );
+        return;
+      }
+      if (path) {
+        const { error: fileError } = await supabase.storage.from("my-chata-files").remove([path]);
+        // The document is gone from the app; a leftover file is only logged.
+        if (fileError) console.error("[dokumenty] remove file", fileError);
+      }
+      toast.success(t("Dokument smazán.", "Document deleted."));
+      void queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
+    } finally {
+      setDeleteBusy(false);
+      setDeleting(null);
     }
-    queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
   };
   const daysUntil = (date: string) =>
     Math.ceil(
@@ -232,13 +270,15 @@ function DocumentsPage() {
         back="/vice"
         action={
           isAdmin ? (
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={() => setAdding(true)}
-              className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground"
+              className="grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"
               aria-label={t("Přidat dokument", "Add document")}
             >
               <Plus className="size-5" />
-            </button>
+            </Button>
           ) : null
         }
       />
@@ -285,12 +325,12 @@ function DocumentsPage() {
             return (
               <article key={document.id} className="card p-4">
                 <div className="flex items-start gap-3">
-                  <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary">
+                  <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary">
                     <FileText className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-bold">{document.title}</h2>
-                    <p className="text-[13px] text-muted-foreground">
+                    <p className="text-[16px] text-muted-foreground">
                       {categoryLabel(document.category)}
                     </p>
                   </div>
@@ -308,14 +348,14 @@ function DocumentsPage() {
                     </PillNeutral>
                   )}
                 </div>
-                {document.notes && <p className="mt-2 text-[14px]">{document.notes}</p>}
+                {document.notes && <p className="mt-2 text-[16px]">{document.notes}</p>}
                 {document.expiry_date && (
-                  <p className="mt-2 text-[13px] font-semibold text-muted-foreground">
+                  <p className="mt-2 text-[16px] font-semibold text-muted-foreground">
                     {t("Platnost do", "Expires")} {fmtDate(document.expiry_date)}
                   </p>
                 )}
                 {document.file_url && (
-                  <p className="mt-2 flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                  <p className="mt-2 flex items-center gap-2 text-[16px] font-semibold text-muted-foreground">
                     {reading === document.id ? (
                       <>
                         <Loader2 className="size-4 animate-spin" />
@@ -326,7 +366,7 @@ function DocumentsPage() {
                         {t("Připraveno pro otázky", "Ready for questions")}
                       </span>
                     ) : document.text_status === "failed" ? (
-                      <span className="text-warn">
+                      <span className="text-warn-foreground">
                         {t("Text se nepodařilo přečíst", "Couldn't read the text")}
                         {document.text_error ? ` (${document.text_error})` : ""}
                       </span>
@@ -334,35 +374,47 @@ function DocumentsPage() {
                       t("Zatím nepřečteno", "Not read yet")
                     )}
                     {isAdmin && document.text_status !== "ready" && reading !== document.id && (
-                      <button
+                      <Button
+                        variant="fresh"
+                        size="fresh"
                         onClick={() => readText.mutate(document.id)}
                         disabled={readText.isPending}
                         className="inline-flex min-h-11 items-center gap-1 font-bold text-primary"
                       >
                         <RefreshCw className="size-4" />
                         {t("Přečíst", "Read now")}
-                      </button>
+                      </Button>
                     )}
                   </p>
                 )}
                 <div className="mt-3 flex gap-2">
                   {document.file_url && (
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       onClick={() => openFile(document.file_url)}
                       className="btn-secondary flex-1"
                     >
                       <Download className="size-4" />
                       {t("Otevřít", "Open")}
-                    </button>
+                    </Button>
                   )}
                   {isAdmin && (
-                    <button
-                      onClick={() => remove(document.id, document.file_url)}
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      onClick={() =>
+                        setDeleting({
+                          id: document.id,
+                          title: document.title,
+                          path: document.file_url,
+                        })
+                      }
                       className="grid size-11 place-items-center rounded-xl bg-primary-soft text-primary"
                       aria-label={t("Smazat", "Delete")}
                     >
                       <Trash2 className="size-5" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </article>
@@ -377,7 +429,7 @@ function DocumentsPage() {
               e.preventDefault();
               save.mutate();
             }}
-            className="card max-h-[90vh] w-full max-w-[400px] space-y-3 overflow-auto p-4"
+            className="w-full max-w-[400px] max-h-[90vh] space-y-3 overflow-auto rounded-[28px] bg-card p-5 shadow-2xl"
           >
             <h2 className="text-xl font-bold">
               {linkedTaskId
@@ -408,7 +460,7 @@ function DocumentsPage() {
               className="field"
               placeholder={t("Poznámky", "Notes")}
             />
-            <label className="block text-[13px] font-bold">
+            <label className="label-text text-[16px]">
               {t("Datum vystavení", "Issue date")}
               <input
                 type="date"
@@ -417,7 +469,7 @@ function DocumentsPage() {
                 className="field mt-1"
               />
             </label>
-            <label className="block text-[13px] font-bold">
+            <label className="label-text text-[16px]">
               {t("Platnost do", "Expiry date")}
               <input
                 type="date"
@@ -440,23 +492,49 @@ function DocumentsPage() {
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="field"
             />
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {t(
                 "Text souboru (PDF, Word, fotka, text) se přečte, aby na něj šlo odpovídat v otázkách. Dokumenty jen pro správce vidí v odpovědích jen správci.",
                 "The file's text (PDF, Word, photo, text) is read so questions can be answered from it. Admin-only documents appear in answers for admins only.",
               )}
             </p>
             <div className="flex gap-2">
-              <button className="btn-primary flex-1" disabled={save.isPending}>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-primary flex-1"
+                disabled={save.isPending}
+              >
                 {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
-              </button>
-              <button type="button" onClick={() => setAdding(false)} className="btn-secondary">
+              </Button>
+              <Button
+                variant="fresh"
+                size="fresh"
+                type="button"
+                onClick={() => setAdding(false)}
+                className="btn-secondary"
+              >
                 {t("Zrušit", "Cancel")}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
       )}
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={t(
+          `Smazat dokument „${deleting?.title ?? ""}“?`,
+          `Delete the document “${deleting?.title ?? ""}”?`,
+        )}
+        description={t(
+          "Smaže se i nahraný soubor. Nelze to vrátit.",
+          "The uploaded file is deleted too. This can't be undone.",
+        )}
+        confirmLabel={t("Smazat", "Delete")}
+        busy={deleteBusy}
+        onConfirm={() => deleting && void remove(deleting.id, deleting.path)}
+      />
     </AppShell>
   );
 }

@@ -12,5 +12,5 @@ describe("Prague meteorological seasons", () => {
     ["2027-11-30T12:00:00Z", "autumn"],
     ["2027-12-01T12:00:00Z", "winter"],
     ["2027-02-28T23:30:00Z", "spring"],
-  ])("%s is %s", (date, season) => expect(seasonFor(new Date(date))).toBe(season));
+  ])("%s is %s", (date: string, season: string) => expect(seasonFor(new Date(date))).toBe(season));
 });

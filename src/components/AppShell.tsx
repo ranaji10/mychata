@@ -44,6 +44,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
 
+  // Tell the consent banner (rendered at root) that the mobile tab bar is present.
+  useEffect(() => {
+    document.documentElement.classList.add("has-tabbar");
+    return () => document.documentElement.classList.remove("has-tabbar");
+  }, []);
+
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);

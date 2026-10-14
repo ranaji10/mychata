@@ -11,6 +11,7 @@ import {
   Globe,
   Home,
   Link2,
+  Link2Off,
   LogOut,
   Shield,
   Users,
@@ -18,6 +19,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Avatar, PageHeader } from "@/components/bits";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
@@ -56,6 +58,8 @@ function MorePage() {
     url: string;
   } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
+  const [stopOpen, setStopOpen] = useState(false);
+  const [stopping, setStopping] = useState(false);
 
   // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
   // The toast says the link was copied — never the raw URL.
@@ -92,6 +96,32 @@ function MorePage() {
       return;
     }
     await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`, "calendar");
+  };
+
+  // Switch the public calendar off. The link stops working at once; switching it on again
+  // ("Public calendar link") brings the same link back. The token is not rotated, because the
+  // public house manual uses it too.
+  const stopPublicCalendar = async () => {
+    if (!property) return;
+    setStopping(true);
+    const { error } = await supabase.rpc("set_public_calendar", {
+      _property_id: property.id,
+      _enabled: false,
+    });
+    setStopping(false);
+    if (error) {
+      toast.error(
+        t(
+          "Veřejný kalendář může vypnout jen správce.",
+          "Only an admin can switch off the calendar.",
+        ),
+      );
+      return;
+    }
+    setStopOpen(false);
+    setManualLink(null);
+    await queryClient.invalidateQueries({ queryKey: ["properties"] });
+    toast.success(t("Veřejný kalendář je vypnutý.", "The public calendar is switched off."));
   };
 
   const createGuestLink = async () => {
@@ -204,6 +234,21 @@ function MorePage() {
             <div className="px-4">
               <ManualCopyLink url={manualLink?.source === "calendar" ? manualLink.url : null} />
             </div>
+            {property?.public_calendar_enabled && (
+              <Button
+                variant="fresh"
+                size="fresh"
+                onClick={() => setStopOpen(true)}
+                className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
+              >
+                <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-destructive-soft text-destructive">
+                  <Link2Off className="size-[22px]" />
+                </span>
+                <span className="flex-1 text-[16px] font-bold">
+                  {t("Vypnout veřejný kalendář", "Switch off the public calendar")}
+                </span>
+              </Button>
+            )}
             <Button
               variant="fresh"
               size="fresh"
@@ -314,6 +359,18 @@ function MorePage() {
           <span className="flex-1 text-[16px] font-bold">{t("Odhlásit se", "Sign out")}</span>
         </Button>
       </section>
+      <ConfirmDialog
+        open={stopOpen}
+        onOpenChange={setStopOpen}
+        title={t("Vypnout veřejný kalendář?", "Switch off the public calendar?")}
+        description={t(
+          "Odkaz, který jste sdíleli, přestane fungovat. Kdykoli ho můžete znovu zapnout tlačítkem Veřejný odkaz na kalendář.",
+          "The link you shared will stop working. You can switch it on again at any time with Public calendar link.",
+        )}
+        confirmLabel={t("Vypnout", "Switch off")}
+        onConfirm={stopPublicCalendar}
+        busy={stopping}
+      />
     </AppShell>
   );
 }

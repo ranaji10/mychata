@@ -23,7 +23,10 @@ export const getGuestLinkInfo = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: link, error } = await supabase.rpc("public_guest_link", { _token: data.token });
-    if (error || !link?.length) return null;
+    // A database error is not an invalid link: throw, so the page says "could not be loaded"
+    // instead of "this link is no longer valid" (PR #31 review).
+    if (error) throw new Error("guest_link_failed");
+    if (!link?.length) return null;
     const row = link[0]!;
     const { data: availability, error: availabilityError } = await supabase.rpc(
       "public_guest_availability",

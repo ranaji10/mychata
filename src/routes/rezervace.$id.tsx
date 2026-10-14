@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Users } from "lucide-react";
@@ -137,14 +138,18 @@ function BookingDetail() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => navigate({ to: "/kalendar" })}
           aria-label={t("Zpět", "Back")}
-          className="grid size-11 place-items-center rounded-xl bg-secondary"
+          className="grid size-11 place-items-center rounded-full bg-secondary"
         >
           <ArrowLeft className="size-5" />
-        </button>
-        <h1 className="text-2xl font-bold">{t("Detail pobytu", "Stay detail")}</h1>
+        </Button>
+        <h1 className="text-[28px] font-extrabold leading-[1.15]">
+          {t("Detail pobytu", "Stay detail")}
+        </h1>
       </div>
 
       <section className="card mt-4 p-4">
@@ -159,7 +164,7 @@ function BookingDetail() {
 
         <div className="mt-3 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-muted-foreground">
+            <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground">
               <CalendarDays className="size-5" />
             </div>
             <p className="text-[16px] font-bold">
@@ -167,7 +172,7 @@ function BookingDetail() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-muted-foreground">
+            <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground">
               <Users className="size-5" />
             </div>
             <p className="text-[16px] font-semibold">{guestsLabel}</p>
@@ -175,10 +180,10 @@ function BookingDetail() {
         </div>
 
         {booking.note && (
-          <p className="mt-3 rounded-2xl bg-background p-3 text-[15px]">„{booking.note}“</p>
+          <p className="mt-3 rounded-2xl bg-background p-3 text-[16px]">„{booking.note}“</p>
         )}
 
-        <p className="mt-3 text-[12px] text-muted-foreground">
+        <p className="mt-3 text-[16px] text-muted-foreground">
           {t("Vytvořeno", "Created")} {fmtDateTime(booking.created_at)}
         </p>
       </section>
@@ -206,19 +211,34 @@ function BookingDetail() {
 
       {pending && isAdmin && (
         <div className="mt-4 flex gap-2">
-          <button onClick={() => confirm.mutate()} className="btn-dark flex-1">
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={() => confirm.mutate()}
+            className="btn-dark flex-1"
+          >
             {t("Schválit", "Approve")}
-          </button>
-          <button onClick={() => setConfirmRemove(true)} className="btn-secondary flex-1">
+          </Button>
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={() => setConfirmRemove(true)}
+            className="btn-secondary flex-1"
+          >
             {t("Zamítnout", "Decline")}
-          </button>
+          </Button>
         </div>
       )}
 
       {!pending && canCancel && (
-        <button onClick={() => setConfirmRemove(true)} className="btn-danger mt-4 w-full">
+        <Button
+          variant="fresh"
+          size="fresh"
+          onClick={() => setConfirmRemove(true)}
+          className="btn-danger-soft mt-4 w-full"
+        >
           {t("Zrušit pobyt", "Cancel stay")}
-        </button>
+        </Button>
       )}
 
       <ConfirmDialog
@@ -239,7 +259,7 @@ function BookingDetail() {
       />
 
       {pending && !isAdmin && (
-        <p className="mt-4 text-center text-[14px] font-semibold text-muted-foreground">
+        <p className="mt-4 text-center text-[16px] font-semibold text-muted-foreground">
           <PillNeutral>
             {t("Schválit může pouze správce.", "Only an admin can approve.")}
           </PillNeutral>

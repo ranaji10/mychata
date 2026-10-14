@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -115,71 +116,75 @@ function MorePage() {
         <Avatar name={members.find((m) => m.id === currentMemberId)?.name ?? ""} />
         <div className="min-w-0 flex-1">
           <h3 className="font-bold">{members.find((m) => m.id === currentMemberId)?.name}</h3>
-          <p className="text-[13px] text-muted-foreground">{t("Můj profil", "My profile")}</p>
+          <p className="text-[16px] text-muted-foreground">{t("Můj profil", "My profile")}</p>
         </div>
         <User className="size-5 text-muted-foreground" />
       </Link>
 
-      <section className="card mt-4 divide-y divide-border p-0">
+      <section className="card mt-4 divide-y divide-divider p-0">
         <Link to="/clenove" className="flex items-center gap-3 p-4 active:bg-secondary">
           <Users className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">
+          <span className="flex-1 text-[16px] font-bold">
             {t("Členové a oprávnění", "Members & permissions")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link to="/chata/nova" className="flex items-center gap-3 p-4 active:bg-secondary">
           <Home className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Přidat chatu", "Add a cottage")}</span>
+          <span className="flex-1 text-[16px] font-bold">{t("Přidat chatu", "Add a cottage")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link to="/fotky" className="flex items-center gap-3 p-4 active:bg-secondary">
           <Camera className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Fotky chaty", "Cottage photos")}</span>
+          <span className="flex-1 text-[16px] font-bold">{t("Fotky chaty", "Cottage photos")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link to="/manual" className="flex items-center gap-3 p-4 active:bg-secondary">
           <BookOpen className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Manuál chaty", "House Manual")}</span>
+          <span className="flex-1 text-[16px] font-bold">{t("Manuál chaty", "House Manual")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link to="/dokumenty" className="flex items-center gap-3 p-4 active:bg-secondary">
           <FileText className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Dokumenty", "Document Vault")}</span>
+          <span className="flex-1 text-[16px] font-bold">{t("Dokumenty", "Document Vault")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link to="/predani" className="flex items-center gap-3 p-4 active:bg-secondary">
           <ClipboardCheck className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">
+          <span className="flex-1 text-[16px] font-bold">
             {t("Odjezdový checklist", "Check-out checklist")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         {isFamily && (
           <>
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={copyPublicLink}
               className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
             >
               <Link2 className="size-5 text-muted-foreground" />
-              <span className="flex-1 text-[15px] font-bold">
+              <span className="flex-1 text-[16px] font-bold">
                 {t("Veřejný odkaz na kalendář", "Public calendar link")}
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
-            </button>
+            </Button>
             <div className="px-4">
               <ManualCopyLink url={manualLink?.source === "calendar" ? manualLink.url : null} />
             </div>
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={createGuestLink}
               className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
             >
               <Link2 className="size-5 text-muted-foreground" />
-              <span className="flex-1 text-[15px] font-bold">
+              <span className="flex-1 text-[16px] font-bold">
                 {t("Odkaz pro hosta bez účtu", "Guest booking link (no account)")}
               </span>
               <ChevronRight className="size-5 text-muted-foreground" />
-            </button>
+            </Button>
             <div className="px-4">
               <ManualCopyLink url={manualLink?.source === "guest" ? manualLink.url : null} />
             </div>
@@ -193,7 +198,7 @@ function MorePage() {
             className="flex items-center gap-3 p-4 active:bg-secondary"
           >
             <Link2 className="size-5 text-muted-foreground" />
-            <span className="flex-1 text-[15px] font-bold">
+            <span className="flex-1 text-[16px] font-bold">
               {t("Veřejný formulář žádosti", "Public request form")}
             </span>
             <ChevronRight className="size-5 text-muted-foreground" />
@@ -203,47 +208,55 @@ function MorePage() {
 
       {/* Language: collapsed row near the bottom */}
       <section className="card mt-4 p-0">
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => setLangOpen((v) => !v)}
           className="flex w-full items-center gap-3 p-4 text-left"
           aria-expanded={langOpen}
         >
           <Globe className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Jazyk", "Language")}</span>
-          <span className="text-[14px] font-semibold text-muted-foreground">
+          <span className="flex-1 text-[16px] font-bold">{t("Jazyk", "Language")}</span>
+          <span className="text-[16px] font-semibold text-muted-foreground">
             {lang === "cs" ? "Čeština" : "English"}
           </span>
           <ChevronDown
             className={`size-5 text-muted-foreground transition-transform ${langOpen ? "rotate-180" : ""}`}
           />
-        </button>
+        </Button>
         {langOpen && (
           <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${lang === "cs" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setLang("cs")}
             >
               Čeština
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${lang === "en" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setLang("en")}
             >
               English
-            </button>
+            </Button>
           </div>
         )}
       </section>
 
-      <section className="card mt-4 divide-y divide-border p-0">
+      <section className="card mt-4 divide-y divide-divider p-0">
         <Link to="/soukromi" className="flex items-center gap-3 p-4 active:bg-secondary">
           <Shield className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">
+          <span className="flex-1 text-[16px] font-bold">
             {t("Soukromí a cookies", "Privacy & cookies")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => {
             supabase.auth.signOut().then(() => {
               queryClient.clear();
@@ -254,8 +267,8 @@ function MorePage() {
           className="flex w-full items-center gap-3 p-4 text-left active:bg-secondary"
         >
           <LogOut className="size-5 text-muted-foreground" />
-          <span className="flex-1 text-[15px] font-bold">{t("Odhlásit se", "Sign out")}</span>
-        </button>
+          <span className="flex-1 text-[16px] font-bold">{t("Odhlásit se", "Sign out")}</span>
+        </Button>
       </section>
     </AppShell>
   );

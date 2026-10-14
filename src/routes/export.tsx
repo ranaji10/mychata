@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Download, FileSpreadsheet } from "lucide-react";
@@ -16,6 +17,8 @@ export const Route = createFileRoute("/export")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Usage export — My Chata" },
       { name: "description", content: "CSV export of cottage usage by month." },
       { property: "og:title", content: "Usage export — My Chata" },
@@ -109,7 +112,7 @@ function ExportPage() {
 
       <section className="card mt-2 space-y-4 p-4">
         <div>
-          <label htmlFor="export-month" className="mb-1 block text-[13px] font-bold">
+          <label htmlFor="export-month" className="label-text text-[16px]">
             {t("Měsíc", "Month")}
           </label>
           <input
@@ -122,7 +125,7 @@ function ExportPage() {
         </div>
 
         <div className="rounded-2xl bg-background p-4">
-          <p className="text-[13px] font-semibold text-muted-foreground">
+          <p className="text-[16px] font-semibold text-muted-foreground">
             {monthNames(lang)[(m || 1) - 1]} {y}
           </p>
           {isLoading ? (
@@ -132,27 +135,34 @@ function ExportPage() {
               <p className="font-bold">
                 {t("Žádosti se nepodařilo načíst.", "Could not load the requests.")}
               </p>
-              <button onClick={() => void refetch()} className="btn-secondary mt-2 w-full">
+              <Button
+                variant="fresh"
+                size="fresh"
+                onClick={() => void refetch()}
+                className="btn-secondary mt-2 w-full"
+              >
                 {t("Zkusit znovu", "Try again")}
-              </button>
+              </Button>
             </div>
           ) : (
-            <p className="mt-1 text-2xl font-bold">
+            <p className="mt-1 text-[28px] font-extrabold leading-[1.15]">
               {inMonth.length} {t("žádostí", "requests")}
             </p>
           )}
         </div>
 
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={download}
           disabled={isLoading || inMonth.length === 0}
           className="btn-primary w-full disabled:opacity-40"
         >
           <Download className="size-5" /> {t("Stáhnout CSV", "Download CSV")}
-        </button>
+        </Button>
 
         {inMonth.length === 0 && !isLoading && !(isError && !requests) && (
-          <p className="flex items-center gap-2 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
+          <p className="flex items-center gap-2 rounded-2xl bg-secondary p-3 text-[16px] font-semibold text-muted-foreground">
             <FileSpreadsheet className="size-5 shrink-0" />
             {t("V tomto měsíci nejsou žádné žádosti.", "There are no requests this month.")}
           </p>

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, CheckCircle2, Circle, ClipboardCheck, History, Wrench } from "lucide-react";
@@ -22,6 +23,8 @@ export const Route = createFileRoute("/predani")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Handover — My Chata" },
       { name: "description", content: "Cottage handover checklist and handover history." },
       { property: "og:title", content: "Handover — My Chata" },
@@ -191,7 +194,7 @@ function HandoverPage() {
       <section className="card p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold">{t("Checklist", "Checklist")}</h3>
-          <span className="text-[14px] font-bold text-muted-foreground">
+          <span className="text-[16px] font-bold text-muted-foreground">
             {doneCount}/{items.length}
           </span>
         </div>
@@ -204,7 +207,9 @@ function HandoverPage() {
 
         <div className="mt-3 space-y-1">
           {items.map((item, i) => (
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               key={item}
               onClick={() => setChecked((c) => c.map((v, j) => (j === i ? !v : v)))}
               className="flex w-full items-center gap-3 rounded-2xl p-2 text-left active:bg-secondary"
@@ -215,16 +220,16 @@ function HandoverPage() {
                 <Circle className="size-7 shrink-0 text-muted-foreground" />
               )}
               <span
-                className={`text-[15px] font-semibold ${checked[i] ? "text-muted-foreground line-through" : ""}`}
+                className={`text-[16px] font-semibold ${checked[i] ? "text-muted-foreground line-through" : ""}`}
               >
                 {item}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="mt-3">
-          <label htmlFor="handover-note" className="mb-1 block text-[13px] font-bold">
+          <label htmlFor="handover-note" className="label-text text-[16px]">
             {t("Poznámka (nepovinné)", "Note (optional)")}
           </label>
           <textarea
@@ -240,7 +245,7 @@ function HandoverPage() {
         <div className="mt-3">
           <label
             htmlFor="handover-issue"
-            className="mb-1 flex items-center gap-2 text-[13px] font-bold"
+            className="mb-1 flex items-center gap-2 text-[16px] font-bold"
           >
             <Wrench className="size-4" />
             {t("Nahlásit závadu (nepovinné)", "Report an issue (optional)")}
@@ -265,14 +270,16 @@ function HandoverPage() {
         </label>
 
         {!allDone && (
-          <p className="mt-4 text-[14px] text-muted-foreground">
+          <p className="mt-4 text-[16px] text-muted-foreground">
             {t(
               `Neodškrtnuté body (${skippedCount}) se uloží jako vynechané.`,
               `Unticked items (${skippedCount}) will be saved as skipped.`,
             )}
           </p>
         )}
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => save.mutate()}
           disabled={save.isPending}
           className="btn-primary mt-3 w-full disabled:opacity-40"
@@ -285,7 +292,7 @@ function HandoverPage() {
                   `Uložit předání (${doneCount} z ${items.length} hotovo)`,
                   `Save handover (${doneCount} of ${items.length} done)`,
                 )}
-        </button>
+        </Button>
       </section>
 
       <section className="mt-4">
@@ -315,8 +322,8 @@ function HandoverPage() {
                 <details key={h.id} className="card group p-4">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-bold">{memberName(h.member_id)}</p>
-                      <p className="text-[13px] text-muted-foreground">
+                      <p className="truncate text-[16px] font-bold">{memberName(h.member_id)}</p>
+                      <p className="text-[16px] text-muted-foreground">
                         {fmtDateTime(h.submitted_at)}
                       </p>
                     </div>
@@ -324,7 +331,7 @@ function HandoverPage() {
                   </summary>
                   <ul className="mt-3 space-y-1.5">
                     {entries.map(([item, entry]) => (
-                      <li key={item} className="flex items-start gap-2 text-[15px]">
+                      <li key={item} className="flex items-start gap-2 text-[16px]">
                         {entry.state === "checked" ? (
                           <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
                         ) : (
@@ -339,7 +346,7 @@ function HandoverPage() {
                     ))}
                   </ul>
                   {h.note && (
-                    <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">„{h.note}“</p>
+                    <p className="mt-3 rounded-2xl bg-background p-3 text-[16px]">„{h.note}“</p>
                   )}
                 </details>
               );

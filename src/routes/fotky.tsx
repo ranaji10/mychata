@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { ImagePlus, Star, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
@@ -13,7 +14,14 @@ import { classifyUploadError, preparePhoto, uploadErrorMessage } from "@/lib/pho
 
 export const Route = createFileRoute("/fotky")({
   staticData: { sitemap: false },
-  head: () => ({ meta: [{ title: "Photos — My Chata" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Photos — My Chata" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: PhotosPage,
 });
 
@@ -207,14 +215,16 @@ function PhotosPage() {
         className="hidden"
         onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
       />
-      <button
+      <Button
+        variant="fresh"
+        size="fresh"
         className="btn-primary mt-4 w-full"
         disabled={busy}
         onClick={() => fileRef.current?.click()}
       >
         <ImagePlus className="size-5" />
         {busy ? t("Nahrávám…", "Uploading…") : t("Přidat fotku", "Add a photo")}
-      </button>
+      </Button>
       <div className="mt-4 grid grid-cols-2 gap-3">
         {photos?.map((p) => (
           <figure
@@ -226,22 +236,30 @@ function PhotosPage() {
             ) : (
               <div className="aspect-square w-full bg-secondary" />
             )}
-            {p.is_primary && <span className="pill absolute left-2 top-2 bg-ok-soft text-ok">{t("Hlavní fotka", "Main photo")}</span>}
+            {p.is_primary && (
+              <span className="pill absolute left-2 top-2 bg-ok-soft text-ok">
+                {t("Hlavní fotka", "Main photo")}
+              </span>
+            )}
             <figcaption className="flex items-center justify-between p-2">
-              <button
-                className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary"
                 aria-label={t("Nastavit jako hlavní", "Set as main")}
                 onClick={() => makePrimary.mutate(p.id)}
               >
                 <Star className={`size-5 ${p.is_primary ? "fill-primary text-primary" : ""}`} />
-              </button>
-              <button
-                className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
+              </Button>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary"
                 aria-label={t("Smazat", "Delete")}
                 onClick={() => setDeleting(p)}
               >
                 <Trash2 className="size-5" />
-              </button>
+              </Button>
             </figcaption>
           </figure>
         ))}
@@ -251,9 +269,14 @@ function PhotosPage() {
           <p className="font-bold">
             {t("Fotky se nepodařilo načíst.", "Could not load the photos.")}
           </p>
-          <button onClick={() => void refetchPhotos()} className="btn-secondary mt-3 w-full">
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={() => void refetchPhotos()}
+            className="btn-secondary mt-3 w-full"
+          >
             {t("Zkusit znovu", "Try again")}
-          </button>
+          </Button>
         </div>
       ) : null}
       {!photos?.length && !photosFailed && (
@@ -261,7 +284,7 @@ function PhotosPage() {
           {t("Zatím žádné fotky. Přidejte první!", "No photos yet. Add the first one!")}
         </p>
       )}
-      <p className="mt-4 text-center text-[13px] text-muted-foreground">
+      <p className="mt-4 text-center text-[16px] text-muted-foreground">
         {t(
           "Hvězdičkou vyberete hlavní fotku chaty.",
           "Use the star to pick the cottage's main photo.",

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,12 @@ import { useLang } from "@/lib/i18n";
 export const Route = createFileRoute("/chata/nova")({
   staticData: { sitemap: false },
   head: () => ({
-    meta: [{ title: "Add cottage — My Chata" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Add cottage — My Chata" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: AddPropertyPage,
 });
@@ -66,7 +72,7 @@ function AddPropertyPage() {
       />
       {!isAdmin && (
         <div className="card mt-4 space-y-3 p-4">
-          <p className="text-[15px]">
+          <p className="text-[16px]">
             {t(
               `Do účtu „${account?.name ?? ""}“ může chaty přidávat jen správce. Požádejte správce, nebo si založte vlastní účet pro svou chatu.`,
               `Only an admin can add cottages to "${account?.name ?? ""}". Ask an admin, or create your own account for your cottage.`,
@@ -106,13 +112,15 @@ function AddPropertyPage() {
             onChange={(e) => setRooms(e.target.value)}
           />
         </div>
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           className="btn-primary w-full"
           disabled={busy || name.trim().length < 2 || address.trim().length < 2}
           onClick={save}
         >
           {busy ? t("Ukládám…", "Saving…") : t("Přidat chatu", "Add cottage")}
-        </button>
+        </Button>
       </div>
     </AppShell>
   );

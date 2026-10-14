@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Cookie } from "lucide-react";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,7 +114,7 @@ export function ConsentBanner() {
             {t("Sušenky? Jen ty nejlepší.", "Cookies? Only the good kind.")}
           </h2>
         </div>
-        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+        <p className="mt-3 text-[16px] leading-relaxed text-muted-foreground">
           {t(
             "Používáme nezbytné cookies, aby chata fungovala. Pokud nám dovolíte i analytické, pomůžete nám ji zlepšovat. Žádné reklamy, žádné prodeje dat.",
             "We use essential cookies to keep the cottage running. Allow analytics too and you help us improve it. No ads, no selling data.",
@@ -122,30 +123,55 @@ export function ConsentBanner() {
         {customising ? (
           <div className="mt-4 space-y-3">
             <label className="flex items-center justify-between rounded-2xl bg-secondary p-3">
-              <span className="text-[15px] font-bold">{t("Nezbytné", "Essential")}</span>
+              <span className="text-[16px] font-bold">{t("Nezbytné", "Essential")}</span>
               <span className="pill bg-ok-soft text-ok">{t("Vždy zapnuté", "Always on")}</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
-              <button className="btn-secondary" onClick={() => decide(false)}>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-secondary"
+                onClick={() => decide(false)}
+              >
                 {t("Bez analytiky", "No analytics")}
-              </button>
-              <button className="btn-primary" onClick={() => decide(true)}>
+              </Button>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-primary"
+                onClick={() => decide(true)}
+              >
                 {t("S analytikou", "With analytics")}
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
           <div className="mt-4 grid gap-2">
-            <button className="btn-primary" onClick={() => decide(true)}>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-primary"
+              onClick={() => decide(true)}
+            >
               {t("Pomáhat zlepšovat", "Help us improve")}
-            </button>
+            </Button>
             <div className="grid grid-cols-2 gap-2">
-              <button className="btn-secondary" onClick={() => decide(false)}>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-secondary"
+                onClick={() => decide(false)}
+              >
                 {t("Jen nezbytné", "Essentials only")}
-              </button>
-              <button className="btn-secondary" onClick={() => setCustomising(true)}>
+              </Button>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-secondary"
+                onClick={() => setCustomising(true)}
+              >
                 {t("Přizpůsobit", "Customise")}
-              </button>
+              </Button>
             </div>
           </div>
         )}

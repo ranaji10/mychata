@@ -40,7 +40,7 @@ Acceptance:
 - `bun run check` passes
 - `bun run build` succeeds
 - Destructive AlertDialogActions use btn-danger-soft hover/active, never primary green
-- TaskGroup tick visually 28px; vice.tsx button-row icons 22px
+- TaskGroup tick visually 24px open / 26px done, per `docs/product/design.md` (the 28px in the PR #25 review was wrong); vice.tsx button-row icons 22px
 - Consent banner at bottom-0 on pages without the tab bar, bottom-[84px] inside AppShell below lg
 
 Handoff note:

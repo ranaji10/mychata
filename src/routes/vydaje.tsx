@@ -1,10 +1,18 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillWarn } from "@/components/bits";
+import {
+  EmptyState,
+  LoadingCards,
+  PageHeader,
+  PillNeutral,
+  PillWarn,
+  StatCard,
+} from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
@@ -23,6 +31,8 @@ export const Route = createFileRoute("/vydaje")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Expenses — My Chata" },
       { name: "description", content: "Shared cottage expenses and their split between members." },
       { property: "og:title", content: "Expenses — My Chata" },
@@ -197,10 +207,13 @@ function ExpensesPage() {
 
   return (
     <AppShell>
-      <PageHeader
-        title={t("Výdaje", "Expenses")}
-        subtitle={`${t("Celkem", "Total")}: ${fmtKc(total)}`}
-      />
+      <PageHeader title={t("Výdaje", "Expenses")} />
+
+      {!isEmpty && (
+        <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] lg:gap-4">
+          <StatCard label={t("Celkem", "Total")} value={fmtKc(total)} />
+        </div>
+      )}
 
       {!isEmpty && (
         <Link to="/vydaje/vyrovnani" className="btn-secondary mb-3 w-full">
@@ -219,25 +232,28 @@ function ExpensesPage() {
             "Add the first expense and split it between members.",
           )}
           action={
-            <button onClick={openForm} className="btn-primary w-full">
+            <Button variant="fresh" size="fresh" onClick={openForm} className="btn-primary w-full">
               {t("Přidat výdaj", "Add expense")}
-            </button>
+            </Button>
           }
         />
       ) : (
-        <div className="space-y-2.5">
+        <div className="card px-4 py-1">
           {expenses.map((e) => (
-            <div key={e.id} className="card flex items-center gap-3 p-4">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-bold">
+            <div
+              key={e.id}
+              className="flex min-h-[60px] flex-wrap items-center gap-3 border-b border-divider py-3 last:border-0"
+            >
+              <div className="min-w-[160px] flex-1">
+                <p className="break-words text-[16px] font-semibold">
                   {e.description ?? expenseCategoryLabel(e.category, lang)}
                 </p>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[16px] text-muted-foreground">
                   {payerName(e.paid_by_member_id)} · {fmtDate(e.date ?? e.created_at)} ·{" "}
                   {expenseCategoryLabel(e.category, lang)}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="flex w-full flex-wrap items-center justify-between gap-2 text-right sm:w-auto sm:flex-col sm:items-end [&_.pill]:whitespace-normal">
                 <p className="text-[16px] font-bold">{fmtKc(Number(e.amount))}</p>
                 {splits &&
                   (() => {
@@ -264,7 +280,7 @@ function ExpensesPage() {
         <section className="card mt-4 space-y-3 p-4">
           <h3 className="text-lg font-bold">{t("Nový výdaj", "New expense")}</h3>
           <div>
-            <label htmlFor="exp-desc" className="mb-1 block text-[13px] font-bold">
+            <label htmlFor="exp-desc" className="label-text text-[16px]">
               {t("Popis", "Description")}
             </label>
             <input
@@ -277,7 +293,7 @@ function ExpensesPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="exp-amount" className="mb-1 block text-[13px] font-bold">
+              <label htmlFor="exp-amount" className="label-text text-[16px]">
                 {t("Částka (Kč)", "Amount (Kč)")}
               </label>
               <input
@@ -294,7 +310,7 @@ function ExpensesPage() {
               />
             </div>
             <div>
-              <label htmlFor="exp-cat" className="mb-1 block text-[13px] font-bold">
+              <label htmlFor="exp-cat" className="label-text text-[16px]">
                 {t("Kategorie", "Category")}
               </label>
               <select
@@ -312,9 +328,7 @@ function ExpensesPage() {
             </div>
           </div>
           <div>
-            <span className="mb-1 block text-[13px] font-bold">
-              {t("Způsob rozdělení", "Split method")}
-            </span>
+            <span className="label-text text-[16px]">{t("Způsob rozdělení", "Split method")}</span>
             <div className="grid grid-cols-3 gap-2">
               {(
                 [
@@ -323,39 +337,41 @@ function ExpensesPage() {
                   ["BY_BRANCH", t("Podle větví", "By branch")],
                 ] as const
               ).map(([method, label]) => (
-                <button
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   key={method}
                   aria-pressed={splitMethod === method}
                   onClick={() => chooseMethod(method)}
                   className={
                     splitMethod === method
-                      ? "btn-primary px-2 text-[13px]"
-                      : "btn-secondary px-2 text-[13px]"
+                      ? "btn-primary px-2 text-[16px]"
+                      : "btn-secondary px-2 text-[16px]"
                   }
                 >
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
           <div>
-            <span className="mb-1 block text-[13px] font-bold">
-              {t("Rozdělit mezi", "Split between")}
-            </span>
+            <span className="label-text text-[16px]">{t("Rozdělit mezi", "Split between")}</span>
             <div className="flex flex-wrap gap-2">
               {members.map((m) => (
-                <button
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   key={m.id}
                   aria-pressed={selected.includes(m.id)}
                   onClick={() => toggleMember(m.id)}
-                  className={`h-11 rounded-full px-4 text-[14px] font-bold ${
+                  className={`h-11 rounded-full px-4 text-[16px] font-bold ${
                     selected.includes(m.id)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card ring-1 ring-black/10"
+                      ? "bg-primary-soft text-primary shadow-[inset_0_0_0_1.5px_var(--primary)]"
+                      : "bg-card text-foreground ring-1 ring-input"
                   }`}
                 >
                   {chipName(m.name)}
-                </button>
+                </Button>
               ))}
             </div>
             {selected.length === 0 && (
@@ -363,7 +379,7 @@ function ExpensesPage() {
                 {t("Vyberte alespoň jednoho člověka.", "Pick at least one person.")}
               </p>
             )}
-            <p className="mt-1 text-[12px] text-muted-foreground">
+            <p className="mt-1 text-[16px] text-muted-foreground">
               {splitMethod === "EQUAL"
                 ? t(
                     "Částka se rozdělí rovným dílem mezi vybrané (včetně vás, pokud jste vybráni).",
@@ -384,7 +400,7 @@ function ExpensesPage() {
                 .map((member) => (
                   <label
                     key={member.id}
-                    className="flex items-center gap-3 text-[14px] font-semibold"
+                    className="flex items-center gap-3 text-[16px] font-semibold"
                   >
                     <span className="min-w-0 flex-1 truncate">{member.name}</span>
                     <input
@@ -403,8 +419,8 @@ function ExpensesPage() {
                   </label>
                 ))}
               <p
-                className={`rounded-2xl p-3 text-[14px] font-semibold ${
-                  customMismatch ? "bg-warn-soft text-warn" : "bg-ok-soft text-ok"
+                className={`rounded-2xl p-3 text-[16px] font-semibold ${
+                  customMismatch ? "bg-warn-soft text-warn-foreground" : "bg-ok-soft text-ok"
                 }`}
                 aria-live="polite"
               >
@@ -428,7 +444,7 @@ function ExpensesPage() {
             selectedMembers.length > 0 &&
             Number.isFinite(amountCzk) &&
             amountCzk > 0 && (
-              <ul className="space-y-1 text-[14px]">
+              <ul className="space-y-1 text-[16px]">
                 {selectedMembers.map((member, index) => (
                   <li key={member.id} className="flex justify-between">
                     <span className="truncate">
@@ -443,7 +459,9 @@ function ExpensesPage() {
               </ul>
             )}
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={save}
               disabled={
                 saving || !desc.trim() || !amount || selected.length === 0 || customMismatch
@@ -451,17 +469,27 @@ function ExpensesPage() {
               className="btn-primary flex-1 disabled:opacity-40"
             >
               {saving ? t("Ukládám…", "Saving…") : t("Přidat výdaj", "Add expense")}
-            </button>
-            <button onClick={() => setShowForm(false)} className="btn-secondary">
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              onClick={() => setShowForm(false)}
+              className="btn-secondary"
+            >
               {t("Zrušit", "Cancel")}
-            </button>
+            </Button>
           </div>
         </section>
       ) : (
         !isEmpty && (
-          <button onClick={openForm} className="btn-primary mt-4 w-full">
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={openForm}
+            className="btn-primary mt-4 w-full"
+          >
             <Plus className="size-5" /> {t("Přidat výdaj", "Add expense")}
-          </button>
+          </Button>
         )
       )}
     </AppShell>

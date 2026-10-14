@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
@@ -269,13 +270,15 @@ function DocumentsPage() {
         back="/vice"
         action={
           isAdmin ? (
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={() => setAdding(true)}
-              className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground"
+              className="grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"
               aria-label={t("Přidat dokument", "Add document")}
             >
               <Plus className="size-5" />
-            </button>
+            </Button>
           ) : null
         }
       />
@@ -322,12 +325,12 @@ function DocumentsPage() {
             return (
               <article key={document.id} className="card p-4">
                 <div className="flex items-start gap-3">
-                  <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary">
+                  <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary">
                     <FileText className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-bold">{document.title}</h2>
-                    <p className="text-[13px] text-muted-foreground">
+                    <p className="text-[16px] text-muted-foreground">
                       {categoryLabel(document.category)}
                     </p>
                   </div>
@@ -345,14 +348,14 @@ function DocumentsPage() {
                     </PillNeutral>
                   )}
                 </div>
-                {document.notes && <p className="mt-2 text-[14px]">{document.notes}</p>}
+                {document.notes && <p className="mt-2 text-[16px]">{document.notes}</p>}
                 {document.expiry_date && (
-                  <p className="mt-2 text-[13px] font-semibold text-muted-foreground">
+                  <p className="mt-2 text-[16px] font-semibold text-muted-foreground">
                     {t("Platnost do", "Expires")} {fmtDate(document.expiry_date)}
                   </p>
                 )}
                 {document.file_url && (
-                  <p className="mt-2 flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                  <p className="mt-2 flex items-center gap-2 text-[16px] font-semibold text-muted-foreground">
                     {reading === document.id ? (
                       <>
                         <Loader2 className="size-4 animate-spin" />
@@ -363,7 +366,7 @@ function DocumentsPage() {
                         {t("Připraveno pro otázky", "Ready for questions")}
                       </span>
                     ) : document.text_status === "failed" ? (
-                      <span className="text-warn">
+                      <span className="text-warn-foreground">
                         {t("Text se nepodařilo přečíst", "Couldn't read the text")}
                         {document.text_error ? ` (${document.text_error})` : ""}
                       </span>
@@ -371,29 +374,35 @@ function DocumentsPage() {
                       t("Zatím nepřečteno", "Not read yet")
                     )}
                     {isAdmin && document.text_status !== "ready" && reading !== document.id && (
-                      <button
+                      <Button
+                        variant="fresh"
+                        size="fresh"
                         onClick={() => readText.mutate(document.id)}
                         disabled={readText.isPending}
                         className="inline-flex min-h-11 items-center gap-1 font-bold text-primary"
                       >
                         <RefreshCw className="size-4" />
                         {t("Přečíst", "Read now")}
-                      </button>
+                      </Button>
                     )}
                   </p>
                 )}
                 <div className="mt-3 flex gap-2">
                   {document.file_url && (
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       onClick={() => openFile(document.file_url)}
                       className="btn-secondary flex-1"
                     >
                       <Download className="size-4" />
                       {t("Otevřít", "Open")}
-                    </button>
+                    </Button>
                   )}
                   {isAdmin && (
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       onClick={() =>
                         setDeleting({
                           id: document.id,
@@ -405,7 +414,7 @@ function DocumentsPage() {
                       aria-label={t("Smazat", "Delete")}
                     >
                       <Trash2 className="size-5" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </article>
@@ -420,7 +429,7 @@ function DocumentsPage() {
               e.preventDefault();
               save.mutate();
             }}
-            className="card max-h-[90vh] w-full max-w-[400px] space-y-3 overflow-auto p-4"
+            className="w-full max-w-[400px] max-h-[90vh] space-y-3 overflow-auto rounded-[28px] bg-card p-5 shadow-2xl"
           >
             <h2 className="text-xl font-bold">
               {linkedTaskId
@@ -451,7 +460,7 @@ function DocumentsPage() {
               className="field"
               placeholder={t("Poznámky", "Notes")}
             />
-            <label className="block text-[13px] font-bold">
+            <label className="label-text text-[16px]">
               {t("Datum vystavení", "Issue date")}
               <input
                 type="date"
@@ -460,7 +469,7 @@ function DocumentsPage() {
                 className="field mt-1"
               />
             </label>
-            <label className="block text-[13px] font-bold">
+            <label className="label-text text-[16px]">
               {t("Platnost do", "Expiry date")}
               <input
                 type="date"
@@ -483,19 +492,30 @@ function DocumentsPage() {
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="field"
             />
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {t(
                 "Text souboru (PDF, Word, fotka, text) se přečte, aby na něj šlo odpovídat v otázkách. Dokumenty jen pro správce vidí v odpovědích jen správci.",
                 "The file's text (PDF, Word, photo, text) is read so questions can be answered from it. Admin-only documents appear in answers for admins only.",
               )}
             </p>
             <div className="flex gap-2">
-              <button className="btn-primary flex-1" disabled={save.isPending}>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-primary flex-1"
+                disabled={save.isPending}
+              >
                 {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
-              </button>
-              <button type="button" onClick={() => setAdding(false)} className="btn-secondary">
+              </Button>
+              <Button
+                variant="fresh"
+                size="fresh"
+                type="button"
+                onClick={() => setAdding(false)}
+                className="btn-secondary"
+              >
                 {t("Zrušit", "Cancel")}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

@@ -14,7 +14,18 @@ import {
 export const Route = createFileRoute("/pozvanka/$token")({
   staticData: { sitemap: false },
   head: () => ({
-    meta: [{ title: "Invitation — My Chata" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Invitation — My Chata" },
+      { name: "description", content: "Join your shared cottage with a My Chata invitation." },
+      { property: "og:title", content: "Invitation — My Chata" },
+      {
+        property: "og:description",
+        content: "Join your shared cottage with a My Chata invitation.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: InvitePage,
 });

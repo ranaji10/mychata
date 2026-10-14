@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, HandCoins } from "lucide-react";
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/vydaje/vyrovnani")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Settlement — My Chata" },
       {
         name: "description",
@@ -90,14 +93,18 @@ function SettlementPage() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => navigate({ to: "/vydaje" })}
           aria-label={t("Zpět", "Back")}
-          className="grid size-11 place-items-center rounded-xl bg-secondary"
+          className="grid size-11 place-items-center rounded-full bg-secondary"
         >
           <ArrowLeft className="size-5" />
-        </button>
-        <h1 className="text-2xl font-bold">{t("Vyrovnat dluhy", "Settle debts")}</h1>
+        </Button>
+        <h1 className="text-[28px] font-extrabold leading-[1.15]">
+          {t("Vyrovnat dluhy", "Settle debts")}
+        </h1>
       </div>
 
       {isLoading ? (
@@ -111,22 +118,24 @@ function SettlementPage() {
       ) : (
         <div className="mt-4 space-y-3">
           {suggestions.map((s) => (
-            <div key={`${s.from}-${s.to}`} className="card p-4">
+            <div key={`${s.from}-${s.to}`} className="rounded-[20px] bg-card p-[14px] shadow-chip">
               <div className="flex items-center gap-3">
                 <Avatar name={name(s.from)} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-bold">
+                  <p className="text-[16px] font-bold">
                     {name(s.from)} → {name(s.to)}
                   </p>
-                  <p className="text-[13px] text-muted-foreground">{t("dluží", "owes")}</p>
+                  <p className="text-[16px] text-muted-foreground">{t("dluží", "owes")}</p>
                 </div>
                 <p className="text-xl font-bold">{fmtKc(s.amount)}</p>
               </div>
               {currentMember?.id === s.to || isAdmin ? (
-                <button
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   onClick={() => settle(s.from, s.to)}
                   disabled={settling === `${s.from}->${s.to}`}
-                  className="btn-primary mt-3 w-full disabled:opacity-40"
+                  className="btn-dark mt-3 w-full disabled:opacity-40"
                 >
                   {settling === `${s.from}->${s.to}`
                     ? t("Ukládám…", "Saving…")
@@ -136,9 +145,9 @@ function SettlementPage() {
                           `Potvrdit za ${name(s.to)} (správce)`,
                           `Confirm for ${name(s.to)} (admin)`,
                         )}
-                </button>
+                </Button>
               ) : (
-                <p className="mt-3 rounded-2xl bg-secondary p-3 text-[14px] font-semibold text-muted-foreground">
+                <p className="mt-3 rounded-2xl bg-secondary p-3 text-[16px] font-semibold text-muted-foreground">
                   {currentMember?.id === s.from
                     ? t(
                         `Pošlete ${fmtKc(s.amount)} osobě ${name(s.to)}. Jakmile platbu potvrdí, dluh zmizí.`,

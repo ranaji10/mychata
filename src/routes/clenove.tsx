@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -256,7 +257,7 @@ function MembersPage() {
             {t("Pozvat nového člena", "Invite a new member")}
           </h2>
           <label className="block">
-            <span className="text-[14px] font-bold">
+            <span className="text-[16px] font-bold">
               {t("E-maily (jeden nebo více)", "Emails (one or more)")}
             </span>
             <textarea
@@ -268,7 +269,7 @@ function MembersPage() {
             />
           </label>
           {parsed.invalid.length > 0 && (
-            <p className="text-[14px] font-semibold text-warn">
+            <p className="text-[16px] font-semibold text-warn-foreground">
               {t(
                 `Zkontrolujte: ${parsed.invalid.join(", ")}`,
                 `Please check: ${parsed.invalid.join(", ")}`,
@@ -276,20 +277,26 @@ function MembersPage() {
             </p>
           )}
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${inviteRole === "MEMBER" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setInviteRole("MEMBER")}
             >
               {t("Člen", "Member")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
               className={`btn-secondary ${inviteRole === "ADMIN" ? "ring-2 ring-primary" : ""}`}
               onClick={() => setInviteRole("ADMIN")}
             >
               {t("Správce", "Admin")}
-            </button>
+            </Button>
           </div>
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             className="btn-primary w-full"
             disabled={parsed.valid.length === 0 || parsed.invalid.length > 0 || invite.isPending}
             onClick={() => invite.mutate()}
@@ -300,8 +307,8 @@ function MembersPage() {
                   `Create ${parsed.valid.length} invitations`,
                 )
               : t("Vytvořit pozvánku", "Create invitation")}
-          </button>
-          <p className="text-[13px] text-muted-foreground">
+          </Button>
+          <p className="text-[16px] text-muted-foreground">
             {t(
               "Každý dostane vlastní odkaz, platný 7 dní, jen pro svůj e-mail. Roli můžete změnit i později.",
               "Everyone gets their own link, valid 7 days, for their email only. You can change the role later.",
@@ -309,16 +316,18 @@ function MembersPage() {
           </p>
           {!!invites?.length && (
             <div className="space-y-2">
-              <p className="text-[14px] font-bold text-muted-foreground">
+              <p className="text-[16px] font-bold text-muted-foreground">
                 {t("Čekající pozvánky", "Pending invitations")}
               </p>
               {invites.map((inv) => (
                 <div key={inv.id} className="space-y-2 rounded-2xl bg-secondary p-3">
                   <div className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+                    <span className="min-w-0 flex-1 truncate text-[16px] font-semibold">
                       {inv.email ?? t("kdokoli s odkazem", "anyone with the link")}
                     </span>
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className="pill min-h-11 bg-card px-3 text-muted-foreground"
                       aria-label={t("Změnit roli", "Change role")}
                       onClick={() =>
@@ -329,7 +338,7 @@ function MembersPage() {
                       }
                     >
                       {isAdminRole(inv.role) ? t("Správce", "Admin") : t("Člen", "Member")} ⇄
-                    </button>
+                    </Button>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {inv.email && (
@@ -339,33 +348,39 @@ function MembersPage() {
                         aria-label={t("Poslat e-mailem", "Send by email")}
                       >
                         <Mail className="size-5" />
-                        <span className="text-[12px] font-bold">{t("E-mail", "Email")}</span>
+                        <span className="text-[16px] font-bold">{t("E-mail", "Email")}</span>
                       </a>
                     )}
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                       aria-label={t("Sdílet", "Share")}
                       onClick={() => shareInvite(inv)}
                     >
                       <Share2 className="size-5" />
-                      <span className="text-[12px] font-bold">{t("Sdílet", "Share")}</span>
-                    </button>
-                    <button
+                      <span className="text-[16px] font-bold">{t("Sdílet", "Share")}</span>
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
                       aria-label={t("Zkopírovat odkaz", "Copy link")}
                       onClick={() => copyInvite(inv.token)}
                     >
                       <Copy className="size-5" />
-                      <span className="text-[12px] font-bold">{t("Kopírovat", "Copy")}</span>
-                    </button>
-                    <button
+                      <span className="text-[16px] font-bold">{t("Kopírovat", "Copy")}</span>
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1 text-muted-foreground"
                       aria-label={t("Zrušit pozvánku", "Cancel invitation")}
                       onClick={() => setCancelling(inv)}
                     >
                       <X className="size-5" />
-                      <span className="text-[12px] font-bold">{t("Zrušit", "Cancel")}</span>
-                    </button>
+                      <span className="text-[16px] font-bold">{t("Zrušit", "Cancel")}</span>
+                    </Button>
                   </div>
                   <ManualCopyLink url={manualLink?.token === inv.token ? manualLink.url : null} />
                 </div>
@@ -388,7 +403,7 @@ function MembersPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold">{m.name}</p>
-                <p className="truncate text-[14px] text-muted-foreground">{m.email}</p>
+                <p className="truncate text-[16px] text-muted-foreground">{m.email}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {mIsAdmin && (
                     <span className="pill bg-primary-soft text-primary">
@@ -402,15 +417,17 @@ function MembersPage() {
                     </span>
                   )}
                   {!m.user_id && (
-                    <span className="pill bg-warn-soft text-warn">
+                    <span className="pill bg-warn-soft text-warn-foreground">
                       {t("Zatím nepřihlášen", "Not signed in yet")}
                     </span>
                   )}
                 </div>
               </div>
               {isAdmin && m.id !== currentMember?.id && m.user_id && (
-                <button
-                  className="flex min-h-11 max-w-[8.5rem] shrink-0 items-center gap-1.5 rounded-xl bg-secondary px-3 py-1.5 text-left text-[13px] font-bold leading-tight disabled:opacity-50"
+                <Button
+                  variant="fresh"
+                  size="fresh"
+                  className="flex min-h-11 max-w-[8.5rem] shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-left text-[16px] font-bold leading-tight disabled:opacity-50"
                   disabled={toggleRole.isPending}
                   aria-busy={changing}
                   onClick={() => toggleRole.mutate({ memberId: m.id, makeAdmin: !mIsAdmin })}
@@ -425,7 +442,7 @@ function MembersPage() {
                   {mIsAdmin
                     ? t("Odebrat správce", "Remove admin")
                     : t("Udělat správcem", "Make admin")}
-                </button>
+                </Button>
               )}
             </div>
           );

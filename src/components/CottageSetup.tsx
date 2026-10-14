@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList } from "lucide-react";
@@ -75,11 +76,11 @@ export function CottageSetup() {
 
   return (
     <section className="card mt-4 p-4">
-      <h2 className="flex items-center gap-2 text-[15px] font-bold">
+      <h2 className="flex items-center gap-2 text-[16px] font-bold">
         <ClipboardList className="size-5 text-primary" />
         {t("Doplňte údaje o chatě", "Finish setting up your cottage")}
       </h2>
-      <p className="mt-1 text-[13px] text-muted-foreground">
+      <p className="mt-1 text-[16px] text-muted-foreground">
         {t(
           "Tyto otázky zůstaly při zakládání bez odpovědi.",
           "These questions were left unanswered during setup.",
@@ -161,7 +162,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
   return (
     <div className="rounded-2xl bg-secondary p-3">
       <p className="font-bold">{property.name}</p>
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-[16px] text-muted-foreground">
         {t("Chybí: ", "Missing: ")}
         {missing.map((m) => label[m]).join(", ")}
       </p>
@@ -169,15 +170,20 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
         <Link
           to="/fotky"
           onClick={() => active?.id !== property.id && setActivePropertyId(property.id)}
-          className="mt-2 inline-flex min-h-11 items-center text-[14px] font-bold text-primary"
+          className="mt-2 inline-flex min-h-11 items-center text-[16px] font-bold text-primary"
         >
           {t("Přidat fotky chaty", "Add cottage photos")}
         </Link>
       )}
       {formFields.length > 0 && !open && (
-        <button className="btn-secondary mt-2 w-full bg-card" onClick={() => setOpen(true)}>
+        <Button
+          variant="fresh"
+          size="fresh"
+          className="btn-secondary mt-2 w-full bg-card"
+          onClick={() => setOpen(true)}
+        >
           {t("Doplnit", "Fill in")}
-        </button>
+        </Button>
       )}
       {open && (
         <div className="mt-3 space-y-2">
@@ -209,10 +215,12 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
           )}
           {missing.includes("seasons") && (
             <div>
-              <p className="text-[14px] font-bold">{t("Rušná období", "Busy seasons")}</p>
+              <p className="text-[16px] font-bold">{t("Rušná období", "Busy seasons")}</p>
               <div className="mt-1 flex flex-wrap gap-2">
                 {SEASONS.map((s) => (
-                  <button
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     key={s.id}
                     type="button"
                     onClick={() =>
@@ -227,7 +235,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                     }`}
                   >
                     {lang === "cs" ? s.cs : s.en}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -257,16 +265,23 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
             />
           )}
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className="btn-primary flex-1"
               disabled={save.isPending}
               onClick={() => save.mutate()}
             >
               {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
-            </button>
-            <button className="btn-secondary bg-card" onClick={() => setOpen(false)}>
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-secondary bg-card"
+              onClick={() => setOpen(false)}
+            >
               {t("Zrušit", "Cancel")}
-            </button>
+            </Button>
           </div>
         </div>
       )}

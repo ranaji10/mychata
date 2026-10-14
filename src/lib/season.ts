@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
 import { useLang } from "@/lib/i18n";
-import spring from "@/assets/seasons/chata-spring.webp.asset.json";
-import summer from "@/assets/seasons/chata-summer.webp.asset.json";
-import autumn from "@/assets/seasons/chata-autumn.webp.asset.json";
-import winter from "@/assets/seasons/chata-winter.webp.asset.json";
+import spring from "@/assets/seasons/chata-spring.webp";
+import summer from "@/assets/seasons/chata-summer.webp";
+import autumn from "@/assets/seasons/chata-autumn.webp";
+import winter from "@/assets/seasons/chata-winter.webp";
 
 export function seasonFor(date = new Date()): "spring" | "summer" | "autumn" | "winter" {
   const month = Number(
@@ -19,11 +18,7 @@ export function seasonFor(date = new Date()): "spring" | "summer" | "autumn" | "
 }
 export function useDefaultChataPhoto() {
   const { t } = useLang();
-  const [season, setSeason] = useState(seasonFor);
-  useEffect(() => {
-    const timer = window.setInterval(() => setSeason(seasonFor()), 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
+  const season = seasonFor();
   const photos = { spring, summer, autumn, winter };
   const alt = {
     spring: t("Chata na jaře", "The chata in spring"),
@@ -31,5 +26,5 @@ export function useDefaultChataPhoto() {
     autumn: t("Chata na podzim", "The chata in autumn"),
     winter: t("Chata v zimě", "The chata in winter"),
   };
-  return { src: photos[season].url, alt: alt[season] };
+  return { src: photos[season], alt: alt[season] };
 }

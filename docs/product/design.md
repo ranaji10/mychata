@@ -23,10 +23,10 @@ Users are mostly 45–68, mostly on phones, some on tablets and computers. Plain
 
 There is one design. It comes in two colour schemes and **nothing else differs**: same layout, type, spacing, radii, components, copy and icons.
 
-| Brand                       | Who sees it                                    | Primary   |
-| --------------------------- | ---------------------------------------------- | --------- |
-| `family` (default, green)   | Everyone, unless the institution rule applies  | `#1F7A4D` |
-| `institution` (blue)        | See the rule below                             | `#1D5FA6` |
+| Brand                     | Who sees it                                   | Primary   |
+| ------------------------- | --------------------------------------------- | --------- |
+| `family` (default, green) | Everyone, unless the institution rule applies | `#1F7A4D` |
+| `institution` (blue)      | See the rule below                            | `#1D5FA6` |
 
 **Institution rule.** A screen uses the blue `institution` brand when any of these is true:
 
@@ -46,47 +46,47 @@ All colours are CSS variables in `src/styles.css`, exposed to Tailwind through `
 
 ### Brand-dependent tokens
 
-| Token                    | Family (green) | Institution (blue) | Used for                                                     |
-| ------------------------ | -------------- | ------------------ | ------------------------------------------------------------ |
-| `--background`           | `#F5F8F5`      | `#F5F7FA`          | Page background                                              |
-| `--background-top`       | `#E2EFE5`      | `#E2EBF5`          | Top of the page gradient (new token)                         |
-| `--foreground`           | `#14201A`      | `#141B24`          | Main text, dark pill buttons, selected segment               |
-| `--primary`              | `#1F7A4D`      | `#1D5FA6`          | Primary buttons, links, active tab, confirmed stays, ticks    |
-| `--primary-hover`        | `#155C39`      | `#164A82`          | Hover/pressed primary and link hover (new token)             |
-| `--primary-foreground`   | `#FFFFFF`      | `#FFFFFF`          | Text on primary                                              |
-| `--primary-soft`         | `#E7F3EA`      | `#E6EEF8`          | Tinted chips, date badges, active tab icon fill, ok pill bg  |
-| `--primary-muted`        | `#D5E6DA`      | `#D4E1F0`          | Inactive bars in mini charts (new token)                     |
-| `--secondary` / `--muted` / `--accent` | `#F0F4F1` | `#EEF2F7`  | Round icon buttons, quiet surfaces                           |
-| `--secondary-foreground` | `#14201A`      | `#141B24`          |                                                              |
-| `--muted-foreground`     | `#4E5F55`      | `#4B5A69`          | Secondary text, captions, labels                             |
-| `--nav-foreground`       | `#5B6B62`      | `#5A6877`          | Inactive tab-bar items (new token)                           |
-| `--sidebar-foreground`   | `#3F4F46`      | `#3E4B59`          | Inactive desktop sidebar items (new token)                   |
-| `--subtle`               | `#6B7A71`      | `#6B7785`          | Done/struck-through tasks, past days (new token)             |
-| `--faint`                | `#A3B0A8`      | `#A3ADB8`          | Days outside the month (new token)                           |
-| `--control-border`       | `#8A9890`      | `#8896A5`          | Empty checkbox circle (new token)                            |
-| `--border`               | `#E6ECE7`      | `#E4E9EF`          | Tab bar top border, outlines                                 |
-| `--divider`              | `#EEF2EF`      | `#EDF1F5`          | Row dividers inside cards (new token)                        |
-| `--input`                | `#D3DDD6`      | `#D2DAE3`          | Field borders, secondary-button outline                      |
-| `--track`                | `#E3ECE5`      | `#E1E8F0`          | Progress-bar track (new token)                               |
-| `--ring`                 | = primary      | = primary          | Focus outline                                                |
-| `--shadow-rgb`           | `20 32 26`     | `20 27 36`         | Shadow colour, used as `rgb(var(--shadow-rgb) / a)` (new)    |
+| Token                                  | Family (green) | Institution (blue) | Used for                                                    |
+| -------------------------------------- | -------------- | ------------------ | ----------------------------------------------------------- |
+| `--background`                         | `#F5F8F5`      | `#F5F7FA`          | Page background                                             |
+| `--background-top`                     | `#E2EFE5`      | `#E2EBF5`          | Top of the page gradient (new token)                        |
+| `--foreground`                         | `#14201A`      | `#141B24`          | Main text, dark pill buttons, selected segment              |
+| `--primary`                            | `#1F7A4D`      | `#1D5FA6`          | Primary buttons, links, active tab, confirmed stays, ticks  |
+| `--primary-hover`                      | `#155C39`      | `#164A82`          | Hover/pressed primary and link hover (new token)            |
+| `--primary-foreground`                 | `#FFFFFF`      | `#FFFFFF`          | Text on primary                                             |
+| `--primary-soft`                       | `#E7F3EA`      | `#E6EEF8`          | Tinted chips, date badges, active tab icon fill, ok pill bg |
+| `--primary-muted`                      | `#D5E6DA`      | `#D4E1F0`          | Inactive bars in mini charts (new token)                    |
+| `--secondary` / `--muted` / `--accent` | `#F0F4F1`      | `#EEF2F7`          | Round icon buttons, quiet surfaces                          |
+| `--secondary-foreground`               | `#14201A`      | `#141B24`          |                                                             |
+| `--muted-foreground`                   | `#4E5F55`      | `#4B5A69`          | Secondary text, captions, labels                            |
+| `--nav-foreground`                     | `#5B6B62`      | `#5A6877`          | Inactive tab-bar items (new token)                          |
+| `--sidebar-foreground`                 | `#3F4F46`      | `#3E4B59`          | Inactive desktop sidebar items (new token)                  |
+| `--subtle`                             | `#6B7A71`      | `#6B7785`          | Done/struck-through tasks, past days (new token)            |
+| `--faint`                              | `#A3B0A8`      | `#A3ADB8`          | Days outside the month (new token)                          |
+| `--control-border`                     | `#8A9890`      | `#8896A5`          | Empty checkbox circle (new token)                           |
+| `--border`                             | `#E6ECE7`      | `#E4E9EF`          | Tab bar top border, outlines                                |
+| `--divider`                            | `#EEF2EF`      | `#EDF1F5`          | Row dividers inside cards (new token)                       |
+| `--input`                              | `#D3DDD6`      | `#D2DAE3`          | Field borders, secondary-button outline                     |
+| `--track`                              | `#E3ECE5`      | `#E1E8F0`          | Progress-bar track (new token)                              |
+| `--ring`                               | = primary      | = primary          | Focus outline                                               |
+| `--shadow-rgb`                         | `20 32 26`     | `20 27 36`         | Shadow colour, used as `rgb(var(--shadow-rgb) / a)` (new)   |
 
 ### Shared tokens (identical in both brands)
 
-| Token                   | Value     | Used for                                        |
-| ----------------------- | --------- | ----------------------------------------------- |
-| `--card`, `--popover`   | `#FFFFFF` | Cards, sheets, dialogs                          |
-| `--warn`                | `#E39A2D` | Progress fill for money owed, warn dots         |
-| `--warn-soft`           | `#FDF0DD` | Pending stays, pending badge background         |
-| `--warn-foreground`     | `#8A4F00` | Text on `--warn-soft`                           |
-| `--warn-border`         | `#C77700` | Pending legend swatch outline                   |
-| `--destructive`         | `#B3261E` | Overdue text, delete actions, errors            |
-| `--destructive-soft`    | `#FCECEA` | Danger button and danger pill background (new)  |
-| `--alert-dot`           | `#D9483B` | Small unread/attention dot                      |
-| `--ok`                  | `#1F7A4D` | Success text (stays green in both brands)       |
-| `--ok-soft`             | `#E7F3EA` | Success background                              |
-| `--cat-tasks`           | `#2563A6` | Task icon in quick actions (new)                |
-| `--cat-expenses`        | `#9A5B00` | Expense icon in quick actions (new)             |
+| Token                 | Value     | Used for                                       |
+| --------------------- | --------- | ---------------------------------------------- |
+| `--card`, `--popover` | `#FFFFFF` | Cards, sheets, dialogs                         |
+| `--warn`              | `#E39A2D` | Progress fill for money owed, warn dots        |
+| `--warn-soft`         | `#FDF0DD` | Pending stays, pending badge background        |
+| `--warn-foreground`   | `#8A4F00` | Text on `--warn-soft`                          |
+| `--warn-border`       | `#C77700` | Pending legend swatch outline                  |
+| `--destructive`       | `#B3261E` | Overdue text, delete actions, errors           |
+| `--destructive-soft`  | `#FCECEA` | Danger button and danger pill background (new) |
+| `--alert-dot`         | `#D9483B` | Small unread/attention dot                     |
+| `--ok`                | `#1F7A4D` | Success text (stays green in both brands)      |
+| `--ok-soft`           | `#E7F3EA` | Success background                             |
+| `--cat-tasks`         | `#2563A6` | Task icon in quick actions (new)               |
+| `--cat-expenses`      | `#9A5B00` | Expense icon in quick actions (new)            |
 
 `BRANCH_COLORS` in `src/lib/data.ts` becomes `["#1F7A4D", "#2E6FB0", "#0F766E", "#B45309", "#7C5CBF"]` (coral removed). `public/manifest.webmanifest`: `theme_color` `#1F7A4D`, `background_color` `#F5F8F5`.
 
@@ -97,19 +97,19 @@ All other inner pages (Calendar, Tasks, Expenses, Settings…): flat `var(--back
 
 ## 3. Type
 
-| Role                   | Size / line-height | Weight | Notes                                     |
-| ---------------------- | ------------------ | ------ | ----------------------------------------- |
-| Font                   | **Plus Jakarta Sans** 400–800 (Google Fonts), `system-ui, sans-serif` fallback. Replaces Manrope in `src/styles.css` and the font link in `src/routes/__root.tsx` | | |
-| Hero headline (phone)  | 31–32px / 1.12     | 800    | letter-spacing −0.02em; sign-in and Home  |
-| Hero headline (desktop)| 40px / 1.1         | 800    | letter-spacing −0.02em                    |
-| Page title             | 28px / 1.15        | 800    | letter-spacing −0.02em (Calendar, Tasks…) |
-| Section heading        | 18px (19px desktop)| 700    |                                           |
-| Card value / big number| 20px (24px desktop)| 800    |                                           |
-| Brand wordmark         | 18px (19px desktop)| 800    | "My Chata"                                |
-| Body / list title      | 16px / 1.5         | 600 titles, 400–500 body |                         |
-| Secondary / caption    | 14–15px            | 500–600| `--muted-foreground`                      |
-| Card label             | 14px               | 600    | `--muted-foreground`                      |
-| Tab label, pill, legend| 12–13px            | 600–700|                                           |
+| Role                    | Size / line-height                                                                                                                                                | Weight                   | Notes                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------- |
+| Font                    | **Plus Jakarta Sans** 400–800 (Google Fonts), `system-ui, sans-serif` fallback. Replaces Manrope in `src/styles.css` and the font link in `src/routes/__root.tsx` |                          |                                           |
+| Hero headline (phone)   | 31–32px / 1.12                                                                                                                                                    | 800                      | letter-spacing −0.02em; sign-in and Home  |
+| Hero headline (desktop) | 40px / 1.1                                                                                                                                                        | 800                      | letter-spacing −0.02em                    |
+| Page title              | 28px / 1.15                                                                                                                                                       | 800                      | letter-spacing −0.02em (Calendar, Tasks…) |
+| Section heading         | 18px (19px desktop)                                                                                                                                               | 700                      |                                           |
+| Card value / big number | 20px (24px desktop)                                                                                                                                               | 800                      |                                           |
+| Brand wordmark          | 18px (19px desktop)                                                                                                                                               | 800                      | "My Chata"                                |
+| Body / list title       | 16px / 1.5                                                                                                                                                        | 600 titles, 400–500 body |                                           |
+| Secondary / caption     | 14–15px                                                                                                                                                           | 500–600                  | `--muted-foreground`                      |
+| Card label              | 14px                                                                                                                                                              | 600                      | `--muted-foreground`                      |
+| Tab label, pill, legend | 12–13px                                                                                                                                                           | 600–700                  |                                           |
 
 ## 4. Shape, spacing, depth
 
@@ -132,6 +132,7 @@ All other inner pages (Calendar, Tasks, Expenses, Settings…): flat `var(--back
 Keep the existing utility names in `src/styles.css` so pages need few class changes; only their values change.
 
 **Buttons**
+
 - `btn-primary`: pill, `--primary` background, white 700 text, hover/active `--primary-hover`, no shadow. Heights: large 56px (17px text) for the main action on sign-in/onboarding/forms; default 52px (16px); compact 44px (15px) for page-header actions like "+ Pobyt". Icon 18–20px, gap 8–10px.
 - `btn-secondary`: pill, white background, `inset 0 0 0 1.5px var(--input)`, `--foreground` text, 700.
 - `btn-dark` (new): pill, `--foreground` background, white text, 700. For a decisive inline action such as "Schválit".
@@ -176,12 +177,12 @@ Phone: 2 columns. Desktop: `repeat(auto-fit, minmax(200px, 1fr))`.
 
 Whenever a cottage has no main photo (`usePrimaryPhotoUrl` returns null), and on every screen that shows a stock cottage picture, show the picture for the **current season**:
 
-| Season | Months (Prague time) | File                                  |
-| ------ | -------------------- | ------------------------------------- |
-| Spring | March – May          | `src/assets/seasons/chata-spring.webp`|
-| Summer | June – August        | `src/assets/seasons/chata-summer.webp`|
-| Autumn | September – November | `src/assets/seasons/chata-autumn.webp`|
-| Winter | December – February  | `src/assets/seasons/chata-winter.webp`|
+| Season | Months (Prague time) | File                                   |
+| ------ | -------------------- | -------------------------------------- |
+| Spring | March – May          | `src/assets/seasons/chata-spring.webp` |
+| Summer | June – August        | `src/assets/seasons/chata-summer.webp` |
+| Autumn | September – November | `src/assets/seasons/chata-autumn.webp` |
+| Winter | December – February  | `src/assets/seasons/chata-winter.webp` |
 
 - Seasons are meteorological (whole months), decided by the date in `Europe/Prague`, so the picture changes automatically on 1 March, 1 June, 1 September and 1 December.
 - Code: `src/lib/season.ts` exports `seasonFor(date = new Date()): "spring" | "summer" | "autumn" | "winter"` (month from `Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Prague", month: "numeric" })`), and `useDefaultChataPhoto()` returning `{ src, alt }`. Alt text: "Chata na jaře" / "The chata in spring", "Chata v létě" / "…in summer", "Chata na podzim" / "…in autumn", "Chata v zimě" / "…in winter".

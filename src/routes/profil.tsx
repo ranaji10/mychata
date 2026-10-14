@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,7 +14,15 @@ import { useLang } from "@/lib/i18n";
 export const Route = createFileRoute("/profil")({
   staticData: { sitemap: false },
   head: () => ({
-    meta: [{ title: "My profile — My Chata" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "My profile — My Chata" },
+      { name: "robots", content: "noindex" },
+      { name: "description", content: "Your My Chata profile and contact details." },
+      { property: "og:title", content: "My profile — My Chata" },
+      { property: "og:description", content: "Your My Chata profile and contact details." },
+    ],
   }),
   component: ProfilePage,
 });
@@ -120,7 +129,7 @@ function ProfilePage() {
         )}
         <div>
           <p className="text-lg font-bold">{name || t("Bez jména", "No name")}</p>
-          <p className="text-[14px] text-muted-foreground">
+          <p className="text-[16px] text-muted-foreground">
             {currentMember?.role === "ADMIN" || currentMember?.role === "OWNER"
               ? t("Správce", "Admin")
               : t("Člen", "Member")}
@@ -129,7 +138,7 @@ function ProfilePage() {
       </div>
       <div className="card mt-4 space-y-3 p-4">
         <label className="block">
-          <span className="text-[14px] font-bold">{t("Zobrazované jméno", "Display name")}</span>
+          <span className="text-[16px] font-bold">{t("Zobrazované jméno", "Display name")}</span>
           <input
             className="field mt-1 w-full"
             value={name}
@@ -137,7 +146,7 @@ function ProfilePage() {
           />
         </label>
         <label className="block">
-          <span className="text-[14px] font-bold">{t("Telefon", "Phone")}</span>
+          <span className="text-[16px] font-bold">{t("Telefon", "Phone")}</span>
           <input
             className="field mt-1 w-full"
             type="tel"
@@ -149,17 +158,23 @@ function ProfilePage() {
             aria-invalid={!normalizePhone(phone)}
           />
           {!normalizePhone(phone) && (
-            <span className="mt-1 block text-[14px] font-semibold text-warn">
+            <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
               {t("Zadejte číslo jako +420 777 123 456.", "Enter the number as +420 777 123 456.")}
             </span>
           )}
         </label>
-        <button className="btn-primary w-full" disabled={busy} onClick={save}>
+        <Button
+          variant="fresh"
+          size="fresh"
+          className="btn-primary w-full"
+          disabled={busy}
+          onClick={save}
+        >
           {busy ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
-        </button>
+        </Button>
       </div>
       {(!profile?.phone || !profile?.display_name) && (
-        <p className="mt-3 rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+        <p className="mt-3 rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
           {!profile?.display_name && !profile?.phone
             ? t("Doplňte své jméno a telefon.", "Please add your name and phone number.")
             : !profile?.phone
@@ -173,8 +188,8 @@ function ProfilePage() {
       <CottageSetup />
       {accounts.length > 1 && (
         <section className="card mt-4 p-4">
-          <h2 className="text-[15px] font-bold">{t("Moje účty", "My accounts")}</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <h2 className="text-[16px] font-bold">{t("Moje účty", "My accounts")}</h2>
+          <p className="mt-1 text-[16px] text-muted-foreground">
             {t(
               "Jste členem více účtů. Vyberte, se kterým chcete pracovat.",
               "You belong to several accounts. Choose which one to work in.",
@@ -182,7 +197,9 @@ function ProfilePage() {
           </p>
           <div className="mt-3 space-y-2">
             {accounts.map((a) => (
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 key={a.id}
                 className={a.id === account?.id ? "btn-primary w-full" : "btn-secondary w-full"}
                 disabled={a.id === account?.id}
@@ -193,14 +210,14 @@ function ProfilePage() {
                 }
               >
                 {a.name}
-              </button>
+              </Button>
             ))}
           </div>
         </section>
       )}
-      <button className="btn-secondary mt-4 w-full" onClick={signOut}>
+      <Button variant="fresh" size="fresh" className="btn-secondary mt-4 w-full" onClick={signOut}>
         {t("Odhlásit se", "Sign out")}
-      </button>
+      </Button>
     </AppShell>
   );
 }

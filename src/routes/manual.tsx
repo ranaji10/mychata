@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -137,13 +138,15 @@ function ManualPage() {
         back="/vice"
         action={
           isAdmin ? (
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={() => setEditing(true)}
               aria-label={t("Přidat sekci", "Add section")}
-              className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground"
+              className="grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"
             >
               <Plus className="size-5" />
-            </button>
+            </Button>
           ) : null
         }
       />
@@ -162,11 +165,13 @@ function ManualPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-bold">{t("Veřejný manuál", "Public manual")}</p>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-[16px] text-muted-foreground">
                 {t("Hosté jej otevřou bez přihlášení.", "Guests can open it without signing in.")}
               </p>
             </div>
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={async () => {
                 setManualLink(null);
                 try {
@@ -178,10 +183,10 @@ function ManualPage() {
                 }
               }}
               aria-label={t("Kopírovat odkaz", "Copy link")}
-              className="grid size-11 place-items-center rounded-xl bg-secondary"
+              className="grid size-11 place-items-center rounded-full bg-secondary"
             >
               <Copy className="size-5" />
-            </button>
+            </Button>
           </div>
           <ManualCopyLink url={manualLink} />
         </section>
@@ -189,7 +194,7 @@ function ManualPage() {
       {isAdmin && !!feedback?.length && (
         <section className="mb-4 rounded-2xl bg-warn-soft p-4">
           <div className="flex items-center gap-2">
-            <Flag className="size-5 text-warn" />
+            <Flag className="size-5 text-warn-foreground" />
             <h2 className="font-bold">
               {t("Nahlášené neaktuální informace", "Outdated information reports")}
             </h2>
@@ -197,20 +202,22 @@ function ManualPage() {
           <div className="mt-3 space-y-2">
             {feedback.map((item) => (
               <div key={item.id} className="flex items-center gap-3 rounded-xl bg-card p-3">
-                <p className="flex-1 text-[14px] font-semibold">
+                <p className="flex-1 text-[16px] font-semibold">
                   {
                     sections?.find((section) => section.id === item.section_id)?.[
                       lang === "en" ? "title_en" : "title_cs"
                     ]
                   }
                 </p>
-                <button
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   onClick={() => resolveFeedback.mutate(item.id)}
                   className="grid size-11 place-items-center rounded-xl bg-ok-soft text-ok"
                   aria-label={t("Označit jako vyřešené", "Mark resolved")}
                 >
                   <Check className="size-5" />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -227,7 +234,7 @@ function ManualPage() {
             <article key={section.id} className="card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[13px] font-bold uppercase text-muted-foreground">
+                  <p className="text-[16px] font-bold uppercase text-muted-foreground">
                     {section.category}
                   </p>
                   <h2 className="text-lg font-bold">
@@ -240,7 +247,7 @@ function ManualPage() {
                     : t("Jen členové", "Members only")}
                 </PillNeutral>
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-[15px]">
+              <p className="mt-2 whitespace-pre-wrap text-[16px]">
                 {lang === "en" ? section.content_en : section.content_cs}
               </p>
             </article>
@@ -255,7 +262,7 @@ function ManualPage() {
               event.preventDefault();
               addSection.mutate();
             }}
-            className="card max-h-[90vh] w-full max-w-[400px] space-y-3 overflow-auto p-4"
+            className="w-full max-w-[400px] max-h-[90vh] space-y-3 overflow-auto rounded-[28px] bg-card p-5 shadow-2xl"
           >
             <h2 className="text-xl font-bold">{t("Nová sekce", "New section")}</h2>
             <select
@@ -306,10 +313,18 @@ function ManualPage() {
               </option>
             </select>
             <div className="flex gap-2">
-              <button className="btn-primary flex-1">{t("Uložit", "Save")}</button>
-              <button type="button" onClick={() => setEditing(false)} className="btn-secondary">
+              <Button variant="fresh" size="fresh" className="btn-primary flex-1">
+                {t("Uložit", "Save")}
+              </Button>
+              <Button
+                variant="fresh"
+                size="fresh"
+                type="button"
+                onClick={() => setEditing(false)}
+                className="btn-secondary"
+              >
                 {t("Zrušit", "Cancel")}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

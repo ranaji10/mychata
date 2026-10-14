@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/schvalovani")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Approvals — My Chata" },
       { name: "description", content: "Overview of bookings awaiting approval." },
       { property: "og:title", content: "Approvals — My Chata" },
@@ -122,9 +125,14 @@ function ApprovalsPage() {
           <p className="font-bold">
             {t("Rezervace se nepodařilo načíst.", "Could not load the bookings.")}
           </p>
-          <button onClick={() => void refetch()} className="btn-secondary mt-3 w-full">
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={() => void refetch()}
+            className="btn-secondary mt-3 w-full"
+          >
             {t("Zkusit znovu", "Try again")}
-          </button>
+          </Button>
         </div>
       ) : !pending?.length ? (
         <EmptyState
@@ -135,34 +143,41 @@ function ApprovalsPage() {
       ) : (
         <div className="space-y-3">
           {pending.map((b) => (
-            <article key={b.id} className="card p-4">
+            <article key={b.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
               <div className="flex items-center gap-3">
                 <Avatar name={b.requester_name} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-bold">{b.requester_name}</p>
-                  <p className="text-[14px] text-muted-foreground">
+                  <p className="text-[16px] text-muted-foreground">
                     {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {guestCount(b.guests, lang)}
                   </p>
                 </div>
               </div>
               {b.note && (
-                <p className="mt-2 rounded-2xl bg-background p-3 text-[14px]">„{b.note}“</p>
+                <p className="mt-2 rounded-2xl bg-background p-3 text-[16px]">„{b.note}“</p>
               )}
               {isAdmin ? (
                 <div className="mt-3 flex gap-2">
-                  <button
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     onClick={() => decide.mutate({ id: b.id, approve: true })}
                     disabled={decide.isPending}
-                    className="btn-primary flex-1"
+                    className="btn-dark flex-1"
                   >
                     {t("Schválit", "Approve")}
-                  </button>
-                  <button onClick={() => setDeclining(b)} className="btn-danger flex-1">
+                  </Button>
+                  <Button
+                    variant="fresh"
+                    size="fresh"
+                    onClick={() => setDeclining(b)}
+                    className="btn-secondary flex-1"
+                  >
                     {t("Zamítnout", "Decline")}
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <p className="mt-3 text-[13px] font-semibold text-muted-foreground">
+                <p className="mt-3 text-[16px] font-semibold text-muted-foreground">
                   {t("Schválit může správce rodiny.", "Only the family admin can approve.")}
                 </p>
               )}

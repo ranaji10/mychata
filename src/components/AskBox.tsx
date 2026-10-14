@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
@@ -73,31 +74,33 @@ export function AskBox({
           onChange={(e) => setQuestion(e.target.value)}
           aria-label={title}
         />
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           type="submit"
           className="btn-primary shrink-0"
           disabled={asking || question.trim().length < 2 || !propertyId}
         >
           {asking ? <Loader2 className="size-5 animate-spin" /> : t("Zeptat se", "Ask")}
-        </button>
+        </Button>
       </form>
       {asking && (
-        <p className="mt-3 text-[14px] font-semibold text-muted-foreground" aria-live="polite">
+        <p className="mt-3 text-[16px] font-semibold text-muted-foreground" aria-live="polite">
           {t("Hledám v manuálu a dokumentech…", "Looking through the manual and documents…")}
         </p>
       )}
       {failed && (
-        <p className="mt-3 rounded-2xl bg-danger-soft p-3 text-[14px] font-semibold text-danger">
+        <p className="mt-3 rounded-2xl bg-destructive-soft p-3 text-[16px] font-semibold text-destructive">
           {t(`Odpověď se nepodařilo získat: ${failed}`, `Could not get an answer: ${failed}`)}
         </p>
       )}
       {result && (
         <div className="mt-3 space-y-2" aria-live="polite">
-          <p className="whitespace-pre-wrap rounded-2xl bg-secondary p-3 text-[15px]">
+          <p className="whitespace-pre-wrap rounded-2xl bg-secondary p-3 text-[16px]">
             {result.answer ?? (result.reason ? reasonText[result.reason] : reasonText.no_match)}
           </p>
           {result.excerptOnly && (
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {t(
                 "Toto je nejbližší úryvek ze zdroje níže (odpověď AI teď není dostupná).",
                 "This is the closest passage from the source below (an AI answer isn't available right now).",

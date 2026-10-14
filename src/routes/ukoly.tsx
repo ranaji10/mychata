@@ -249,18 +249,18 @@ function TasksPage() {
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             key={f.key}
             aria-pressed={filter === f.key}
             onClick={() => setFilter(f.key)}
             className={`h-11 shrink-0 rounded-full px-4 text-[16px] font-bold ${
-              filter === f.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-foreground ring-1 ring-border"
+              filter === f.key ? "bg-foreground text-primary-foreground" : "bg-card text-foreground"
             }`}
           >
             {f.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -335,7 +335,7 @@ function TasksPage() {
         <section className="card mt-4 space-y-3 p-4">
           <h3 className="text-lg font-bold">{t("Nový úkol", "New task")}</h3>
           <div>
-            <label htmlFor="task-title" className="mb-1 block text-[16px] font-bold">
+            <label htmlFor="task-title" className="label-text text-[16px]">
               {t("Název", "Title")}
             </label>
             <input
@@ -348,7 +348,7 @@ function TasksPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="task-assignee" className="mb-1 block text-[16px] font-bold">
+              <label htmlFor="task-assignee" className="label-text text-[16px]">
                 {t("Odpovědná osoba", "Assignee")}
               </label>
               <select
@@ -366,7 +366,7 @@ function TasksPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="task-due" className="mb-1 block text-[16px] font-bold">
+              <label htmlFor="task-due" className="label-text text-[16px]">
                 {t("Termín", "Due date")}
               </label>
               <input
@@ -379,22 +379,34 @@ function TasksPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={addTask}
               disabled={adding || !title.trim()}
               className="btn-primary flex-1 disabled:opacity-40"
             >
               {adding ? t("Ukládám…", "Saving…") : t("Přidat úkol", "Add task")}
-            </button>
-            <button onClick={() => setShowForm(false)} className="btn-secondary">
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              onClick={() => setShowForm(false)}
+              className="btn-secondary"
+            >
               {t("Zrušit", "Cancel")}
-            </button>
+            </Button>
           </div>
         </section>
       ) : (
-        <button onClick={() => setShowForm(true)} className="btn-primary mt-4 w-full">
+        <Button
+          variant="fresh"
+          size="fresh"
+          onClick={() => setShowForm(true)}
+          className="btn-primary mt-4 w-full"
+        >
           <Plus className="size-5" /> {t("Přidat úkol", "Add task")}
-        </button>
+        </Button>
       )}
 
       <section className="card mt-4 p-4">
@@ -408,24 +420,26 @@ function TasksPage() {
             "Ready-made checklists for the season.",
           )}
         </p>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 divide-y divide-divider">
           {seasonalTemplates(lang).map((tpl) => (
             <div key={tpl.id}>
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 onClick={() => {
                   setPendingTemplate(pendingTemplate === tpl.id ? null : tpl.id);
                   setAssignMode("all");
                   setAssignAll(null);
                   setAssignEach({});
                 }}
-                className={`btn-secondary w-full ${pendingTemplate === tpl.id ? "ring-2 ring-primary" : ""}`}
+                className={`min-h-[60px] w-full justify-between whitespace-normal rounded-none py-3 text-left text-[16px] font-semibold ${pendingTemplate === tpl.id ? "text-primary" : "text-foreground"}`}
               >
                 {tpl.title} ({tpl.tasks.length})
-              </button>
+              </Button>
               {pendingTemplate === tpl.id && (
                 <div className="mt-2 space-y-3 rounded-2xl bg-secondary p-3">
                   {alreadyOpen(tpl.id) > 0 && (
-                    <p className="text-[16px] font-semibold text-warn">
+                    <p className="text-[16px] font-semibold text-warn-foreground">
                       {t(
                         `Z tohoto seznamu už máte ${alreadyOpen(tpl.id)} nesplněných úkolů. Přidat znovu?`,
                         `You already have ${alreadyOpen(tpl.id)} open tasks from this checklist. Add again?`,
@@ -434,18 +448,22 @@ function TasksPage() {
                   )}
                   <p className="text-[16px] font-bold">{t("Kdo je udělá?", "Who does them?")}</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className={`btn-secondary ${assignMode === "all" ? "ring-2 ring-primary" : ""}`}
                       onClick={() => setAssignMode("all")}
                     >
                       {t("Všechny jeden člověk", "All to one person")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className={`btn-secondary ${assignMode === "each" ? "ring-2 ring-primary" : ""}`}
                       onClick={() => setAssignMode("each")}
                     >
                       {t("Každý úkol zvlášť", "Each task separately")}
-                    </button>
+                    </Button>
                   </div>
                   {assignMode === "all" ? (
                     <select
@@ -486,7 +504,7 @@ function TasksPage() {
                     </ul>
                   )}
                   {duplicateOf === tpl.id && (
-                    <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn">
+                    <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                       {t(
                         "Tento seznam už letos máte. Opravdu ho přidat znovu?",
                         "You already added this checklist this season. Add it again anyway?",
@@ -494,7 +512,9 @@ function TasksPage() {
                     </p>
                   )}
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className="btn-primary flex-1 disabled:opacity-40"
                       disabled={adding}
                       onClick={() => addChecklist(tpl.id, duplicateOf === tpl.id)}
@@ -502,8 +522,10 @@ function TasksPage() {
                       {duplicateOf === tpl.id
                         ? t("Ano, přidat znovu", "Yes, add again")
                         : t(`Přidat ${tpl.tasks.length} úkolů`, `Add ${tpl.tasks.length} tasks`)}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       className="btn-secondary"
                       onClick={() => {
                         setPendingTemplate(null);
@@ -511,7 +533,7 @@ function TasksPage() {
                       }}
                     >
                       {t("Zrušit", "Cancel")}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

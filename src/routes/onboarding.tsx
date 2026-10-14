@@ -15,6 +15,10 @@ export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
       { title: "Welcome — My Chata" },
+      { property: "og:title", content: "Welcome — My Chata" },
+      { property: "og:description", content: "Set up your cottage in a few simple steps." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "description", content: "Set up your cottage in a few simple steps." },
       { name: "robots", content: "noindex" },
     ],

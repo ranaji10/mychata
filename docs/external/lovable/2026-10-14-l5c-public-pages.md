@@ -134,7 +134,6 @@ Screenshots are not committed. Chat attachments show representative frames; loca
 
 Metadata changes reach the live URL only after a future publish; this task did not publish.
 
-
 > Combined by Claude on 14 Oct 2026: Lovable made this follow-up on a branch based on `main` (lovable-sync-1792000663), without the L-5c edits. It was merged onto PR #28's branch. Lovable's checkout had no onboarding selector, so Claude removed it in the combined branch (see section 1).
 
 ## Follow-up: three requested changes (17:33 UTC, 14 Oct 2026)

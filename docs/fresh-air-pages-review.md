@@ -6,16 +6,16 @@ Preview-only presentation pass, 14 October 2026. No publishing, package, migrati
 
 The editor manages commits automatically on `edit/edt-75c9b2f2-bb4c-4d28-8f50-43f2e28f6a61`, not `lovable-sync`. These are actual recorded commits, not a claim of pushes to the requested branch. Some editor commits span groups; the requested one-commit-per-group history could not be guaranteed.
 
-| Group | Recorded commits |
-| --- | --- |
-| Seasonal photos | `c2bce21` hook and roadmap; `b234fd9` removes asset pointers |
-| Tasks | `aeb2f68`, `4f2ad5c`; shared refinements in `85e7bc4` |
-| Expenses | `76f9a41`, `daa323e`; mobile row correction in `78e2162` |
-| Stays | `76f9a41`, `daa323e` |
-| Cottage | `daa323e`, `85e7bc4` |
-| People/settings | `daa323e`, `85e7bc4` |
-| Used shared UI | `85e7bc4` (Button, AlertDialog, Sonner, ConfirmDialog) |
-| Required head metadata | `78e2162`, formatting in `0a6ea51` |
+| Group                  | Recorded commits                                             |
+| ---------------------- | ------------------------------------------------------------ |
+| Seasonal photos        | `c2bce21` hook and roadmap; `b234fd9` removes asset pointers |
+| Tasks                  | `aeb2f68`, `4f2ad5c`; shared refinements in `85e7bc4`        |
+| Expenses               | `76f9a41`, `daa323e`; mobile row correction in `78e2162`     |
+| Stays                  | `76f9a41`, `daa323e`                                         |
+| Cottage                | `daa323e`, `85e7bc4`                                         |
+| People/settings        | `daa323e`, `85e7bc4`                                         |
+| Used shared UI         | `85e7bc4` (Button, AlertDialog, Sonner, ConfirmDialog)       |
+| Required head metadata | `78e2162`, formatting in `0a6ea51`                           |
 
 Unused dialog, sheet, select, popover, tabs, switch and checkbox files were left alone. Route features, query logic, validation and error handling were retained.
 
@@ -60,13 +60,13 @@ Autumn photos loaded on Auth and Home without a main photo. Development serves `
 
 Screenshots remain in the sandbox under `/tmp/browser/fresh-pages/`, not in application source. The five before/after desktop comparisons were visually inspected:
 
-| Group | Comparison |
-| --- | --- |
-| Tasks | `/tmp/browser/fresh-pages/comparisons/tasks.png` |
-| Expenses | `/tmp/browser/fresh-pages/comparisons/expenses.png` |
-| Stays | `/tmp/browser/fresh-pages/comparisons/stays.png` |
-| Cottage (manual) | `/tmp/browser/fresh-pages/comparisons/cottage.png` |
-| Settings | `/tmp/browser/fresh-pages/comparisons/settings.png` |
+| Group            | Comparison                                          |
+| ---------------- | --------------------------------------------------- |
+| Tasks            | `/tmp/browser/fresh-pages/comparisons/tasks.png`    |
+| Expenses         | `/tmp/browser/fresh-pages/comparisons/expenses.png` |
+| Stays            | `/tmp/browser/fresh-pages/comparisons/stays.png`    |
+| Cottage (manual) | `/tmp/browser/fresh-pages/comparisons/cottage.png`  |
+| Settings         | `/tmp/browser/fresh-pages/comparisons/settings.png` |
 
 Phone after-screenshots are `<group>-after-375.png`; desktop after-screenshots are `<group>-after-1280.png`. The initial phone Tasks baseline captured a loading screen and is not a valid comparison; the desktop baseline is valid. Initial screenshots captured too early during navigation were replaced with loaded-page captures before inspection.
 

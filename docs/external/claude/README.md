@@ -9,3 +9,9 @@ Claude docs and artifacts are the readable, shareable versions. The files here a
 | 2026-10-14 | Site check and release readiness (local report, no artifact)                                                             | `2026-10-14-site-check.md`      |
 
 Rule (AGENTS.md): every new artifact gets a row here, a copy with frontmatter `artifact: <link>`, and a "Source file:" line at the end of the artifact.
+
+## Reviews and site checks
+
+| Date       | Report                      | What was checked                                    | Verdict                | Open follow-ups                                                                                                                               |
+| ---------- | --------------------------- | --------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-14 | `2026-10-14-pr26-review.md` | PR #26 (T-027 L-5b follow-ups), last commit aa1e5c7 | Merge yes, after fixes | STATUS.md live claims and dropped untested items, T-027 tick criterion 24/26px, icon sizes app-wide not verified, has-tabbar on early returns |

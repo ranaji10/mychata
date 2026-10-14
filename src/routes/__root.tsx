@@ -32,6 +32,14 @@ gtag('js',new Date());gtag('config',${JSON.stringify(id)},{send_page_view:false}
 }
 
 function NotFoundComponent() {
+  return (
+    <LanguageProvider>
+      <NotFoundBody />
+    </LanguageProvider>
+  );
+}
+
+function NotFoundBody() {
   const { t } = useLang();
   return (
     <main className="page-fresh flex min-h-screen flex-col items-center justify-center gap-6 px-5 text-center">
@@ -56,6 +64,14 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
+  return (
+    <LanguageProvider>
+      <ErrorBody error={error} reset={reset} />
+    </LanguageProvider>
+  );
+}
+
+function ErrorBody({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const { t } = useLang();
   const router = useRouter();

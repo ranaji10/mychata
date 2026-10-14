@@ -14,10 +14,16 @@ export const Route = createFileRoute("/auth")({
   staticData: { sitemap: true },
   head: () => ({
     meta: [
-      { title: "Sign in — My Chata" },
-      { name: "description", content: "Secure sign in to your My Chata account." },
-      { property: "og:title", content: "Sign in — My Chata" },
-      { property: "og:description", content: "Secure sign in to your My Chata account." },
+      { title: "Přihlášení — My Chata" },
+      {
+        name: "description",
+        content: "Bezpečné přihlášení a registrace do My Chata pro rodiny i organizace.",
+      },
+      { property: "og:title", content: "Přihlášení — My Chata" },
+      {
+        property: "og:description",
+        content: "Bezpečné přihlášení a registrace do My Chata pro rodiny i organizace.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -248,7 +254,7 @@ function AuthPage() {
   };
 
   return (
-    <main className="page-fresh mx-auto flex min-h-screen max-w-[480px] flex-col px-5 py-5 md:py-8">
+    <main className="page-fresh mx-auto flex min-h-screen max-w-[420px] md:max-w-[560px] flex-col px-5 py-5 md:py-8">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
@@ -261,6 +267,9 @@ function AuthPage() {
       <img
         src={defaultPhoto.src}
         alt={defaultPhoto.alt}
+        width={1200}
+        height={1200}
+        fetchPriority="high"
         className="mt-6 h-[250px] w-full rounded-[28px] object-cover object-[50%_42%]"
       />
       <section className="py-6">
@@ -336,7 +345,7 @@ function AuthPage() {
             </p>
           </div>
         ) : (
-          <div className="card mt-6 space-y-3 p-4">
+          <div className="mt-6 space-y-3">
             <h2 className="text-lg font-bold">
               {mode === "institute"
                 ? t("Registrace instituce", "Sign up as an Institute")
@@ -373,7 +382,9 @@ function AuthPage() {
             <input
               className="field w-full"
               type="email"
-              placeholder={mode === "institute" ? t("Pracovní e-mail", "Work email") : "E-mail"}
+              placeholder={
+                mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
+              }
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -425,7 +436,7 @@ function AuthPage() {
               </Button>
             )}
             {mode === "email" && (
-              <div className="flex items-center justify-between gap-2 text-[16px]">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[16px]">
                 <Button
                   variant="fresh"
                   size="fresh"

@@ -211,7 +211,7 @@ function RequestsPage() {
                       })
                     }
                     disabled={decide.isPending}
-                    className="btn-primary disabled:opacity-50"
+                    className="btn-dark disabled:opacity-50"
                   >
                     {decide.isPending
                       ? t("Ukládám…", "Saving…")
@@ -221,7 +221,7 @@ function RequestsPage() {
                     onClick={() =>
                       setDeclining(pending.filter((request) => selected.includes(request.id)))
                     }
-                    className="btn-danger"
+                    className="btn-secondary"
                   >
                     {t("Zamítnout vybrané", "Decline selected")}
                   </button>
@@ -229,7 +229,7 @@ function RequestsPage() {
               )}
               <div className="space-y-3">
                 {pending.map((r) => (
-                  <article key={r.id} className="card p-4">
+                  <article key={r.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
                     <div className="flex items-start justify-between gap-2">
                       <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3">
                         <input
@@ -287,7 +287,7 @@ function RequestsPage() {
                       <button
                         onClick={() => decide.mutate({ requests: [r], approve: true })}
                         disabled={decide.isPending}
-                        className="btn-primary flex-1 disabled:opacity-50"
+                        className="btn-dark flex-1 disabled:opacity-50"
                       >
                         {decide.isPending && decide.variables?.requests.some((x) => x.id === r.id)
                           ? t("Ukládám…", "Saving…")
@@ -296,7 +296,7 @@ function RequestsPage() {
                       <button
                         onClick={() => setDeclining([r])}
                         disabled={decide.isPending}
-                        className="btn-danger flex-1 disabled:opacity-50"
+                        className="btn-secondary flex-1 disabled:opacity-50"
                       >
                         {t("Zamítnout", "Decline")}
                       </button>

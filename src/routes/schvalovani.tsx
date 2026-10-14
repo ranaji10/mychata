@@ -135,7 +135,7 @@ function ApprovalsPage() {
       ) : (
         <div className="space-y-3">
           {pending.map((b) => (
-            <article key={b.id} className="card p-4">
+            <article key={b.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
               <div className="flex items-center gap-3">
                 <Avatar name={b.requester_name} />
                 <div className="min-w-0 flex-1">
@@ -153,11 +153,11 @@ function ApprovalsPage() {
                   <button
                     onClick={() => decide.mutate({ id: b.id, approve: true })}
                     disabled={decide.isPending}
-                    className="btn-primary flex-1"
+                    className="btn-dark flex-1"
                   >
                     {t("Schválit", "Approve")}
                   </button>
-                  <button onClick={() => setDeclining(b)} className="btn-danger flex-1">
+                  <button onClick={() => setDeclining(b)} className="btn-secondary flex-1">
                     {t("Zamítnout", "Decline")}
                   </button>
                 </div>

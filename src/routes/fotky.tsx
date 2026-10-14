@@ -219,13 +219,14 @@ function PhotosPage() {
         {photos?.map((p) => (
           <figure
             key={p.id}
-            className={`card overflow-hidden ${p.is_primary ? "ring-2 ring-primary" : ""}`}
+            className={`relative overflow-hidden rounded-[18px] bg-card shadow-chip ${p.is_primary ? "ring-2 ring-primary" : ""}`}
           >
             {urls?.[p.id] ? (
               <img src={urls[p.id]} alt="" className="aspect-square w-full object-cover" />
             ) : (
               <div className="aspect-square w-full bg-secondary" />
             )}
+            {p.is_primary && <span className="pill absolute left-2 top-2 bg-ok-soft text-ok">{t("Hlavní fotka", "Main photo")}</span>}
             <figcaption className="flex items-center justify-between p-2">
               <button
                 className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"

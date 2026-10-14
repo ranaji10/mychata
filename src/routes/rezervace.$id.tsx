@@ -206,10 +206,10 @@ function BookingDetail() {
 
       {pending && isAdmin && (
         <div className="mt-4 flex gap-2">
-          <button onClick={() => confirm.mutate()} className="btn-primary flex-1">
+          <button onClick={() => confirm.mutate()} className="btn-dark flex-1">
             {t("Schválit", "Approve")}
           </button>
-          <button onClick={() => setConfirmRemove(true)} className="btn-danger flex-1">
+          <button onClick={() => setConfirmRemove(true)} className="btn-secondary flex-1">
             {t("Zamítnout", "Decline")}
           </button>
         </div>

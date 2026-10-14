@@ -111,7 +111,7 @@ function SettlementPage() {
       ) : (
         <div className="mt-4 space-y-3">
           {suggestions.map((s) => (
-            <div key={`${s.from}-${s.to}`} className="card p-4">
+            <div key={`${s.from}-${s.to}`} className="rounded-[20px] bg-card p-[14px] shadow-chip">
               <div className="flex items-center gap-3">
                 <Avatar name={name(s.from)} />
                 <div className="min-w-0 flex-1">
@@ -126,7 +126,7 @@ function SettlementPage() {
                 <button
                   onClick={() => settle(s.from, s.to)}
                   disabled={settling === `${s.from}->${s.to}`}
-                  className="btn-primary mt-3 w-full disabled:opacity-40"
+                  className="btn-dark mt-3 w-full disabled:opacity-40"
                 >
                   {settling === `${s.from}->${s.to}`
                     ? t("Ukládám…", "Saving…")

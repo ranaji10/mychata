@@ -4,7 +4,7 @@ import { Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillWarn } from "@/components/bits";
+import { EmptyState, LoadingCards, PageHeader, PillNeutral, PillWarn, StatCard } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
@@ -199,8 +199,9 @@ function ExpensesPage() {
     <AppShell>
       <PageHeader
         title={t("Výdaje", "Expenses")}
-        subtitle={`${t("Celkem", "Total")}: ${fmtKc(total)}`}
       />
+
+      {!isEmpty && <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] lg:gap-4"><StatCard label={t("Celkem", "Total")} value={fmtKc(total)} /></div>}
 
       {!isEmpty && (
         <Link to="/vydaje/vyrovnani" className="btn-secondary mb-3 w-full">
@@ -225,11 +226,11 @@ function ExpensesPage() {
           }
         />
       ) : (
-        <div className="space-y-2.5">
+        <div className="card px-4 py-1">
           {expenses.map((e) => (
-            <div key={e.id} className="card flex items-center gap-3 p-4">
+            <div key={e.id} className="flex min-h-[60px] flex-wrap items-center gap-3 border-b border-divider py-3 last:border-0">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-bold">
+                <p className="break-words text-[16px] font-semibold">
                   {e.description ?? expenseCategoryLabel(e.category, lang)}
                 </p>
                 <p className="text-[13px] text-muted-foreground">
@@ -237,7 +238,7 @@ function ExpensesPage() {
                   {expenseCategoryLabel(e.category, lang)}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="max-w-full text-right [&_.pill]:whitespace-normal">
                 <p className="text-[16px] font-bold">{fmtKc(Number(e.amount))}</p>
                 {splits &&
                   (() => {
@@ -350,8 +351,8 @@ function ExpensesPage() {
                   onClick={() => toggleMember(m.id)}
                   className={`h-11 rounded-full px-4 text-[14px] font-bold ${
                     selected.includes(m.id)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card ring-1 ring-black/10"
+                      ? "bg-primary-soft text-primary shadow-[inset_0_0_0_1.5px_var(--primary)]"
+                      : "bg-card text-foreground ring-1 ring-input"
                   }`}
                 >
                   {chipName(m.name)}

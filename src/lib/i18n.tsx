@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 export type Lang = "cs" | "en";
@@ -58,7 +59,9 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
       aria-label={t("Jazyk", "Language")}
     >
       {(["cs", "en"] as const).map((l) => (
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           key={l}
           type="button"
           onClick={() => setLang(l)}
@@ -68,7 +71,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
           }`}
         >
           {l === "cs" ? "CZ" : "EN"}
-        </button>
+        </Button>
       ))}
     </div>
   );

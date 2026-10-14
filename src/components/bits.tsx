@@ -66,7 +66,7 @@ export function StatCard({
       >
         {value}
       </p>
-      {hint && <p className="mt-2 text-[14px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-2 text-[16px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -88,14 +88,14 @@ export function EmptyState({
         <Icon className="size-7" strokeWidth={1.6} />
       </div>
       <p className="mt-4 text-lg font-bold">{title}</p>
-      {hint && <p className="mt-2 text-[14px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-2 text-[16px] text-muted-foreground">{hint}</p>}
       {action && <div className="mt-5 w-full">{action}</div>}
     </div>
   );
 }
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-secondary ${className}`} />;
+  return <div className={`animate-pulse rounded-[22px] bg-secondary ${className}`} />;
 }
 
 export function LoadingCards() {

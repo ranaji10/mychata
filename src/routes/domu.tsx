@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, Inbox, Loader2 } from "lucide-react";
@@ -205,7 +206,9 @@ function HomePage() {
               "Some information could not be loaded; this overview may be incomplete.",
             )}
           </p>
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             onClick={() => {
               void refetchBookings();
               void refetchTasks();
@@ -213,7 +216,7 @@ function HomePage() {
             className="btn-secondary mt-3 w-full"
           >
             {t("Zkusit znovu", "Try again")}
-          </button>
+          </Button>
         </div>
       )}
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -295,7 +298,7 @@ function HomePage() {
                 {nextBooking.requester_name} · {nextBooking.guests}{" "}
                 {guestsLabel(nextBooking.guests)}
               </p>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   to="/rezervace/$id"
                   params={{ id: nextBooking.id }}
@@ -404,7 +407,7 @@ function HomePage() {
           <h3 className="text-lg font-bold">{t("Žádosti hostů", "Guest requests")}</h3>
           <div className="mt-2 space-y-2.5">
             {guestRequests.map((g) => (
-              <div key={g.id} className="rounded-2xl bg-background p-3">
+              <div key={g.id} className="border-b border-divider py-3 last:border-0">
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-[16px] font-bold">{g.guest_name}</p>
                   <PillWarn>{t("Čeká", "Pending")}</PillWarn>
@@ -419,7 +422,9 @@ function HomePage() {
                     const busyApprove = busy && decideGuest.variables?.approve;
                     return (
                       <>
-                        <button
+                        <Button
+                          variant="fresh"
+                          size="fresh"
                           className="btn-secondary disabled:opacity-50"
                           disabled={decideGuest.isPending}
                           onClick={() => decideGuest.mutate({ id: g.id, approve: false })}
@@ -432,8 +437,10 @@ function HomePage() {
                           ) : (
                             t("Odmítnout", "Decline")
                           )}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="fresh"
+                          size="fresh"
                           className="btn-primary disabled:opacity-50"
                           disabled={decideGuest.isPending}
                           aria-busy={busyApprove}
@@ -447,7 +454,7 @@ function HomePage() {
                           ) : (
                             t("Potvrdit pobyt", "Confirm stay")
                           )}
-                        </button>
+                        </Button>
                       </>
                     );
                   })()}
@@ -500,7 +507,7 @@ function HomePage() {
             <p className="mt-1 text-[16px] text-muted-foreground">
               {nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}
             </p>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               <Link
                 to="/rezervace/$id"
                 params={{ id: nextBooking.id }}

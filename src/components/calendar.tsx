@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import {
@@ -100,7 +101,9 @@ export function CalendarMonth({
           }
           const disabled = d.iso < earliest;
           return (
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               key={d.iso}
               type="button"
               disabled={disabled}
@@ -112,7 +115,7 @@ export function CalendarMonth({
               className={`${cellClass} active:scale-95 disabled:cursor-not-allowed`}
             >
               {label}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -153,22 +156,26 @@ export function MonthHeader({
         {monthNames(lang)[month]} {year}
       </h2>
       <div className="flex w-full justify-between">
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           type="button"
           onClick={prev}
           aria-label={t("Předchozí měsíc", "Previous month")}
           className="grid size-11 place-items-center rounded-full bg-secondary"
         >
           <ChevronLeft className="size-5" />
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="fresh"
+          size="fresh"
           type="button"
           onClick={next}
           aria-label={t("Další měsíc", "Next month")}
           className="grid size-11 place-items-center rounded-full bg-secondary"
         >
           <ChevronRight className="size-5" />
-        </button>
+        </Button>
       </div>
     </div>
   );

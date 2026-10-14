@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Home, LogIn, Mail } from "lucide-react";
@@ -290,7 +291,9 @@ function AuthPage() {
 
         {mode === "main" ? (
           <div className="mt-6 space-y-3">
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={signInGoogle}
               disabled={busy}
               className="btn-primary min-h-[56px] w-full text-[17px]"
@@ -299,31 +302,37 @@ function AuthPage() {
               {busy
                 ? t("Přihlašuji…", "Signing in…")
                 : t("Pokračovat přes Google", "Continue with Google")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
               className="btn-secondary min-h-[56px] w-full text-[17px]"
               onClick={() => open("email", true)}
             >
               <Mail className="size-5" />
               {t("Registrovat se e-mailem", "Sign up with email")}
-            </button>
+            </Button>
             <p className="pt-1 text-center text-[16px] text-muted-foreground">
               {t("Už máte účet?", "Already have an account?")}{" "}
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 className="min-h-11 font-semibold text-primary"
                 onClick={() => open("email", false)}
               >
                 {t("Přihlásit se", "Sign in")}
-              </button>
+              </Button>
             </p>
             <p className="text-center text-[16px] text-muted-foreground">
               {t("Škola nebo firma?", "School or company?")}{" "}
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 className="min-h-11 font-bold text-primary hover:text-primary-hover"
                 onClick={() => open("institute", true)}
               >
                 {t("Registrovat instituci", "Sign up as an Institute")}
-              </button>
+              </Button>
             </p>
           </div>
         ) : (
@@ -390,7 +399,9 @@ function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={signingUp ? "new-password" : "current-password"}
             />
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className="btn-primary min-h-[56px] w-full text-[17px]"
               disabled={!canSubmit}
               onClick={submit}
@@ -400,43 +411,51 @@ function AuthPage() {
                 : signingUp
                   ? t("Vytvořit účet", "Create account")
                   : t("Přihlásit se", "Sign in")}
-            </button>
+            </Button>
             {canResend && (
-              <button
+              <Button
+                variant="fresh"
+                size="fresh"
                 className="btn-secondary min-h-[56px] w-full text-[17px]"
                 disabled={busy || !cleanEmail}
                 onClick={resendConfirmation}
               >
                 <Mail className="size-5" />
                 {t("Poslat potvrzovací e-mail znovu", "Send the confirmation email again")}
-              </button>
+              </Button>
             )}
             {mode === "email" && (
               <div className="flex items-center justify-between gap-2 text-[16px]">
-                <button
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   className="min-h-11 font-semibold text-primary"
                   onClick={() => open("email", !isSignUp)}
                 >
                   {isSignUp
                     ? t("Už mám účet – přihlásit se", "I have an account – sign in")
                     : t("Nemám účet – zaregistrovat se", "No account – sign up")}
-                </button>
+                </Button>
                 {!isSignUp && (
-                  <button
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     className="min-h-11 font-semibold text-muted-foreground"
                     onClick={() => navigate({ to: "/reset-password" })}
                   >
                     {t("Zapomenuté heslo", "Forgot password")}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
-            <button
+            <Button
+              variant="fresh"
+              size="fresh"
               className="min-h-11 w-full text-center text-[16px] font-semibold text-muted-foreground"
               onClick={() => open("main", true)}
             >
               {t("Zpět", "Back")}
-            </button>
+            </Button>
           </div>
         )}
       </section>

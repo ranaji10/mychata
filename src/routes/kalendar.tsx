@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -141,10 +142,15 @@ function CalendarPage() {
       <div className="mb-5 mt-2 flex items-center justify-between gap-3">
         <h2 className="text-[28px] font-extrabold leading-[1.15]">{t("Kalendář", "Calendar")}</h2>
         {isFamily && (
-          <button onClick={startPicking} className="btn-primary min-h-[44px] px-4 py-2 text-[16px]">
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={startPicking}
+            className="btn-primary min-h-[44px] px-4 py-2 text-[16px]"
+          >
             <Plus className="size-[18px]" />
             {t("Pobyt", "Stay")}
-          </button>
+          </Button>
         )}
       </div>
       <div
@@ -153,14 +159,16 @@ function CalendarPage() {
         className="mb-4 flex gap-2"
       >
         {(["month", "list"] as const).map((v) => (
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             key={v}
             aria-pressed={view === v}
             onClick={() => setView(v)}
             className={`min-h-11 rounded-full px-5 text-[14px] ${view === v ? "bg-foreground text-primary-foreground font-bold" : "bg-card text-foreground font-semibold"}`}
           >
             {v === "month" ? t("Měsíc", "Month") : t("Seznam", "List")}
-          </button>
+          </Button>
         ))}
       </div>
       <section
@@ -194,9 +202,14 @@ function CalendarPage() {
               <p className="font-bold">
                 {t("Kalendář se nepodařilo načíst.", "Could not load the calendar.")}
               </p>
-              <button onClick={() => void refetch()} className="btn-secondary mt-3 w-full">
+              <Button
+                variant="fresh"
+                size="fresh"
+                onClick={() => void refetch()}
+                className="btn-secondary mt-3 w-full"
+              >
                 {t("Zkusit znovu", "Try again")}
-              </button>
+              </Button>
             </div>
           ) : (
             <CalendarMonth
@@ -212,18 +225,25 @@ function CalendarPage() {
 
         {isFamily && range.start && (
           <div className="mt-4 flex gap-2">
-            <button onClick={continueToBooking} className="btn-primary flex-1">
+            <Button
+              variant="fresh"
+              size="fresh"
+              onClick={continueToBooking}
+              className="btn-primary flex-1"
+            >
               {range.end
                 ? t("Pokračovat k rezervaci", "Continue to booking")
                 : t("Jen jeden den", "Just this one day")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
               onClick={clearRange}
               className="grid size-11 shrink-0 place-items-center self-center rounded-full bg-secondary"
               aria-label={t("Zrušit výběr", "Clear the dates")}
             >
               <X className="size-5" />
-            </button>
+            </Button>
           </div>
         )}
       </section>
@@ -275,7 +295,9 @@ function CalendarPage() {
 
       {isFamily && (
         <>
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             onClick={copyPublicLink}
             className="card mt-4 flex w-full items-center gap-3 p-4 text-left active:scale-[0.99]"
           >
@@ -293,7 +315,7 @@ function CalendarPage() {
                 )}
               </p>
             </div>
-          </button>
+          </Button>
           <ManualCopyLink url={manualLink} />
         </>
       )}

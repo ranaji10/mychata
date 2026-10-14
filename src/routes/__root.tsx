@@ -107,8 +107,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace.",
       },
       { property: "og:type", content: "website" },
-      // Our own preview image. Without it, Lovable's publish attaches an automatic screenshot,
-      // which captured the error page during the 25 Sep outage (B-002).
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [

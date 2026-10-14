@@ -468,7 +468,7 @@ export function declineReasons(lang: "cs" | "en") {
 export const BRANCH_COLORS = ["#1F7A4D", "#2E6FB0", "#0F766E", "#B45309", "#7C5CBF"];
 export function branchColor(branch: string, branches: string[]): string {
   const i = Math.max(0, branches.indexOf(branch));
-  return BRANCH_COLORS[i % BRANCH_COLORS.length] ?? "#FF5A5F";
+  return BRANCH_COLORS[i % BRANCH_COLORS.length] ?? "#1F7A4D";
 }
 
 // Seasonal checklist templates (J2)

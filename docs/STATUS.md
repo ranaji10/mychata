@@ -17,7 +17,7 @@ As of 2026-10-14. Update this file in every PR that changes behaviour.
 
 ## Own logo and icons (T-030, 14 Oct 2026)
 
-- The browser-tab icon, home-screen icons and link-preview image now come from MyChata's logo in `brand/` instead of Lovable's heart and Lovable's screenshot. One command, `bun run brand`, regenerates them all (`brand/README.md`). Lovable Knowledge rule 12 keeps Lovable from adding its own.
+- The browser-tab icon, home-screen icons and link-preview image now come from MyChata's logo in `brand/` instead of Lovable's heart and Lovable's screenshot. Transparent icons; the tab icon is a simplified cabin that reads at 16–32 px. One command, `bun run brand`, regenerates them all (`brand/README.md`). Lovable Knowledge rule 12 keeps Lovable from adding its own.
 - Not live until merged and published. Lovable's visitor analytics, its "Edit with Lovable" badge and its own social-image choice are settings in Lovable, changed by a maintainer (prompt `prompts/2026-10-14/18-L-6-lovable-cleanup.md`).
 
 ## Fresh air L-5c (T-028, PR #31, live 14 Oct 2026)

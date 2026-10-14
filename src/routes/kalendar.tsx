@@ -210,30 +210,22 @@ function CalendarPage() {
 
         <CalendarLegend picking={isFamily && !!range.start} />
 
-        {isFamily &&
-          (range.start ? (
-            <div className="mt-4 flex gap-2">
-              <button onClick={continueToBooking} className="btn-primary flex-1">
-                {range.end
-                  ? t("Pokračovat k rezervaci", "Continue to booking")
-                  : t("Jen jeden den", "Just this one day")}
-              </button>
-              <button
-                onClick={clearRange}
-                className="grid size-11 shrink-0 place-items-center self-center rounded-full bg-secondary"
-                aria-label={t("Zrušit výběr", "Clear the dates")}
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-          ) : (
-            false &&
-            !picking && (
-              <button onClick={startPicking} className="btn-primary mt-4 w-full">
-                {t("Rezervovat termín", "Book a date")}
-              </button>
-            )
-          ))}
+        {isFamily && range.start && (
+          <div className="mt-4 flex gap-2">
+            <button onClick={continueToBooking} className="btn-primary flex-1">
+              {range.end
+                ? t("Pokračovat k rezervaci", "Continue to booking")
+                : t("Jen jeden den", "Just this one day")}
+            </button>
+            <button
+              onClick={clearRange}
+              className="grid size-11 shrink-0 place-items-center self-center rounded-full bg-secondary"
+              aria-label={t("Zrušit výběr", "Clear the dates")}
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="mt-4">

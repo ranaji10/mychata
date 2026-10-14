@@ -28,7 +28,7 @@ export const Route = createFileRoute("/verejne/zadost/$token")({
 function PublicRequest() {
   const defaultPhoto = useDefaultChataPhoto();
   const { t } = useLang();
-  useBrand(true ? "institution" : "family");
+  useBrand("institution");
   const { token } = Route.useParams();
   // Each institution shares its own link: /verejne/zadost/<property share token> (migration 0012).
   const { data: property, isLoading: loadingProperty } = useQuery({

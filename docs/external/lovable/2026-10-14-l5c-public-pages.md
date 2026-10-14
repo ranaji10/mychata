@@ -29,8 +29,10 @@ the `type` state. No change was needed; nothing else in onboarding was touched.
   `Building2` icon from lucide-react.
 - Label: `t("Registrovat instituci", "Sign up as an institution")` — the "(škola, firma, spolek)"
   parenthetical was removed on request; still calls `open("institute", true)`.
-- Style: `btn-secondary` with the existing blue token `var(--cat-tasks)` for the border and icon
-  (no new CSS, `styles.css` untouched).
+- Style: `btn-secondary` plus the existing blue token `var(--cat-tasks)` on the `Building2` icon
+  (no new CSS, `styles.css` untouched). Note: `btn-secondary` draws its ring with an inset
+  box-shadow, so a `border-[var(--cat-tasks)]` class has no visible effect — the blue accent shows
+  in the icon only.
 - "Už máte účet? Přihlásit se" now sits below all three buttons, unchanged in wording.
 
 Verified in the preview at 375×812, 768×1024 and 1280×900: the three buttons are all visible

@@ -37,6 +37,7 @@ check | pass/fail | time | note
 ## After the checks
 
 - [ ] Tag the published commit (not a newer one):
+  - Which commit is published: open `https://mychata.cz/auth`, view the page source and search for `data-commit-sha` (on Lovable's `/__l5e/events` script tag, seen since 14 Oct).
   - GitHub website: Releases → Draft a new release → Choose a tag → type `release-YYYY-MM-DD` → "Create new tag on publish" → Target: the published commit or `main` if nothing newer landed → Publish release.
   - Or terminal: `git fetch origin && git tag -a release-YYYY-MM-DD <hash> -m "<what is live>" && git push origin release-YYYY-MM-DD`
   - Tags are safe for Lovable's sync.

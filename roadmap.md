@@ -1,3 +1,11 @@
+## T-028 Fresh air public pages (14 Oct 2026)
+
+- [x] Restyle only allowed public routes and fallback pages; Czech link previews and priority seasonal heroes.
+- [x] Check sign-in, reset, five onboarding steps, test-cottage public calendar and 404 at 375px, 768px and 1280px; record untested states.
+- [x] Check contrast, brands, cookie position and write the scoped report; shared contrast/banner blockers remain outside this task's allowlist.
+- [ ] Remaining guest/invitation/institution public states: requires test-cottage links and an institutional test account.
+- [ ] Institutional live-data checks: requires an institutional test account.
+
 ## Fresh air signed-in pages (14 Oct 2026)
 
 - [x] Replace seasonal asset pointers with ordinary bundled photos and verify autumn in development.

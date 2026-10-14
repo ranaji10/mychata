@@ -18,6 +18,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CONSENT_REGIONS } from "../lib/consent-regions";
+import { brandAssets } from "../lib/brand-assets";
 
 const GA_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as
   string | undefined;
@@ -133,10 +134,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      // Link-preview image from brand/ (bun run brand). Lovable must not set its own.
+      { property: "og:image", content: brandAssets.ogImage },
+      { property: "og:image:width", content: String(brandAssets.ogImageWidth) },
+      { property: "og:image:height", content: String(brandAssets.ogImageHeight) },
+      { property: "og:image:alt", content: "My Chata" },
+      { name: "twitter:image", content: brandAssets.ogImage },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      // Tab and home-screen icons from brand/ (bun run brand); never Lovable's.
+      { rel: "icon", href: brandAssets.icon32, type: "image/png", sizes: "32x32" },
+      { rel: "icon", href: brandAssets.favicon, sizes: "any" },
+      { rel: "apple-touch-icon", href: brandAssets.appleTouchIcon },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },

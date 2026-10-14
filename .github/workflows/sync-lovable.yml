@@ -1,0 +1,42 @@
+name: Keep lovable-sync current
+# Lovable works from the branch lovable-sync (it can't push to main: the ruleset refuses it).
+# After every merge into main, move lovable-sync up to main so Lovable's next round starts
+# from the latest code. Only a fast-forward: if lovable-sync has Lovable commits that are not
+# on main yet, nothing is pushed and the run ends with a warning (merge Lovable's PR first).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Only this workflow writes, and only to lovable-sync.
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-lovable
+  cancel-in-progress: false
+
+jobs:
+  fast-forward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Fast-forward lovable-sync to main
+        run: |
+          git fetch origin main lovable-sync
+          main=$(git rev-parse origin/main)
+          sync=$(git rev-parse origin/lovable-sync)
+          if [ "$main" = "$sync" ]; then
+            echo "lovable-sync is already at main (${main:0:7})." | tee -a "$GITHUB_STEP_SUMMARY"
+          elif git merge-base --is-ancestor "$sync" "$main"; then
+            git push origin "$main:refs/heads/lovable-sync"
+            echo "lovable-sync moved from ${sync:0:7} to ${main:0:7}. Lovable picks it up on its next sync." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            ahead=$(git rev-list --count "$main..$sync")
+            msg="lovable-sync has $ahead Lovable commit(s) that are not on main, so it was not moved. Open or merge the PR from lovable-sync into main; this workflow then moves it on the next merge."
+            echo "::warning title=lovable-sync not moved::$msg"
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+          fi

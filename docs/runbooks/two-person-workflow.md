@@ -16,7 +16,7 @@ Two partners push to this repo, plus Lovable and coding agents. These rules keep
 
 - Your own work: `<your-github-name>/<task-id>-<short-name>`, e.g. `ranaji10/T-012-demo-data`.
 - Agents: `agent/<tool>/<task-id>` (AGENTS.md invariant 3).
-- Lovable edits `main` directly while production is hosted by Lovable (ADR-0007, Model A). That is the only direct push to `main`.
+- Lovable works on the branch `lovable-sync` (its GitHub setting since 14 Oct; the ruleset refuses its pushes to `main`). Its work reaches `main` through a PR like everyone else's. After every merge into `main`, the workflow `.github/workflows/sync-lovable.yml` fast-forwards `lovable-sync` to `main`, so Lovable's next round starts from the latest code. If `lovable-sync` holds Lovable commits not yet on `main`, it is left alone and the run shows a warning: merge Lovable's PR first. To run it by hand: Actions → Keep lovable-sync current → Run workflow.
 - Start every piece of work with `git checkout main && git pull`, then branch. Delete your branch after it is merged.
 
 ## Am I up to date? (`scripts/sync-check.sh`)
@@ -56,9 +56,9 @@ These can't be set from a pull request. They need the owner's account, in the Gi
    - Require a pull request before merging, **0 required approvals** (decided 26 Sep: each of you merges your own PRs).
    - Allowed merge method: merge commits only.
    - Require status checks to pass: the check named exactly `check` (the job in `.github/workflows/ci.yml`; renaming that job, or giving it a matrix, changes the name and blocks every merge), and tick **Require branches to be up to date before merging**, so nothing merges that was tested against an old main.
-   - Bypass list: the **Lovable** GitHub App, so Lovable can keep syncing to `main` under Model A. Without it, Lovable's pushes are rejected and its editor goes out of sync.
+   - Bypass list: the **Lovable** GitHub App. It turned out not to help: Lovable pushes as the `ranaji10` user, not as its app, so its pushes to `main` are refused. That is why Lovable works on `lovable-sync` (see Branches).
    - **Require extra approval for unattributed changes** must stay **off**. Claude's commits aren't linked to a GitHub account, so with it on every agent PR needs an approval, against the 0-approvals decision. If an agent PR asks for an approval before it can merge, this setting is on.
-   - Check afterwards: make a tiny text change in Lovable and confirm it appears on `main`.
+   - Check afterwards: make a tiny text change in Lovable and confirm it appears on `lovable-sync`, then in a PR into `main`.
 3. **Three repository settings that must be on** (all three were on when checked 12 Oct).
    - Settings → General → Pull Requests → **Always suggest updating pull request branches**: gives every PR an "Update branch" button, which the up-to-date rule above makes you need whenever `main` moved.
    - Settings → General → Pull Requests → **Automatically delete head branches**: merged branches disappear by themselves.

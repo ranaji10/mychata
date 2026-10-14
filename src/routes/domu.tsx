@@ -28,6 +28,8 @@ export const Route = createFileRoute("/domu")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Home — My Chata" },
       {
         name: "description",
@@ -214,25 +216,30 @@ function HomePage() {
           </button>
         </div>
       )}
+      <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <h2 className="text-[32px] font-extrabold leading-[1.12] lg:text-[40px]">{nextBooking && nextBooking.start_date > today ? t(`Chata je volná do ${fmtDate(nextBooking.start_date)}.`, `The chata is free until ${fmtDate(nextBooking.start_date)}.`) : t(`Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`, `Hello, ${currentMember?.name?.split(" ")[0] ?? ""}`)}</h2>
+        <Link to="/kalendar" search={{ book: true }} className="btn-primary shrink-0"><CalendarDays className="size-5" />{t("Přidat pobyt", "Add booking")}</Link>
+      </div>
       {/* Property hero */}
       <section>
-        <div className="relative overflow-hidden rounded-3xl">
+        <div className="relative overflow-hidden rounded-[28px]">
           <img
             src={mainPhoto ?? defaultPhoto.src}
-            alt={property?.name ?? t("Chata", "Cottage")}
-            className="aspect-[16/10] w-full object-cover md:aspect-[21/9]"
-            width={1024}
+            alt={mainPhoto ? property?.name ?? t("Chata", "Cottage") : defaultPhoto.alt}
+            className="aspect-[16/10] w-full object-cover object-[50%_42%] md:aspect-[21/9]"
+            loading="lazy"
+            width={1200}
             height={640}
           />
-          <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 ring-1 ring-black/5">
+          <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 shadow-chip">
             <span className="size-2 rounded-full bg-ok" />
-            <span className="text-[13px] font-bold">
+            <span className="text-[16px] font-bold">
               {nextBooking ? t("Připravená", "Ready") : t("Volná", "Free")}
             </span>
           </div>
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-2xl bg-card/95 px-4 py-3 ring-1 ring-black/5">
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-2xl bg-card/95 px-4 py-3 shadow-chip">
             <div>
-              <p className="text-[12px] font-semibold text-muted-foreground">
+              <p className="text-[16px] font-semibold text-muted-foreground">
                 {t("Nejbližší pobyt", "Next stay")}
               </p>
               {nextBooking ? (
@@ -254,16 +261,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Greeting */}
-      <p className="mt-4 text-[15px] font-semibold text-muted-foreground">
-        {t("Dobrý den", "Hello")}, {currentMember?.name?.split(" ")[0] ?? ""}
-      </p>
-
-      {/* Add a booking: always one tap away (the calendar opens with date picking). */}
-      <Link to="/kalendar" search={{ book: true }} className="btn-primary mt-3 w-full">
-        <CalendarDays className="size-5" /> {t("Přidat pobyt", "Add booking")}
-      </Link>
-
       {/* Family: next stay is the first actionable card — the whole card opens the stay */}
       {isFamily && (
         <section
@@ -281,7 +278,7 @@ function HomePage() {
               <p className="mt-1 text-xl font-bold">
                 {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
               </p>
-              <p className="mt-1 text-[15px] text-muted-foreground">
+              <p className="mt-1 text-[16px] text-muted-foreground">
                 {nextBooking.requester_name} · {nextBooking.guests}{" "}
                 {guestsLabel(nextBooking.guests)}
               </p>
@@ -305,7 +302,7 @@ function HomePage() {
             </>
           ) : (
             <>
-              <p className="mt-1 text-[15px] text-muted-foreground">
+              <p className="mt-1 text-[16px] text-muted-foreground">
                 {t("Zatím není naplánovaný žádný pobyt.", "No stay is planned yet.")}
               </p>
             </>
@@ -314,7 +311,7 @@ function HomePage() {
       )}
 
       {/* Stats */}
-      <section className="mt-3 grid grid-cols-2 gap-3">
+      <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] lg:gap-4">
         {isFamily ? (
           <>
             <Link to="/vydaje/vyrovnani">
@@ -379,7 +376,7 @@ function HomePage() {
             <p className="text-base font-bold leading-tight">
               {t("Zpracovat žádosti", "Process requests")}
             </p>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[16px] text-muted-foreground">
               {pendingRequests.length} {t("čeká", "waiting")} · {conflictRequests.length}{" "}
               {t("v kolizi", "in conflict")}
             </p>
@@ -396,10 +393,10 @@ function HomePage() {
             {guestRequests.map((g) => (
               <div key={g.id} className="rounded-2xl bg-background p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-[15px] font-bold">{g.guest_name}</p>
+                  <p className="truncate text-[16px] font-bold">{g.guest_name}</p>
                   <PillWarn>{t("Čeká", "Pending")}</PillWarn>
                 </div>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[16px] text-muted-foreground">
                   {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests}{" "}
                   {guestsLabel(g.guests)} · {g.guest_email}
                 </p>
@@ -448,6 +445,7 @@ function HomePage() {
         </section>
       )}
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-5">
       {/* Overdue task highlight */}
       {overdueTasks.length > 0 && (
         <section className="card mt-4 p-4">
@@ -458,11 +456,11 @@ function HomePage() {
                 key={t2.id}
                 to="/ukoly/$id"
                 params={{ id: t2.id }}
-                className="flex items-center gap-3 rounded-2xl bg-background p-3 active:scale-[0.99]"
+                className="flex min-h-[60px] items-center gap-3 border-b border-divider py-3 last:border-0 active:scale-[0.99]"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-bold">{taskTitle(t2, lang)}</p>
-                  <p className="text-[13px] text-muted-foreground">
+                  <p className="truncate text-[16px] font-bold">{taskTitle(t2, lang)}</p>
+                  <p className="text-[16px] text-muted-foreground">
                     {t("Termín", "Due")}: {fmtDate(t2.due_date)}
                   </p>
                 </div>
@@ -486,7 +484,7 @@ function HomePage() {
           <p className="mt-1 text-xl font-bold">
             {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
           </p>
-          <p className="mt-1 text-[15px] text-muted-foreground">
+          <p className="mt-1 text-[16px] text-muted-foreground">
             {nextBooking.requester_name} · {nextBooking.guests} {guestsLabel(nextBooking.guests)}
           </p>
           <div className="mt-3 flex gap-2">
@@ -522,7 +520,7 @@ function HomePage() {
                   <PillWarn>{t(`${done} z ${total} hotovo`, `${done} of ${total} done`)}</PillWarn>
                 )}
               </div>
-              <p className="mt-1 text-[15px] text-muted-foreground">
+              <p className="mt-1 text-[16px] text-muted-foreground">
                 {fmtDateTime(lastDeparture.submitted_at)}
                 {lastDeparture.note ? ` · „${lastDeparture.note}“` : ""}
               </p>
@@ -530,10 +528,11 @@ function HomePage() {
           );
         })()}
 
+      </div>
       {openTasks.length === 0 && overdueTasks.length === 0 && (
         <div className="card mt-4 p-4 text-center">
           <PillWarn>{t("Tip", "Tip")}</PillWarn>
-          <p className="mt-2 text-[15px] font-semibold">
+          <p className="mt-2 text-[16px] font-semibold">
             {(tasks?.length ?? 0) > 0
               ? t(
                   "Všechny úkoly jsou hotové. Chatu máte pod kontrolou.",

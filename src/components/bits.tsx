@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, type LucideIcon } from "lucide-react";
+import { ArrowLeft, CalendarDays, Wallet, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useLang } from "@/lib/i18n";
 
@@ -21,15 +21,15 @@ export function PageHeader({
         <Link
           to={back}
           aria-label={t("Zpět", "Back")}
-          className="grid size-11 shrink-0 place-items-center rounded-2xl bg-card text-foreground shadow-sm ring-1 ring-black/5"
+          className="grid size-11 shrink-0 place-items-center rounded-full bg-card text-foreground shadow-floating"
         >
           <ArrowLeft className="size-5" />
         </Link>
       )}
 
-      <div className="flex-1">
-        <h2 className="text-2xl font-bold leading-tight">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-[14px] text-muted-foreground">{subtitle}</p>}
+      <div className="min-w-0 flex-1">
+        <h2 className="text-[28px] font-extrabold leading-[1.15]">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-[16px] text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -48,14 +48,14 @@ export function StatCard({
   tone?: "danger" | "ok" | undefined;
 }) {
   return (
-    <div className="card p-4">
-      <p className="text-[13px] font-semibold text-muted-foreground">{label}</p>
+    <div className="card h-full p-4 lg:p-5">
+      <div className="flex items-start justify-between gap-2"><p className="text-[14px] font-semibold text-muted-foreground">{label}</p><span className={`grid size-[34px] shrink-0 place-items-center rounded-full ${typeof value === "string" && value.includes("Kč") ? "bg-warn-soft text-cat-expenses" : "bg-primary-soft text-primary"}`}>{typeof value === "string" && value.includes("Kč") ? <Wallet className="size-[18px]" /> : <CalendarDays className="size-[18px]" />}</span></div>
       <p
-        className={`mt-1 text-3xl font-bold leading-none ${tone === "danger" ? "text-primary" : ""}`}
+        className={`mt-2 text-xl font-extrabold leading-tight lg:text-2xl ${tone === "danger" ? "text-destructive" : ""}`}
       >
         {value}
       </p>
-      {hint && <p className="mt-1 text-[13px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-2 text-[14px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -77,7 +77,7 @@ export function EmptyState({
         <Icon className="size-7" strokeWidth={1.6} />
       </div>
       <p className="mt-4 text-lg font-bold">{title}</p>
-      {hint && <p className="mt-1 text-[15px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-2 text-[14px] text-muted-foreground">{hint}</p>}
       {action && <div className="mt-5 w-full">{action}</div>}
     </div>
   );
@@ -101,13 +101,13 @@ export function LoadingCards() {
 }
 
 export function PillOk({ children }: { children: ReactNode }) {
-  return <span className="pill bg-ok-soft text-ok">{children}</span>;
+  return <span className="pill bg-primary-soft text-primary">{children}</span>;
 }
 export function PillWarn({ children }: { children: ReactNode }) {
-  return <span className="pill bg-warn-soft text-warn">{children}</span>;
+  return <span className="pill bg-warn-soft text-warn-foreground">{children}</span>;
 }
 export function PillDanger({ children }: { children: ReactNode }) {
-  return <span className="pill bg-primary-soft text-primary">{children}</span>;
+  return <span className="pill bg-destructive-soft text-destructive">{children}</span>;
 }
 export function PillNeutral({ children }: { children: ReactNode }) {
   return <span className="pill bg-secondary text-muted-foreground">{children}</span>;
@@ -123,7 +123,7 @@ export function Avatar({ name, className = "" }: { name: string; className?: str
     .toUpperCase();
   return (
     <div
-      className={`grid size-10 shrink-0 place-items-center rounded-full bg-fog text-sm font-bold text-muted-foreground ${className}`}
+      className={`grid size-10 shrink-0 place-items-center rounded-full bg-card text-base font-extrabold text-primary ${className}`}
     >
       {initials || "?"}
     </div>

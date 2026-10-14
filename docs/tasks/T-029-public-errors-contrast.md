@@ -4,7 +4,7 @@ Owner: Claude · Status: review
 
 Goal: close the small review findings that fall outside the T-027 and T-028 allowlists, so none of them is lost.
 Non-goals: no migrations, policies, database functions, package changes or restyling.
-Files allowed: `src/lib/guest.functions.ts`, `src/components/calendar.tsx`, `src/components/AppShell.tsx`, `src/lib/consent.tsx`, `docs/tasks/T-027-l5b-followups.md`, `docs/tasks/T-028-l5c-public-pages.md`, `docs/tasks/T-029-public-errors-contrast.md`, `docs/external/lovable/2026-10-14-l5a-foundation-review.md`, `docs/external/lovable/2026-10-14-l5b-pages-review.md`.
+Files allowed: `src/lib/guest.functions.ts`, `src/components/calendar.tsx`, `src/components/AppShell.tsx`, `src/lib/consent.tsx`, `docs/tasks/T-027-l5b-followups.md`, `docs/tasks/T-028-l5c-public-pages.md`, `docs/tasks/T-029-public-errors-contrast.md`, `docs/external/lovable/2026-10-14-l5a-foundation-review.md`, `docs/external/lovable/2026-10-14-l5b-pages-review.md`, `docs/external/claude/2026-09-25-critical-review.md` (copy of the Claude doc).
 Invariants touched (AGENTS.md): 6 (errors).
 Context: `docs/external/claude/2026-10-14-pr26-review.md`, `2026-10-14-pr31-review.md`, `docs/external/lovable/2026-10-14-l5c-public-pages.md` ("Contrast and shared blockers").
 

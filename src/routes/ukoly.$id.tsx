@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, ClipboardList, FileBadge, User } from "lucide-react";
@@ -31,6 +32,8 @@ export const Route = createFileRoute("/ukoly/$id")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Task detail — My Chata" },
       { name: "description", content: "Details of a cottage task." },
       { property: "og:title", content: "Task detail — My Chata" },
@@ -136,9 +139,14 @@ function TaskDetail() {
           }
           action={
             isError ? (
-              <button onClick={() => void refetch()} className="btn-primary w-full">
+              <Button
+                variant="fresh"
+                size="fresh"
+                onClick={() => void refetch()}
+                className="btn-primary w-full"
+              >
                 {t("Zkusit znovu", "Try again")}
-              </button>
+              </Button>
             ) : (
               <Link to="/ukoly" className="btn-primary w-full">
                 {t("Zpět na úkoly", "Back to tasks")}
@@ -157,14 +165,18 @@ function TaskDetail() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button
+        <Button
+          variant="fresh"
+          size="fresh"
           onClick={() => navigate({ to: "/ukoly" })}
           aria-label={t("Zpět", "Back")}
-          className="grid size-11 place-items-center rounded-xl bg-secondary"
+          className="grid size-11 place-items-center rounded-full bg-secondary"
         >
           <ArrowLeft className="size-5" />
-        </button>
-        <h1 className="text-2xl font-bold">{t("Detail úkolu", "Task detail")}</h1>
+        </Button>
+        <h1 className="text-[28px] font-extrabold leading-[1.15]">
+          {t("Detail úkolu", "Task detail")}
+        </h1>
       </div>
 
       <section className="card mt-4 p-4">
@@ -181,24 +193,24 @@ function TaskDetail() {
           )}
         </div>
 
-        <p className="mt-1 text-[14px] font-semibold text-muted-foreground">
+        <p className="mt-1 text-[16px] font-semibold text-muted-foreground">
           {taskCategoryLabel(task.category, lang)} · {t("Priorita", "Priority")}:{" "}
           {urgencyLabel(task.urgency, lang)}
         </p>
 
         <div className="mt-4 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-muted-foreground">
+            <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground">
               <User className="size-5" />
             </div>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-muted-foreground">
+              <p className="text-[16px] font-semibold text-muted-foreground">
                 {t("Odpovědná osoba", "Assignee")}
               </p>
               <select
                 value={task.assignee_member_id ?? ""}
                 onChange={(e) => update.mutate({ assignee_member_id: e.target.value || null })}
-                className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 text-[15px] font-semibold"
+                className="field mt-1 font-semibold"
                 aria-label={t("Přiřadit osobu", "Assign person")}
               >
                 <option value="">{t("Nikdo", "Nobody")}</option>
@@ -212,18 +224,18 @@ function TaskDetail() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-muted-foreground">
+            <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground">
               <CalendarDays className="size-5" />
             </div>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-muted-foreground">
+              <p className="text-[16px] font-semibold text-muted-foreground">
                 {t("Termín", "Due date")}
               </p>
               <input
                 type="date"
                 value={task.due_date ?? ""}
                 onChange={(e) => update.mutate({ due_date: e.target.value || null })}
-                className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 text-[15px] font-semibold"
+                className="field mt-1 font-semibold"
                 aria-label={t("Termín", "Due date")}
               />
             </div>
@@ -231,7 +243,7 @@ function TaskDetail() {
         </div>
 
         {task.done_note && (
-          <p className="mt-3 rounded-2xl bg-background p-3 text-[14px]">
+          <p className="mt-3 rounded-2xl bg-background p-3 text-[16px]">
             {t("Poznámka", "Note")}: „{task.done_note}“
           </p>
         )}
@@ -249,13 +261,15 @@ function TaskDetail() {
             ["DONE", t("Hotovo", "Done")],
           ] as const
         ).map(([status, label]) => (
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             key={status}
             onClick={() => update.mutate({ status })}
             className={task.status === status ? "btn-primary px-2" : "btn-secondary px-2"}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
       {done && (
@@ -266,12 +280,14 @@ function TaskDetail() {
       )}
       {isAdmin && (
         <>
-          <button
+          <Button
+            variant="fresh"
+            size="fresh"
             onClick={() => setConfirmOpen(true)}
             className="btn-secondary mt-6 min-h-11 w-full text-destructive"
           >
             {t("Smazat úkol", "Delete task")}
-          </button>
+          </Button>
           <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
             <AlertDialogContent className="w-[calc(100%-2rem)] rounded-3xl">
               <AlertDialogHeader>

@@ -29,7 +29,10 @@ export function TaskGroup({
   const remaining = tasks.filter((task) => task.status !== "DONE");
   const count = totalTasks.filter((task) => task.status === "DONE").length;
   const tile = (task: Task) => (
-    <div key={task.id} className="relative flex min-h-[60px] items-center gap-2 border-b border-divider py-3 last:border-0">
+    <div
+      key={task.id}
+      className="relative flex min-h-[60px] items-center gap-2 border-b border-divider py-3 last:border-0"
+    >
       <Button
         variant="ghost"
         disabled={busy}
@@ -41,7 +44,9 @@ export function TaskGroup({
         className="relative z-10 size-11 shrink-0 rounded-full p-0"
       >
         {task.status === "DONE" ? (
-          <span className="grid size-[26px] place-items-center rounded-[8px] bg-primary text-primary-foreground"><Check className="size-[18px]" strokeWidth={3} /></span>
+          <span className="grid size-[26px] place-items-center rounded-[8px] bg-primary text-primary-foreground">
+            <Check className="size-[18px]" strokeWidth={3} />
+          </span>
         ) : (
           <Circle className="size-6 text-control-border" strokeWidth={2} />
         )}

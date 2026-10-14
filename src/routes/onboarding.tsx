@@ -1,3 +1,4 @@
+import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,6 +53,7 @@ function OnboardingPage() {
   // Family or institution is decided at sign-up (T-021): "Sign up as an Institute" stores
   // signup_kind "institution"; every other sign-up (Google, personal email) is a family.
   const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL">("FAMILY");
+  useBrand(type === "INSTITUTIONAL" ? "institution" : "family");
   const [accountName, setAccountName] = useState("");
   // Name from Google, or from the email sign-up form; always editable (T-021).
   const [fullName, setFullName] = useState("");
@@ -181,7 +183,7 @@ function OnboardingPage() {
           : true;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4 md:max-w-[560px] md:py-10">
+    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh p-4 md:max-w-[560px] md:py-10">
       <div className="flex items-center justify-between">
         <p className="font-bold text-primary">My Chata</p>
         <LanguageToggle />

@@ -1,12 +1,14 @@
+import { Button } from "@/components/ui/button";
+import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Building2, LogIn, Mail } from "lucide-react";
+import { Home, LogIn, Mail } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { pendingInvite } from "@/lib/pending-invite";
 import { authLinkError, isPublicEmailDomain } from "@/lib/signup";
-import chataImg from "@/assets/chata.jpg";
+import { useDefaultChataPhoto } from "@/lib/season";
 
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: true },
@@ -28,12 +30,14 @@ export const Route = createFileRoute("/auth")({
 type Mode = "main" | "email" | "institute";
 
 function AuthPage() {
+  const defaultPhoto = useDefaultChataPhoto();
   const { t } = useLang();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [mode, setMode] = useState<Mode>("main");
+  useBrand(mode === "institute" ? "institution" : "family");
   const [isSignUp, setIsSignUp] = useState(true);
   const [name, setName] = useState("");
   const [organisation, setOrganisation] = useState("");
@@ -244,56 +248,91 @@ function AuthPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background p-4 md:max-w-[480px] md:py-8 lg:grid lg:max-w-[1080px] lg:grid-cols-2 lg:content-center lg:gap-x-14 lg:px-8">
-      <div className="flex justify-end lg:col-span-2">
+    <main className="page-fresh mx-auto flex min-h-screen max-w-[480px] flex-col px-5 py-5 md:py-8">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
+            <Home className="size-6" strokeWidth={2} />
+          </span>
+          <span className="text-lg font-extrabold">My Chata</span>
+        </div>
         <LanguageToggle />
       </div>
       <img
-        src={chataImg}
-        alt={t("Dřevěná chata", "Wooden cottage")}
-        className="mt-4 aspect-[16/10] w-full rounded-3xl object-cover lg:aspect-[4/5] lg:max-h-[640px]"
+        src={defaultPhoto.src}
+        alt={defaultPhoto.alt}
+        className="mt-6 h-[250px] w-full rounded-[28px] object-cover object-[50%_42%]"
       />
-      <section className="py-8 lg:self-center">
-        <p className="font-bold text-primary">My Chata</p>
-        <h1 className="mt-1 text-3xl font-bold">
-          {t("Přihlaste se ke své chatě", "Sign in to your cottage")}
+      <section className="py-6">
+        <h1 className="mt-1 text-[32px] font-extrabold leading-[1.12]">
+          {mode === "main"
+            ? t("Společná chata, bez zmatků.", "One shared chata, no muddle.")
+            : mode === "institute"
+              ? t("Registrace instituce", "Sign up as an Institute")
+              : t("Přihlaste se ke své chatě", "Sign in to your cottage")}
         </h1>
         <p className="mt-2 text-muted-foreground">
           {t(
-            "Vaše pobyty, úkoly, výdaje a dokumenty zůstávají soukromé.",
-            "Your stays, tasks, expenses, and documents stay private.",
+            mode === "main"
+              ? "Kalendář, úkoly, výdaje a návod k chatě na jednom místě."
+              : "Vaše pobyty, úkoly, výdaje a dokumenty zůstávají soukromé.",
+            mode === "main"
+              ? "Calendar, tasks, expenses and the house manual in one place."
+              : "Your stays, tasks, expenses, and documents stay private.",
           )}
         </p>
 
         {error && (
-          <p className="mt-4 rounded-2xl bg-primary-soft p-3 font-semibold text-primary">{error}</p>
+          <p className="mt-4 rounded-2xl bg-destructive-soft p-3 font-semibold text-destructive">
+            {error}
+          </p>
         )}
         {info && <p className="mt-4 rounded-2xl bg-ok-soft p-3 font-semibold text-ok">{info}</p>}
 
         {mode === "main" ? (
           <div className="mt-6 space-y-3">
-            <button onClick={signInGoogle} disabled={busy} className="btn-primary w-full">
+            <Button
+              variant="fresh"
+              size="fresh"
+              onClick={signInGoogle}
+              disabled={busy}
+              className="btn-primary min-h-[56px] w-full text-[17px]"
+            >
               <LogIn className="size-5" />
               {busy
                 ? t("Přihlašuji…", "Signing in…")
                 : t("Pokračovat přes Google", "Continue with Google")}
-            </button>
-            <button className="btn-secondary w-full" onClick={() => open("email", true)}>
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-secondary min-h-[56px] w-full text-[17px]"
+              onClick={() => open("email", true)}
+            >
               <Mail className="size-5" />
               {t("Registrovat se e-mailem", "Sign up with email")}
-            </button>
-            <button className="btn-secondary w-full" onClick={() => open("institute", true)}>
-              <Building2 className="size-5" />
-              {t("Registrovat instituci", "Sign up as an Institute")}
-            </button>
-            <p className="pt-1 text-center text-[14px] text-muted-foreground">
-              {t("Už máte účet s e-mailem?", "Already have an email account?")}{" "}
-              <button
+            </Button>
+            <p className="pt-1 text-center text-[16px] text-muted-foreground">
+              {t("Už máte účet?", "Already have an account?")}{" "}
+              <Button
+                variant="fresh"
+                size="fresh"
                 className="min-h-11 font-semibold text-primary"
                 onClick={() => open("email", false)}
               >
                 {t("Přihlásit se", "Sign in")}
-              </button>
+              </Button>
+            </p>
+            <p className="text-center text-[16px] text-muted-foreground">
+              {t("Škola nebo firma?", "School or company?")}{" "}
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="min-h-11 font-bold text-primary hover:text-primary-hover"
+                onClick={() => open("institute", true)}
+              >
+                {t("Registrovat instituci", "Sign up as an Institute")}
+              </Button>
             </p>
           </div>
         ) : (
@@ -306,7 +345,7 @@ function AuthPage() {
                   : t("Přihlášení e-mailem", "Sign in with email")}
             </h2>
             {mode === "institute" && (
-              <p className="text-[14px] text-muted-foreground">
+              <p className="text-[16px] text-muted-foreground">
                 {t(
                   "Pro školy, firmy, odbory a spolky. Použijte pracovní e-mail vaší organizace (např. @vase-skola.cz).",
                   "For schools, companies, unions and clubs. Use your organisation's work email (e.g. @your-school.cz).",
@@ -341,7 +380,7 @@ function AuthPage() {
               aria-invalid={institutePublicEmail}
             />
             {institutePublicEmail && (
-              <p className="rounded-2xl bg-warn-soft p-3 text-[14px] font-semibold text-warn">
+              <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                 {t(
                   "Pro instituci použijte pracovní e-mail, ne veřejnou schránku (Gmail, Seznam…). Pro rodinu zvolte „Registrovat se e-mailem“.",
                   "For an institution, use a work email, not a public mailbox (Gmail, Outlook…). For a family, choose “Sign up with email”.",
@@ -360,49 +399,63 @@ function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={signingUp ? "new-password" : "current-password"}
             />
-            <button className="btn-primary w-full" disabled={!canSubmit} onClick={submit}>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-primary min-h-[56px] w-full text-[17px]"
+              disabled={!canSubmit}
+              onClick={submit}
+            >
               {busy
                 ? t("Pracuji…", "Working…")
                 : signingUp
                   ? t("Vytvořit účet", "Create account")
                   : t("Přihlásit se", "Sign in")}
-            </button>
+            </Button>
             {canResend && (
-              <button
-                className="btn-secondary w-full"
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-secondary min-h-[56px] w-full text-[17px]"
                 disabled={busy || !cleanEmail}
                 onClick={resendConfirmation}
               >
                 <Mail className="size-5" />
                 {t("Poslat potvrzovací e-mail znovu", "Send the confirmation email again")}
-              </button>
+              </Button>
             )}
             {mode === "email" && (
-              <div className="flex items-center justify-between gap-2 text-[14px]">
-                <button
+              <div className="flex items-center justify-between gap-2 text-[16px]">
+                <Button
+                  variant="fresh"
+                  size="fresh"
                   className="min-h-11 font-semibold text-primary"
                   onClick={() => open("email", !isSignUp)}
                 >
                   {isSignUp
                     ? t("Už mám účet – přihlásit se", "I have an account – sign in")
                     : t("Nemám účet – zaregistrovat se", "No account – sign up")}
-                </button>
+                </Button>
                 {!isSignUp && (
-                  <button
+                  <Button
+                    variant="fresh"
+                    size="fresh"
                     className="min-h-11 font-semibold text-muted-foreground"
                     onClick={() => navigate({ to: "/reset-password" })}
                   >
                     {t("Zapomenuté heslo", "Forgot password")}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
-            <button
-              className="min-h-11 w-full text-center text-[14px] font-semibold text-muted-foreground"
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="min-h-11 w-full text-center text-[16px] font-semibold text-muted-foreground"
               onClick={() => open("main", true)}
             >
               {t("Zpět", "Back")}
-            </button>
+            </Button>
           </div>
         )}
       </section>

@@ -1,3 +1,4 @@
+import { useBrand } from "@/lib/brand";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
@@ -5,7 +6,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { findConflicts, fmtDate, todayISO, type Booking } from "@/lib/data";
 import { LanguageToggle, useLang } from "@/lib/i18n";
-import chataImg from "@/assets/chata.jpg";
+import { useDefaultChataPhoto } from "@/lib/season";
 
 export const Route = createFileRoute("/verejne/zadost/$token")({
   staticData: { sitemap: false },
@@ -25,7 +26,9 @@ export const Route = createFileRoute("/verejne/zadost/$token")({
 });
 
 function PublicRequest() {
+  const defaultPhoto = useDefaultChataPhoto();
   const { t } = useLang();
+  useBrand("institution");
   const { token } = Route.useParams();
   // Each institution shares its own link: /verejne/zadost/<property share token> (migration 0012).
   const { data: property, isLoading: loadingProperty } = useQuery({
@@ -109,16 +112,17 @@ function PublicRequest() {
   };
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[420px] bg-background px-4 py-4 pb-8 md:max-w-[640px] md:py-8">
+    <div className="mx-auto min-h-screen w-full max-w-[420px] page-fresh px-4 py-4 pb-8 md:max-w-[640px] md:py-8">
       <div className="mb-2 flex justify-end">
         <LanguageToggle />
       </div>
 
       <div className="relative overflow-hidden rounded-3xl">
         <img
-          src={chataImg}
-          alt={property?.name ?? t("Firemní chata", "Company cottage")}
-          className="aspect-[16/9] w-full object-cover"
+          src={defaultPhoto.src}
+          alt={defaultPhoto.alt}
+          className="aspect-[16/9] w-full object-cover object-[50%_42%]"
+          loading="lazy"
           width={1024}
           height={576}
         />

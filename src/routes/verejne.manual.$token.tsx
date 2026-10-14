@@ -1,3 +1,4 @@
+import { useBrand } from "@/lib/brand";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { BookOpen, Flag } from "lucide-react";
@@ -37,6 +38,7 @@ function PublicManual() {
       return { property: property?.[0] ?? null, sections: sections ?? [] };
     },
   });
+  useBrand(data?.property?.is_institution ? "institution" : "family");
   const flag = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.rpc("public_flag_manual_section", {
@@ -51,7 +53,7 @@ function PublicManual() {
       ),
   });
   return (
-    <main className="mx-auto min-h-screen max-w-[420px] bg-background px-4 py-6 text-foreground md:max-w-[720px] md:py-10">
+    <main className="mx-auto min-h-screen max-w-[420px] page-fresh px-4 py-6 text-foreground md:max-w-[720px] md:py-10">
       <header className="mb-5 flex items-start justify-between gap-3">
         <div>
           <p className="text-[13px] font-bold uppercase text-primary">My Chata</p>

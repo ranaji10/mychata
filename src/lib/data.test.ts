@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  BRANCH_COLORS,
+  branchColor,
   buildChecklistState,
   checklistProgress,
   expenseSettlement,
@@ -90,5 +92,13 @@ describe("normalizePhone (B-016)", () => {
     expect(normalizePhone("12345")).toBeNull();
     expect(normalizePhone("+420 777 123 456 789 000")).toBeNull();
     expect(normalizePhone("+0777123456")).toBeNull();
+  });
+});
+
+describe("Fresh air branch palette", () => {
+  it("uses the green family palette and cycles without coral", () => {
+    expect(BRANCH_COLORS).toEqual(["#1F7A4D", "#2E6FB0", "#0F766E", "#B45309", "#7C5CBF"]);
+    expect(branchColor("unknown", [])).toBe("#1F7A4D");
+    expect(branchColor("f", ["a", "b", "c", "d", "e", "f"])).toBe("#1F7A4D");
   });
 });

@@ -4,7 +4,7 @@ import { useAccount } from "@/lib/account";
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { LanguageToggle, useLang } from "@/lib/i18n";
-import chataImg from "@/assets/chata.jpg";
+import { useDefaultChataPhoto } from "@/lib/season";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -31,6 +31,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { account, user, loading } = useAccount();
+  const defaultPhoto = useDefaultChataPhoto();
   const { t } = useLang();
   const navigate = useNavigate();
 
@@ -40,15 +41,16 @@ function Index() {
   }, [account, loading, user, navigate]);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col bg-background px-4 pb-8">
+    <div className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col page-fresh px-4 pb-8">
       <div className="mt-4 flex justify-end">
         <LanguageToggle />
       </div>
       <div className="relative mt-3 overflow-hidden rounded-3xl">
         <img
-          src={chataImg}
-          alt={t("Dřevěná chata v přírodě", "Wooden cottage in nature")}
-          className="aspect-[16/10] w-full object-cover"
+          src={defaultPhoto.src}
+          alt={defaultPhoto.alt}
+          className="aspect-[16/10] w-full object-cover object-[50%_42%]"
+          loading="lazy"
           width={1024}
           height={640}
         />

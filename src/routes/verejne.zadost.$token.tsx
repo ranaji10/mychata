@@ -137,9 +137,8 @@ function PublicRequest() {
           <p className="text-[16px] font-semibold text-muted-foreground">
             {t("Žádost o pobyt", "Stay request")}
           </p>
-          <p className="text-lg font-bold leading-tight">
-            {property?.name ?? t("Firemní chata", "Company cottage")}
-          </p>
+          {/* Only a found cottage gets a name; an invalid link must not look like it found one. */}
+          {property?.name && <p className="text-lg font-bold leading-tight">{property.name}</p>}
         </div>
       </div>
 

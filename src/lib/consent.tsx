@@ -108,9 +108,11 @@ export function ConsentBanner() {
   return (
     <div
       data-consent-banner
-      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[420px] p-3 md:max-w-[640px] lg:inset-x-auto lg:bottom-4 lg:right-4 lg:max-w-[440px]"
+      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[420px] md:max-w-[640px] md:p-3 lg:inset-x-auto lg:bottom-4 lg:right-4 lg:max-w-[440px]"
     >
-      <div className="rounded-[28px] bg-card p-5 shadow-2xl">
+      {/* Phones: a sheet flush with the bottom edge (top corners rounded, room for the home bar).
+          Tablets and computers: a floating card. */}
+      <div className="rounded-t-[28px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl md:rounded-[28px] md:pb-5">
         <div className="flex items-center gap-3">
           <div className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
             <Cookie className="size-6" />

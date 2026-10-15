@@ -266,6 +266,8 @@ function AuthPage() {
       </div>
       <img
         src={defaultPhoto.src}
+        srcSet={defaultPhoto.srcSet}
+        sizes={defaultPhoto.sizes}
         alt={defaultPhoto.alt}
         width={1200}
         height={1200}

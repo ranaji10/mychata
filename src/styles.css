@@ -259,6 +259,12 @@
 @media (max-width: 1023px) {
   .has-tabbar [data-consent-banner] {
     bottom: 84px;
+    padding: 0.75rem;
+  }
+  /* Above the tab bar the banner floats, so it keeps all four corners round. */
+  .has-tabbar [data-consent-banner] > div {
+    border-radius: 28px;
+    padding-bottom: 1.25rem;
   }
 }
 

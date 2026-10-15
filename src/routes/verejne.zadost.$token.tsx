@@ -127,6 +127,8 @@ function PublicRequest() {
       <div className="relative overflow-hidden rounded-[28px]">
         <img
           src={defaultPhoto.src}
+          srcSet={defaultPhoto.srcSet}
+          sizes={defaultPhoto.sizes}
           alt={defaultPhoto.alt}
           className="aspect-[16/9] w-full object-cover object-[50%_42%]"
           loading="lazy"
@@ -156,9 +158,9 @@ function PublicRequest() {
       ) : !property ? (
         // An unknown or family link: say so instead of showing a form that can't be sent.
         <section className="card mt-4 p-4">
-          <p className="text-[16px] font-semibold">
+          <h1 className="text-xl font-bold">
             {t("Tento odkaz na formulář neplatí.", "This form link is not valid.")}
-          </p>
+          </h1>
           <p className="mt-1 text-[16px] text-muted-foreground">
             {t(
               "Požádejte správce chaty o aktuální odkaz.",

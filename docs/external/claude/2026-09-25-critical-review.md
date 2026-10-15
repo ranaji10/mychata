@@ -14,13 +14,13 @@ tab: Now
 
 15 Oct 2026 · Tuik
 
-**Live:** `c099891` (T-033), published 15 Oct 00:46. **Waiting on you:** merge PR #42 (CI green) and PR #43 (this doc's repo copies), the institutional test account, and the two-person checks. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `c099891` (T-033), published 15 Oct 00:46. **Waiting on you:** publish PR #42 (merged), merge PR #43 (this doc's repo copies), the institutional test account, and the two-person checks. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-1 | **Merge PR #42 (T-034)** (CI green), then publish, run prompt `10`. Cookie banner flush with the phone's bottom edge, an 800px photo for phones (about 180 KB instead of 380 KB), a heading on an invalid request link | You | To do | F-03, F-11, F-13 |
+| N-1 | **PR #42 (T-034) merged 15 Oct, 02:14**; now publish, run prompt `10`. Cookie banner flush with the phone's bottom edge, an 800px photo for phones (about 180 KB instead of 380 KB), a heading on an invalid request link | You | To do | F-03, F-11, F-13 |
 | N-2 | **Institutional test account:** a test e-mail on a work-style domain plus an institutional test property, added to `docs/runbooks/test-cottages.md` and Lovable's Knowledge | You | To do | N-3, F-02 |
 | N-3 | **Two-person checks:** `prompts/2026-10-13/12-release-two-person-checks.md` (about 15 min, with Rajat or your second e-mail) plus the five onboarding steps for a family and an institution sign-up. Record results in STATUS.md, then tag the live commit (`release-2026-10-14` sits on the older `9f801e8`) | You, Rajat | To do | F-01, F-10 |
 | N-4 | **Switch off the test chata's public calendar** in Settings ("Vypnout veřejný kalendář", live since T-032), then prompt `10` again | You | To do | |

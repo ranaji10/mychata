@@ -17,3 +17,5 @@ src/integrations/lovable/
 src/integrations/supabase/types.ts
 drizzle/migrations/meta/
 docs/generated/
+# Tracker copies: kept unpadded so agents read them cheaply (a padded table tripled the file size)
+docs/external/claude/2026-09-25-critical-review*.md

@@ -1,0 +1,138 @@
+---
+source: claude
+model: claude-opus-5-5
+date: 2026-09-25
+updated: 2026-10-15
+status: reviewed
+artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
+tab: Done & history
+---
+
+> Copy of the "Done & history" tab of the Claude doc "MyChata: tracker and critical review". The doc is the working copy; Claude refreshes this file whenever it edits that tab.
+
+# Done and history
+
+Everything finished, oldest first. Details are in the repo: `docs/STATUS.md`, `docs/bugs/`, the task briefs and the pull requests.
+
+## Chain of events
+
+| When | What happened | Evidence |
+| --- | --- | --- |
+| 25 Sep | Critical review written (sections 1–9, now the Reference tab). | This doc |
+| 25 Sep | Fixes for defects 1–13 built, 35 tests passing; PR #1 merged. Lovable Knowledge rules pasted. main protected against force pushes and deletion; secret scanning and Dependabot on. | PR #1 |
+| 25 Sep | Lovable switched back from lovable/experiments to main. Migrations 0011–0015 applied to the live database through an empty 0016, with no data lost (8 members, 4 profiles, 3 chatas). | Lovable, regenerated types |
+| 25 Sep, 18:00 | Live site on the new build: a wrong form link is refused, and the home page no longer links to the demo university's form. | Browser check |
+| 25 Sep, 18:16 | CI green again after Lovable's commit broke it. | PR #3 |
+| 25 Sep, 20:30 | Outage B-002: a publish built the app without its Supabase settings. Fixed with a committed `.env.production` and a CI guard, then republished. Full database backup taken (30 tables plus sign-in accounts; no uploaded files). | PR #4, B-002 |
+| 26 Sep, 01:00 | Site back up. The first five checks found B-003 (members sent to onboarding). | B-003 |
+| 26 Sep, 02:34 | B-003 fixed, new link-preview image, nightly production check added; 0017 live. Lovable added 0018, a copy of 0017 (harmless, kept). | PR #5 |
+| 26 Sep, 03:25 | Cleanup: release checklist, design rules saved from Lovable's memory, Knowledge rules 3a and 9. Lovable memory entries deleted, old GitHub branches deleted. The GitHub 500 errors were on GitHub's side. | PR #6 |
+| 26 Sep, 10:33 | First nightly production check passed. | GitHub Actions |
+| 26 Sep, 13:30 | Live database probed as an anonymous visitor: the fixes hold. Bot audit done. Gemini review triaged into the prompts doc. | Prompts doc |
+| 26 Sep | Decided: no approvals between partners; email through Lovable's built-in email; AI and email billed to the "My Lovable" workspace; no Lovable connector for Claude for now; the repo is the shared tracker. | T-005, environments.md |
+| 26–27 Sep | Two-person setup merged: CI migration guard, sync check with git hooks and a VS Code task, two-person runbook, email plan, copies of Claude docs in the repo. Tag `baseline-2026-09-26` on 7d5d8b7. Lovable reconnected to the repo, waiting for the next merge to pull. | PR #7 |
+| 28 Sep | CC-1 (T-017) built by Claude Code and reviewed: code, database rules, new security tests and formatting all check out. The branch was wrongly set to track main, which could have pushed it straight to main; that link was removed. | Branch agent/claude/T-017-review-bugs |
+| 28 Sep, 14:48 | CC-1 merged; Lovable pulled and published it. | PR #8 |
+| 28 Sep, 17:27–18:35 | Release checks and CC-1 checks recorded on the live site: every request succeeded (sign-in, two invitations, manual answer, public calendar, booking, half-done handover, profile save). One iPhone photo was refused in Firefox with the new "wrong file type" message, as designed. | Recordings in private/Screenshots/28092026 |
+| 28 Sep | Maintainer review notes triaged. Root causes found: email sign-up crashed before sending anything; admin invitations became members (lower-case role); the invitation link was lost at sign-in; Home never read the main photo. | B-011 to B-017 |
+| 28 Sep, 19:10 | T-019 and T-012 built on a branch. All migrations replayed on an in-memory Postgres: 36 database tests pass, including the new invitation and demo-removal tests; 25 unit tests pass; lint 0 errors; formatting matches CI. | Branch agent/claude/T-019-invites-signin-demo |
+| 28 Sep, 19:40 | Database export taken before the demo removal (Lovable DB exports folder). First CI run of T-019 failed on one type in the invite email helper; fixed. | Commit abeda7f |
+| 28 Sep, 21:12 | T-019 and T-012 merged. Lovable applied 0019 and 0020 through an empty marker (0021) and published. Demo family, fake university and their storage folders removed. | PR #10 |
+| 28 Sep, evening | Maintainer walkthrough of T-019 on the live site: 15 notes, among them the members page crashing, no admin left after the demo removal, a non-admin able to confirm a guest booking, and Document Vault questions doing nothing. | T-021 brief |
+| 29 Sep, 06:25 | T-021 merged (migration 0022, three admin-checked database functions). Lovable applied it as 0023, a copy of 0022: harmless, but against Knowledge rule 3a. | PR #11 |
+| 29 Sep, morning | Claude's live test at phone size: most flows work. 11 problems fixed, among them Settle debts and task detail never opening, people left without an account landing on an empty Home, and clear messages for links that aren't valid. Tests ran in CI only (the computer disconnected). | PR #12, T-022 |
+| 29 Sep, 10:11 | CC-2 merged (T-018, migration 0024: checklists, booking defaults, "cover it all", new tasks assigned to their creator). Lovable applied it through an empty marker (0025), as rule 3a says. | PR #13 |
+| 29 Sep, 10:13–10:29 | Lovable built L-1: Settings tab, share sheet, chata switcher, Home and the public calendar. CI on main went red twice on formatting; PR #14 fixed it. | PR #14 |
+| 29 Sep – 3 Oct | Nightly production check red every night. Cause: the test, not the site (fixed 12 Oct in CC-0). | GitHub Actions |
+| 3 Oct, 23:26 | Two rulesets on main: PR required with 0 approvals, branches up to date, one app on the bypass list; no deletion, no force push. | GitHub settings |
+| 4 Oct | GitHub settings checked against the workflow; prompts for every remaining agent written to the Mac (prompts/2026-10-04/). | This doc |
+| 12 Oct, 20:13 | GitHub settings redone and checked through the API: "main - PRs and CI" (PR, 0 approvals, unattributed-changes approval off, merge commits only, required check "check" from GitHub Actions, branches up to date, Lovable app bypass) and "main - protect" (no deletion, no force push, no bypass). Update-branch button, auto-delete branches, auto-merge and push protection on; classic branch protection removed. Lovable bypass still to be proven by one Lovable edit. | GitHub settings |
+| 12 Oct, 21:18 | CC-0 merged: nightly smoke test fixed, PR format check limited to changed files, read-only CI permissions, npm Dependabot off, STATUS.md and Lovable rule 3a refreshed. First PR under the new ruleset; merged with 0 approvals after green CI. | PR #15 |
+| 12 Oct, 21:25-21:34 | Lovable built L-2 (13 commits). The ruleset refused its push to main, so it created the branch lovable-sync. The diff stays in UI files apart from short notes in AGENTS.md, STATUS.md and roadmap.md, and TanStack and Lovable package updates. One file fails the format check. | Branch lovable-sync |
+| 12 Oct, evening | L-2 opened as PR #16 from lovable-sync; CI green; independent review run. Live site smoke tests: 5 of 6 pass, the invalid institution form link shows its message only after about 3 seconds. Tag live-2026-09-29 prepared for the build that is live (35819d8); Claude's session can't push tags, so a maintainer creates it. | PR #16 |
+| 12 Oct, 23:00 | Tag live-2026-09-29 created on 35819d8 (what mychata.cz runs). Rajat added as a collaborator. Lovable confirmed it publishes its workspace copy (lovable-sync) and never pulls main; it did receive PR #16's merge from main, so the rule is: publish only after Lovable's PR is merged and Lovable shows the latest main commit. | GitHub tags |
+| 13 Oct, 00:22 | L-2 and L-2b merged after two independent reviews (all six fixes done, 86 tests, CI green). Cosmetic follow-ups are listed on the PR for the next Lovable batch; iPhone link selection still to check during release. | PR #16 |
+| 12–13 Oct, night | L-2 and L-2b published. Prompts 09 and 10 ran in separate Claude Code sessions. Only 10 left a trace: the six public smoke tests passed against mychata.cz at 23:34 (in the T-023 worktree, no report file). 09 saved nothing locally and posted nothing on GitHub. | PR #16, #17 |
+| 13 Oct, 02:00 | Decision: keep Lovable's package updates (TanStack Router 1.170.41, Start 1.168.60, router-plugin 1.168.42, Lovable config 2.25.3). Patch-level, already live, tests and build green, none of the versions is in the May 2026 TanStack malware list or below the seroval fix. Rolling back would cost a Lovable round for no gain. Lovable rule 11 now keeps package changes out of UI batches. | Knowledge rule 11 |
+| 13 Oct, 02:05–02:40 | Live release check in "Test chata (Claude)" with invented data: guest request and approval, promote/demote, invitation create/copy/cancel, Settle debts, PDF and photo questions, checklist add and tick, task filters, clipboard fallback, invalid links. All passed; 19 signed-in pages without console errors. The slow invalid-form message is gone. | T-024 brief |
+| 13 Oct, 02:43 | PR #18 (T-024) merged and published: responsive layout built by Claude rather than Lovable, onboarding question removed, 11 fixes from the live check, test-cottage runbook, AGENTS.md invariant 8, Lovable rules 10–11. The sign-in page on mychata.cz serves the new computer layout. | PR #18 |
+| 13 Oct, ~03:10 | Lovable set up "Testovací chata (Lovable)" with seed data, in the account of the micamail.in address it tests as (it had no cottages before, so it is isolated). It found two gaps: tasks could not be deleted, and the expense form started with nobody selected. | Prompt 11 |
+| 13 Oct, 03:50 | Visual redesign started: three directions (Fresh air, Quiet editorial, Photo-first) drawn on a design canvas from your reference screens; each shows sign-in, Home and Calendar on a phone and Home on a computer. | Design canvas |
+| 13 Oct, 04:18 | L-4 (Lovable) merged and published: admins can delete a task after a confirmation; the expense form starts with you selected and explains when nobody is picked. | PR #19 |
+| 13 Oct, 07:00 | L-4 tested live: delete and expense default work. Found that a deleted task's page stays blank and that a refused delete could report success. Fixed in T-025. | PR #20 |
+| 13 Oct, 08:00 | PR #20 (T-025) merged: a deleted task's page says so; a refused delete is reported. Publish together with PR #21. | PR #20 |
+| 13 Oct, 09:15 | Lovable's preview error diagnosed (B-018): the preview runs in development mode, which never read .env.production, so the browser started without the database address. Reproduced locally; fixed with .env.development and a test that keeps the two files identical. The "Fix error" button would have let Lovable's AI edit code unreviewed. | PR #21, docs/bugs/B-018 |
+| 13 Oct, 09:20 | Open defects fixed: pending guest requests now drawn on the admin's calendar; /zadosti and /export send families Home; cancelling an invitation asks first. Three B-005/T-014 items fixed (one membership claim per page load, one signing request for photos, AI time limits). | PR #21 |
+| 13 Oct, 09:40 | Test pass (code review, live test in the test cottage at 375/768/1440px, invented-data browser checks) found and fixed 13 unlogged defects: Photos page crash after reload (B-019, seen live); Approvals listing confirmed stays; offline start signing people out; failed read sending members to onboarding; "Cancel stay" for everyone with one tap; photo and document deletes without confirmation; Document Vault deleting the file before the record and "Open" blocked in Safari; requests approved without a stay; unsafe usage-export CSV; duplicate tasks from double taps; silent read errors on Home and Calendar; "1 guests". Three of them reproduced against the old code too. | PR #21, docs/tasks/T-026 |
+| 13 Oct, 09:56 | PR #21 (T-026) merged: Photos crash, Approvals listing confirmed stays, Lovable preview (B-018) and the other T-026 fixes. | PR #21 |
+| 13–14 Oct | Visual direction A "Fresh air" chosen: family screens green, institution screens blue, seasonal photos as the default cottage picture. Lovable implements it in three batches (L-5a, L-5b, L-5c). | docs/product/design.md |
+| 14 Oct, 11:13–11:36 | L-5a merged (design tokens, shell, sign-in, Home, Calendar). The four seasonal photos moved into the repo instead of Lovable's storage; the once-a-minute season timer dropped. | PR #22, #23 |
+| 14 Oct, 14:23 | Site check of mychata.cz: public pages pass, 6/6 smoke tests, no console errors. The live commit can't be read from the site; signed-in release checks not done. | PR #24, 2026-10-14-site-check.md |
+| 14 Oct, 15:06 | L-5b merged (every signed-in page) before anyone ran bun run check, then published. Review: merge yes after follow-ups; Lovable batches now get a brief with a file list. | PR #25, 2026-10-14-pr25-review.md |
+| 14 Oct, 17:57 | T-027 merged: delete buttons stay red, icon sizes, cookie banner at the bottom edge, Lovable reports moved, L-5c brief (T-028). Review reports now live in docs/external/claude/ with a table of open follow-ups. | PR #26, #27 |
+| 14 Oct, 18:38–20:18 | L-5c built by Lovable (PR #28). Review: remove the onboarding Family/Institution selector it added. Lovable then lost lovable-sync and pushed the new institution sign-up button to two timestamped branches. Everything was combined on agent/claude/T-028-combined with the selector removed; PR #28 closed. | PR #28, #29 |
+| 14 Oct, 20:16–20:45 | PR #31 opened from the combined branch. Review: merge after filling in the PR body, correcting roadmap.md and two auth.tsx fixes. | PR #31, #32 |
+| 14 Oct, evening | PR #31 and #28 review findings fixed on #31 (reset password always "sent", silent "Nahlásit neaktuální", sign-in buttons under "Otevírám vaši chatu", onboarding save errors ignored); bun run check passes (103 tests), CI green. Leftovers (guest-link error, calendar contrast 2.25:1, banner lifted on loading screens, consent-log errors, PR #26 doc fixes) opened as T-029, PR #33. Sweep of all MyChata sessions for untracked recommendations. | PR #31, #33 |
+| 14 Oct, 21:11–21:15 | PR #31 (L-5c) and PR #33 (T-029) merged; both fix sets live the same evening. | PR #31, #33 |
+| 14 Oct, 21:30–21:40 | lovable-sync moved up to main (9f801e8). Lovable's GitHub setting changed from main to lovable-sync: set to main, its pushes were refused and it created new branches. Published from Lovable. lovable-sync-1791999312 and -1792000663 deleted on GitHub; eleven merged local branches deleted on the Mac, which is back on main. | Lovable settings, git |
+| 14 Oct, ~22:00 | Tag release-2026-10-14 on 9f801e8, the published commit (made before the site check and before the signed-in checks). Evening site check: 6/6 smoke tests, no console errors, Czech titles, seasonal photo from /assets/, live commit readable from data-commit-sha. Not verified: cookie banner (US address). | PR #34, 2026-10-14-site-check-2.md |
+| 14 Oct, 22:18 | PR #35 merged: STATUS.md records the live commit and the tag; the release runbook says where to read the live commit. Docs only. | PR #35 |
+| 14 Oct, 22:30 | Dependabot PR #2 (`actions/checkout` 4 → 7) merged. Mac cleanup finished (T-023 worktree and branch, old bundles). Cookie banner on phones deferred by decision. | PR #2 |
+| 14 Oct, 23:27 | T-030 merged: tab icon (simplified cabin), transparent home-screen icons and link-preview image from `brand/`, regenerated with `bun run brand`. | PR #36 |
+| 14 Oct, 23:45 | T-031 merged: `lovable-sync` kept current after every merge into `main`. | PR #37 |
+| 15 Oct, 00:05 | Lovable's reply to the L-6 cleanup prompt: badge already hidden; Social & search appearance is a Publish-dialog preview with no image field (none needed); the app had no way to switch a public calendar off. | Prompt 18 |
+| 15 Oct, 00:10–00:20 | T-032 merged and published: admins can switch off the public calendar link. Checked live: cabin icon and our logo files served, only our `og:image`, Lovable's tracking scripts gone. Side effect: `data-commit-sha` went with Lovable's analytics, so the live commit could not be read. | PR #38 |
+| 15 Oct, 00:35 | Site check 3: 6/6 smoke tests, no errors. Found the lost version marker, a layout shift on `/host` (CLS 0.11) and the "Firemní chata" placeholder on an invalid request link. | PR #39, `2026-10-14-site-check-3.md` |
+| 15 Oct, 00:46 | T-033 merged and published (`c099891`): `build-sha` and `build-time` meta tags on every page, no layout shift on `/host`, no placeholder name. Closes the version-marker question. | PR #40 |
+| 15 Oct, 01:06 | Site check 4: 6/6, T-033 fixes live, live commit read from `build-sha`. Open: banner gap at 375px, hero photo "downloaded twice", no heading on an invalid request link. | PR #41, `2026-10-14-site-check-4.md` |
+| 15 Oct, ~02:15 | T-034 opened as PR #42: banner flush on phones, 800px photo for phones, request-link heading; the double download was not reproduced. This doc split into four tabs (Now, Backlog, Reference, Done & history) and every open row got an ID. | PR #42 |
+
+## GitHub settings check (found 4 Oct, done 12 Oct)
+
+The table is what the 4 Oct check found and recommended. All of it was applied on 12 Oct and read back through the GitHub API: two new rulesets on `main` ("main - PRs and CI" with the required check `check`, 0 approvals, unattributed-changes approval off, merge commits only, Lovable app on the bypass list; "main - protect" with no deletion and no force push), plus "lovable-sync - keep" (no deletion). CC-0 (PR #15) then merged with 0 approvals. One thing behaved differently than expected: Lovable pushes as the `ranaji10` user, not as its app, so the bypass doesn't apply and Lovable's work now arrives on `lovable-sync` through a PR. Not readable from Claude's session: collaborators, Actions workflow permissions, Dependabot alerts.
+
+| Setting | Now | Should be | Why |
+| --- | --- | --- | --- |
+| Ruleset "main - PRs and CI" → Require status checks | On, but the list of checks is **empty** | Add `check` (the CI job). Keep "Require branches to be up to date" on | With an empty list GitHub requires nothing, so a PR with red CI can be merged |
+| Same ruleset → "Require extra approval for unattributed changes" | On | Off | Claude's commits (`Claude <noreply@anthropic.com>`) aren't linked to a GitHub account. Other repos report that this setting then holds the PR until someone else approves, which contradicts the 0-approvals decision. CC-0's PR will show whether it bites |
+| Same ruleset → bypass list | One GitHub App (id 818760), "Always" | Lovable's app (shown as Lovable or gpt-engineer-app) | The app's name can't be read through the API from here. Check it on the ruleset page, then make one tiny Lovable edit and see it land on `main` |
+| Same ruleset → required approvals | 0 | 0 | As decided on 26 Sep |
+| Same ruleset → allowed merge methods | Merge, squash, rebase | Merge (squash too if you like) | Every merge so far is a merge commit. Low priority |
+| Ruleset "main - protect" | No deletion, no force push | Keep | A classic branch protection with the same two rules also exists. Harmless; delete it if you want the rules in one place |
+| Settings → General → "Always suggest updating pull request branches" | Off | On | "Up to date" is required and Lovable pushes to `main` often, so most PRs will need "Update branch". Without the button that means a local merge |
+| Settings → General → "Automatically delete head branches" | Off | On | Merged branches are being deleted by hand today |
+| Settings → General → "Allow auto-merge" | Off | Optional | Lets either of you press "merge when green" and walk away |
+| Collaborators | Not readable from this session. No commit from Rajat yet | Rajat with Write, on his own GitHub account | Every PR, merge and push so far is from `ranaji10`. If two people share one account, GitHub and the sync check's "someone else is changing these files" warning can't tell you apart |
+| Code security | Secret scanning on; push protection and Dependabot security updates off | Push protection on. Dependabot alerts on; security-update PRs stay off until Model B (they hit the same private-registry failure as the npm updates) | Free on public repos. Push protection stops a key before it lands in history |
+| Actions token permissions | Workflows don't set any | `permissions: contents: read` in both workflows (CC-0), and Settings → Actions → Workflow permissions → Read | Least privilege on a public repo |
+| Dependabot | npm updates fail every week on Lovable's private package links; PR #2 (`actions/checkout` 4 → 7) open | npm updates off until Model B (CC-0); merge #2 after the release tag | A job that always fails teaches you to ignore red |
+| Visibility | Public, AGPL-3.0 | Your decision (O-07) | Public means STATUS.md, bug reports and the copies of this doc are readable by anyone. The T-022 brief names a maintainer's personal email; CC-0 removes it |
+| CODEOWNERS | None | Optional, once Rajat's username is known | Only auto-requests the other person as reviewer; blocks nothing |
+| Notifications | Unknown | Both: Watch → All activity | The nightly check failed five nights in a row without anyone acting on it |
+
+## Defects 1–13, found 25 Sep
+
+These came from reading the migrations and server functions, not from the docs. Several contradict items marked ✅ in `docs/00-OVERVIEW.md` and `docs/build-last-3-responses.md`. Paths are relative to `my-chata-manager_LovableCodebaseDownload/`. Nothing below was tested against the live database; each has a one-line check.
+
+**All fixed and live since 25 Sep** (migrations 0011–0015). A 13th was found during the fix: a member could make themselves admin. The anonymous probe on 26 Sep confirmed 1, 3 and 4 from outside. The table keeps the original findings.
+
+| # | Defect | Where | Severity | Fix |
+| --- | --- | --- | --- | --- |
+| 1 | Any signed-in user can read any other property's manual chunks, including members-only sections. `match_manual_chunks` is SECURITY DEFINER, granted to all authenticated users, takes any `_property_id` and any `_count`. Latent today only because of #2; fixing RAG switches the leak on. | `drizzle/migrations/0007_*.sql`, `src/lib/manual-qa.functions.ts` | Critical | Add an account check inside the function (`property_id in (select id from properties where account_id = current_account_id())`), cap `_count` at 8, filter by visibility |
+| 2 | RAG Stage 1 has almost certainly never stored an embedding. The insert writes a `lang` column that doesn't exist in `manual_chunks`, `gemini-embedding-001` returns 3,072 dims against `vector(768)`, and insert errors are never checked. Q&A silently falls back to pasting the first 6 sections into the model. | `src/lib/manual-qa.functions.ts`, `src/integrations/supabase/types.ts` | High | Check: `select count(*) from manual_chunks;` Then add `lang`, set `output_dimensionality: 768` (or migrate the column), throw on insert error |
+| 3 | Every PUBLIC manual section of every property can be listed by anyone holding the publishable key, which ships in every page. New sections default to `PUBLIC`; onboarding writes house rules as `PUBLIC`. Wi-Fi codes and key-box instructions are the kind of thing admins put there. | `0001_*.sql`, `0008_*.sql`, `src/routes/verejne.manual.$propertyId.tsx` | High | Default to members-only. Serve the public manual through a definer function keyed by an unguessable share token, not the property id |
+| 4 | A property id alone gets a stranger the address plus every booked date, which also tells them when the cottage is empty. | `public_property_details`, `public_booking_availability` (`0005`, `0006`) | High | Same token pattern as #3; public availability only for properties that opt in |
+| 5 | Make/remove admin always fails. `clenove.tsx` writes `user_roles` from the browser, but users only have SELECT on it. The last-admin check counts `members.role`, while access checks `user_roles`: two role systems that drift. | `src/routes/clenove.tsx`, `0003_*.sql` | High | One definer function `set_member_role(member_id, role)`, one role store, scoped per account |
+| 6 | Guest booking submissions very likely fail. `submitGuestRequest` inserts with the anon key; `guest_requests` has no anon INSERT grant or policy. | `src/lib/guest.functions.ts`, `0007_*.sql` | High | Check by submitting one test request. Replace with a definer function `submit_guest_request(token, …)` plus a rate limit |
+| 7 | A user can belong to only one account, ever. `members.user_id` is UNIQUE, `current_account_id()` uses `LIMIT 1`, admin is a global role. Inviting someone who already has an account silently returns null. | `0003_*.sql`, `0007_*.sql` (`accept_invitation`) | High (blocks institutional plans) | See Reference, section 2: a memberships table and an explicit active account |
+| 8 | The public stay-request form linked from the mychata.cz home page is hard-wired to the first institutional property, which is the seeded demo "Vysoká škola podhorní". Real visitors can file requests into a fake university. Seed families with `example.cz` emails also live in production. | `public_institutional_property()`, `supabase/migrations/20260908133152_*.sql`, `src/routes/verejne.zadost.tsx` | Medium | Remove seed data from production; one public request page per institution via slug |
+| 9 | Any member can edit or delete every booking, task, expense, split and handover in the account. "Only the receiver confirms a settlement" is enforced only in the UI. | `FOR ALL` policies in `0003_*.sql`, `src/routes/vydaje.vyrovnani.tsx` | Medium (money) | Per-row policies: author or admin edits; only the receiving member can set `paid_back` |
+| 10 | Admin-only documents: the row is protected, the file is not. Storage policies check only the property folder. | `0004_*.sql` | Medium | Store admin-only files under a separate prefix with an admin check |
+| 11 | No rate limit on `askManual` or `translateTaskText`; anon can insert unlimited `manual_feedback` rows. | `src/lib/*.functions.ts`, `0001_*.sql` | Medium (cost) | Per-user daily cap in a small `usage_counters` table |
+| 12 | Local copy is not runnable as is. `VITE_SUPABASE_PUBLISHABLE_KEY` starts with `ssb_` (typo) in both `.env.local` files; 60 files carry an uncommitted Prettier reformat; a stray `package-lock.json` sits in a Bun project. | both `.env.local`, `git status` | Low but blocking | Fix the key; commit the reformat alone or discard it; delete `package-lock.json` |
+
+Two follow-ups from then: "Confirm email" for password sign-ups is still open (F-07), and "which build is live" is now answered by the `build-sha` meta tag and the Production row in STATUS.md.
+
+---
+
+Source file: `docs/external/claude/2026-09-25-critical-review.history.md`

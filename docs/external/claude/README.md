@@ -2,15 +2,24 @@
 
 Claude docs and artifacts are the readable, shareable versions. The files here are copies that agents can read and git keeps history of. Claude refreshes a copy whenever it edits the artifact; if the two disagree, the artifact is newer.
 
-| Date       | Artifact                                                                                                                 | Copy in this folder             |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------- |
-| 2026-09-25 | [MyChata MVP: critical review and V3 build system](https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1) | `2026-09-25-critical-review.md` |
-| 2026-09-26 | [MyChata: agent prompts from the 26 Sep review](https://claude.ai/code/artifact/7b07f9c1-14fd-4777-8538-cd684a70538e)    | `2026-09-26-review-prompts.md`  |
-| 2026-10-14 | Site check and release readiness (local report, no artifact)                                                             | `2026-10-14-site-check.md`      |
-| 2026-10-14 | PR #25 review (local report, no artifact)                                                                                | `2026-10-14-pr25-review.md`     |
-| 2026-10-14 | Site check, evening (local report, no artifact)                                                                          | `2026-10-14-site-check-2.md`    |
+| Date       | Artifact                                                                                                                 | Copy in this folder                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| 2026-09-25 | [MyChata: tracker and critical review](https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1) (four tabs) | `2026-09-25-critical-review.md` (Now), `.backlog.md`, `.reference.md`, `.history.md` |
+| 2026-09-26 | [MyChata: agent prompts from the 26 Sep review](https://claude.ai/code/artifact/7b07f9c1-14fd-4777-8538-cd684a70538e)    | `2026-09-26-review-prompts.md`                                                       |
+| 2026-10-14 | Site check and release readiness (local report, no artifact)                                                             | `2026-10-14-site-check.md`                                                           |
+| 2026-10-14 | PR #25 review (local report, no artifact)                                                                                | `2026-10-14-pr25-review.md`                                                          |
+| 2026-10-14 | Site check, evening (local report, no artifact)                                                                          | `2026-10-14-site-check-2.md`                                                         |
 
 Rule (AGENTS.md): every new artifact gets a row here, a copy with frontmatter `artifact: <link>`, and a "Source file:" line at the end of the artifact.
+
+## The tracker (critical review doc)
+
+- One copy per tab. Start with `2026-09-25-critical-review.md` (the Now tab, under 10 KB); open `.backlog`, `.reference` or `.history` only when an ID or task points there.
+- IDs: N next step, D decision, F defect, O backlog. Never renumber or reuse an ID. Repo IDs (T-, B-, PR #) go in the row text.
+- In the doc, find rows by searching the ID; don't read whole tabs. Change only the rows the user named, then refresh that tab's copy.
+- A finished row leaves Now or Backlog and becomes a dated row at the end of "Chain of events" (Done & history, oldest first).
+- Keep Now short: the lead line, Next up (≤ 8 rows), Decisions, Open defects, How to use.
+- These copies are in `.prettierignore` on purpose: padded tables tripled their size.
 
 ## Reviews and site checks
 
@@ -22,6 +31,5 @@ Rule (AGENTS.md): every new artifact gets a row here, a copy with frontmatter `a
 | 2026-10-14 | `2026-10-14-pr26-review.md`  | PR #26 (T-027 L-5b follow-ups), last commit aa1e5c7                                    | Merge yes, after fixes                                                     | STATUS.md live claims and dropped untested items, T-027 tick criterion 24/26px, icon sizes app-wide not verified, has-tabbar on early returns            |
 | 2026-10-14 | `2026-10-14-pr31-review.md`  | PR #31 (T-028 L-5c public pages + institution button), last commit 9de22c9             | Merge yes, after fixes                                                     | PR body/Verification, roadmap onboarding tick, auth.tsx dead class and label; reset-password error, guest-link RPC error, STATUS line                    |
 | 2026-10-14 | `2026-10-14-pr28-review.md`  | PR #28 (L-5c public pages, Lovable), last commit ce5954d                               | Merge yes, after fixes                                                     | Onboarding Family/Institution selector needs a human decision, roadmap.md:5 tick, manual flag onError, onboarding_answers error check                    |
-| 2026-10-14 | `2026-10-14-site-check-2.md` | Live site after the evening publish, commit 9f801e8 (tag release-2026-10-14)           | 6/6 e2e pass, no errors                                                    | Cookie banner from an EU address, signed-in release checks, og:image from Lovable's storage, 380 KB hero photo                                           |
 | 2026-10-14 | `2026-10-14-site-check-3.md` | Live site (mychata.cz), night, after a publish later than 9f801e8; live commit unknown | 6/6 e2e pass, no errors; photo from /assets, titles Czech                  | Live commit no longer exposed (data-commit-sha gone), cookie-banner card inset 12px at 375px, CLS 0.11 on /host, "Firemní chata" on invalid request link |
 | 2026-10-14 | `2026-10-14-site-check-4.md` | Live site after T-033 publish, live commit c099891 (read from `build-sha` meta)        | 6/6 e2e pass, no errors; T-033 fixes live, icon/og:image/photo/titles pass | Cookie-banner card still inset 12.75px at 375px, hero webp downloaded twice, no heading on invalid request link                                          |

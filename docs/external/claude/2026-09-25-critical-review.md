@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-15
+updated: 2026-10-16
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Now
@@ -31,6 +31,8 @@ tab: Now
 
 Pick a Decision (Focus later, Open, Ignore, Done). "Ignore" rows are removed at the next update; "Focus later" rows stay until they become an N row; anything with a note, write the ID in chat or comment on the row.
 
+**New 16 Oct:** D-18 to D-21 decide pricing. The strategy and its build steps (P-1 to P-13) are in Reference, section 10.
+
 | ID | Question | Why it matters | Raised | Decision |
 | --- | --- | --- | --- | --- |
 | D-01 | Why did Lovable lose `lovable-sync` on 14 Oct? | If its GitHub connection keeps dropping, every Lovable round needs a rescue like PR #31. After any reconnect, check the ruleset bypass list | 12 and 14 Oct | |
@@ -50,6 +52,10 @@ Pick a Decision (Focus later, Open, Ignore, Done). "Ignore" rows are removed at 
 | D-15 | Uploaded documents (deeds, insurance) are read by Lovable's AI gateway: keep, or switch `ai_documents` off? | The privacy page says so since T-022; ADR-0004 is still open | 29 Sep | |
 | D-16 | Should only admins approve institution stay requests? | Guest requests are admin-only since migration 0022; the institution queue was left open | 29 Sep | |
 | D-17 | Make `bun run docs:gen` automatic when a migration or route changes? | A forgotten regenerate turned CI red on 28 Sep | 28 Sep | |
+| D-18 | Adopt pricing v2 (Reference, section 10)? Families stay free; institutions pay first (9,900 Kč per object a year); Rodina Plus at 1,490 Kč a year once the rental toolkit ships | Replaces Gemini's draft and the 25 Sep table. Unlocks P-1 and P-10 and sets what the O-12 interviews test | 16 Oct | |
+| D-19 | Founding offer: Rodina Plus at 990 Kč a year, locked for 3 years, for the first 100 accounts? | Gemini's "forever" price can never be raised; a 3-year lock can. Sets P-4 | 16 Oct | |
+| D-20 | Institution pilots: free until 30 Sep 2027 for the first 3, in return for a named contact, monthly feedback and list price afterwards? | Sets P-3's backfill and what existing institutional accounts (D-08) are told | 16 Oct | |
+| D-21 | Who sells: you, Rajat, or a company you both own (O-11)? | No invoice, terms or payment account without a seller; it also decides VAT status and the business split | 16 Oct | |
 
 ## Open defects
 

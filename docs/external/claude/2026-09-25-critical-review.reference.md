@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-15
+updated: 2026-10-16
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Reference
@@ -59,7 +59,7 @@ The billing unit must be the account, and a person must be able to sit in severa
 | Family Plus | Families who rent out spare weeks | Guest links, direct booking, calendar sync, guest registration and tourist-fee reports, more storage, AI manual |
 | Institution | Universities, unions, companies, clubs | Per property per year: request queue, eligibility rules, audit log, CSV/ISDOC export, SSO later |
 
-Commission rates tied to plans (12%/8%/5%) should wait until a marketplace exists; putting them in the tier table now anchors a price you can't yet defend.
+Commission rates tied to plans (12%/8%/5%) should wait until a marketplace exists; putting them in the tier table now anchors a price you can't yet defend. Superseded on 16 Oct by section 10.
 
 ## 3. Taking share from Airbnb, Booking.com and Couchsurfing by V3
 
@@ -373,6 +373,95 @@ Add Rajat as a collaborator on the existing repo now. Don't move the repo or lea
 3. **Use the repo as the live tracker** (recommended now). Every Claude session, yours or his, already writes its results into the repo through PRs: docs/STATUS.md, the task briefs, and copies of Claude docs in docs/external/claude/. GitHub Issues can hold the to-do list, with comments from both sessions. It has history, needs no new tools, and two sessions can't overwrite each other.
 
 A Google Doc edited by two Claude accounts through the Drive connector won't work. The connector available here can create files and rename or move them, but it can't edit an existing document's content. Even with a connector that could, two sessions writing the same doc would overwrite each other without warning.
+
+## 10. Pricing strategy (16 Oct)
+
+Keep Gemini's frame (per chata, unlimited members, annual billing, invoices for institutions) but drop its prices on features that don't exist. Families stay free for everything V1 does. The first revenue comes from institutions, through invoiced pilots. A paid family tier, Rodina Plus, launches only when the rental toolkit (T-010, T-011) ships. Every number below is a hypothesis to test in the O-12 interviews. Decisions D-18 to D-21 on the Now tab; build steps P-1 to P-13 below.
+
+**Gemini's draft, point by point** ([source doc](https://docs.google.com/document/d/1STwfNTXC5HTnD5e4thaMhWX_NiqST5MuoCX8GX-JzM8/edit))
+
+| Gemini proposed | Verdict | Why |
+| --- | --- | --- |
+| Price per chata, unlimited members | Keep | Every invited relative is distribution. Applies to the free tier too |
+| Free: 1 chata, 5 members, no Document Vault, "manual" expense notes | Change | Contradicts the 25 Sep decision: expenses and settlement are why relatives join. A 5-member cap breaks Gemini's own viral-loop argument |
+| Rodina Pro 1,900 Kč/yr: unlimited members + AI Document Vault | Change | Charges families for the core product. The vault's AI search isn't built (N-6, T-020), so it can't be the paywall yet |
+| Pronájem 490 Kč/month: guest portal, iCal, analytics, check-in briefs | Merge into Rodina Plus | Same buyer as Rodina Pro (families who rent out weeks). iCal (T-011) and guest registration (T-010) aren't built |
+| Annual billing anchor | Keep, annual only | Avoids the November churn Gemini names; one card charge a year keeps fees low |
+| AGPL self-hosted edition, dual licence | Park | Depends on O-07 (public or private, licence). Ownership of Lovable-generated code and contributions is unclear. Chata families don't self-host |
+| Seasonal pass 1,350 Kč (Apr–Sep) | Drop | Invites downgrades and adds billing states for little revenue |
+| Extra chata +120 Kč/month | Keep, as +490 Kč/yr | Fits the annual-only model |
+| AI or storage top-up packs | Later | Need real usage and cost data first (P-5 measures it) |
+| Founding price 1,200 Kč/yr "forever" | Change | No lifetime prices. Founding price locked for the first 3 years instead |
+| Institutions: 14,900 / 34,900 / 69,000–120,000 Kč/yr by lodge count | Change | Keeps the 25 Sep decision: per object per year. SSO, lottery allocation, FKSP payroll export, Pohoda/SAP exports and "Vertex AI tenant isolation" don't exist (AI runs through Lovable's gateway), so they can't carry a price now |
+| "Under 40,000–50,000 Kč needs no tender" | Partly right | The legal limit for small contracts is 3,000,000 Kč without DPH since 3 Apr 2025 ([CRR](https://crr.gov.cz/wp-content/uploads/2025/05/Informace-Centra-ke-zvyseni-limitu-VZMR-po-novele-3.-4.-2025-a-zvyseni-limitu-pro-primy-nakup_FINAL.pdf)). What decides at these prices is each institution's internal signing limit. Ask in interviews |
+| Annual invoice, 30-day due date; budgets spent Oct–Dec | Keep | Already in `docs/architecture/billing.md` |
+| One-off "Digitalizace chaty" setup 9,900 Kč | Keep as optional "Zavedení" | Priced as your time. Document ingestion only once AI search works |
+| Room/bed units, peak-week quotas, domain sign-up, stay-fee reports | Keep as institution roadmap | They justify a later Instituce+ tier, not today's price |
+| 0% commission positioning | Keep | Matches `docs/product/strategy.md` |
+
+**Final tiers**
+
+| Plan id | Name (CZ / EN) | Who | Price | What it adds | Sold from |
+| --- | --- | --- | --- | --- | --- |
+| `family_free` | Rodina / Family | Families sharing 1–2 chatas | 0 Kč | All of V1: calendar, tasks, expenses and settlement, handover, manual, vault, guest booking link, public calendar | Now |
+| `family_plus` | Rodina Plus / Family Plus | Families who rent out spare weeks, or have more chatas | 1,490 Kč/yr incl. 2 chatas; +490 Kč/yr per further chata (max 5). Founding: 990 Kč/yr, locked 3 years, first 100 accounts | Rental toolkit: guest book and registration, stay-fee report, deposits, registration-number field (T-010); iCal with Airbnb/Booking (T-011); guest questions on the public manual; more storage and AI | When T-010 ships; a "Chci vědět" interest button before that |
+| `institution` | Instituce / Institution | Universities, unions, companies, clubs | 9,900 Kč/yr per object without DPH; each further object 6,900 Kč. Optional Zavedení 6,900 Kč one-off | Request queue and approvals, audit log, CSV export, domain-restricted sign-up, invoice with QR payment | Now, as pilots (D-20) |
+| `institution_trial` | Instituce, zkušební / Trial | New institutional sign-ups | 0 Kč for 60 days | Same as Instituce | Now |
+| `institution_plus` | Instituce+ | Faculties or networks with 3+ objects | From 39,000 Kč/yr, quoted | Room/bed units, peak-week quotas, SSO, FKSP and payroll exports | When those features exist |
+
+Why these numbers: 1,490 Kč is about one night's rent for a renting family and a fraction of Airbnb's ~15.5% host fee on a single rented week. 9,900 Kč per object sits below Gemini's 14,900 because today's institutional feature set is thinner; raise it for new customers when quotas and room units ship. Rough ceiling at 100 Plus accounts and 10 institutions with 1.5 objects each: about 300,000 Kč a year, half from each. Institutions get there with far fewer sales.
+
+**Entitlements** (what each plan's `limits` row holds; `null` = unlimited)
+
+| Key | family_free | family_plus | institution (+ trial) | Enforced by |
+| --- | --- | --- | --- | --- |
+| `properties` | 2 | 2 + paid extras, max 5 | paid objects (`subscriptions.seats`) | `add_property` (P-6) |
+| `members` | null | null | null | none needed |
+| `storage_mb` (per account) | 1000 | 10000 | 20000 | upload check (P-6) |
+| `ai_questions_per_day` (per account, not per user) | 20 | 100 | 500 | `bump_account_usage` (P-5) |
+| `guest_links` | true | true | true | exists |
+| `rental_toolkit` | false | true | false | T-010, T-011 call `has_entitlement` |
+| `public_manual_qa` | false | true | true | manual Q&A on public pages |
+| `request_queue`, `audit_export`, `domain_signup` | false | false | true | institution screens |
+| `read_only` | false | false | false (true on `institution_lapsed`) | write policies (P-8) |
+
+**When payment stops.** Nothing is deleted. A family falls back to Rodina; content above its limits stays readable and downloadable, but nothing new is added there. An institution gets 30 days as `past_due`, then `institution_lapsed`: read-only, exports and document downloads still work. This also answers the open question on what happens to documents when someone stops paying.
+
+**Gates before anyone is charged** (in this order)
+
+1. **Legal operator** (O-11): a company or sole trader to issue invoices, terms of service (B2C and B2B), the withdrawal-right consent for a digital service, a data-processing agreement for institutions. No invoice can go out without this.
+2. **VAT status.** Below 2 million Kč turnover the operator need not register ([VATCalc](https://www.vatcalc.com/czech/czechia-vat-guide/)). Then family prices are final and institutions see "neplátce DPH". After registration, keep 1,490 Kč as the price including DPH.
+3. **Interviews** (O-12): 10 families and 3 institutions, each asked how they split costs today, what they would pay a year, who signs and up to what amount, and whether FKSP or a union budget pays.
+4. **Staging** (O-08) before the billing migrations P-2 to P-8. Billing and tenancy changes are never tried first on production.
+5. **Rental toolkit** (T-010) live before Rodina Plus is sold.
+
+**Pricing build steps** (backlog row O-18). Each P row is one task brief in `docs/tasks/` and one PR. P-1 to P-8 can ship dark behind a `billing_enabled` flag set to false, so nothing changes for users until the gates pass.
+
+| ID | Change | Where | Done when | Owner | Needs |
+| --- | --- | --- | --- | --- | --- |
+| P-1 | Product docs to pricing v2 | `docs/product/pricing.md`, `docs/architecture/billing.md`, `docs/tasks/T-009-billing.md` | Pricing.md shows the tiers and entitlements above; T-009 lists P-2 to P-12 | Claude | D-18 |
+| P-2 | Plans v2: add `price_czk_year`, `extra_property_czk_year`, `vat_included`, `public`, `sort` to `plans`; upsert `family_free`, `family_plus`, `institution`, `institution_trial`, `institution_plus`, `institution_lapsed` with the limits above; add flag `billing_enabled` (off) | New migration in `drizzle/migrations/`; `docs:gen` | `select * from plans` matches the Entitlements table; schema.md regenerated | Claude (migration lane) | Staging (O-08) |
+| P-3 | Fix `account_plan()`: today every institutional account without a subscription gets the full `institution` plan for free, forever. New institutional accounts get a `trialing` subscription ending after 60 days; expired trials resolve to `institution_lapsed`; existing institutional accounts are backfilled as pilots (`provider = 'pilot'`, period end 30 Sep 2027) | Same migration as P-2, or the next one | pgTAP: new institution = trial; trial past end = lapsed; pilot = institution | Claude | P-2, D-20 |
+| P-4 | Price locks: `subscriptions.price_czk_year`, `price_locked_until`, `deal` (`founding`, `pilot`, `list`) | Migration | Founding and pilot prices survive a list-price change | Claude | P-2 |
+| P-5 | AI limit per account, read from the plan: `usage_counters` gets `account_id`; new `bump_account_usage(account_id, kind)` checks membership and `plan_limit(account, 'ai_questions_per_day')`; `manual-qa` and `task-translation` switch to it. Log the Lovable credits each question costs | Migration; `src/lib/manual-qa.functions.ts`, `src/lib/task-translation.functions.ts` | pgTAP: member of A can't count against B; the 21st question on Rodina is refused; cost per question noted in `docs/architecture/environments.md` | Claude | P-2 |
+| P-6 | Enforce limits in the database: `add_property` checks the property allowance (`subscriptions.seats` or plan limit); uploads check `storage_used_mb(account)` against `storage_mb`; new `has_entitlement(account, key)` helper | Migration; upload server functions | pgTAP: a third chata on Rodina is refused; an upload over the limit returns a clear Czech error | Claude | P-2 |
+| P-7 | `account_entitlements(account)`: plan, limits, usage today (AI, storage, chatas), period end; for the Settings screen | Migration | Returns one row for admins of the account only | Claude | P-5, P-6 |
+| P-8 | Lapsed means read-only: write policies check `not has_entitlement(account, 'read_only')`; exports and document downloads stay open | Migration | pgTAP: lapsed admin can read and export, can't insert | Claude + RLS auditor | P-3, P-6 |
+| P-9 | Settings → "Předplatné / Plan": current plan, usage bars, period end; for institutions an IČO/DIČ form and "Požádat o fakturu", stored as a `billing_requests` row and e-mailed to podpora@mychata.cz | Lovable (screen); Claude (table, server function) | An admin sees usage and can request an invoice; members don't see the section | Lovable, Claude | P-7, e-mail (N-5) |
+| P-10 | Public `/cenik` page: Rodina, Rodina Plus ("Brzy" + "Chci vědět" interest button), Instituce ("Požádat o nabídku"); Czech first; DPH note per the VAT gate | Lovable | Live at 375px and 1280px; links from home and footer | Lovable | D-18 |
+| P-11 | Analytics events: `pricing_viewed`, `plan_interest_clicked(plan)`, `limit_reached(kind)`, `invoice_requested` | `docs/product/analytics.md`; event calls in P-9, P-10, P-6 errors | Events visible in GA4 debug view | Claude | P-9, P-10 |
+| P-12 | Payments (T-009). Institutions first: invoices with QR payment from a Czech invoicing tool (Fakturoid or iDoklad); a service-role script records each payment in `billing_events` (`provider = 'invoice'`) and updates `subscriptions`. Families: Stripe Checkout, annual, CZK, webhook route, only when Rodina Plus launches | Server route; `scripts/` | A test invoice marked paid turns a trial into `institution`; a webhook retry changes nothing | Claude, you | Gates 1–2 |
+| P-13 | Legal pages: obchodní podmínky (B2C, B2B), withdrawal-right consent at checkout, data-processing agreement, operator identity in the footer | `/podminky`, footer | Reviewed by a lawyer; linked from `/cenik` and checkout | You | O-11 |
+
+**Questions you haven't asked yet on pricing**
+
+| Question | Why it matters |
+| --- | --- |
+| What does one AI question cost in Lovable credits? | Sets whether 20 a day per free account is affordable at 1,000 accounts. P-5 measures it |
+| Who signs the invoice: you, Rajat, or a company you both own? | Revenue, tax and liability follow the operator; it also settles the business split |
+| Do the institutional accounts that exist today (D-08) know a price is coming? | Turning a free tool into a paid one without notice loses the pilots you most need |
+| Is the 14-day withdrawal right handled for families? | EU consumers can cancel a digital service unless they agreed to immediate start; checkout needs that tick box |
+| Will you sell outside Czechia? | Euro prices and EU VAT (OSS) come with it; keep CZK only until then |
 
 ## Questions you haven't asked yet
 

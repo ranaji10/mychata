@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-15
+updated: 2026-10-16
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Backlog
@@ -35,6 +35,7 @@ Open work that is not next yet. When a row becomes next, it moves to Now as an N
 | O-15 | Shared editing of this doc (Claude Team plan) | Both | Optional; the repo is the shared tracker meanwhile | Waiting |
 | O-16 | Visual redesign "Fresh air": L-5a, L-5b, L-5c live | You, Claude, Lovable | Rules in `docs/product/design.md`. Left: blue screens with real data (N-2), design questions D-02, D-06, D-10, D-11, cookie banner F-03 | Doing |
 | O-17 | G-1: Gemini's Czech content | You | Needed before L-3 (N-5) | To do |
+| O-18 | Pricing v2 build, steps P-1 to P-13 (Reference, section 10) | Claude, Lovable, you | After D-18. P-1 and P-10 can start now; P-2 to P-8 wait for staging (O-08); P-12 waits for O-11. Ships dark behind billing_enabled. Replaces the pricing part of O-14 | To do |
 
 ## Standing routines
 

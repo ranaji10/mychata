@@ -382,7 +382,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setSwitcherOpen(false)}
               className="btn-secondary mt-5 w-full"
             >
-              <Plus className="size-5" /> {t("Přidat chatu", "Add a chata")}
+              <Plus className="size-5" />{" "}
+              {currentMember?.role === "ADMIN" || currentMember?.role === "OWNER"
+                ? t("Přidat chatu", "Add a chata")
+                : t("Založit vlastní chatu", "Start my own cottage")}
             </Link>
           </div>
         </div>

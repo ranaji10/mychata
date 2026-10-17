@@ -16,6 +16,7 @@ import {
 } from "@/components/calendar";
 import {
   findConflicts,
+  overlapPeakGuests,
   fmtDate,
   isoDateOrNull,
   pickRange,
@@ -88,6 +89,16 @@ function NewBooking() {
   const conflicts = findConflicts(start, end, bookings ?? []);
   const overlaps = conflicts.filter((c) => c.kind === "hard");
   const changeovers = conflicts.filter((c) => c.kind === "same-day");
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+  // Same rule as the database (booking_defaults, migration 0028): "No" to overlaps, or more
+  // guests on any one night than the saved limit, sends a member's booking to the admin.
+  // Nights are [arrival, departure); a same-day changeover shares no night.
+  const peakGuests = overlapPeakGuests(start, end, bookings ?? []);
+  const overlapNeedsApproval =
+    end >= start &&
+    peakGuests > 0 &&
+    (property?.overlap_allowed === false ||
+      (property?.overlap_max_guests != null && peakGuests + guests > property.overlap_max_guests));
   const invalid = end < start;
 
   const save = async () => {
@@ -260,7 +271,17 @@ function NewBooking() {
               ))}
             </ul>
             <p className="mt-2">
-              {t("Překryv je v rodinném účtu povolen.", "Overlapping family stays are allowed.")}
+              {overlapNeedsApproval
+                ? isAdmin
+                  ? t(
+                      "Tato chata překrývání pobytů nepovoluje. Jako správce máte rezervaci potvrzenou i tak.",
+                      "This cottage doesn't allow overlapping stays. As an admin, your booking is confirmed anyway.",
+                    )
+                  : t(
+                      "Tato chata překrývání pobytů nepovoluje (nebo je překročen počet hostů). Rezervace půjde ke schválení správci.",
+                      "This cottage doesn't allow overlapping stays (or the guest limit is reached). Your booking goes to the admin for approval.",
+                    )
+                : t("Překryv je v rodinném účtu povolen.", "Overlapping family stays are allowed.")}
             </p>
           </div>
         )}
@@ -287,10 +308,15 @@ function NewBooking() {
         {saving ? t("Ukládám…", "Saving…") : t("Potvrdit rezervaci", "Confirm booking")}
       </Button>
       <p className="mt-2 text-center text-[16px] text-muted-foreground">
-        {t(
-          "Rezervace se ihned zapíše do rodinného kalendáře.",
-          "The booking is added to the family calendar immediately.",
-        )}
+        {overlapNeedsApproval && !isAdmin
+          ? t(
+              "Rezervace se zapíše jako čekající na schválení správcem.",
+              "The booking is saved as waiting for the admin's approval.",
+            )
+          : t(
+              "Rezervace se ihned zapíše do rodinného kalendáře.",
+              "The booking is added to the family calendar immediately.",
+            )}
       </p>
     </AppShell>
   );

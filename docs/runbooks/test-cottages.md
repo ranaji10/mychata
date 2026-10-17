@@ -9,6 +9,16 @@ Until staging exists (T-003), every check of the live app runs on mychata.cz. Re
 | `Test chata (Claude)`       | a maintainer's own Google sign-in                        | Claude's live checks (built-in browser) | the same maintainer's second email address            |
 | `Testovací chata (Lovable)` | the user Lovable's preview signs in as (its own account) | Lovable's preview checks                | none yet: two-person checks stay with the maintainers |
 
+### Test sign-ins of the maintainers (since 17 Oct 2026)
+
+The addresses and passwords stay with the maintainers (`private/` folder, outside the repo): this repo is public. Never put them in the repo, prompts or Knowledge.
+
+| Sign-in                    | Kind                                 | What it holds                                                                                                |
+| -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Test 1 (Gmail)             | Google                               | Admin of the family account `Chata Alfa (test)` with three test cottages (Alfa, Beta, Gama)                  |
+| Test 2 (Gmail)             | Email + password, also Google        | Member of `Chata Alfa (test)` (joined by group link)                                                         |
+| Test 3 (work-style domain) | Email + password (work-style domain) | Admin of the organisation `Test Institute` (`Institutní chata (test)`), also a member of `Chata Alfa (test)` |
+
 The Lovable cottage is created by Lovable itself, in its own account, with the prompt in `prompts/2026-10-13/11-L-T-test-cottage.md` (maintainers' folder, outside the repo). If Lovable's test user ever turns out to be a member of a real family's account, stop: remove that membership first, then continue.
 
 ## Rules for every agent and person testing

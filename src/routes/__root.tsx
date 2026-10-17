@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import { LanguageProvider, LanguageToggle, useLang } from "@/lib/i18n";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
@@ -124,6 +124,42 @@ function ErrorBody({ error, reset }: ErrorComponentProps) {
       <LanguageToggle />
     </main>
   );
+}
+
+const OFFLINE_CACHE_KEY = "mychata.offline-cache";
+
+/**
+ * Sign-out leaves nothing of the person behind in this browser (release check of 17 Oct):
+ * the offline copy of their data was sometimes written again right after sign-out, because
+ * the persister saves with a delay and in-flight queries finish late. Shared browsers (bug 2)
+ * must not keep one person's members, invitations or bookings for the next.
+ */
+function SignOutCleanup() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const forget = () => {
+      try {
+        localStorage.removeItem(OFFLINE_CACHE_KEY);
+      } catch {
+        /* storage blocked: nothing was saved either */
+      }
+    };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_OUT") return;
+      void queryClient.cancelQueries();
+      queryClient.clear();
+      forget();
+      // The persister writes at most once a second; remove whatever it wrote after the clear.
+      clearTimeout(timer);
+      timer = setTimeout(forget, 2000);
+    });
+    return () => {
+      clearTimeout(timer);
+      data.subscription.unsubscribe();
+    };
+  }, [queryClient]);
+  return null;
 }
 
 /**
@@ -263,7 +299,7 @@ function RootComponent() {
   const persister =
     typeof window === "undefined"
       ? undefined
-      : createSyncStoragePersister({ storage: window.localStorage, key: "mychata.offline-cache" });
+      : createSyncStoragePersister({ storage: window.localStorage, key: OFFLINE_CACHE_KEY });
   return (
     <PersistQueryClientProvider
       client={queryClient}
@@ -291,6 +327,7 @@ function RootComponent() {
           <ConsentProvider>
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <RecoveryGuard />
+            <SignOutCleanup />
             <Outlet />
             <ConsentBanner />
             <Toaster position="top-center" richColors />

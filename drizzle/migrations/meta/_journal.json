@@ -204,6 +204,13 @@
       "when": 1792274181871,
       "tag": "0028_overlap_rule_and_owner_conversion",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792276440957,
+      "tag": "0029_apply_journaled_0028",
+      "breakpoints": true
     }
   ]
 }

@@ -732,7 +732,6 @@ export type Database = {
           created_by_member_id: string | null
           email: string | null
           expires_at: string
-          group_token: string | null
           id: string
           property_id: string | null
           role: string
@@ -746,7 +745,6 @@ export type Database = {
           created_by_member_id?: string | null
           email?: string | null
           expires_at?: string
-          group_token?: string | null
           id?: string
           property_id?: string | null
           role?: string
@@ -760,7 +758,6 @@ export type Database = {
           created_by_member_id?: string | null
           email?: string | null
           expires_at?: string
-          group_token?: string | null
           id?: string
           property_id?: string | null
           role?: string
@@ -1123,7 +1120,6 @@ export type Database = {
           house_rules_text: string | null
           id: string
           name: string
-          overlap_allowed: boolean | null
           overlap_max_guests: number | null
           peak_seasons: string[]
           photo_url: string | null
@@ -1142,7 +1138,6 @@ export type Database = {
           house_rules_text?: string | null
           id?: string
           name: string
-          overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
           photo_url?: string | null
@@ -1161,7 +1156,6 @@ export type Database = {
           house_rules_text?: string | null
           id?: string
           name?: string
-          overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
           photo_url?: string | null
@@ -1635,14 +1629,6 @@ export type Database = {
           _token: string
         }
         Returns: string
-      }
-      set_property_overlap: {
-        Args: { _allowed: boolean; _max_guests?: number; _property_id: string }
-        Returns: undefined
-      }
-      convert_account_to_institution: {
-        Args: { _account_id: string; _name: string }
-        Returns: undefined
       }
       update_property_details: {
         Args: {

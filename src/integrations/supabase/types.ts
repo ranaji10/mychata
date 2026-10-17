@@ -1477,6 +1477,10 @@ export type Database = {
         Returns: boolean
       }
       claim_initial_membership: { Args: never; Returns: string }
+      convert_account_to_institution: {
+        Args: { _account_id: string; _name: string }
+        Returns: undefined
+      }
       cover_expense: { Args: { _expense_id: string }; Returns: number }
       create_account_onboarding: {
         Args: {
@@ -1602,6 +1606,10 @@ export type Database = {
         Args: { _member_id: string; _role: string }
         Returns: undefined
       }
+      set_property_overlap: {
+        Args: { _allowed: boolean; _max_guests?: number; _property_id: string }
+        Returns: undefined
+      }
       set_public_calendar: {
         Args: { _enabled: boolean; _property_id: string }
         Returns: string
@@ -1635,14 +1643,6 @@ export type Database = {
           _token: string
         }
         Returns: string
-      }
-      set_property_overlap: {
-        Args: { _allowed: boolean; _max_guests?: number; _property_id: string }
-        Returns: undefined
-      }
-      convert_account_to_institution: {
-        Args: { _account_id: string; _name: string }
-        Returns: undefined
       }
       update_property_details: {
         Args: {

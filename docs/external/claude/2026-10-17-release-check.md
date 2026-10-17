@@ -9,7 +9,7 @@ verdict: "T-035 works live. Three defects found (overlap answer ignored, cached 
 
 ## Release check of 17–18 Oct 2026 (live commit 860f7fe, PR #47)
 
-Signed-in checks on mychata.cz in the desktop app's browser pane (phone-width layout), with the three test accounts: `testchata001@gmail.com` (Google; family "Chata Alfa (test)", three cottages, admin), `testchata002@gmail.com` (email + Google; joined Alfa as member), `blpxrd4460@qualbo.com` (email; onboarded as "Test Institute", and joined Alfa as member). Test data only, in test cottages (`docs/runbooks/test-cottages.md`).
+Signed-in checks on mychata.cz in the desktop app's browser pane (phone-width layout), with the three test accounts: Test 1 (Google; family "Chata Alfa (test)", three cottages, admin), Test 2 (email + Google; joined Alfa as member), Test 3 (email, work-style domain; onboarded as "Test Institute", and joined Alfa as member). Test data only, in test cottages (`docs/runbooks/test-cottages.md`).
 
 ### Build and database
 
@@ -40,7 +40,7 @@ Also passed: institution onboarding (5 steps, overlap Yes + limit saved), public
 
 ### Defects found (fixed in T-036 unless noted)
 
-1. **Overlap answer ignored.** Alfa set to "No"; testchata002's overlapping stay was confirmed at once with "Overlapping family stays are allowed". `overlap_allowed` and `overlap_max_guests` were never read by the booking flow. Fixed: `booking_defaults()` (0028).
+1. **Overlap answer ignored.** Alfa set to "No"; Test 2's overlapping stay was confirmed at once with "Overlapping family stays are allowed". `overlap_allowed` and `overlap_max_guests` were never read by the booking flow. Fixed: `booking_defaults()` (0028).
 2. **Cached data kept after sign-out.** After signing out from My profile, `mychata.offline-cache` (14 KB: email, members, invitations) stayed in the browser and was there when the next account signed in. From Settings it was cleared. Fixed: `SignOutCleanup`.
 3. **Requests list stale for a minute.** A new public request didn't show until the cached list aged out. Fixed: refetch on open.
 4. Members see "Add a cottage"/"Add a chata" that only admins can use. Fixed.
@@ -50,7 +50,7 @@ Also passed: institution onboarding (5 steps, overlap Yes + limit saved), public
 
 ### Item 5 of the maintainers (password not accepted)
 
-Four sign-ins as testchata002 returned `Invalid login credentials` from Supabase; the app sent the typed password unchanged. The account had an email identity from 16:19 and Google added at 21:41. After a reset (email delivered), the new password worked. Conclusion: no app defect found; most likely the sign-up password differed from the one remembered. Reset emails are delivered today.
+Four sign-ins as Test 2 returned `Invalid login credentials` from Supabase; the app sent the typed password unchanged. The account had an email identity from 16:19 and Google added at 21:41. After a reset (email delivered), the new password worked. Conclusion: no app defect found; most likely the sign-up password differed from the one remembered. Reset emails are delivered today.
 
 ### Not verified
 

@@ -116,6 +116,8 @@ function HomePage() {
 
   const { data: requests } = useQuery({
     queryKey: ["requests", property?.id],
+    // New requests come from the public form: never treat a restored offline copy as fresh.
+    staleTime: 0,
     enabled: !!property && !isFamily,
     queryFn: async () => {
       const { data, error } = await supabase

@@ -56,4 +56,12 @@ Four sign-ins as Test 2 returned `Invalid login credentials` from Supabase; the 
 
 Migration 0028 on the live database; avatar upload on iOS; desktop-width layout; the token guard against a hand-made clashing row on live (tests cover it); Brave/Firefox.
 
+### Re-check after the T-036 publish (18 Oct, live `9fce136`)
+
+- Migration 0028 live (Lovable's marker 0029, PR #49, nothing else changed). Prompt 20's first check query looked for the wrong name (`overlap_guests`; the function is `overlap_peak_guests`), so its `false` was expected; Lovable checked the right name.
+- Overlap "No" on Chata Alfa (test), as Test 3 (plain member): the screen says the booking goes to the admin; the booking was saved PENDING; setting it CONFIRMED directly returned `403 admin_approval_required`. Pass (F-14).
+- Sign-out from My profile: offline copy and active-cottage key removed. Pass (F-15).
+- Requests: a new public request shows when Requests is opened from inside the app, but not after a full reload within a minute (the restored offline copy counts as fresh). Fixed in T-037 (F-16 stays open until then).
+- Tag `release-2026-10-18` on `9fce136`: to be set by a maintainer (Claude's session cannot push tags).
+
 Source file: `docs/external/claude/2026-10-17-release-check.md` in the mychata repo.

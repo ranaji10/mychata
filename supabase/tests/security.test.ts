@@ -1124,4 +1124,127 @@ describe("release check of 17 Oct (T-036, migration 0028)", () => {
       ).toEqual([{ action: "account_converted" }]);
     });
   });
+
+  // --- RLS audit of 0028 (18 Oct) ---------------------------------------------------------
+
+  it("nobody books into another account's cottage, or for another member", async () => {
+    const ins = (prop: string, member: string | null) =>
+      `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status)
+       values ('${prop}', 'X', ${member ? `'${member}'` : "null"}, current_date + 40, current_date + 41, 'CONFIRMED') returning status`;
+    await as(db, anon, async (q) => {
+      await expect(q(ins(ids.propA, null))).rejects.toThrow();
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(q(ins(ids.propA, ids.memberBAdmin))).rejects.toThrow(/row-level security/);
+    });
+    await as(db, aMember, async (q) => {
+      await expect(q(ins(ids.propB, ids.memberAMember))).rejects.toThrow(/row-level security/);
+      // Booking in Anna's name (pending or confirmed) is refused for a plain member.
+      await expect(q(ins(ids.propA, ids.memberAAdmin))).rejects.toThrow(/row-level security/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await expect(q(ins(ids.propB, ids.memberAAdmin))).rejects.toThrow(/row-level security/);
+    });
+  });
+
+  // GAP (open): the hold is only on INSERT and only when requester_member_id = me.
+  // These document the bypasses; they pass while the gap exists (it.fails). Remove .fails once fixed.
+  it("GAP: a member cannot confirm their own held booking with an UPDATE", async () => {
+    await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
+      ids.propA,
+    ]);
+    try {
+      await as(db, aMember, async (q) => {
+        const [b] = await q<{ id: string; status: string }>(
+          `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status)
+           values ($1, 'Petr', $2, current_date + 11, current_date + 14, 'CONFIRMED') returning id, status`,
+          [ids.propA, ids.memberAMember],
+        );
+        expect(b!.status).toBe("PENDING");
+        const r = await q<{ status: string }>(
+          "update public.bookings set status = 'CONFIRMED' where id = $1 returning status",
+          [b!.id],
+        ).catch(() => [{ status: "REFUSED" }]);
+        expect(r).not.toEqual([{ status: "CONFIRMED" }]);
+      });
+    } finally {
+      await admin(db, "update public.properties set overlap_allowed = null where id = $1", [
+        ids.propA,
+      ]);
+    }
+  });
+
+  it("GAP: a member cannot dodge the hold with requester_member_id = null", async () => {
+    await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
+      ids.propA,
+    ]);
+    try {
+      await as(db, aMember, async (q) => {
+        const r = await q<{ status: string }>(
+          `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status)
+           values ($1, 'Petr', null, current_date + 11, current_date + 14, 'CONFIRMED') returning status`,
+          [ids.propA],
+        ).catch(() => [{ status: "REFUSED" }]);
+        expect(r).not.toEqual([{ status: "CONFIRMED" }]);
+      });
+    } finally {
+      await admin(db, "update public.properties set overlap_allowed = null where id = $1", [
+        ids.propA,
+      ]);
+    }
+  });
+
+  it("the founder rule cannot be gamed by writing members rows directly", async () => {
+    await as(db, aAdmin, async (q) => {
+      await expect(
+        q("update public.members set created_at = now() - interval '10 years' where user_id = $1", [
+          U.aAdmin,
+        ]),
+      ).rejects.toThrow(/permission denied/);
+      expect(
+        await q("delete from public.members where id = $1 returning id", [ids.memberAAdmin]),
+      ).toEqual([]);
+      await expect(
+        q(
+          "insert into public.members (account_id, name, email, role, user_id, created_at) values ($1,'X','x@example.org','OWNER',$2, now() - interval '10 years')",
+          [ids.acctA, U.newcomer],
+        ),
+      ).rejects.toThrow(/row-level security/);
+      await expect(
+        q("select public.set_member_role($1, 'OWNER')", [ids.memberAMember]),
+      ).rejects.toThrow(/bad_role/);
+    });
+    await as(db, anon, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/permission denied/);
+    });
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/Admin role required/);
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/Admin role required/);
+    });
+    await as(db, { ...aAdmin, email: "anna@gmail.com" }, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/institution_email_required/);
+    });
+  });
+
+  // GAP (open): a co-admin can demote the founder, after which nobody can ever convert.
+  it("GAP: a co-admin cannot demote the founder", async () => {
+    await as(db, aMember, async (q) => {
+      await q("reset role");
+      await q("update public.members set role = 'ADMIN' where id = $1", [ids.memberAMember]);
+      await q("set local role authenticated");
+      await expect(
+        q("select public.set_member_role($1, 'MEMBER')", [ids.memberAAdmin]),
+      ).rejects.toThrow();
+    });
+  });
 });

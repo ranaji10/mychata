@@ -4,7 +4,7 @@ Owner: Claude · Status: review
 
 Goal: fix what the live release check of 17 Oct found after PR #47 (T-035 + migration 0026), and apply the maintainers' decisions on the PR #46 review's open points.
 Non-goals: email delivery (N-5), the phone cookie banner, billing (T-009), per-cottage conversion to an organisation.
-Files allowed: `drizzle/migrations/0028_*`, `drizzle/migrations/meta/*`, `supabase/tests/security.test.ts`, `src/routes/rezervace.nova.tsx`, `src/routes/__root.tsx`, `src/routes/chaty.tsx`, `src/routes/pozvanka.$token.tsx`, `src/components/InstitutionSetup.tsx`, `src/components/AppShell.tsx`, `src/routes/zadosti.tsx`, `src/routes/verejne.zadost.$token.tsx`, `docs/architecture/billing.md`, `docs/STATUS.md`, `docs/generated/*`, `docs/external/claude/`, this file.
+Files allowed: `drizzle/migrations/0028_*`, `drizzle/migrations/meta/*`, `supabase/tests/security.test.ts`, `src/routes/rezervace.nova.tsx`, `src/routes/__root.tsx`, `src/routes/chaty.tsx`, `src/routes/pozvanka.$token.tsx`, `src/components/InstitutionSetup.tsx`, `src/components/AppShell.tsx`, `src/routes/zadosti.tsx`, `src/routes/verejne.zadost.$token.tsx`, `docs/architecture/billing.md`, `docs/runbooks/test-cottages.md`, `docs/STATUS.md`, `docs/generated/*`, `docs/external/claude/`, this file.
 Invariants touched (AGENTS.md): 1 (booking_defaults and convert_account_to_institution, both definer, both check the caller), 2 (migration 0028), 5, 6.
 Context: `docs/external/claude/2026-10-17-release-check.md`, `docs/external/claude/2026-10-17-pr46-review.md` (findings 8 and 9).
 

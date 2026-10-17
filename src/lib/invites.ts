@@ -24,8 +24,8 @@ export function inviteLink(origin: string, token: string): string {
 
 /** A mailto: link with a ready Czech + English message; opens the admin's mail app. */
 export function inviteMailto(opts: {
-  /** One address, or several separated by commas (a batch with one shared link). */
-  to: string;
+  /** One address, or several (a batch with one shared link). */
+  to: string | string[];
   link: string;
   chata: string;
   inviter?: string | null | undefined;
@@ -45,7 +45,11 @@ export function inviteMailto(opts: {
     `Accept here (valid for 7 days):`,
     opts.link,
   ].join("\n");
-  return `mailto:${encodeURIComponent(opts.to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const q = `subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const list = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean);
+  // Several people: Bcc, so no one sees the others' addresses (personal data).
+  if (list.length > 1) return `mailto:?bcc=${list.map(encodeURIComponent).join(",")}&${q}`;
+  return `mailto:${encodeURIComponent(list[0] ?? "")}?${q}`;
 }
 
 // ---------- Invitation batches (bugs 10–12, 17 Oct 2026) ----------
@@ -56,6 +60,7 @@ export interface InvitationRow {
   role: string;
   token: string;
   group_token?: string | null;
+  property_id?: string | null;
   status: string;
   created_at: string;
   expires_at: string;

@@ -77,7 +77,7 @@ export function InstitutionSetup() {
   };
 
   const startInstitutionSignup = async () => {
-    rememberPersonalEmail(email);
+    rememberPersonalEmail(email, cleanInstEmail);
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast.error(t("Odhlášení se nepodařilo.", "Could not sign out."));

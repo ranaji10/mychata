@@ -141,6 +141,7 @@ function ResetPasswordPage() {
       {!choosing && (
         <Link
           to="/auth"
+          onClick={() => clearRecovery()}
           className="mt-4 inline-flex min-h-11 items-center justify-center text-center text-[16px] font-semibold text-primary"
         >
           {t("Zpět na přihlášení", "Back to sign in")}

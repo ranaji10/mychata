@@ -9,6 +9,7 @@ Claude docs and artifacts are the readable, shareable versions. The files here a
 | 2026-10-14 | Site check and release readiness (local report, no artifact)                                                             | `2026-10-14-site-check.md`                                                           |
 | 2026-10-14 | PR #25 review (local report, no artifact)                                                                                | `2026-10-14-pr25-review.md`                                                          |
 | 2026-10-14 | Site check, evening (local report, no artifact)                                                                          | `2026-10-14-site-check-2.md`                                                         |
+| 2026-10-17 | `2026-10-17-pr46-review.md`                                                                                              | PR #46 (T-035 bugs of 17 Oct), commit 7aea298, review + RLS audit                    | Request changes; fixed on the branch | Masked hints on group links; who may convert to an organisation; free institution plan before T-009 |
 
 Rule (AGENTS.md): every new artifact gets a row here, a copy with frontmatter `artifact: <link>`, and a "Source file:" line at the end of the artifact.
 

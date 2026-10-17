@@ -45,6 +45,34 @@ alter table public.invitations add column if not exists group_token text;
 create index if not exists invitations_group_token_idx on public.invitations (group_token)
   where group_token is not null;
 
+-- A group token belongs to one account and is never anyone's single token (and the other way
+-- round). Without this, an admin of another account who had seen a group link could insert a
+-- row whose token or group_token equals it and catch the people opening that link (PR #46
+-- review). The browser picks the tokens, so the database checks them; definer so the check
+-- sees rows of every account, which row-level security would hide.
+create or replace function public.invitations_token_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.group_token is not null then
+    perform pg_advisory_xact_lock(hashtext('invitation_group:' || new.group_token));
+    if exists (select 1 from public.invitations
+               where group_token = new.group_token and account_id <> new.account_id)
+       or exists (select 1 from public.invitations where token = new.group_token) then
+      raise exception 'invitation_token_taken' using errcode = '23505';
+    end if;
+  end if;
+  if exists (select 1 from public.invitations where group_token = new.token) then
+    raise exception 'invitation_token_taken' using errcode = '23505';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function public.invitations_token_guard() from public, anon, authenticated;
+drop trigger if exists invitations_token_guard on public.invitations;
+create trigger invitations_token_guard
+  before insert or update of token, group_token, account_id on public.invitations
+  for each row execute function public.invitations_token_guard();
+
 create or replace function public.accept_invitation(_token text)
 returns uuid language plpgsql security definer set search_path = public as $$
 declare inv public.invitations; new_member uuid; inviter_branch text; caller_email text; display text;

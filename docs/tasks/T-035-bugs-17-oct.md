@@ -4,7 +4,7 @@ Owner: Claude · Status: review
 
 Goal: fix the 14 bugs in `private/Screenshots/Bugs/17102026_BugsList.rtf` (maintainers' folder) and the defects found while testing them.
 Non-goals: billing, email sending (T-005), the phone cookie banner (deferred), staging.
-Files allowed: `src/**`, `drizzle/migrations/0026_*`, `drizzle/migrations/meta/*`, `supabase/tests/security.test.ts`, `brand/`, `public/brand/og-image.jpg`, `public/manifest.webmanifest`, `scripts/brand-assets.ts`, `docs/STATUS.md`, `docs/generated/*`, this file.
+Files allowed: `src/**`, `drizzle/migrations/0026_*`, `drizzle/migrations/meta/*`, `supabase/tests/security.test.ts`, `supabase/security-allowlist.json`, `docs/external/claude/`, `brand/`, `public/brand/og-image.jpg`, `public/manifest.webmanifest`, `scripts/brand-assets.ts`, `docs/STATUS.md`, `docs/generated/*`, this file.
 Invariants touched (AGENTS.md): 1 (three definer functions with caller checks), 2 (migration 0026), 5, 6.
 
 | Bug                                                  | Fix                                                                                                                                                                                                                                                                            |
@@ -30,5 +30,7 @@ Acceptance (runnable):
 
 - `bun run check`
 - `bun run test:db` (four new tests in "bugs of 17 Oct")
+
+Review fixes (PR #46 review, `docs/external/claude/2026-10-17-pr46-review.md`): token guard trigger against group-link takeover; reset flag only redirects with a session; renewal keeps the cottage and revokes first; batch email in Bcc; personal-email link tied to the typed work email for one day; partial batch updates and onboarding failures reported.
 
 Handoff note: verified with `bun run check`, database tests, and a local run against a mocked backend (screenshots of Home switcher, Members tiles, My profile, Manage cottages, booking overlap on phone and desktop). Not verified: the real reset-password email round trip, Google sign-up password on the live auth, avatar upload on iOS, migration 0026 on the live database (Lovable applies it), cross-account switching on iPhone.

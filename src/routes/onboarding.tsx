@@ -168,7 +168,15 @@ function OnboardingPage() {
               ? { _max_guests: Number(overlapMaxGuests) }
               : {}),
           });
-          if (overlapError) console.error("[onboarding] overlap answer", overlapError);
+          if (overlapError) {
+            console.error("[onboarding] overlap answer", overlapError);
+            toast.error(
+              t(
+                "Odpověď na překrývání pobytů se neuložila. Nastavte ji v Nastavení.",
+                "The overlapping-stays answer was not saved. Set it in Settings.",
+              ),
+            );
+          }
         }
       }
       const { error: profileError } = await supabase.from("profiles").upsert(
@@ -225,8 +233,15 @@ function OnboardingPage() {
                 token,
                 created_by_member_id: me?.id ?? null,
               });
-        if (inviteError) console.error("[onboarding] invite personal email", inviteError);
-        else {
+        if (inviteError) {
+          console.error("[onboarding] invite personal email", inviteError);
+          toast.error(
+            t(
+              `Pozvánku pro ${personal} se nepodařilo vytvořit. Pozvěte ji v Členech.`,
+              `Could not create the invitation for ${personal}. Invite it from Members.`,
+            ),
+          );
+        } else {
           linkEmail = personal;
           linkUrl = inviteLink(window.location.origin, token);
           forgetPersonalEmail();

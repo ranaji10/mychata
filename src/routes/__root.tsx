@@ -18,7 +18,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 // Reads a password-reset link's address before Supabase clears it (bug 4). Keep it early.
-import { markRecovery, recoveryPending } from "../lib/password";
+import { clearRecovery, markRecovery, recoveryPending } from "../lib/password";
 import { supabase } from "../integrations/supabase/client";
 import { isStaleChunkError, reloadOnceForNewVersion } from "../lib/stale-chunk";
 import appCss from "../styles.css?url";
@@ -134,11 +134,29 @@ function RecoveryGuard() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
-    if (pathname === "/reset-password") return;
-    if (recoveryPending()) navigate({ to: "/reset-password", replace: true });
+    if (pathname === "/reset-password" || !recoveryPending()) return;
+    // Only someone the reset link signed in is sent to "New password"; a signed-out tab with
+    // a stale flag (used or expired link) must not be trapped there (PR #46 review).
+    let live = true;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!live) return;
+      if (error || !data.session) {
+        if (error) console.error("[recovery] session", error);
+        clearRecovery();
+        return;
+      }
+      navigate({ to: "/reset-password", replace: true });
+    });
+    return () => {
+      live = false;
+    };
   }, [pathname, navigate]);
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        clearRecovery();
+        return;
+      }
       if (event !== "PASSWORD_RECOVERY") return;
       markRecovery();
       navigate({ to: "/reset-password", replace: true });

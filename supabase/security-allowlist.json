@@ -37,6 +37,7 @@
     "plan_limit": "Returns a plan limit; execute limited to authenticated",
     "audit_decisions": "Trigger function",
     "guard_public_form": "Trigger function",
+    "invitations_token_guard": "Trigger function; reads other accounts' tokens only to refuse a collision",
     "invitation_preview": "Scoped by invitation token"
   },
   "anonTablePrivileges": {

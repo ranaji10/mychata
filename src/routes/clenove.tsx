@@ -109,11 +109,15 @@ function MembersPage() {
   // Several people at once with ONE link (bugs 10 and 12): every row keeps its own token and
   // shares the batch's group_token; the database lets only the listed emails use it
   // (migration 0026). Roles are stored upper case (migration 0020, B-011).
-  const createBatch = async (addresses: string[], role: string) => {
+  const createBatch = async (
+    addresses: string[],
+    role: string,
+    propertyId: string | null = property?.id ?? null,
+  ) => {
     const groupToken = crypto.randomUUID();
     const rows = addresses.map((address) => ({
       account_id: account!.id,
-      property_id: property?.id ?? null,
+      property_id: propertyId,
       email: address,
       role,
       token: crypto.randomUUID(),
@@ -167,6 +171,13 @@ function MembersPage() {
         .in("id", ids)
         .select("id");
       if (error) throw error;
+      if (data && data.length > 0 && data.length < ids.length)
+        throw new Error(
+          t(
+            `změněno jen ${data.length} z ${ids.length}, zkuste to znovu`,
+            `only ${data.length} of ${ids.length} changed, please try again`,
+          ),
+        );
       if (!data?.length)
         throw new Error(
           t(
@@ -225,7 +236,8 @@ function MembersPage() {
     mutationFn: async (batch: InvitationBatch) => {
       const emails = batch.expired.map((r) => r.email).filter((e): e is string => !!e);
       if (!emails.length) throw new Error(t("nikdo nečeká", "nobody is waiting"));
-      const created = await createBatch(emails, batch.admin ? "ADMIN" : "MEMBER");
+      // Close the old rows first: if that fails, no second live batch is made. The new link
+      // keeps the cottage the old one was for, not whichever cottage is open now.
       const { error } = await supabase
         .from("invitations")
         .update({ status: "REVOKED" })
@@ -234,7 +246,11 @@ function MembersPage() {
           batch.expired.map((r) => r.id),
         );
       if (error) throw error;
-      return created;
+      return createBatch(
+        emails,
+        batch.admin ? "ADMIN" : "MEMBER",
+        batch.expired[0]?.property_id ?? null,
+      );
     },
     onSuccess: async ({ count }) => {
       await queryClient.invalidateQueries({ queryKey: ["invitations"] });
@@ -288,10 +304,7 @@ function MembersPage() {
 
   const mailInvite = (b: InvitationBatch, token: string) =>
     inviteMailto({
-      to: b.pending
-        .map((r) => r.email)
-        .filter(Boolean)
-        .join(","),
+      to: b.pending.map((r) => r.email).filter((e): e is string => !!e),
       link: linkFor(token),
       chata: property?.name ?? account?.name ?? "My Chata",
       inviter: currentMember?.name,

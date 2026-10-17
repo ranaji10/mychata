@@ -176,8 +176,8 @@ function PublicRequest() {
           </h1>
           <p className="mt-2 text-[16px] text-muted-foreground">
             {t(
-              `Vaši žádost o termín ${fmtDate(start)} – ${fmtDate(end)} jsme přijali. O výsledku vás budeme informovat e-mailem.`,
-              `We have received your request for ${fmtDate(start)} – ${fmtDate(end)}. We will let you know the outcome by email.`,
+              `Vaši žádost o termín ${fmtDate(start)} – ${fmtDate(end)} jsme přijali. Správce chaty se vám ozve, jakmile ji vyřídí.`,
+              `We have received your request for ${fmtDate(start)} – ${fmtDate(end)}. The cottage's admin will get back to you once it is decided.`,
             )}
           </p>
           <Link to="/" className="btn-secondary mt-4 w-full">

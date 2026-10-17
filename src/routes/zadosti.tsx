@@ -52,6 +52,9 @@ function RequestsPage() {
   } = useQuery({
     queryKey: ["requests", property?.id, "newest"],
     enabled: !!property && !hidden,
+    // Requests arrive from the public form, outside this app: always ask again when the page
+    // opens (a minute-old empty list hid a new request in the release check of 17 Oct).
+    refetchOnMount: "always",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutional_requests")

@@ -95,6 +95,8 @@ Everything finished, oldest first. Details are in the repo: `docs/STATUS.md`, `d
 | 18 Oct, 00:00 | Test 2's password was refused 4 times by Supabase ("Invalid login credentials"); the reset email arrived and the new password works. No app defect; the reset flow (bug 4) passed live. | Release-check report |
 | 18 Oct, 00:20 | T-036 on branch `agent/claude/T-036-release-fixes`: migration 0028 (overlap rule, owner-only conversion), sign-out cleanup, Requests refresh, small fixes. Prompt 20 written for Lovable. | T-036 brief |
 | 18 Oct, 00:30 | Reviewer and RLS audit of T-036: a member could still bypass the hold (UPDATE to CONFIRMED, null requester) and a co-admin could demote the founder. Fixed before the PR: trigger on insert and update, per-night guest count, founder protected. PR #48 opened, check 0 errors, 140 tests. | PR #48, `2026-10-18-pr-t036-review.md` |
+| 18 Oct, 00:30–00:35 | PR #48 merged. Lovable applied 0028 through the empty marker 0029 and nothing else (PR #49); published as `9fce136`. Prompt 20's first check query used a wrong function name (Claude's error); Lovable checked the right one. Closes N-7. | PR #48, PR #49, prompt 20 |
+| 18 Oct, 00:45–01:00 | Re-check live on `9fce136`: a plain member's overlapping booking on a "No" cottage is held, and approving it yourself is refused (F-14 closed); sign-out from My profile clears the offline copy (F-15 closed). Requests still stale after a full reload: T-037 (PR #50). Lovable's extra changes of 17 Oct reviewed: platform files only, no effect on mychata.cz; rule added to the two-person runbook. The tag can't be pushed from Claude's session: left to a maintainer. | PR #50, release-check report |
 
 ## GitHub settings check (found 4 Oct, done 12 Oct)
 

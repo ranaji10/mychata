@@ -14,7 +14,7 @@ tab: Now
 
 18 Oct 2026 · Tuik
 
-**Live:** `860f7fe` (PR #47: T-035 bugs of 17 Oct + migration 0026), published 17 Oct 22:25. Release check of 17–18 Oct passed for bugs 1–14 and found three defects (F-14 to F-16), fixed in T-036. **Waiting on you:** merge PR #48 (T-036), run prompt `20` (Lovable applies 0028), publish, say "published" for the re-check and the release tag. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `9fce136` (PR #48 T-036 + Lovable's 0029 marker, PR #49), published 18 Oct 00:35, migrations up to 0029. Re-checked live: overlap hold (F-14) and sign-out cleanup (F-15) pass; the Requests list is still stale after a full reload (F-16, fix in PR #50). **Waiting on you:** set the tag `release-2026-10-18` on `9fce136`, merge PR #49 and PR #50, publish, say "published" for the reload check. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
@@ -24,15 +24,14 @@ tab: Now
 | N-4 | **Switch off the test chata's public calendar** in Settings ("Vypnout veřejný kalendář", live since T-032), then prompt `10` again | You | To do | |
 | N-5 | **E-mail:** Lovable reported on 15 Oct that `notify.mychata.cz` failed verification. Check its DNS records in Lovable's e-mail settings and at the registrar. Then L-E (`05`), CC-3 (`06`) and L-3 (`07`) once G-1's Czech content is reviewed | You | To do | F-07 |
 | N-6 | **Document search:** plan first (`08-CC-4-plan-document-search.md`). T-021 reads the manual's full text without embeddings, so re-check the T-007 and T-020 plans before anyone builds | Claude | To do | |
-| N-7 | **T-036 release fixes:** merge PR #48 when CI is green (reviewed; reviewer and RLS-audit gaps already fixed on the branch), then prompt 20 (Lovable applies migration 0028 exactly as written, nothing else), then publish | You, Lovable | To do | F-14, F-15, F-16, N-8 |
-| N-8 | **Re-check and tag:** after the T-036 publish, Claude re-checks overlap "No" on Chata Alfa (test) with Test 2, sign-out from My profile and the Requests list, then the published commit gets the tag `release-2026-10-18` (first tag since `release-2026-10-14`) | Claude, you | To do | |
+| N-8 | **Tag and finish the release:** set `release-2026-10-18` on `9fce136` (GitHub → Releases → Draft a new release; Claude's session can't push tags). Merge PR #49 (Lovable's 0029 marker, already live) and PR #50 (T-037: Requests fresh after a reload), publish, then Claude checks the reload case | You, then Claude | To do | F-16 |
 | N-9 | **Record the test accounts:** done in PR #48 for `docs/runbooks/test-cottages.md` as Test 1, 2, 3. Left: add the same labels to Lovable's Knowledge | You | To do | F-02 |
 
 ## Decisions waiting on you
 
 Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" rows stay until they become an N row; anything with a note, write the ID in chat or comment on the row.
 
-**New 16 Oct:** D-18 to D-21 decide pricing. The strategy and its build steps (P-1 to P-13) are in Reference, section 10. **New 18 Oct:** D-22, D-23.
+**New 16 Oct:** D-18 to D-21 decide pricing. The strategy and its build steps (P-1 to P-13) are in Reference, section 10. **New 18 Oct:** D-22 to D-24.
 
 | ID | Question | Why it matters | Raised | Decision |
 | --- | --- | --- | --- | --- |
@@ -59,6 +58,7 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | D-21 | Who sells: you, Rajat, or a company you both own (O-11)? | No invoice, terms or payment account without a seller; it also decides VAT status and the business split | 16 Oct | |
 | D-22 | "Owner" = the account's founding member (founders are stored as admins; no owner role exists). Keep that, or store an explicit owner (and owner transfer) before billing (T-009)? | Decides who may convert an account and, later, who pays. If the founder leaves, the next-oldest member becomes owner; in accounts older than sign-in, an unclaimed early member row could make its claimer the founder (worth a data check) | 18 Oct | |
 | D-23 | Should an admin's own overlapping booking also wait, or stay confirmed (as built in T-036)? | With "No" to overlaps, admins can still double-book; the screen warns them | 18 Oct | |
+| D-24 | Lovable's own platform updates (its build package, files under `src/integrations/`): accept them as they come, but ask that they arrive in a separate commit, never mixed into a migration or app round (as on 17 Oct)? | Mixed rounds make a broken publish harder to trace; the runbook now says how to handle them (two-person-workflow, "Lovable platform updates") | 18 Oct | |
 
 ## Open defects
 
@@ -74,9 +74,7 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | F-08 | iPhone photos (HEIC) can't be converted in Chrome or Firefox | The app explains how to switch to JPG; Safari works | Optional: a HEIC converter in the browser | To do |
 | F-09 | B-005: slow CORS / HTTP/3 errors on Supabase hosting (Firefox) | Three other B-005 items fixed in PR #21 | Watch; T-002 | Waiting |
 | F-12 | Site check 4: hero photo downloaded twice | Not reproduced on 15 Oct (one request per load on `/`, `/auth`, `/verejne/zadost/x`) | Recheck in the next site check | Waiting |
-| F-14 | "No" to overlapping stays is stored but ignored: a member's overlapping booking is confirmed at once, with "Overlapping family stays are allowed" (seen live 17 Oct, Chata Alfa) | Fixed in T-036: migration 0028 sends it to the admin; the screen says so | N-7, recheck in N-8 | Doing |
-| F-15 | Signing out from My profile can leave the previous person's cached data (email, members, invitations) in the browser for the next person (shared browser, bug 2) | Fixed in T-036: cache removed on every sign-out | N-7, recheck in N-8 | Doing |
-| F-16 | Requests (institutions) showed "No requests" for up to a minute after a new public request | Fixed in T-036: list reloads on open | N-7, recheck in N-8 | Doing |
+| F-16 | Requests (institutions) showed "No requests" for up to a minute after a new public request. T-036 fixed it when moving between pages; after a full reload the restored offline copy still counts as fresh (re-check 18 Oct) | Fix in PR #50 (T-037): no stale copy for requests | N-8 | Doing |
 | F-17 | Low items from 17 Oct: "expires in 6 days" right after making a 7-day link; wrong-account notice on an invitation is green, not a warning; page titles stay Czech in English; Members and Requests pages lack a main landmark; Home shows "Next stay" twice; "Check Out" offered on a stay 9 days away; pre-0026 invitation batches can't be cancelled | Small, none blocks the release | Next design or polish round | To do |
 
 ## How to use this doc

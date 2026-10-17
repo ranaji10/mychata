@@ -126,10 +126,6 @@ function ErrorBody({ error, reset }: ErrorComponentProps) {
   );
 }
 
-/**
- * The reset-password link signs the person in; send them to choose a new password before
- * anything else (Home, onboarding, an invitation). Bug 4, 17 Oct 2026.
- */
 const OFFLINE_CACHE_KEY = "mychata.offline-cache";
 
 /**
@@ -166,6 +162,10 @@ function SignOutCleanup() {
   return null;
 }
 
+/**
+ * The reset-password link signs the person in; send them to choose a new password before
+ * anything else (Home, onboarding, an invitation). Bug 4, 17 Oct 2026.
+ */
 function RecoveryGuard() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });

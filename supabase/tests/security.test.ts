@@ -1147,9 +1147,9 @@ describe("release check of 17 Oct (T-036, migration 0028)", () => {
     });
   });
 
-  // GAP (open): the hold is only on INSERT and only when requester_member_id = me.
-  // These document the bypasses; they pass while the gap exists (it.fails). Remove .fails once fixed.
-  it.fails("GAP: a member cannot confirm their own held booking with an UPDATE", async () => {
+  // Closed in 0028 after the RLS audit: the hold also runs on UPDATE and for a null requester.
+
+  it("a member cannot confirm their own held booking with an UPDATE", async () => {
     await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
       ids.propA,
     ]);
@@ -1174,7 +1174,43 @@ describe("release check of 17 Oct (T-036, migration 0028)", () => {
     }
   });
 
-  it.fails("GAP: a member cannot dodge the hold with requester_member_id = null", async () => {
+  it("moving a confirmed stay onto another one is held; guests are counted per night", async () => {
+    await admin(
+      db,
+      "update public.properties set overlap_allowed = true, overlap_max_guests = 5 where id = $1",
+      [ids.propA],
+    );
+    try {
+      await admin(
+        db,
+        `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, guests, status)
+         values ($1,'Anna',$2, current_date + 50, current_date + 52, 3, 'CONFIRMED'),
+                ($1,'Anna',$2, current_date + 55, current_date + 58, 3, 'CONFIRMED')`,
+        [ids.propA, ids.memberAAdmin],
+      );
+      await as(db, aMember, async (q) => {
+        // 3 guests on any one night plus 2 is within the limit of 5, even though 6 overlap in total.
+        const [b] = await q<{ id: string; status: string }>(
+          `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, guests, status)
+           values ($1, 'Petr', $2, current_date + 50, current_date + 60, 2, 'CONFIRMED') returning id, status`,
+          [ids.propA, ids.memberAMember],
+        );
+        expect(b!.status).toBe("CONFIRMED");
+        // Same booking with 4 guests: 3 + 4 on one night is over the limit.
+        expect(
+          await q("update public.bookings set guests = 4 where id = $1 returning status", [b!.id]),
+        ).toEqual([{ status: "PENDING" }]);
+      });
+    } finally {
+      await admin(
+        db,
+        "update public.properties set overlap_allowed = null, overlap_max_guests = null where id = $1",
+        [ids.propA],
+      );
+    }
+  });
+
+  it("a member cannot dodge the hold with requester_member_id = null", async () => {
     await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
       ids.propA,
     ]);
@@ -1236,8 +1272,8 @@ describe("release check of 17 Oct (T-036, migration 0028)", () => {
     });
   });
 
-  // GAP (open): a co-admin can demote the founder, after which nobody can ever convert.
-  it.fails("GAP: a co-admin cannot demote the founder", async () => {
+  // Closed in 0028: a co-admin cannot demote the founder.
+  it("a co-admin cannot demote the founder", async () => {
     await as(db, aMember, async (q) => {
       await q("reset role");
       await q("update public.members set role = 'ADMIN' where id = $1", [ids.memberAMember]);

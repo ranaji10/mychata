@@ -38,6 +38,8 @@
     "audit_decisions": "Trigger function",
     "guard_public_form": "Trigger function",
     "invitations_token_guard": "Trigger function; reads other accounts' tokens only to refuse a collision",
+    "overlap_peak_guests": "Internal helper of booking_defaults; no execute grant to anon or authenticated",
+    "account_founder": "Internal helper of convert_account_to_institution and set_member_role; no execute grant to anon or authenticated",
     "invitation_preview": "Scoped by invitation token"
   },
   "anonTablePrivileges": {

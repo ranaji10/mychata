@@ -310,6 +310,47 @@ export function findConflicts(
   return out;
 }
 
+/**
+ * Most guests on any one night of [start, end) from confirmed and pending stays: the number
+ * the overlap rule compares with the cottage's limit (mirrors overlap_peak_guests, 0028).
+ */
+export function overlapPeakGuests(
+  start: string,
+  end: string,
+  others: { start_date: string; end_date: string; guests?: number | null; status: string }[],
+): number {
+  const nights: string[] = [];
+  const d = new Date(`${start}T00:00:00Z`);
+  const last = end > start ? end : addDaysIso(start, 1);
+  while (nights.length < 400) {
+    const iso = d.toISOString().slice(0, 10);
+    if (iso >= last) break;
+    nights.push(iso);
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  let peak = 0;
+  for (const night of nights) {
+    let sum = 0;
+    for (const o of others) {
+      if (
+        (o.status === "CONFIRMED" || o.status === "PENDING") &&
+        o.start_date <= night &&
+        night < o.end_date
+      ) {
+        sum += o.guests ?? 1;
+      }
+    }
+    peak = Math.max(peak, sum);
+  }
+  return peak;
+}
+
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 // ---------- Picking a stay on the calendar ----------
 
 export interface DateRange {

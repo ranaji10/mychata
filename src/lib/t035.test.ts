@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { accountContextLine, sameName } from "@/lib/account-label";
 import { centreSquare } from "@/lib/avatar";
 import { missingCottageDetails } from "@/lib/cottage-details";
+import { overlapPeakGuests } from "@/lib/data";
 import { daysUntil, groupInvitations, type InvitationRow } from "@/lib/invites";
 import { captureRecoveryFromUrl, hasPassword } from "@/lib/password";
 import { isStaleChunkError } from "@/lib/stale-chunk";
@@ -170,5 +171,27 @@ describe("profile photo (bug 6)", () => {
   it("crops the centre square", () => {
     expect(centreSquare(400, 300)).toEqual({ sx: 50, sy: 0, side: 300 });
     expect(centreSquare(300, 500)).toEqual({ sx: 0, sy: 100, side: 300 });
+  });
+});
+
+describe("overlapPeakGuests (T-036)", () => {
+  const b = (s: string, e: string, guests: number, status = "CONFIRMED") => ({
+    start_date: s,
+    end_date: e,
+    guests,
+    status,
+  });
+  it("counts guests per night, not every stay in the range", () => {
+    const stays = [b("2026-11-10", "2026-11-12", 3), b("2026-11-15", "2026-11-18", 3)];
+    expect(overlapPeakGuests("2026-11-10", "2026-11-20", stays)).toBe(3);
+  });
+  it("a same-day changeover shares no night", () => {
+    expect(overlapPeakGuests("2026-11-12", "2026-11-14", [b("2026-11-10", "2026-11-12", 2)])).toBe(
+      0,
+    );
+  });
+  it("adds stays on the same night, pending included", () => {
+    const stays = [b("2026-11-10", "2026-11-13", 2), b("2026-11-11", "2026-11-12", 4, "PENDING")];
+    expect(overlapPeakGuests("2026-11-11", "2026-11-12", stays)).toBe(6);
   });
 });

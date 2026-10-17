@@ -119,11 +119,13 @@ function ManageCottagesPage() {
             </p>
           )}
         </div>
-        {isAdmin && (
-          <Link to="/chata/nova" className="btn-secondary mt-4 w-full">
-            <Plus className="size-5" /> {t("Přidat chatu", "Add a cottage")}
-          </Link>
-        )}
+        {/* Members land on "Start my own cottage" (chata.nova explains adding needs an admin). */}
+        <Link to="/chata/nova" className="btn-secondary mt-4 w-full">
+          <Plus className="size-5" />{" "}
+          {isAdmin
+            ? t("Přidat chatu", "Add a cottage")
+            : t("Založit vlastní chatu", "Start my own cottage")}
+        </Link>
       </section>
 
       <CottageSetup />

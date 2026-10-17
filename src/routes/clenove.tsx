@@ -208,6 +208,7 @@ function MembersPage() {
       });
       if (error) {
         if (error.message.includes("last_admin")) throw new Error("last-admin");
+        if (error.message.includes("founder_role_is_fixed")) throw new Error("founder");
         throw error;
       }
     },
@@ -225,9 +226,14 @@ function MembersPage() {
       toast.error(
         e.message === "last-admin"
           ? t("Musí zbýt alespoň jeden správce.", "At least one admin must remain.")
-          : e.message === "not-registered"
-            ? t("Tento člen se ještě nepřihlásil.", "This member has not signed in yet.")
-            : t("Změna se nepodařila.", "Change failed."),
+          : e.message === "founder"
+            ? t(
+                "Zakladateli účtu může správcovská práva odebrat jen on sám.",
+                "Only the account's founder can give up their own admin rights.",
+              )
+            : e.message === "not-registered"
+              ? t("Tento člen se ještě nepřihlásil.", "This member has not signed in yet.")
+              : t("Změna se nepodařila.", "Change failed."),
       ),
   });
 

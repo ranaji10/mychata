@@ -17,11 +17,11 @@ As of 2026-10-18. Update this file in every PR that changes behaviour.
 
 ## Release check fixes (T-036, 18 Oct 2026, not yet live; needs migration 0028)
 
-- "No" to overlapping stays now counts: a plain member's booking that overlaps another stay goes to the admin for approval, as does one that takes the overlapping guests above the saved limit. Same-day changeovers are not overlaps; admins' own bookings stay confirmed. The booking screen says which applies.
-- Only the account's founder (the oldest member with a sign-in) can turn a family account into an organisation's; another admin gets "Only the person who set up this account can convert it". Each conversion is written to the audit log.
+- "No" to overlapping stays now counts: a plain member's booking that overlaps another stay goes to the admin for approval, as does one that takes the guests of any one night above the saved limit. The database also checks changed dates or guests, and a member can no longer approve their own held booking. Same-day changeovers are not overlaps; admins' own bookings stay confirmed. The booking screen says which applies.
+- Only the account's founder (the oldest member with a sign-in) can turn a family account into an organisation's; another admin gets "Only the person who set up this account can convert it". Each conversion is written to the audit log, and another admin can no longer demote the founder.
 - Signing out removes the offline copy of the person's data from the browser, even when the copy is written again just after sign-out (seen live from My profile).
 - Requests (institutions) always reloads the list when opened, so a new public request shows at once; the public request page no longer promises an email.
-- "Add a cottage" / "Add a chata" only for admins (Manage cottages and the switcher); the open cottage's badge says "Currently open". Invitation page no longer repeats the name when account and cottage are called the same.
+- Members see "Start my own cottage" instead of "Add a cottage" (Manage cottages and the switcher); the open cottage's badge says "Currently open". Invitation page no longer repeats the name when account and cottage are called the same.
 
 ## Bugs of 17 Oct (T-035, 17 Oct 2026, not yet live; needs migration 0026)
 

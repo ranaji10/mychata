@@ -16,6 +16,7 @@ import {
 } from "@/components/calendar";
 import {
   findConflicts,
+  overlapPeakGuests,
   fmtDate,
   isoDateOrNull,
   pickRange,
@@ -89,21 +90,15 @@ function NewBooking() {
   const overlaps = conflicts.filter((c) => c.kind === "hard");
   const changeovers = conflicts.filter((c) => c.kind === "same-day");
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
-  // Same rule as the database (booking_defaults, migration 0028): "No" to overlaps, or the
-  // overlapping stays' guests above the saved limit, sends a member's booking to the admin.
-  const overlapGuests = (bookings ?? [])
-    .filter(
-      (b) =>
-        (b.status === "CONFIRMED" || b.status === "PENDING") &&
-        b.start_date < end &&
-        start < b.end_date,
-    )
-    .reduce((sum, b) => sum + (b.guests ?? 1), 0);
+  // Same rule as the database (booking_defaults, migration 0028): "No" to overlaps, or more
+  // guests on any one night than the saved limit, sends a member's booking to the admin.
+  // Nights are [arrival, departure); a same-day changeover shares no night.
+  const peakGuests = overlapPeakGuests(start, end, bookings ?? []);
   const overlapNeedsApproval =
-    overlaps.length > 0 &&
+    end >= start &&
+    peakGuests > 0 &&
     (property?.overlap_allowed === false ||
-      (property?.overlap_max_guests != null &&
-        overlapGuests + guests > property.overlap_max_guests));
+      (property?.overlap_max_guests != null && peakGuests + guests > property.overlap_max_guests));
   const invalid = end < start;
 
   const save = async () => {

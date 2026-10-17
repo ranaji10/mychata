@@ -62,6 +62,6 @@ Migration 0028 on the live database; avatar upload on iOS; desktop-width layout;
 - Overlap "No" on Chata Alfa (test), as Test 3 (plain member): the screen says the booking goes to the admin; the booking was saved PENDING; setting it CONFIRMED directly returned `403 admin_approval_required`. Pass (F-14).
 - Sign-out from My profile: offline copy and active-cottage key removed. Pass (F-15).
 - Requests: a new public request shows when Requests is opened from inside the app, but not after a full reload within a minute (the restored offline copy counts as fresh). Fixed in T-037 (F-16 stays open until then).
-- Tagged `release-2026-10-18` on `9fce136`.
+- Tag `release-2026-10-18` on `9fce136`: to be set by a maintainer (Claude's session cannot push tags).
 
 Source file: `docs/external/claude/2026-10-17-release-check.md` in the mychata repo.

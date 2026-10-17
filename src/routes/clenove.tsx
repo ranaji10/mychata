@@ -246,11 +246,24 @@ function MembersPage() {
           batch.expired.map((r) => r.id),
         );
       if (error) throw error;
-      return createBatch(
-        emails,
-        batch.admin ? "ADMIN" : "MEMBER",
-        batch.expired[0]?.property_id ?? null,
-      );
+      try {
+        return await createBatch(
+          emails,
+          batch.admin ? "ADMIN" : "MEMBER",
+          batch.expired[0]?.property_id ?? null,
+        );
+      } catch (e) {
+        // Put the old rows back so the batch stays under "Expired" with its button to retry.
+        const { error: undoError } = await supabase
+          .from("invitations")
+          .update({ status: "PENDING" })
+          .in(
+            "id",
+            batch.expired.map((r) => r.id),
+          );
+        if (undoError) console.error("[clenove] renew undo", undoError);
+        throw e;
+      }
     },
     onSuccess: async ({ count }) => {
       await queryClient.invalidateQueries({ queryKey: ["invitations"] });

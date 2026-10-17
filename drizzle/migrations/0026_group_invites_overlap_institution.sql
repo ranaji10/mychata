@@ -61,6 +61,7 @@ begin
       raise exception 'invitation_token_taken' using errcode = '23505';
     end if;
   end if;
+  perform pg_advisory_xact_lock(hashtext('invitation_group:' || new.token));
   if exists (select 1 from public.invitations where group_token = new.token) then
     raise exception 'invitation_token_taken' using errcode = '23505';
   end if;

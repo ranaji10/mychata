@@ -1022,10 +1022,10 @@ describe("bugs of 17 Oct (T-035, migration 0026)", () => {
     ).toEqual([{ type: "FAMILY", name: "Rodina A" }]);
   });
 
-  // GAP (fails on 0026): group_token is chosen by the client and not tied to one account, so an
+  // Was a gap in the first draft of 0026, closed by invitations_token_guard: group_token is chosen by the client, so an
   // admin of another account who knows a batch's link (e.g. was invited in it) can add rows with
   // the same group_token. accept_invitation() picks the newest matching row, so the invitee who
-  // opens account A's link joins account B instead.
+  // opens account A's link would join account B instead.
   it("a group token cannot be reused by another account", async () => {
     await admin(
       db,

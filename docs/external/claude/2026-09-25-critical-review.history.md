@@ -86,6 +86,15 @@ Everything finished, oldest first. Details are in the repo: `docs/STATUS.md`, `d
 | 15 Oct, 00:46 | T-033 merged and published (`c099891`): `build-sha` and `build-time` meta tags on every page, no layout shift on `/host`, no placeholder name. Closes the version-marker question. | PR #40 |
 | 15 Oct, 01:06 | Site check 4: 6/6, T-033 fixes live, live commit read from `build-sha`. Open: banner gap at 375px, hero photo "downloaded twice", no heading on an invalid request link. | PR #41, `2026-10-14-site-check-4.md` |
 | 15 Oct, ~02:15 | T-034 opened as PR #42: banner flush on phones, 800px photo for phones, request-link heading; the double download was not reproduced. This doc split into four tabs (Now, Backlog, Reference, Done & history) and every open row got an ID. | PR #42 |
+| 15 Oct, day | PR #42 (T-034) and #43 published, live `37b2a0e`. Site check: 6/6, banner flush on phones, 800px phone photo, heading on an invalid request link. Closes N-1, F-11, F-13. | PR #44, `2026-10-15-site-check.md` |
+| 16 Oct | Pricing v2 written into Reference section 10; D-18 to D-21 opened. | PR #45 |
+| 17 Oct, 15:00–20:00 | Bugs list of 17 Oct (14 bugs) fixed as T-035; reviewer and RLS audit found a group-link takeover, fixed with the `invitations_token_guard` trigger. | PR #46, `2026-10-17-pr46-review.md` |
+| 17 Oct, 22:24 | Lovable applied 0026 through the empty marker 0027 (it also bumped a Lovable build package and changed `previewAuthStorage.ts`, outside the prompt). Merged as PR #47, published as `860f7fe`. | PR #47, prompt 19 |
+| 17 Oct, 23:30 – 18 Oct, 00:15 | Release check with Test 1, Test 2 and Test 3 (institution): bugs 1–14 pass live; F-10 (phone) passes; institution onboarding, public request and approval pass. Found: "No" to overlaps not enforced, cached data left after sign-out, Requests list stale for a minute. Closes N-2. | `2026-10-17-release-check.md` |
+| 17 Oct, 23:50 | Decisions on the PR #46 review: (1) the token guard keeps reading other accounts' tokens; (2) only the owner converts a family account to an organisation; (3) verification before the organisation plan is billed (T-009); (4) group links keep showing masked invitee emails. | Chat, T-036 brief |
+| 18 Oct, 00:00 | Test 2's password was refused 4 times by Supabase ("Invalid login credentials"); the reset email arrived and the new password works. No app defect; the reset flow (bug 4) passed live. | Release-check report |
+| 18 Oct, 00:20 | T-036 on branch `agent/claude/T-036-release-fixes`: migration 0028 (overlap rule, owner-only conversion), sign-out cleanup, Requests refresh, small fixes. Prompt 20 written for Lovable. | T-036 brief |
+| 18 Oct, 00:30 | Reviewer and RLS audit of T-036: a member could still bypass the hold (UPDATE to CONFIRMED, null requester) and a co-admin could demote the founder. Fixed before the PR: trigger on insert and update, per-night guest count, founder protected. PR #48 opened, check 0 errors, 140 tests. | PR #48, `2026-10-18-pr-t036-review.md` |
 
 ## GitHub settings check (found 4 Oct, done 12 Oct)
 

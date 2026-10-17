@@ -77,6 +77,16 @@ These can't be set from a pull request. They need the owner's account, in the Gi
 
 5. **Notifications.** Both maintainers: Watch → All activity, so failed CI and the nightly production check reach both of you.
 
+## Lovable platform updates
+
+Lovable sometimes changes its own files in the same round as a prompt (17 Oct: `@lovable.dev/vite-tanstack-config` 2.25.3 → 2.26.5 with `bun.lock`, and `src/integrations/supabase/previewAuthStorage.ts`, while applying migration 0026). These are Lovable's platform files, so accept them, but keep them apart from our changes:
+
+- Which files: `@lovable.dev/*` versions in `package.json` and their `bun.lock` lines, and every file under `src/integrations/` marked "automatically generated". Never edit them by hand (AGENTS.md).
+- `previewAuthStorage.ts` only acts on Lovable's preview hosts inside the editor frame; on mychata.cz it returns plain `localStorage`.
+- When a Lovable PR mixes a platform update with a migration or app change, say so in the PR and the tracker's history, and check CI's install and build steps passed (they rewrite Lovable's private registry URLs first).
+- If a publish breaks right after such a round, suspect the platform update first: restore the previous version in Lovable, then ask Lovable to make the update on its own.
+- Prompts to Lovable end with: "If you need a platform or dependency update, do it in a separate commit and name it in your reply."
+
 ## Tags
 
 - `baseline-YYYY-MM-DD`: the state of `main` when something changes hands (a new maintainer, a hosting move). Any maintainer can create one.

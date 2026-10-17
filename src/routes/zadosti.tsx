@@ -53,8 +53,10 @@ function RequestsPage() {
     queryKey: ["requests", property?.id, "newest"],
     enabled: !!property && !hidden,
     // Requests arrive from the public form, outside this app: always ask again when the page
-    // opens (a minute-old empty list hid a new request in the release check of 17 Oct).
+    // opens. "always" covers moving between pages; staleTime 0 covers a reload, where the
+    // offline copy is restored first and a minute-old copy counted as fresh (re-check of 18 Oct).
     refetchOnMount: "always",
+    staleTime: 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutional_requests")

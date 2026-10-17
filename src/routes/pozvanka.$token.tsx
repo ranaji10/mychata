@@ -150,9 +150,11 @@ function InvitePage() {
         <div className="card mt-4 space-y-2 p-4 text-left">
           <Row icon={<Home className="size-5 text-primary" />}>
             <b>{preview?.property_name ?? preview?.account_name}</b>
-            {preview?.property_name && preview.account_name && (
-              <span className="text-muted-foreground"> · {preview.account_name}</span>
-            )}
+            {preview?.property_name &&
+              preview.account_name &&
+              preview.account_name !== preview.property_name && (
+                <span className="text-muted-foreground"> · {preview.account_name}</span>
+              )}
           </Row>
           <Row icon={<ShieldCheck className="size-5 text-primary" />}>
             {t(`Role: ${roleLabel}`, `Role: ${roleLabel}`)}

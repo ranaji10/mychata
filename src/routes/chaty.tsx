@@ -119,9 +119,11 @@ function ManageCottagesPage() {
             </p>
           )}
         </div>
-        <Link to="/chata/nova" className="btn-secondary mt-4 w-full">
-          <Plus className="size-5" /> {t("Přidat chatu", "Add a cottage")}
-        </Link>
+        {isAdmin && (
+          <Link to="/chata/nova" className="btn-secondary mt-4 w-full">
+            <Plus className="size-5" /> {t("Přidat chatu", "Add a cottage")}
+          </Link>
+        )}
       </section>
 
       <CottageSetup />
@@ -230,7 +232,9 @@ function CottageCard({
       <div className="flex items-center gap-2">
         <p className="min-w-0 flex-1 truncate text-[17px] font-bold">{property.name}</p>
         {open && (
-          <span className="pill bg-card text-muted-foreground">{t("Otevřená", "Open")}</span>
+          <span className="pill bg-card text-muted-foreground">
+            {t("Právě otevřená", "Currently open")}
+          </span>
         )}
       </div>
       {(property.address || property.city) && (

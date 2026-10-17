@@ -13,3 +13,7 @@ Skeleton only (migration 0015). Nothing is charged and nothing is gated yet.
 2. Webhook server route writes `billing_events`, then updates `subscriptions`.
 3. Enforce limits inside database functions (`add_property` checks `plan_limit(..., 'properties')`), not only in the UI.
 4. Marketplace money (guests paying hosts) is separate and regulated: Stripe Connect or a Czech gateway, V2 at the earliest.
+
+## Organisation verification (decision of 17 Oct 2026)
+
+A family account can become an organisation's (`convert_account_to_institution`, owner only, work email required), and an organisation sign-up only needs a work-style email. Before billing limits are enforced (T-009), add a verification step for the organisation plan: for example a confirmed email on the organisation's domain plus a manual check of the name, or an invoice-first activation. Until then the organisation type is not proof of being one.

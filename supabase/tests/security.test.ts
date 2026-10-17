@@ -1044,3 +1044,84 @@ describe("bugs of 17 Oct (T-035, migration 0026)", () => {
     });
   });
 });
+
+describe("release check of 17 Oct (T-036, migration 0028)", () => {
+  const bookAsMember = (
+    q: <R = Record<string, unknown>>(sql: string, params?: unknown[]) => Promise<R[]>,
+    start: number,
+    end: number,
+    guests = 2,
+  ) =>
+    q<{ status: string }>(
+      `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, guests, status)
+       values ($1, 'Petr', $2, current_date + $3::int, current_date + $4::int, $5, 'CONFIRMED') returning status`,
+      [ids.propA, ids.memberAMember, start, end, guests],
+    );
+
+  it("'No' to overlapping stays sends a member's overlapping booking to the admin", async () => {
+    await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
+      ids.propA,
+    ]);
+    await as(db, aMember, async (q) => {
+      // Anna's stay is current_date + 10 .. + 12 (seed).
+      expect(await bookAsMember(q, 11, 14)).toEqual([{ status: "PENDING" }]);
+    });
+    await as(db, aMember, async (q) => {
+      // Arriving the day Anna leaves is a changeover, not an overlap.
+      expect(await bookAsMember(q, 12, 15)).toEqual([{ status: "CONFIRMED" }]);
+      expect(await bookAsMember(q, 30, 32)).toEqual([{ status: "CONFIRMED" }]);
+    });
+    await as(db, aAdmin, async (q) => {
+      // An admin's own booking is not held back.
+      const r = await q<{ status: string }>(
+        `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status)
+         values ($1, 'Anna', $2, current_date + 11, current_date + 13, 'CONFIRMED') returning status`,
+        [ids.propA, ids.memberAAdmin],
+      );
+      expect(r).toEqual([{ status: "CONFIRMED" }]);
+    });
+    await admin(db, "update public.properties set overlap_allowed = null where id = $1", [
+      ids.propA,
+    ]);
+  });
+
+  it("an overlap within the guest limit is confirmed, above it waits for the admin", async () => {
+    await admin(
+      db,
+      "update public.properties set overlap_allowed = true, overlap_max_guests = 5 where id = $1",
+      [ids.propA],
+    );
+    await as(db, aMember, async (q) => {
+      expect(await bookAsMember(q, 11, 14, 2)).toEqual([{ status: "CONFIRMED" }]);
+    });
+    await as(db, aMember, async (q) => {
+      // Anna's seeded stay has the default guest count; 5 more is over the limit of 5.
+      expect(await bookAsMember(q, 11, 14, 5)).toEqual([{ status: "PENDING" }]);
+    });
+    await admin(
+      db,
+      "update public.properties set overlap_allowed = null, overlap_max_guests = null where id = $1",
+      [ids.propA],
+    );
+  });
+
+  it("only the account's founder converts it to an organisation, not another admin", async () => {
+    await admin(db, "update public.members set role = 'ADMIN' where id = $1", [ids.memberAMember]);
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/owner_required/);
+    });
+    await admin(db, "update public.members set role = 'MEMBER' where id = $1", [ids.memberAMember]);
+    await as(db, aAdmin, async (q) => {
+      await q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]);
+      await q("reset role");
+      expect(
+        await q(
+          "select action from public.audit_log where account_id = $1 and action = 'account_converted'",
+          [ids.acctA],
+        ),
+      ).toEqual([{ action: "account_converted" }]);
+    });
+  });
+});

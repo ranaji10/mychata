@@ -55,14 +55,19 @@ export function InstitutionSetup() {
     if (error) {
       console.error("[institution] convert", error);
       toast.error(
-        error.message.includes("institution_email_required")
+        error.message.includes("owner_required")
           ? t(
-              "Organizaci může založit jen přihlášení pracovním e-mailem.",
-              "Only a work-email sign-in can set up an organisation.",
+              "Převést účet na organizaci může jen ten, kdo účet založil.",
+              "Only the person who set up this account can convert it to an organisation.",
             )
-          : error.code === "42501"
-            ? t("Převést účet může jen jeho správce.", "Only the account's admin can convert it.")
-            : t(`Převod se nepodařil: ${error.message}`, `Could not convert: ${error.message}`),
+          : error.message.includes("institution_email_required")
+            ? t(
+                "Organizaci může založit jen přihlášení pracovním e-mailem.",
+                "Only a work-email sign-in can set up an organisation.",
+              )
+            : error.code === "42501"
+              ? t("Převést účet může jen jeho správce.", "Only the account's admin can convert it.")
+              : t(`Převod se nepodařil: ${error.message}`, `Could not convert: ${error.message}`),
       );
       return;
     }

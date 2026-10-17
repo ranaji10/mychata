@@ -732,6 +732,7 @@ export type Database = {
           created_by_member_id: string | null
           email: string | null
           expires_at: string
+          group_token: string | null
           id: string
           property_id: string | null
           role: string
@@ -745,6 +746,7 @@ export type Database = {
           created_by_member_id?: string | null
           email?: string | null
           expires_at?: string
+          group_token?: string | null
           id?: string
           property_id?: string | null
           role?: string
@@ -758,6 +760,7 @@ export type Database = {
           created_by_member_id?: string | null
           email?: string | null
           expires_at?: string
+          group_token?: string | null
           id?: string
           property_id?: string | null
           role?: string
@@ -1120,6 +1123,7 @@ export type Database = {
           house_rules_text: string | null
           id: string
           name: string
+          overlap_allowed: boolean | null
           overlap_max_guests: number | null
           peak_seasons: string[]
           photo_url: string | null
@@ -1138,6 +1142,7 @@ export type Database = {
           house_rules_text?: string | null
           id?: string
           name: string
+          overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
           photo_url?: string | null
@@ -1156,6 +1161,7 @@ export type Database = {
           house_rules_text?: string | null
           id?: string
           name?: string
+          overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
           photo_url?: string | null
@@ -1471,6 +1477,10 @@ export type Database = {
         Returns: boolean
       }
       claim_initial_membership: { Args: never; Returns: string }
+      convert_account_to_institution: {
+        Args: { _account_id: string; _name: string }
+        Returns: undefined
+      }
       cover_expense: { Args: { _expense_id: string }; Returns: number }
       create_account_onboarding: {
         Args: {
@@ -1594,6 +1604,10 @@ export type Database = {
       set_active_account: { Args: { _account_id: string }; Returns: string }
       set_member_role: {
         Args: { _member_id: string; _role: string }
+        Returns: undefined
+      }
+      set_property_overlap: {
+        Args: { _allowed: boolean; _max_guests?: number; _property_id: string }
         Returns: undefined
       }
       set_public_calendar: {

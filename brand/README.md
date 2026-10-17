@@ -1,12 +1,13 @@
 # Brand images: the one place to change the logo
 
-| File            | What it is                                                           | Becomes                                                       |
-| --------------- | -------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `logo-mark.png` | The picture alone (cottage, trees, moon), **transparent background** | Android home-screen icons, iPhone home-screen icon (on cream) |
-| `logo-icon.png` | A simplified version for tiny sizes: the cabin in a green circle     | Browser tab icon and `favicon.ico` (16–48 px)                 |
-| `logo.jpeg`     | Picture + "mychata.cz" on cream                                      | The link-preview image (WhatsApp, Facebook, Messenger, Slack) |
+| File               | What it is                                                           | Becomes                                                       |
+| ------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `logo-mark.png`    | The picture alone (cottage, trees, moon), **transparent background** | Android home-screen icons, iPhone home-screen icon (on cream) |
+| `logo-icon.png`    | A simplified version for tiny sizes: the cabin in a green circle     | Browser tab icon and `favicon.ico` (16–48 px)                 |
+| `logo.jpeg`        | Picture + "mychata.cz" side by side on cream                         | (source of the stacked version below)                         |
+| `logo-stacked.png` | Picture on top, "mychata.cz" below, on cream (optional)              | The link-preview image (WhatsApp, Facebook, Messenger, Slack) |
 
-`logo-mark.png` and `logo-icon.png` were made on 14 Oct 2026 from `design/LogoOption1_graphic.jpeg` (background removed; cabin cut out for the small icon). `logo.jpeg` is `design/LogoOption1.jpeg`.
+`logo-mark.png` and `logo-icon.png` were made on 14 Oct 2026 from `design/LogoOption1_graphic.jpeg` (background removed; cabin cut out for the small icon). `logo.jpeg` is `design/LogoOption1.jpeg`. `logo-stacked.png` was cut from `logo.jpeg` on 17 Oct 2026 (bug 3: WhatsApp and Outlook crop the preview to a square and cut the side-by-side logo); the script keeps it inside the middle 630 × 630 of the preview so a square crop shows all of it. Without it the preview falls back to `logo.jpeg`.
 
 ## To change a logo
 

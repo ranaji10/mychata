@@ -8,13 +8,19 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  useNavigate,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+// Reads a password-reset link's address before Supabase clears it (bug 4). Keep it early.
+import { markRecovery, recoveryPending } from "../lib/password";
+import { supabase } from "../integrations/supabase/client";
+import { isStaleChunkError, reloadOnceForNewVersion } from "../lib/stale-chunk";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CONSENT_REGIONS } from "../lib/consent-regions";
@@ -77,9 +83,14 @@ function ErrorBody({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const { t } = useLang();
   const router = useRouter();
+  const staleCode = isStaleChunkError(error);
   useEffect(() => {
+    // A tab left open across a release asks for page code that no longer exists (bug 1,
+    // 17 Oct: switching cottage on an iPhone showed this page). One reload fetches the new
+    // version; the guard stops a loop if the error is something else.
+    if (staleCode && reloadOnceForNewVersion()) return;
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+  }, [error, staleCode]);
   return (
     <main className="page-fresh flex min-h-screen flex-col items-center justify-center gap-6 px-5 text-center">
       <span className="grid size-11 place-items-center rounded-[14px] bg-primary text-primary-foreground">
@@ -113,6 +124,28 @@ function ErrorBody({ error, reset }: ErrorComponentProps) {
       <LanguageToggle />
     </main>
   );
+}
+
+/**
+ * The reset-password link signs the person in; send them to choose a new password before
+ * anything else (Home, onboarding, an invitation). Bug 4, 17 Oct 2026.
+ */
+function RecoveryGuard() {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    if (pathname === "/reset-password") return;
+    if (recoveryPending()) navigate({ to: "/reset-password", replace: true });
+  }, [pathname, navigate]);
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "PASSWORD_RECOVERY") return;
+      markRecovery();
+      navigate({ to: "/reset-password", replace: true });
+    });
+    return () => data.subscription.unsubscribe();
+  }, [navigate]);
+  return null;
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -197,6 +230,12 @@ function RootComponent() {
   useEffect(() => {
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    // Vite's own signal that a preloaded chunk of an older release failed (bug 1).
+    const onPreloadError = (event: Event) => {
+      if (reloadOnceForNewVersion()) event.preventDefault();
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
   }, []);
   useEffect(() => {
     trackPageView(router.state.location.pathname);
@@ -233,6 +272,7 @@ function RootComponent() {
         <AccountProvider>
           <ConsentProvider>
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <RecoveryGuard />
             <Outlet />
             <ConsentBanner />
             <Toaster position="top-center" richColors />

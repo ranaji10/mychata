@@ -124,7 +124,26 @@ export function PillNeutral({ children }: { children: ReactNode }) {
   return <span className="pill bg-secondary text-muted-foreground">{children}</span>;
 }
 
-export function Avatar({ name, className = "" }: { name: string; className?: string }) {
+export function Avatar({
+  name,
+  className = "",
+  src,
+}: {
+  name: string;
+  className?: string;
+  /** A photo (the person's own profile photo); initials when missing. */
+  src?: string | null | undefined;
+}) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt=""
+        referrerPolicy="no-referrer"
+        className={`size-10 shrink-0 rounded-full object-cover ${className}`}
+      />
+    );
+  }
   const initials = name
     .split(" ")
     .map((p) => p[0])

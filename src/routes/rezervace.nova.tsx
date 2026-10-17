@@ -7,7 +7,13 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
+import {
+  CalendarLegend,
+  CalendarMonth,
+  MonthHeader,
+  OverlapNotice,
+  useMonthNav,
+} from "@/components/calendar";
 import {
   findConflicts,
   fmtDate,
@@ -153,6 +159,7 @@ function NewBooking() {
           />
         </div>
         <CalendarLegend picking />
+        <OverlapNotice selection={range} bookings={bookings ?? []} />
       </section>
 
       <section className="card mt-4 space-y-4 p-4">

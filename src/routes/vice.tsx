@@ -2,12 +2,9 @@ import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  BookOpen,
-  Camera,
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
-  FileText,
   Globe,
   Home,
   Link2,
@@ -22,6 +19,7 @@ import { AppShell } from "@/components/AppShell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Avatar, PageHeader } from "@/components/bits";
 import { useAccount } from "@/lib/account";
+import { accountContextLine } from "@/lib/account-label";
 import { useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -139,7 +137,10 @@ function MorePage() {
 
   return (
     <AppShell>
-      <PageHeader title={t("Nastavení", "Settings")} subtitle={account?.name} />
+      <PageHeader
+        title={t("Nastavení", "Settings")}
+        subtitle={accountContextLine(account, property?.name, t) ?? undefined}
+      />
 
       <Link
         to="/profil"
@@ -166,41 +167,22 @@ function MorePage() {
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
-        <Link
-          to="/chata/nova"
-          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
-        >
+        {/* Add a cottage, photos, house manual and documents live in Manage cottages (bug 7). */}
+        <Link to="/chaty" className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary">
           <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
             <Home className="size-[22px]" />
           </span>
-          <span className="flex-1 text-[16px] font-bold">{t("Přidat chatu", "Add a cottage")}</span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
-        <Link to="/fotky" className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary">
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <Camera className="size-[22px]" />
+          <span className="flex-1">
+            <span className="block text-[16px] font-bold">
+              {t("Spravovat chaty", "Manage cottages")}
+            </span>
+            <span className="block text-[14px] text-muted-foreground">
+              {t(
+                "Přidat chatu, fotky, manuál, dokumenty",
+                "Add a cottage, photos, manual, documents",
+              )}
+            </span>
           </span>
-          <span className="flex-1 text-[16px] font-bold">{t("Fotky chaty", "Cottage photos")}</span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
-        <Link
-          to="/manual"
-          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
-        >
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <BookOpen className="size-[22px]" />
-          </span>
-          <span className="flex-1 text-[16px] font-bold">{t("Manuál chaty", "House Manual")}</span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
-        <Link
-          to="/dokumenty"
-          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
-        >
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <FileText className="size-[22px]" />
-          </span>
-          <span className="flex-1 text-[16px] font-bold">{t("Dokumenty", "Document Vault")}</span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
         <Link
@@ -211,7 +193,7 @@ function MorePage() {
             <ClipboardCheck className="size-[22px]" />
           </span>
           <span className="flex-1 text-[16px] font-bold">
-            {t("Odjezdový checklist", "Check-out checklist")}
+            {t("Odjezdové úkoly", "Checkout Tasks")}
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>

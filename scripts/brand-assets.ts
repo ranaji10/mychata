@@ -6,7 +6,9 @@
 //   brand/logo-mark.png   the picture alone, transparent background: home-screen icons
 //   brand/logo-icon.png   a simplified version for tiny sizes (browser tab, 16–48 px);
 //                         optional: without it the tab icon is made from logo-mark.png
-//   brand/logo.jpeg       picture + "mychata.cz": the link-preview image (WhatsApp, Facebook, …)
+//   brand/logo.jpeg       picture + "mychata.cz" side by side (the original lockup)
+//   brand/logo-stacked.png picture on top, "mychata.cz" below: the link-preview image
+//                         (WhatsApp, Facebook, …); optional, falls back to logo.jpeg
 //
 // Outputs (never edit by hand):
 //   public/favicon.ico                      16, 32 and 48 px, for browsers that ask for /favicon.ico
@@ -31,6 +33,9 @@ const TRANSPARENT = "rgba(0,0,0,0)";
 const SRC_MARK = "brand/logo-mark.png";
 const SRC_ICON = existsSync("brand/logo-icon.png") ? "brand/logo-icon.png" : SRC_MARK;
 const SRC_LOGO = "brand/logo.jpeg";
+// Stacked so both the picture and the name survive the square crop WhatsApp, Messenger and
+// Outlook make of a preview image (bug 3, 17 Oct 2026: the side-by-side logo was cut).
+const SRC_PREVIEW = existsSync("brand/logo-stacked.png") ? "brand/logo-stacked.png" : SRC_LOGO;
 const OUT = "public/brand";
 const TMP = "brand/.tmp";
 
@@ -149,9 +154,10 @@ const icoParts = [16, 32, 48].map((size) => {
 });
 writeFileSync("public/favicon.ico", ico(icoParts));
 
-// The full logo centred on a 1200 × 630 card with a margin.
+// The stacked logo centred on a 1200 × 630 card, kept inside the middle 630 × 630 square so a
+// square crop (WhatsApp, Messenger, Outlook, Twitter "summary") still shows all of it.
 sharp(
-  SRC_LOGO,
+  SRC_PREVIEW,
   join(OUT, "og-image.jpg"),
   "-f",
   "jpeg",
@@ -164,8 +170,8 @@ sharp(
   "20",
   "--",
   "resize",
-  "1040",
-  "470",
+  "500",
+  "500",
   "--fit",
   "contain",
   "--background",
@@ -173,10 +179,10 @@ sharp(
   "--",
   // top, bottom, left, right
   "extend",
-  "80",
-  "80",
-  "80",
-  "80",
+  "65",
+  "65",
+  "350",
+  "350",
   "--background",
   BACKGROUND,
 );
@@ -187,6 +193,7 @@ const version = createHash("sha256")
   .update(readFileSync(SRC_MARK))
   .update(readFileSync(SRC_ICON))
   .update(readFileSync(SRC_LOGO))
+  .update(readFileSync(SRC_PREVIEW))
   .digest("hex")
   .slice(0, 8);
 const v = (path: string) => `${path}?v=${version}`;

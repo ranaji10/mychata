@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import type { Property } from "@/lib/data";
+import { missingCottageDetails, type Missing } from "@/lib/cottage-details";
 import { useLang } from "@/lib/i18n";
 
 const SEASONS = [
@@ -14,25 +15,6 @@ const SEASONS = [
   { id: "winter", cs: "Zima", en: "Winter" },
   { id: "holidays", cs: "Svátky", en: "Holidays" },
 ] as const;
-
-type Missing = "address" | "city" | "rooms" | "seasons" | "overlap" | "rules" | "photo";
-
-/** What onboarding left empty for one cottage. Pure, so it's easy to test. */
-export function missingCottageDetails(
-  p: Pick<Property, "address" | "city" | "rooms" | "peak_seasons" | "overlap_max_guests">,
-  hasRules: boolean,
-  hasPhoto: boolean,
-): Missing[] {
-  const out: Missing[] = [];
-  if (!p.address?.trim()) out.push("address");
-  if (!p.city?.trim()) out.push("city");
-  if (!p.rooms) out.push("rooms");
-  if (!p.peak_seasons?.length) out.push("seasons");
-  if ((p.rooms ?? 0) > 3 && !p.overlap_max_guests) out.push("overlap");
-  if (!hasRules) out.push("rules");
-  if (!hasPhoto) out.push("photo");
-  return out;
-}
 
 /**
  * "Finish setting up" on My profile (T-021): for each cottage the person administers, the
@@ -48,20 +30,12 @@ export function CottageSetup() {
     queryKey: ["cottage-setup", ids.join(",")],
     enabled: isAdmin && ids.length > 0,
     queryFn: async () => {
-      const [rules, photos] = await Promise.all([
-        supabase
-          .from("manual_sections")
-          .select("property_id")
-          .eq("category", "rules")
-          .in("property_id", ids),
-        supabase.from("property_photos").select("property_id").in("property_id", ids),
-      ]);
-      if (rules.error) throw rules.error;
-      if (photos.error) throw photos.error;
-      return {
-        rules: (rules.data ?? []).map((r) => r.property_id),
-        photos: (photos.data ?? []).map((r) => r.property_id),
-      };
+      const { data, error } = await supabase
+        .from("property_photos")
+        .select("property_id")
+        .in("property_id", ids);
+      if (error) throw error;
+      return { photos: (data ?? []).map((r) => r.property_id) };
     },
   });
 
@@ -69,7 +43,7 @@ export function CottageSetup() {
   const todo = properties
     .map((p) => ({
       property: p,
-      missing: missingCottageDetails(p, extras.rules.includes(p.id), extras.photos.includes(p.id)),
+      missing: missingCottageDetails(p, extras.photos.includes(p.id)),
     }))
     .filter((x) => x.missing.length > 0);
   if (!todo.length) return null;
@@ -104,8 +78,8 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
   const [city, setCity] = useState("");
   const [rooms, setRooms] = useState("");
   const [seasons, setSeasons] = useState<string[]>([]);
+  const [overlapAllowed, setOverlapAllowed] = useState<boolean | null>(null);
   const [overlap, setOverlap] = useState("");
-  const [rules, setRules] = useState("");
 
   const label: Record<Missing, string> = {
     address: t("adresa", "address"),
@@ -113,7 +87,6 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
     rooms: t("počet pokojů", "number of rooms"),
     seasons: t("rušná období", "busy seasons"),
     overlap: t("pravidlo pro překrývání pobytů", "overlapping stays rule"),
-    rules: t("pravidla domu", "house rules"),
     photo: t("hlavní fotka", "main photo"),
   };
   const roomsNumber = rooms ? Number(rooms) : (property.rooms ?? 0);
@@ -126,28 +99,21 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
         ...(city.trim() ? { _city: city.trim() } : {}),
         ...(rooms ? { _rooms: Number(rooms) } : {}),
         ...(seasons.length ? { _seasons: seasons } : {}),
-        ...(overlap ? { _overlap_max_guests: Number(overlap) } : {}),
       });
       if (error) throw error;
-      if (rules.trim()) {
-        const { error: rulesError } = await supabase.from("manual_sections").insert({
-          property_id: property.id,
-          category: "rules",
-          title_cs: "Pravidla domu",
-          title_en: "House rules",
-          content_cs: rules.trim(),
-          content_en: rules.trim(),
-          visibility: "PUBLIC",
-          display_order: 0,
+      if (overlapAllowed !== null) {
+        const { error: overlapError } = await supabase.rpc("set_property_overlap", {
+          _property_id: property.id,
+          _allowed: overlapAllowed,
+          ...(overlapAllowed && overlap ? { _max_guests: Number(overlap) } : {}),
         });
-        if (rulesError) throw rulesError;
+        if (overlapError) throw overlapError;
       }
     },
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["properties"] }),
         queryClient.invalidateQueries({ queryKey: ["cottage-setup"] }),
-        queryClient.invalidateQueries({ queryKey: ["manual-sections", property.id] }),
       ]);
       setOpen(false);
       toast.success(t("Údaje o chatě uloženy.", "Cottage details saved."));
@@ -241,28 +207,46 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
             </div>
           )}
           {(missing.includes("overlap") || (missing.includes("rooms") && roomsNumber > 3)) && (
-            <input
-              className="field w-full"
-              type="number"
-              min={1}
-              placeholder={t(
-                "Max. hostů naráz, než rozhoduje správce",
-                "Max guests at once before admin approval",
+            <div className="space-y-2">
+              <p className="text-[16px] font-bold">
+                {t("Mohou se pobyty překrývat?", "May stays overlap?")}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="fresh"
+                  size="fresh"
+                  type="button"
+                  aria-pressed={overlapAllowed === true}
+                  className={`btn-secondary bg-card ${overlapAllowed === true ? "ring-2 ring-primary" : ""}`}
+                  onClick={() => setOverlapAllowed(true)}
+                >
+                  {t("Ano", "Yes")}
+                </Button>
+                <Button
+                  variant="fresh"
+                  size="fresh"
+                  type="button"
+                  aria-pressed={overlapAllowed === false}
+                  className={`btn-secondary bg-card ${overlapAllowed === false ? "ring-2 ring-primary" : ""}`}
+                  onClick={() => setOverlapAllowed(false)}
+                >
+                  {t("Ne", "No")}
+                </Button>
+              </div>
+              {overlapAllowed && (
+                <input
+                  className="field w-full"
+                  type="number"
+                  min={1}
+                  placeholder={t(
+                    "Max. hostů naráz, než rozhoduje správce",
+                    "Max guests at once before admin approval",
+                  )}
+                  value={overlap}
+                  onChange={(e) => setOverlap(e.target.value)}
+                />
               )}
-              value={overlap}
-              onChange={(e) => setOverlap(e.target.value)}
-            />
-          )}
-          {missing.includes("rules") && (
-            <textarea
-              className="field min-h-24 w-full"
-              placeholder={t(
-                "Pravidla domu, např. tichá noc od 22:00…",
-                "House rules, e.g. quiet hours after 10 pm…",
-              )}
-              value={rules}
-              onChange={(e) => setRules(e.target.value)}
-            />
+            </div>
           )}
           <div className="flex gap-2">
             <Button

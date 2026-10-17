@@ -833,3 +833,109 @@ describe("checklists and defaults (T-018, migration 0024)", () => {
     });
   });
 });
+
+describe("bugs of 17 Oct (T-035, migration 0026)", () => {
+  it("a group link works only for emails on the batch, each accepting their own row", async () => {
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, group_token, created_by_member_id)
+       values ($1,'MEMBER','t035-row-nova', $2, 't035-group', $4),
+              ($1,'MEMBER','t035-row-bara', $3, 't035-group', $4)`,
+      [ids.acctA, EMAIL.newcomer, EMAIL.bAdmin, ids.memberAAdmin],
+    );
+    await as(db, anon, async (q) => {
+      const p = await one(q("select * from public.invitation_preview('t035-group')"));
+      expect(p).toMatchObject({
+        state: "valid",
+        account_name: "Rodina A",
+        email_hint: "b***@example.org, n***@example.org",
+        email_matches: null,
+      });
+    });
+    await as(db, aMember, async (q) => {
+      expect(
+        await one(q("select email_matches from public.invitation_preview('t035-group')")),
+      ).toEqual({ email_matches: false });
+      await expect(q("select public.accept_invitation('t035-group')")).rejects.toThrow(
+        /invitation_email_mismatch/,
+      );
+    });
+    await as(db, newcomer, async (q) => {
+      expect(
+        await one(q("select email_matches from public.invitation_preview('t035-group')")),
+      ).toEqual({ email_matches: true });
+      await q("select public.accept_invitation('t035-group')");
+      expect(
+        await q("select account_id from public.members where user_id = $1", [U.newcomer]),
+      ).toEqual([{ account_id: ids.acctA }]);
+      // Only Nova's own row is used; Bára's stays open (read back as superuser).
+      await q("reset role");
+      const rows = await q(
+        "select email, status from public.invitations where group_token = 't035-group' order by email",
+      );
+      expect(rows).toEqual([
+        { email: EMAIL.bAdmin, status: "PENDING" },
+        { email: EMAIL.newcomer, status: "ACCEPTED" },
+      ]);
+    });
+  });
+
+  it("an unknown group link is not found", async () => {
+    await as(db, newcomer, async (q) => {
+      await expect(q("select public.accept_invitation('t035-nothing')")).rejects.toThrow(
+        /invitation_not_found/,
+      );
+    });
+  });
+
+  it("only an admin records the overlap answer, and 'no' clears the limit", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(q("select public.set_property_overlap($1, false)", [ids.propA])).rejects.toThrow(
+        /Admin/,
+      );
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q("select public.set_property_overlap($1, true, 5)", [ids.propA]),
+      ).rejects.toThrow(/Admin/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await q("select public.set_property_overlap($1, true, 6)", [ids.propA]);
+      expect(
+        await q("select overlap_allowed, overlap_max_guests from public.properties where id = $1", [
+          ids.propA,
+        ]),
+      ).toEqual([{ overlap_allowed: true, overlap_max_guests: 6 }]);
+      await q("select public.set_property_overlap($1, false)", [ids.propA]);
+      expect(
+        await q("select overlap_allowed, overlap_max_guests from public.properties where id = $1", [
+          ids.propA,
+        ]),
+      ).toEqual([{ overlap_allowed: false, overlap_max_guests: null }]);
+    });
+  });
+
+  it("only an admin with a work email turns a family account into an institution", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/Admin/);
+    });
+    await as(db, { ...aAdmin, email: "anna@gmail.com" }, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/institution_email_required/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]);
+      expect(await q("select type, name from public.accounts where id = $1", [ids.acctA])).toEqual([
+        { type: "INSTITUTIONAL", name: "Spolek A" },
+      ]);
+    });
+    await as(db, anon, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'X')", [ids.acctA]),
+      ).rejects.toThrow();
+    });
+  });
+});

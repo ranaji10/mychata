@@ -25,9 +25,9 @@ export const Route = createFileRoute("/predani")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Handover — My Chata" },
+      { title: "Checkout tasks — My Chata" },
       { name: "description", content: "Cottage handover checklist and handover history." },
-      { property: "og:title", content: "Handover — My Chata" },
+      { property: "og:title", content: "Checkout tasks — My Chata" },
       { property: "og:description", content: "Cottage handover checklist and handover history." },
     ],
   }),
@@ -162,7 +162,7 @@ function HandoverPage() {
     },
     onSuccess: () => {
       if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
-      toast.success(t("Odjezdový checklist uložen.", "Check-out checklist saved."));
+      toast.success(t("Odjezdové úkoly uloženy.", "Checkout tasks saved."));
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });
     },
@@ -183,7 +183,7 @@ function HandoverPage() {
   return (
     <AppShell>
       <PageHeader
-        title={t("Odjezdový checklist", "Check-out checklist")}
+        title={t("Odjezdové úkoly", "Checkout Tasks")}
         subtitle={t(
           "Odškrtněte, co jste udělali. Kdo přijede příště, uvidí shrnutí.",
           "Tick what you did. Whoever comes next sees the summary.",

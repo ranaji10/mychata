@@ -7,6 +7,8 @@ import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { pendingInvite } from "@/lib/pending-invite";
+import { recoveryPending } from "@/lib/password";
+import { PasswordInput } from "@/components/PasswordInput";
 import { authLinkError, isPublicEmailDomain } from "@/lib/signup";
 import { useDefaultChataPhoto } from "@/lib/season";
 
@@ -28,6 +30,14 @@ export const Route = createFileRoute("/auth")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  // From My profile → "Add an institution" (bug 5): open the institution sign-up pre-filled.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { mode?: "institute"; email?: string; org?: string } => ({
+    ...(search["mode"] === "institute" ? { mode: "institute" as const } : {}),
+    ...(typeof search["email"] === "string" ? { email: search["email"].slice(0, 200) } : {}),
+    ...(typeof search["org"] === "string" ? { org: search["org"].slice(0, 120) } : {}),
+  }),
   component: AuthPage,
 });
 
@@ -42,12 +52,13 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
-  const [mode, setMode] = useState<Mode>("main");
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<Mode>(search.mode ?? "main");
   useBrand(mode === "institute" ? "institution" : "family");
   const [isSignUp, setIsSignUp] = useState(true);
   const [name, setName] = useState("");
-  const [organisation, setOrganisation] = useState("");
-  const [email, setEmail] = useState("");
+  const [organisation, setOrganisation] = useState(search.org ?? "");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   // Offer "send the confirmation email again" when it can help.
   const [canResend, setCanResend] = useState(false);
@@ -55,6 +66,11 @@ function AuthPage() {
   // After any sign-in (including Google's redirect back to /auth), go to a waiting invitation
   // first, otherwise Home (B-013).
   const goOn = useCallback(() => {
+    // A reset-password link signs the person in here: new password first (bug 4).
+    if (recoveryPending()) {
+      navigate({ to: "/reset-password", replace: true });
+      return;
+    }
     const token = pendingInvite();
     if (token) navigate({ to: "/pozvanka/$token", params: { token }, replace: true });
     else navigate({ to: "/domu", replace: true });
@@ -92,7 +108,10 @@ function AuthPage() {
   const explain = (message: string) => {
     const m = message.toLowerCase();
     if (m.includes("invalid login credentials"))
-      return t("Nesprávný e-mail nebo heslo.", "Wrong email or password.");
+      return t(
+        "Nesprávný e-mail nebo heslo. Pokud jste se registrovali přes Google, použijte „Pokračovat přes Google“, nebo si heslo nastavte přes „Zapomenuté heslo“.",
+        "Wrong email or password. If you signed up with Google, use “Continue with Google”, or create a password with “Forgot password”.",
+      );
     if (m.includes("email not confirmed"))
       return t(
         "E-mail ještě není potvrzený. Klikněte na odkaz v potvrzovacím e-mailu (zkontrolujte i spam), nebo si pošlete nový.",
@@ -398,9 +417,7 @@ function AuthPage() {
                 )}
               </p>
             )}
-            <input
-              className="field w-full"
-              type="password"
+            <PasswordInput
               placeholder={
                 signingUp
                   ? t("Heslo (alespoň 8 znaků)", "Password (at least 8 characters)")

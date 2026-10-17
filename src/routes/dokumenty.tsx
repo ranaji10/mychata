@@ -267,7 +267,7 @@ function DocumentsPage() {
           "Smlouvy, záruky a servisní záznamy",
           "Contracts, warranties, and service records",
         )}
-        back="/vice"
+        back="/chaty"
         action={
           isAdmin ? (
             <Button

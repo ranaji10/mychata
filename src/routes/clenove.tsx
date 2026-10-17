@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  ChevronDown,
   Copy,
   Crown,
   Loader2,
   Mail,
+  RefreshCw,
   Share2,
   ShieldCheck,
   UserMinus,
@@ -20,8 +22,18 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
+import { accountContextLine } from "@/lib/account-label";
 import { useLang } from "@/lib/i18n";
-import { inviteLink, inviteMailto, parseEmails } from "@/lib/invites";
+import { fmtDate } from "@/lib/data";
+import {
+  daysUntil,
+  groupInvitations,
+  inviteLink,
+  inviteMailto,
+  parseEmails,
+  type InvitationBatch,
+  type InvitationRow,
+} from "@/lib/invites";
 
 export const Route = createFileRoute("/clenove")({
   staticData: { sitemap: false },
@@ -39,14 +51,7 @@ export const Route = createFileRoute("/clenove")({
   component: MembersPage,
 });
 
-interface Invitation {
-  id: string;
-  email: string | null;
-  role: string;
-  token: string;
-  status: string;
-  created_at: string;
-}
+type Invitation = InvitationRow;
 
 function MembersPage() {
   const { t } = useLang();
@@ -56,25 +61,31 @@ function MembersPage() {
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [emails, setEmails] = useState("");
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
-  const [cancelling, setCancelling] = useState<Invitation | null>(null);
+  const [cancelling, setCancelling] = useState<InvitationBatch | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const parsed = parseEmails(emails);
   const isAdminRole = (role: string) =>
     role.toUpperCase() === "ADMIN" || role.toUpperCase() === "OWNER";
 
+  // Every batch, not only pending rows: a tile says who already joined (bug 11).
   const { data: invites } = useQuery({
-    queryKey: ["invitations", account?.id],
+    queryKey: ["invitations", account?.id, "batches"],
     enabled: !!account && isAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invitations")
         .select("*")
         .eq("account_id", account!.id)
-        .eq("status", "PENDING")
-        .order("created_at", { ascending: false });
+        .in("status", ["PENDING", "ACCEPTED"])
+        .order("created_at", { ascending: false })
+        .limit(300);
       if (error) throw error;
       return data as Invitation[];
     },
   });
+  const batches = useMemo(() => groupInvitations(invites ?? []), [invites]);
+  const activeBatches = batches.filter((b) => b.state === "active");
+  const expiredBatches = batches.filter((b) => b.state === "expired");
 
   // Stored as a plain array: the offline cache saves query results as JSON, and a Set came
   // back as {} after a reload, which crashed this page ("I.has is not a function").
@@ -95,30 +106,39 @@ function MembersPage() {
     [propertyAdminIds],
   );
 
-  // Several people at once, each with their own link. Roles are stored upper case; the
-  // database also normalises them (migration 0020), which fixes admin invitations (B-011).
+  // Several people at once with ONE link (bugs 10 and 12): every row keeps its own token and
+  // shares the batch's group_token; the database lets only the listed emails use it
+  // (migration 0026). Roles are stored upper case (migration 0020, B-011).
+  const createBatch = async (addresses: string[], role: string) => {
+    const groupToken = crypto.randomUUID();
+    const rows = addresses.map((address) => ({
+      account_id: account!.id,
+      property_id: property?.id ?? null,
+      email: address,
+      role,
+      token: crypto.randomUUID(),
+      group_token: groupToken,
+      created_by_member_id: currentMember?.id ?? null,
+    }));
+    const { error } = await supabase.from("invitations").insert(rows);
+    if (error) throw error;
+    return { count: rows.length, groupToken };
+  };
   const invite = useMutation({
-    mutationFn: async () => {
-      const rows = parsed.valid.map((address) => ({
-        account_id: account!.id,
-        property_id: property?.id ?? null,
-        email: address,
-        role: inviteRole,
-        token: crypto.randomUUID(),
-        created_by_member_id: currentMember?.id ?? null,
-      }));
-      const { error } = await supabase.from("invitations").insert(rows);
-      if (error) throw error;
-      return rows.length;
-    },
-    onSuccess: (count) => {
+    mutationFn: () => createBatch(parsed.valid, inviteRole),
+    onSuccess: ({ count }) => {
       setEmails("");
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
       toast.success(
-        t(
-          `Pozvánky vytvořeny (${count}). Pošlete je e-mailem nebo sdílejte odkaz níže.`,
-          `Invitations created (${count}). Email them or share the link below.`,
-        ),
+        count > 1
+          ? t(
+              `Pozvánka pro ${count} lidí vytvořena. Pošlete jim jeden společný odkaz níže.`,
+              `Invitation for ${count} people created. Send them the one shared link below.`,
+            )
+          : t(
+              "Pozvánka vytvořena. Pošlete ji e-mailem nebo sdílejte odkaz níže.",
+              "Invitation created. Email it or share the link below.",
+            ),
       );
     },
     onError: (error) => {
@@ -134,17 +154,17 @@ function MembersPage() {
 
   const updateInvite = useMutation({
     mutationFn: async ({
-      id,
+      ids,
       patch,
     }: {
-      id: string;
+      ids: string[];
       patch: { role?: string; status?: string };
     }) => {
       // Row-level security turns a refused change into "0 rows", not an error: check it.
       const { data, error } = await supabase
         .from("invitations")
         .update(patch)
-        .eq("id", id)
+        .in("id", ids)
         .select("id");
       if (error) throw error;
       if (!data?.length)
@@ -200,7 +220,40 @@ function MembersPage() {
       ),
   });
 
+  // Expired batch: one tap makes a fresh 7-day link for the people who never joined (bug 11).
+  const regenerate = useMutation({
+    mutationFn: async (batch: InvitationBatch) => {
+      const emails = batch.expired.map((r) => r.email).filter((e): e is string => !!e);
+      if (!emails.length) throw new Error(t("nikdo nečeká", "nobody is waiting"));
+      const created = await createBatch(emails, batch.admin ? "ADMIN" : "MEMBER");
+      const { error } = await supabase
+        .from("invitations")
+        .update({ status: "REVOKED" })
+        .in(
+          "id",
+          batch.expired.map((r) => r.id),
+        );
+      if (error) throw error;
+      return created;
+    },
+    onSuccess: async ({ count }) => {
+      await queryClient.invalidateQueries({ queryKey: ["invitations"] });
+      toast.success(
+        t(
+          `Nový odkaz pro ${count} ${count === 1 ? "osobu" : "lidí"}, platí 7 dní.`,
+          `New link for ${count} ${count === 1 ? "person" : "people"}, valid for 7 days.`,
+        ),
+      );
+    },
+    onError: (error) =>
+      toast.error(
+        t(`Obnovení se nepodařilo: ${error.message}`, `Could not renew: ${error.message}`),
+      ),
+  });
+
   const linkFor = (token: string) => inviteLink(window.location.origin, token);
+  const batchToken = (b: InvitationBatch) =>
+    b.groupToken ?? (b.rows.length === 1 ? b.rows[0]!.token : null);
 
   const copyInvite = async (token: string) => {
     setManualLink(null);
@@ -213,8 +266,8 @@ function MembersPage() {
     }
   };
 
-  const shareInvite = async (inv: Invitation) => {
-    const url = linkFor(inv.token);
+  const shareInvite = async (token: string) => {
+    const url = linkFor(token);
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
         await navigator.share({
@@ -230,23 +283,207 @@ function MembersPage() {
         /* cancelled: fall back to copying */
       }
     }
-    await copyInvite(inv.token);
+    await copyInvite(token);
   };
 
-  const mailInvite = (inv: Invitation) =>
+  const mailInvite = (b: InvitationBatch, token: string) =>
     inviteMailto({
-      to: inv.email ?? "",
-      link: linkFor(inv.token),
+      to: b.pending
+        .map((r) => r.email)
+        .filter(Boolean)
+        .join(","),
+      link: linkFor(token),
       chata: property?.name ?? account?.name ?? "My Chata",
       inviter: currentMember?.name,
-      admin: isAdminRole(inv.role),
+      admin: b.admin,
     });
+
+  const renderBatch = (b: InvitationBatch) => {
+    const token = batchToken(b);
+    const open = !!expanded[b.key];
+    const days = daysUntil(b.expiresAt);
+    const people = b.rows.length;
+    const title =
+      people === 1
+        ? (b.rows[0]!.email ?? t("kdokoli s odkazem", "anyone with the link"))
+        : t(`${people} e-mailů`, `${people} email addresses`);
+    const actionClass =
+      "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1";
+    return (
+      <div className="space-y-2 rounded-2xl bg-secondary p-3">
+        <div className="flex items-center gap-2">
+          <span className="min-w-0 flex-1 truncate text-[16px] font-bold">{title}</span>
+          {b.state === "active" ? (
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="pill min-h-11 bg-card px-3 text-muted-foreground"
+              aria-label={t("Změnit roli", "Change role")}
+              onClick={() =>
+                updateInvite.mutate({
+                  ids: b.pending.map((r) => r.id),
+                  patch: { role: b.admin ? "MEMBER" : "ADMIN" },
+                })
+              }
+            >
+              {b.admin ? t("Správce", "Admin") : t("Člen", "Member")} ⇄
+            </Button>
+          ) : (
+            <span className="pill bg-card text-muted-foreground">
+              {b.admin ? t("Správce", "Admin") : t("Člen", "Member")}
+            </span>
+          )}
+        </div>
+        <p className="text-[15px] text-muted-foreground">
+          {t(
+            `Vytvořeno ${fmtDate(b.createdAt.slice(0, 10))}`,
+            `Created ${fmtDate(b.createdAt.slice(0, 10))}`,
+          )}
+          {" · "}
+          {b.state === "expired"
+            ? t(
+                `vypršelo ${fmtDate(b.expiresAt.slice(0, 10))}`,
+                `expired ${fmtDate(b.expiresAt.slice(0, 10))}`,
+              )
+            : days < 1
+              ? t("vyprší dnes", "expires today")
+              : t(
+                  `vyprší za ${days} ${days === 1 ? "den" : days < 5 ? "dny" : "dní"}`,
+                  `expires in ${days} day${days === 1 ? "" : "s"}`,
+                )}
+          {people > 1 &&
+            ` · ${t(`přijalo ${b.accepted.length} z ${people}`, `${b.accepted.length} of ${people} joined`)}`}
+        </p>
+        {b.state === "active" && token && (
+          <div className="grid grid-cols-4 gap-2">
+            <a
+              className={actionClass}
+              href={mailInvite(b, token)}
+              aria-label={t("Poslat e-mailem", "Send by email")}
+            >
+              <Mail className="size-5" />
+              <span className="text-[16px] font-bold">{t("E-mail", "Email")}</span>
+            </a>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className={actionClass}
+              aria-label={t("Sdílet", "Share")}
+              onClick={() => shareInvite(token)}
+            >
+              <Share2 className="size-5" />
+              <span className="text-[16px] font-bold">{t("Sdílet", "Share")}</span>
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className={actionClass}
+              aria-label={t("Zkopírovat odkaz", "Copy link")}
+              onClick={() => copyInvite(token)}
+            >
+              <Copy className="size-5" />
+              <span className="text-[16px] font-bold">{t("Kopírovat", "Copy")}</span>
+            </Button>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className={`${actionClass} text-muted-foreground`}
+              aria-label={t("Zrušit pozvánku", "Cancel invitation")}
+              onClick={() => setCancelling(b)}
+            >
+              <X className="size-5" />
+              <span className="text-[16px] font-bold">{t("Zrušit", "Cancel")}</span>
+            </Button>
+          </div>
+        )}
+        {b.state === "active" && token && people > 1 && (
+          <p className="text-[15px] text-muted-foreground">
+            {t(
+              "Jeden odkaz pro všechny. Funguje jen pro e-maily v této pozvánce.",
+              "One link for everyone. It only works for the emails on this invitation.",
+            )}
+          </p>
+        )}
+        {token && <ManualCopyLink url={manualLink?.token === token ? manualLink.url : null} />}
+        {b.state === "expired" && (
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-primary w-full"
+            disabled={regenerate.isPending}
+            onClick={() => regenerate.mutate(b)}
+          >
+            <RefreshCw className="size-5" />
+            {regenerate.isPending && regenerate.variables?.key === b.key
+              ? t("Vytvářím…", "Creating…")
+              : t("Vytvořit nový odkaz", "Create a new link")}
+          </Button>
+        )}
+        {people > 1 && (
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="flex min-h-11 w-full items-center justify-between rounded-xl bg-card px-3 text-[16px] font-semibold"
+            aria-expanded={open}
+            onClick={() => setExpanded((e) => ({ ...e, [b.key]: !open }))}
+          >
+            {open ? t("Skrýt seznam", "Hide the list") : t("Zobrazit všechny", "See all")}
+            <ChevronDown className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} />
+          </Button>
+        )}
+        {open && people > 1 && (
+          <ul className="space-y-1.5">
+            {b.rows.map((r) => {
+              const joined = r.status === "ACCEPTED";
+              const late = r.status === "PENDING" && daysUntil(r.expires_at) < 0;
+              return (
+                <li key={r.id} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2">
+                  <span className="min-w-0 flex-1 truncate text-[16px]">{r.email}</span>
+                  <span
+                    className={`pill ${joined ? "bg-ok-soft text-ok" : late ? "bg-secondary text-muted-foreground" : "bg-warn-soft text-warn-foreground"}`}
+                  >
+                    {joined
+                      ? t("Přijato", "Joined")
+                      : late
+                        ? t("Vypršelo", "Expired")
+                        : t("Čeká", "Waiting")}
+                  </span>
+                  {!b.groupToken && !joined && !late && (
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      className="grid size-11 place-items-center rounded-full"
+                      aria-label={t(
+                        `Zkopírovat odkaz pro ${r.email}`,
+                        `Copy the link for ${r.email}`,
+                      )}
+                      onClick={() => copyInvite(r.token)}
+                    >
+                      <Copy className="size-5" />
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {!b.groupToken && people > 1 && b.state === "active" && (
+          <p className="text-[15px] text-muted-foreground">
+            {t(
+              "Starší pozvánka: každý má vlastní odkaz (v seznamu).",
+              "Older invitation: each person has their own link (in the list).",
+            )}
+          </p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <AppShell>
       <PageHeader
         title={t("Členové a oprávnění", "Members & permissions")}
-        subtitle={account?.name ?? ""}
+        subtitle={accountContextLine(account, property?.name, t) ?? undefined}
         back="/vice"
       />
 
@@ -310,80 +547,27 @@ function MembersPage() {
           </Button>
           <p className="text-[16px] text-muted-foreground">
             {t(
-              "Každý dostane vlastní odkaz, platný 7 dní, jen pro svůj e-mail. Roli můžete změnit i později.",
-              "Everyone gets their own link, valid 7 days, for their email only. You can change the role later.",
+              "Všichni dostanou jeden společný odkaz, platný 7 dní. Použít ho můžou jen zadané e-maily. Roli můžete změnit i později.",
+              "Everyone gets one shared link, valid for 7 days. Only the emails you entered can use it. You can change the role later.",
             )}
           </p>
-          {!!invites?.length && (
+          {activeBatches.length > 0 && (
             <div className="space-y-2">
               <p className="text-[16px] font-bold text-muted-foreground">
                 {t("Čekající pozvánky", "Pending invitations")}
               </p>
-              {invites.map((inv) => (
-                <div key={inv.id} className="space-y-2 rounded-2xl bg-secondary p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[16px] font-semibold">
-                      {inv.email ?? t("kdokoli s odkazem", "anyone with the link")}
-                    </span>
-                    <Button
-                      variant="fresh"
-                      size="fresh"
-                      className="pill min-h-11 bg-card px-3 text-muted-foreground"
-                      aria-label={t("Změnit roli", "Change role")}
-                      onClick={() =>
-                        updateInvite.mutate({
-                          id: inv.id,
-                          patch: { role: isAdminRole(inv.role) ? "MEMBER" : "ADMIN" },
-                        })
-                      }
-                    >
-                      {isAdminRole(inv.role) ? t("Správce", "Admin") : t("Člen", "Member")} ⇄
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {inv.email && (
-                      <a
-                        className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
-                        href={mailInvite(inv)}
-                        aria-label={t("Poslat e-mailem", "Send by email")}
-                      >
-                        <Mail className="size-5" />
-                        <span className="text-[16px] font-bold">{t("E-mail", "Email")}</span>
-                      </a>
-                    )}
-                    <Button
-                      variant="fresh"
-                      size="fresh"
-                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
-                      aria-label={t("Sdílet", "Share")}
-                      onClick={() => shareInvite(inv)}
-                    >
-                      <Share2 className="size-5" />
-                      <span className="text-[16px] font-bold">{t("Sdílet", "Share")}</span>
-                    </Button>
-                    <Button
-                      variant="fresh"
-                      size="fresh"
-                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1"
-                      aria-label={t("Zkopírovat odkaz", "Copy link")}
-                      onClick={() => copyInvite(inv.token)}
-                    >
-                      <Copy className="size-5" />
-                      <span className="text-[16px] font-bold">{t("Kopírovat", "Copy")}</span>
-                    </Button>
-                    <Button
-                      variant="fresh"
-                      size="fresh"
-                      className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-card py-1 text-muted-foreground"
-                      aria-label={t("Zrušit pozvánku", "Cancel invitation")}
-                      onClick={() => setCancelling(inv)}
-                    >
-                      <X className="size-5" />
-                      <span className="text-[16px] font-bold">{t("Zrušit", "Cancel")}</span>
-                    </Button>
-                  </div>
-                  <ManualCopyLink url={manualLink?.token === inv.token ? manualLink.url : null} />
-                </div>
+              {activeBatches.map((b) => (
+                <div key={b.key}>{renderBatch(b)}</div>
+              ))}
+            </div>
+          )}
+          {expiredBatches.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[16px] font-bold text-muted-foreground">
+                {t("Vypršelé pozvánky", "Expired invitations")}
+              </p>
+              {expiredBatches.map((b) => (
+                <div key={b.key}>{renderBatch(b)}</div>
               ))}
             </div>
           )}
@@ -451,10 +635,17 @@ function MembersPage() {
       <ConfirmDialog
         open={!!cancelling}
         onOpenChange={(open) => !open && setCancelling(null)}
-        title={t(
-          `Zrušit pozvánku pro ${cancelling?.email ?? ""}?`,
-          `Cancel the invitation for ${cancelling?.email ?? ""}?`,
-        )}
+        title={
+          (cancelling?.pending.length ?? 0) > 1
+            ? t(
+                `Zrušit pozvánku pro ${cancelling?.pending.length} lidí?`,
+                `Cancel the invitation for ${cancelling?.pending.length} people?`,
+              )
+            : t(
+                `Zrušit pozvánku pro ${cancelling?.pending[0]?.email ?? ""}?`,
+                `Cancel the invitation for ${cancelling?.pending[0]?.email ?? ""}?`,
+              )
+        }
         description={t(
           "Odkaz z pozvánky přestane fungovat. Kdo ho už má, se nepřipojí; pak musíte poslat novou pozvánku.",
           "The invitation link will stop working. Anyone who already has it can't join; you would need to send a new invitation.",
@@ -462,7 +653,11 @@ function MembersPage() {
         confirmLabel={t("Zrušit pozvánku", "Cancel invitation")}
         busy={updateInvite.isPending}
         onConfirm={() =>
-          cancelling && updateInvite.mutate({ id: cancelling.id, patch: { status: "REVOKED" } })
+          cancelling &&
+          updateInvite.mutate({
+            ids: cancelling.pending.map((r) => r.id),
+            patch: { status: "REVOKED" },
+          })
         }
       />
     </AppShell>

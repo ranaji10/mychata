@@ -13,11 +13,13 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAccount } from "@/lib/account";
+import { accountContextLine, sameName } from "@/lib/account-label";
 import { useBrand } from "@/lib/brand";
 import { Avatar } from "@/components/bits";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { useIsMutating } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const {
@@ -30,6 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     setActivePropertyId,
     switchAccount,
     user,
+    profile,
     loading,
     needsOnboarding,
     identityError,
@@ -131,10 +134,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         setActivePropertyId(propertyId);
       }
       setSwitcherOpen(false);
+    } catch (error) {
+      console.error("[shell] switch cottage", error);
+      toast.error(
+        t("Přepnutí se nepodařilo. Zkuste to znovu.", "Could not switch. Please try again."),
+      );
     } finally {
       setSwitching(false);
     }
   };
+
+  // The small line above the cottage name says which account this is, but only when that adds
+  // something: "Testing with Gemini" over "Testing with Gemini" read as a duplicate (bug 13),
+  // and an organisation named after an email looked like the sign-in email (bug 2).
+  const contextLine = accountContextLine(account, property?.name, t);
+  const avatarSrc =
+    profile?.avatar_url ?? (user.user_metadata?.["avatar_url"] as string | undefined) ?? null;
 
   const isActive = (to: string) => pathname === to || (to !== "/domu" && pathname.startsWith(to));
 
@@ -175,13 +190,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
-            <Link
-              to="/chata/nova"
-              className="mt-4 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[16px] font-semibold text-sidebar-foreground hover:bg-secondary"
-            >
-              <Plus className="size-5 shrink-0" />
-              {t("Přidat chatu", "Add a chata")}
-            </Link>
           </nav>
         </aside>
 
@@ -201,7 +209,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
           <header className="sticky top-0 z-20 bg-background/95 backdrop-blur flex items-center gap-3 px-5 pb-4 pt-5 md:px-6 lg:px-0">
             {pathname === "/domu" ? (
-              <Avatar name={currentMember?.name ?? ""} className="size-12 shadow-floating" />
+              <Link to="/profil" aria-label={t("Můj profil", "My profile")} className="shrink-0">
+                <Avatar
+                  name={currentMember?.name ?? ""}
+                  src={avatarSrc}
+                  className="size-12 shadow-floating"
+                />
+              </Link>
             ) : (
               <Link
                 to="/domu"
@@ -212,16 +226,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[16px] font-medium text-muted-foreground">
-                {pathname === "/domu"
-                  ? t(
-                      `Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`,
-                      `Hello, ${currentMember?.name?.split(" ")[0] ?? ""}`,
-                    )
-                  : account?.type === "INSTITUTIONAL"
-                    ? t("Organizační správa", "Organisation workspace")
-                    : (account?.name ?? "My Chata")}
-              </p>
+              {contextLine && (
+                <p className="truncate text-[16px] font-medium text-muted-foreground">
+                  {contextLine}
+                </p>
+              )}
               {/* Chata switcher: the cottage name is always tappable and opens the sheet below. */}
               <Button
                 variant="fresh"
@@ -301,12 +310,25 @@ export function AppShell({ children }: { children: ReactNode }) {
               {memberships.map((m) => {
                 const acc = accounts.find((a) => a.id === m.account_id);
                 const isActiveAccount = m.account_id === account?.id;
+                // Say the account's name once (bug 13): not above a cottage of the same name,
+                // and not above a "Switch to …" button that already names it.
+                const showTitle =
+                  isActiveAccount && !properties.some((p) => sameName(p.name, acc?.name));
                 return (
                   <div key={m.id}>
                     <div className="flex items-center gap-2">
-                      <p className="min-w-0 flex-1 truncate text-[16px] font-bold">
-                        {acc?.name ?? "—"}
-                      </p>
+                      {showTitle ? (
+                        <p className="min-w-0 flex-1 truncate text-[16px] font-bold">
+                          {acc?.name ?? "—"}
+                        </p>
+                      ) : (
+                        <span className="flex-1" />
+                      )}
+                      {acc?.type === "INSTITUTIONAL" && (
+                        <span className="pill bg-primary-soft text-primary">
+                          {t("Organizace", "Organisation")}
+                        </span>
+                      )}
                       <span className="pill bg-secondary text-muted-foreground">
                         {roleLabel(m.role)}
                       </span>
@@ -319,6 +341,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                             size="fresh"
                             key={p.id}
                             disabled={switching}
+                            aria-current={p.id === property?.id ? "true" : undefined}
                             onClick={() => pickCottage(m.account_id, p.id)}
                             className={`flex min-h-[44px] w-full items-center rounded-2xl px-3 py-2 text-left text-[16px] font-bold ${
                               p.id === property?.id
@@ -343,7 +366,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                         onClick={() => pickCottage(m.account_id)}
                         className="mt-2 flex min-h-[44px] w-full items-center rounded-full bg-secondary px-3 py-2 text-left text-[16px] font-semibold"
                       >
-                        {t("Přepnout na tento účet", "Switch to this account")}
+                        {t(
+                          `Přepnout na ${acc?.name ?? "tento účet"}`,
+                          `Switch to ${acc?.name ?? "this account"}`,
+                        )}
                       </Button>
                     )}
                   </div>

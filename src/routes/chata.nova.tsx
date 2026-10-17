@@ -71,7 +71,7 @@ function AddPropertyPage() {
           "Kdo chatu přidá, stává se jejím správcem.",
           "Whoever adds a cottage becomes its admin.",
         )}
-        back="/vice"
+        back="/chaty"
       />
       {!isAdmin && (
         <div className="card mt-4 space-y-3 p-4">

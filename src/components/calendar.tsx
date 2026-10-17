@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { useState } from "react";
 import {
   dayNames,
+  findConflicts,
+  fmtDate,
   monthGrid,
   monthNames,
   todayISO,
@@ -26,7 +28,8 @@ export function CalendarMonth({
 }: {
   year: number;
   month: number;
-  bookings: Pick<Booking, "start_date" | "end_date" | "status">[];
+  /** With requester_name (members' views only), booked days name who is there (bug 14). */
+  bookings: (Pick<Booking, "start_date" | "end_date" | "status"> & { requester_name?: string })[];
   selection?: DateRange;
   onPickDay?: (iso: string) => void;
   /** Days before this can't be picked (defaults to today when picking). */
@@ -50,7 +53,11 @@ export function CalendarMonth({
       </div>
       <div className="grid grid-cols-7 text-center">
         {days.map((d) => {
-          const booking = bookings.find((b) => d.iso >= b.start_date && d.iso <= b.end_date);
+          const dayStays = bookings.filter((b) => d.iso >= b.start_date && d.iso <= b.end_date);
+          const booking = dayStays[0];
+          const names = [
+            ...new Set(dayStays.map((b) => b.requester_name).filter((n): n is string => !!n)),
+          ];
           const isToday = d.iso === today;
           const isPending = booking?.status === "PENDING";
           const isConfirmed = booking?.status === "CONFIRMED";
@@ -85,17 +92,47 @@ export function CalendarMonth({
             !!booking &&
             (d.iso === booking.end_date || new Date(`${d.iso}T12:00:00`).getDay() === 0);
           const cellClass = `grid h-[44px] min-w-0 place-items-center text-[15px] font-semibold ${stateClass} ${startBand ? "rounded-l-[14px]" : ""} ${endBand ? "rounded-r-[14px]" : ""}`;
+          // A day you are picking that someone already booked: a dot, so "your dates" and
+          // "booked" no longer look the same (both were solid green).
+          const overlapsSelection = !!booking && (isEndpoint || inRange);
           const label = (
             <span
-              className={`grid size-[42px] place-items-center ${isToday ? "rounded-full font-extrabold ring-2 ring-inset ring-foreground" : ""}`}
+              className={`relative grid size-[42px] place-items-center ${isToday ? "rounded-full font-extrabold ring-2 ring-inset ring-foreground" : ""}`}
             >
               {d.day}
+              {overlapsSelection && (
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-warn"
+                />
+              )}
             </span>
           );
+          // Desktop: hover a booked day to see who is staying (bug 14). Touch screens get the
+          // same names in OverlapNotice under the calendar, without an extra tap.
+          const tooltip =
+            names.length > 0 ? (
+              <span
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-xl bg-foreground px-2.5 py-1.5 text-[13px] font-semibold text-background shadow-lg [@media(hover:hover)]:group-hover:block"
+              >
+                {names.join(", ")}
+              </span>
+            ) : null;
+          const booked = names.length
+            ? ` · ${t("obsazeno", "booked")}: ${names.join(", ")}`
+            : booking
+              ? ` · ${t("obsazeno", "booked")}`
+              : "";
           if (!onPickDay) {
             return (
-              <div key={d.iso} className={cellClass}>
+              <div
+                key={d.iso}
+                className={`${cellClass} group relative`}
+                {...(names.length ? { "aria-label": `${d.day}${booked}` } : {})}
+              >
                 {label}
+                {tooltip}
               </div>
             );
           }
@@ -109,12 +146,11 @@ export function CalendarMonth({
               disabled={disabled}
               onClick={() => onPickDay(d.iso)}
               aria-pressed={isEndpoint}
-              aria-label={`${d.day}. ${monthNames(lang)[Number(d.iso.slice(5, 7)) - 1]}${
-                booking ? ` · ${t("obsazeno", "booked")}` : ""
-              }`}
-              className={`${cellClass} active:scale-95 disabled:cursor-not-allowed`}
+              aria-label={`${d.day}. ${monthNames(lang)[Number(d.iso.slice(5, 7)) - 1]}${booked}`}
+              className={`${cellClass} group relative overflow-visible active:scale-95 disabled:cursor-not-allowed`}
             >
               {label}
+              {tooltip}
             </Button>
           );
         })}
@@ -195,10 +231,52 @@ export function CalendarLegend({ picking = false }: { picking?: boolean }) {
       </span>
       {picking && (
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded bg-primary" />
+          <span className="size-3 rounded-full bg-primary" />
           {t("Váš výběr", "Your dates")}
         </span>
       )}
+      {picking && (
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-warn" />
+          {t("Už obsazeno", "Already booked")}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Who already stays on the dates being picked, shown right under the calendar as soon as the
+ * dates overlap (bug 14: on a phone the warning was only at the bottom of the form).
+ */
+export function OverlapNotice({
+  selection,
+  bookings,
+}: {
+  selection: DateRange;
+  bookings: { requester_name: string; start_date: string; end_date: string }[];
+}) {
+  const { t } = useLang();
+  if (!selection.start) return null;
+  const end = selection.end ?? selection.start;
+  const hard = findConflicts(selection.start, end, bookings).filter((c) => c.kind === "hard");
+  if (!hard.length) return null;
+  return (
+    <div
+      role="status"
+      className="mt-3 flex gap-2 rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground"
+    >
+      <Info className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+      <div>
+        <p>{t("Tyto dny už má rezervované:", "Already booked on these dates:")}</p>
+        <ul className="mt-1 space-y-0.5">
+          {hard.map((c) => (
+            <li key={`${c.other.name}-${c.other.start}`}>
+              {c.other.name} · {fmtDate(c.other.start)} – {fmtDate(c.other.end)}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

@@ -523,7 +523,7 @@ function HomePage() {
                 onClick={(e) => e.stopPropagation()}
                 className="btn-secondary flex-1"
               >
-                {t("Odjezdový checklist", "Check-out checklist")}
+                {t("Odjezdové úkoly", "Checkout Tasks")}
               </Link>
             </div>
           </section>

@@ -44,3 +44,15 @@ describe("inviteErrorKind", () => {
     expect(inviteErrorKind("network down")).toBe("unknown");
   });
 });
+
+describe("inviteMailto for a batch (PR #46 review)", () => {
+  it("puts several people in Bcc so no one sees the others' addresses", () => {
+    const url = inviteMailto({
+      to: ["a@example.cz", "b@example.cz"],
+      link: "https://mychata.cz/pozvanka/g",
+      chata: "Chata",
+      admin: false,
+    });
+    expect(url.startsWith("mailto:?bcc=a%40example.cz,b%40example.cz&subject=")).toBe(true);
+  });
+});

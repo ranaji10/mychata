@@ -15,6 +15,19 @@ As of 2026-10-14. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-028 L-5c public pages (merged and live, partial: see below), T-020 document vault search (planned), T-014 performance, T-015/T-016 missing tests, T-001–T-013 as listed below (T-012's migration 0019 is applied; its brief is not closed yet). Done: T-017, T-018, T-019, T-021, T-022, T-024, T-025, T-026, T-027, T-029.                                                                                                                                                                                                                                                                                      |
 
+## Bugs of 17 Oct (T-035, 17 Oct 2026, not yet live; needs migration 0026)
+
+- Bug 1: a tab left open across a release reloads once instead of showing "This page did not load" (stale code-split chunk; `src/lib/stale-chunk.ts`). Not reproduced on the live site in the same account; cross-account switching to be re-checked after publish.
+- Bugs 2 and 13: the line above the cottage name shows the account only when it differs from the cottage name, and marks organisations ("Organisation · …"). My profile says "Signed in as <email>" and lists every account with family/organisation and role. Desktop sidebar no longer has "Add a chata".
+- Bug 3: link preview image is the stacked logo (picture over "mychata.cz") inside the middle square of 1200×630 (`brand/logo-stacked.png`).
+- Bug 4/4a/4b: the reset link opens "New password" and then continues signed in (Home, or onboarding if no cottage). Google sign-ups are offered a password after onboarding and in My profile. Every password field has a show/hide eye.
+- Bugs 5 and 6: My profile has a photo, Set/Change password and "Add an institutional account" (convert a family account, add a new organisation cottage, or start the institution sign-up with a work email, which then invites the personal email as admin).
+- Bug 7: Settings → Manage cottages (`/chaty`): every cottage, organisation badge, photos, manual, documents, house rules, add a cottage, and "Finish setting up".
+- Bug 8: "No" to overlapping stays is stored (`properties.overlap_allowed`); house rules are no longer listed as missing.
+- Bug 9: "Check-out checklist" is now "Checkout Tasks" / "Odjezdové úkoly".
+- Bugs 10–12: one invitation link per batch (`invitations.group_token`), usable only by the listed emails; batches show as one tile with created date, days to expiry, who joined, See all; expired batches get "Create a new link".
+- Bug 14: booked days show who is booked on hover (desktop); under the calendar a notice lists who already has the picked dates (phones and desktop). Picked days that are already booked get a dot.
+
 ## Site check 4 fixes (T-034, 15 Oct 2026, not yet live)
 
 - Cookie banner on phones sits flush on the bottom edge (top corners round); inside the app it still floats above the tab bar. How much of the screen it covers is unchanged (deferred).

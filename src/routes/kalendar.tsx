@@ -7,7 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, Skeleton } from "@/components/bits";
-import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
+import {
+  CalendarLegend,
+  CalendarMonth,
+  MonthHeader,
+  OverlapNotice,
+  useMonthNav,
+} from "@/components/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, guestCount, pickRange, todayISO, type Booking, type DateRange } from "@/lib/data";
@@ -84,6 +90,7 @@ function CalendarPage() {
       start_date: g.start_date,
       end_date: g.end_date,
       status: "PENDING" as const,
+      requester_name: g.guest_name,
     })),
   ];
 
@@ -222,6 +229,7 @@ function CalendarPage() {
         </div>
 
         <CalendarLegend picking={isFamily && !!range.start} />
+        {isFamily && <OverlapNotice selection={range} bookings={calendarStays} />}
 
         {isFamily && range.start && (
           <div className="mt-4 flex gap-2">

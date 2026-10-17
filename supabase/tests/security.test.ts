@@ -833,3 +833,214 @@ describe("checklists and defaults (T-018, migration 0024)", () => {
     });
   });
 });
+
+describe("bugs of 17 Oct (T-035, migration 0026)", () => {
+  it("a group link works only for emails on the batch, each accepting their own row", async () => {
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, group_token, created_by_member_id)
+       values ($1,'MEMBER','t035-row-nova', $2, 't035-group', $4),
+              ($1,'MEMBER','t035-row-bara', $3, 't035-group', $4)`,
+      [ids.acctA, EMAIL.newcomer, EMAIL.bAdmin, ids.memberAAdmin],
+    );
+    await as(db, anon, async (q) => {
+      const p = await one(q("select * from public.invitation_preview('t035-group')"));
+      expect(p).toMatchObject({
+        state: "valid",
+        account_name: "Rodina A",
+        email_hint: "b***@example.org, n***@example.org",
+        email_matches: null,
+      });
+    });
+    await as(db, aMember, async (q) => {
+      expect(
+        await one(q("select email_matches from public.invitation_preview('t035-group')")),
+      ).toEqual({ email_matches: false });
+      await expect(q("select public.accept_invitation('t035-group')")).rejects.toThrow(
+        /invitation_email_mismatch/,
+      );
+    });
+    await as(db, newcomer, async (q) => {
+      expect(
+        await one(q("select email_matches from public.invitation_preview('t035-group')")),
+      ).toEqual({ email_matches: true });
+      await q("select public.accept_invitation('t035-group')");
+      expect(
+        await q("select account_id from public.members where user_id = $1", [U.newcomer]),
+      ).toEqual([{ account_id: ids.acctA }]);
+      // Only Nova's own row is used; Bára's stays open (read back as superuser).
+      await q("reset role");
+      const rows = await q(
+        "select email, status from public.invitations where group_token = 't035-group' order by email",
+      );
+      expect(rows).toEqual([
+        { email: EMAIL.bAdmin, status: "PENDING" },
+        { email: EMAIL.newcomer, status: "ACCEPTED" },
+      ]);
+    });
+  });
+
+  it("another account cannot take over a group link (PR #46 review)", async () => {
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, group_token, created_by_member_id)
+       values ($1,'MEMBER','t035-own-row', $2, 't035-owned-group', $3)`,
+      [ids.acctA, EMAIL.newcomer, ids.memberAAdmin],
+    );
+    await as(db, bAdmin, async (q) => {
+      // Its group_token used as a single token in account B …
+      await expect(
+        q(
+          `insert into public.invitations (account_id, role, token) values ($1,'MEMBER','t035-owned-group')`,
+          [ids.acctB],
+        ),
+      ).rejects.toThrow(/invitation_token_taken/);
+      // … or as account B's own group_token for the same people.
+      await expect(
+        q(
+          `insert into public.invitations (account_id, role, token, email, group_token)
+           values ($1,'MEMBER','t035-b-row', $2, 't035-owned-group')`,
+          [ids.acctB, EMAIL.newcomer],
+        ),
+      ).rejects.toThrow(/invitation_token_taken/);
+      // … nor by moving an existing row onto it.
+      await q(
+        `insert into public.invitations (account_id, role, token) values ($1,'MEMBER','t035-b-plain')`,
+        [ids.acctB],
+      );
+      await expect(
+        q(
+          `update public.invitations set group_token = 't035-owned-group' where token = 't035-b-plain'`,
+        ),
+      ).rejects.toThrow(/invitation_token_taken/);
+      // A single token can't become a group token either.
+      await expect(
+        q(
+          `update public.invitations set group_token = 't035-own-row' where token = 't035-b-plain'`,
+        ),
+      ).rejects.toThrow(/invitation_token_taken/);
+    });
+  });
+
+  it("an unknown group link is not found", async () => {
+    await as(db, newcomer, async (q) => {
+      await expect(q("select public.accept_invitation('t035-nothing')")).rejects.toThrow(
+        /invitation_not_found/,
+      );
+    });
+  });
+
+  it("only an admin records the overlap answer, and 'no' clears the limit", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(q("select public.set_property_overlap($1, false)", [ids.propA])).rejects.toThrow(
+        /Admin/,
+      );
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q("select public.set_property_overlap($1, true, 5)", [ids.propA]),
+      ).rejects.toThrow(/Admin/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await q("select public.set_property_overlap($1, true, 6)", [ids.propA]);
+      expect(
+        await q("select overlap_allowed, overlap_max_guests from public.properties where id = $1", [
+          ids.propA,
+        ]),
+      ).toEqual([{ overlap_allowed: true, overlap_max_guests: 6 }]);
+      await q("select public.set_property_overlap($1, false)", [ids.propA]);
+      expect(
+        await q("select overlap_allowed, overlap_max_guests from public.properties where id = $1", [
+          ids.propA,
+        ]),
+      ).toEqual([{ overlap_allowed: false, overlap_max_guests: null }]);
+    });
+  });
+
+  it("only an admin with a work email turns a family account into an institution", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/Admin/);
+    });
+    await as(db, { ...aAdmin, email: "anna@gmail.com" }, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/institution_email_required/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await q("select public.convert_account_to_institution($1, 'Spolek A')", [ids.acctA]);
+      expect(await q("select type, name from public.accounts where id = $1", [ids.acctA])).toEqual([
+        { type: "INSTITUTIONAL", name: "Spolek A" },
+      ]);
+    });
+    await as(db, anon, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'X')", [ids.acctA]),
+      ).rejects.toThrow();
+    });
+  });
+
+  // RLS audit of PR #46 (added by the rls-auditor).
+  it("a group link refuses an expired or revoked row of the batch", async () => {
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, group_token, expires_at, status)
+       values ($1,'MEMBER','t035-exp-row', $2, 't035-exp', now() - interval '1 day', 'PENDING'),
+              ($1,'MEMBER','t035-rev-row', $2, 't035-rev', now() + interval '1 day', 'REVOKED')`,
+      [ids.acctA, EMAIL.newcomer],
+    );
+    await as(db, newcomer, async (q) => {
+      await expect(q("select public.accept_invitation('t035-exp')")).rejects.toThrow(
+        /invitation_expired/,
+      );
+      await expect(q("select public.accept_invitation('t035-rev')")).rejects.toThrow(
+        /invitation_used/,
+      );
+      expect(await q("select 1 from public.members where user_id = $1", [U.newcomer])).toEqual([]);
+    });
+    await as(db, anon, async (q) => {
+      expect(await one(q("select state from public.invitation_preview('t035-exp')"))).toEqual({
+        state: "expired",
+      });
+    });
+  });
+
+  it("another account's admin cannot flip overlap or convert the account; anon cannot call either", async () => {
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q("select public.convert_account_to_institution($1, 'Spolek X')", [ids.acctA]),
+      ).rejects.toThrow(/Admin/);
+    });
+    await as(db, anon, async (q) => {
+      await expect(
+        q("select public.set_property_overlap($1, true, 3)", [ids.propA]),
+      ).rejects.toThrow(/permission denied/);
+    });
+    expect(
+      await admin(db, "select type, name from public.accounts where id = $1", [ids.acctA]),
+    ).toEqual([{ type: "FAMILY", name: "Rodina A" }]);
+  });
+
+  // Was a gap in the first draft of 0026, closed by invitations_token_guard: group_token is chosen by the client, so an
+  // admin of another account who knows a batch's link (e.g. was invited in it) can add rows with
+  // the same group_token. accept_invitation() picks the newest matching row, so the invitee who
+  // opens account A's link would join account B instead.
+  it("a group token cannot be reused by another account", async () => {
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, group_token)
+       values ($1,'MEMBER','t035-hj-row', $2, 't035-hijack')`,
+      [ids.acctA, EMAIL.newcomer],
+    );
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q(
+          `insert into public.invitations (account_id, role, token, email, group_token)
+           values ($1,'ADMIN','t035-hj-evil', $2, 't035-hijack')`,
+          [ids.acctB, EMAIL.newcomer],
+        ),
+      ).rejects.toThrow(/invitation_token_taken/);
+    });
+  });
+});

@@ -11,6 +11,10 @@ import { LanguageToggle, useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { pendingInvite } from "@/lib/pending-invite";
 import { isPublicEmailDomain, signupMetadata } from "@/lib/signup";
+import { hasPassword } from "@/lib/password";
+import { forgetPersonalEmail, personalEmailToLink } from "@/lib/institution-link";
+import { inviteLink } from "@/lib/invites";
+import { SetPasswordForm } from "@/components/SetPasswordForm";
 
 export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
@@ -27,6 +31,12 @@ export const Route = createFileRoute("/onboarding")({
       { name: "description", content: "Nastavte svou chatu v několika jednoduchých krocích." },
       { name: "robots", content: "noindex" },
     ],
+  }),
+  // From My profile (bug 5): ?kind=institution starts an organisation; ?fresh=1 makes a new
+  // account even for someone who already runs one (otherwise cottages join the open account).
+  validateSearch: (search: Record<string, unknown>): { kind?: "institution"; fresh?: boolean } => ({
+    ...(search["kind"] === "institution" ? { kind: "institution" as const } : {}),
+    ...(search["fresh"] ? { fresh: true } : {}),
   }),
   component: OnboardingPage,
 });
@@ -48,6 +58,12 @@ function OnboardingPage() {
   const { t, lang } = useLang();
   const { user, currentMember, profile } = useAccount();
   const navigate = useNavigate();
+  const search = Route.useSearch();
+  // After the cottage is made: offer a password to Google sign-ups (bug 4a) and show the
+  // invitation for a linked personal email (bug 5). null = still setting up.
+  const [done, setDone] = useState<{ linkEmail: string | null; linkUrl: string | null } | null>(
+    null,
+  );
 
   // Someone who signed up from an invitation link joins that account instead of creating
   // a new one (B-013).
@@ -61,7 +77,9 @@ function OnboardingPage() {
   const [busy, setBusy] = useState(false);
   // Family or institution is decided at sign-up (T-021): "Sign up as an Institute" stores
   // signup_kind "institution"; every other sign-up (Google, personal email) is a family.
-  const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL">("FAMILY");
+  const [type, setType] = useState<"FAMILY" | "INSTITUTIONAL">(
+    search.kind === "institution" ? "INSTITUTIONAL" : "FAMILY",
+  );
   useBrand(type === "INSTITUTIONAL" ? "institution" : "family");
   const [accountName, setAccountName] = useState("");
   // Name from Google, or from the email sign-up form; always editable (T-021).
@@ -108,9 +126,10 @@ function OnboardingPage() {
       // (new people, or plain members of someone else's account) gets their own account,
       // where they are admin. See B-003.
       const addToCurrentAccount =
-        currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+        !search.fresh && (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
+      const newPropertyIds: string[] = [];
       if (!addToCurrentAccount) {
-        const { error } = await supabase.rpc("create_account_onboarding", {
+        const { data: firstId, error } = await supabase.rpc("create_account_onboarding", {
           _type: type,
           _account_name: accountName || first.name || "My Chata",
           _property_name: first.name,
@@ -124,17 +143,41 @@ function OnboardingPage() {
           _house_rules: houseRules,
         });
         if (error) throw error;
+        if (firstId) newPropertyIds.push(firstId as string);
       }
       // Remaining chatas (all of them when adding to the current account); creator is admin.
       for (const extra of addToCurrentAccount ? chatas : chatas.slice(1)) {
         if (!extra.name.trim()) continue;
-        const { error: addError } = await supabase.rpc("add_property", {
+        const { data: extraId, error: addError } = await supabase.rpc("add_property", {
           _name: extra.name,
           _address: extra.address,
           ...(extra.city ? { _city: extra.city } : {}),
           ...(extra.rooms ? { _rooms: Number(extra.rooms) } : {}),
         });
         if (addError) throw addError;
+        if (extraId) newPropertyIds.push(extraId as string);
+      }
+      // "May stays overlap?" is an answer even when it's No (bug 8). The cottages exist by
+      // now, so a failure here is logged, not shown: My profile can still ask again.
+      if (overlapAllowed !== null) {
+        for (const id of newPropertyIds) {
+          const { error: overlapError } = await supabase.rpc("set_property_overlap", {
+            _property_id: id,
+            _allowed: overlapAllowed,
+            ...(overlapAllowed && overlapMaxGuests
+              ? { _max_guests: Number(overlapMaxGuests) }
+              : {}),
+          });
+          if (overlapError) {
+            console.error("[onboarding] overlap answer", overlapError);
+            toast.error(
+              t(
+                "Odpověď na překrývání pobytů se neuložila. Nastavte ji v Nastavení.",
+                "The overlapping-stays answer was not saved. Set it in Settings.",
+              ),
+            );
+          }
+        }
       }
       const { error: profileError } = await supabase.from("profiles").upsert(
         {
@@ -164,9 +207,50 @@ function OnboardingPage() {
         account_type: type === "FAMILY" ? "family" : "institution",
         property_count: chatas.length,
       });
+      // Bug 5: an institution set up by someone who started from a personal sign-in invites
+      // that personal email as an admin, so one sign-in reaches both.
+      let linkEmail: string | null = null;
+      let linkUrl: string | null = null;
+      const personal = type === "INSTITUTIONAL" ? personalEmailToLink(user.email) : null;
+      if (personal) {
+        const { data: accountId, error: accountError } = await supabase.rpc("current_account_id");
+        const { data: me, error: meError } = accountError
+          ? { data: null, error: accountError }
+          : await supabase
+              .from("members")
+              .select("id")
+              .eq("account_id", accountId as string)
+              .eq("user_id", user.id)
+              .maybeSingle();
+        const token = crypto.randomUUID();
+        const { error: inviteError } =
+          accountError || meError || !accountId
+            ? { error: accountError ?? meError ?? new Error("no account") }
+            : await supabase.from("invitations").insert({
+                account_id: accountId as string,
+                email: personal,
+                role: "ADMIN",
+                token,
+                created_by_member_id: me?.id ?? null,
+              });
+        if (inviteError) {
+          console.error("[onboarding] invite personal email", inviteError);
+          toast.error(
+            t(
+              `Pozvánku pro ${personal} se nepodařilo vytvořit. Pozvěte ji v Členech.`,
+              `Could not create the invitation for ${personal}. Invite it from Members.`,
+            ),
+          );
+        } else {
+          linkEmail = personal;
+          linkUrl = inviteLink(window.location.origin, token);
+          forgetPersonalEmail();
+        }
+      }
       queryClient.clear();
       toast.success(t("Vítejte! Vaše chata je připravena.", "Welcome! Your cottage is ready."));
-      navigate({ to: "/domu", replace: true });
+      if (linkEmail || !hasPassword(user)) setDone({ linkEmail, linkUrl });
+      else navigate({ to: "/domu", replace: true });
     } catch (e) {
       const code = (e as { code?: string } | null)?.code;
       toast.error(
@@ -193,6 +277,75 @@ function OnboardingPage() {
         : step === 3
           ? chatas.every((c) => !c.rooms || Number(c.rooms) <= 3) || overlapAllowed !== null
           : true;
+
+  if (done) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh px-5 py-5 md:max-w-[560px] md:py-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
+              <Home className="size-6" />
+            </span>
+            <span className="text-lg font-extrabold">My Chata</span>
+          </div>
+          <LanguageToggle />
+        </div>
+        <h1 className="mt-8 text-[28px] font-extrabold leading-[1.15]">
+          {t("Vaše chata je připravená.", "Your cottage is ready.")}
+        </h1>
+        {done.linkEmail && done.linkUrl && (
+          <section className="card mt-5 space-y-2 p-4">
+            <h2 className="text-lg font-bold">
+              {t("Propojte svůj osobní účet", "Link your personal account")}
+            </h2>
+            <p className="text-[16px]">
+              {t(
+                `Pozvali jsme ${done.linkEmail} jako správce. Otevřete tento odkaz po přihlášení osobním e-mailem a obě chaty pak přepnete v jednom přihlášení.`,
+                `We invited ${done.linkEmail} as an admin. Open this link when signed in with your personal email, and you'll switch between both cottages from one sign-in.`,
+              )}
+            </p>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-secondary w-full"
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(done.linkUrl!)
+                  .then(() => toast.success(t("Odkaz zkopírován.", "Link copied.")))
+                  .catch(() => toast.error(done.linkUrl!));
+              }}
+            >
+              {t("Zkopírovat odkaz", "Copy the link")}
+            </Button>
+          </section>
+        )}
+        {!hasPassword(user) && (
+          <section className="card mt-5 space-y-2 p-4">
+            <h2 className="text-lg font-bold">
+              {t("Chcete si nastavit heslo?", "Would you like a password?")}
+            </h2>
+            <p className="text-[16px] text-muted-foreground">
+              {t(
+                "Registrovali jste se přes Google. S heslem se přihlásíte i e-mailem, třeba na cizím zařízení. Můžete ho nastavit i později v Mém profilu.",
+                "You signed up with Google. With a password you can also sign in with your email, e.g. on someone else's device. You can also set it later in My profile.",
+              )}
+            </p>
+            <SetPasswordForm onDone={() => navigate({ to: "/domu", replace: true })} />
+          </section>
+        )}
+        <Button
+          variant="fresh"
+          size="fresh"
+          className="btn-primary mt-5 min-h-14 w-full"
+          onClick={() => navigate({ to: "/domu", replace: true })}
+        >
+          {hasPassword(user)
+            ? t("Otevřít chatu", "Open my cottage")
+            : t("Teď ne — otevřít chatu", "Not now — open my cottage")}
+        </Button>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh px-5 py-5 md:max-w-[560px] md:py-10">
@@ -278,6 +431,21 @@ function OnboardingPage() {
             </p>
             {chatas.map((c, i) => (
               <div key={i} className="card space-y-2 p-4">
+                {i > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[16px] font-bold text-muted-foreground">
+                      {t(`Chata ${i + 1}`, `Cottage ${i + 1}`)}
+                    </span>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      className="min-h-11 px-2 text-[16px] font-semibold text-muted-foreground"
+                      onClick={() => setChatas(chatas.filter((_, j) => j !== i))}
+                    >
+                      {t("Odebrat", "Remove")}
+                    </Button>
+                  </div>
+                )}
                 <input
                   className="field w-full"
                   placeholder={t("Název chaty", "Cottage name")}

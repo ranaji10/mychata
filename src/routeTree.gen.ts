@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ChatyRouteImport } from './routes/chaty'
 import { Route as ClenoveRouteImport } from './routes/clenove'
 import { Route as DokumentyRouteImport } from './routes/dokumenty'
 import { Route as DomuRouteImport } from './routes/domu'
@@ -48,6 +49,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatyRoute = ChatyRouteImport.update({
+  id: '/chaty',
+  path: '/chaty',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClenoveRoute = ClenoveRouteImport.update({
@@ -194,6 +200,7 @@ const VerejneZadostTokenRoute = VerejneZadostTokenRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/chaty': typeof ChatyRoute
   '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/chaty': typeof ChatyRoute
   '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/chaty': typeof ChatyRoute
   '/clenove': typeof ClenoveRoute
   '/dokumenty': typeof DokumentyRoute
   '/domu': typeof DomuRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/chaty'
     | '/clenove'
     | '/dokumenty'
     | '/domu'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/chaty'
     | '/clenove'
     | '/dokumenty'
     | '/domu'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/chaty'
     | '/clenove'
     | '/dokumenty'
     | '/domu'
@@ -390,6 +402,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ChatyRoute: typeof ChatyRoute
   ClenoveRoute: typeof ClenoveRoute
   DokumentyRoute: typeof DokumentyRoute
   DomuRoute: typeof DomuRoute
@@ -432,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chaty': {
+      id: '/chaty'
+      path: '/chaty'
+      fullPath: '/chaty'
+      preLoaderRoute: typeof ChatyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clenove': {
@@ -657,6 +677,7 @@ const VydajeRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ChatyRoute: ChatyRoute,
   ClenoveRoute: ClenoveRoute,
   DokumentyRoute: DokumentyRoute,
   DomuRoute: DomuRoute,

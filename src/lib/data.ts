@@ -18,6 +18,8 @@ export interface Property {
   rooms: number | null;
   city: string | null;
   overlap_max_guests: number | null;
+  /** Answer to "may stays overlap?": null = never answered (migration 0026). */
+  overlap_allowed?: boolean | null;
   peak_seasons: string[];
   created_by_member_id: string | null;
   public_token: string;

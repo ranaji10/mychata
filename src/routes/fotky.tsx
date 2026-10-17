@@ -212,7 +212,7 @@ function PhotosPage() {
       <PageHeader
         title={t("Fotky chaty", "Cottage photos")}
         subtitle={property?.name ?? ""}
-        back="/vice"
+        back="/chaty"
       />
       <input
         ref={fileRef}

@@ -135,7 +135,7 @@ function ManualPage() {
       <PageHeader
         title={t("Manuál chaty", "House Manual")}
         subtitle={property?.name}
-        back="/vice"
+        back="/chaty"
         action={
           isAdmin ? (
             <Button

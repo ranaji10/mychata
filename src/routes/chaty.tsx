@@ -154,9 +154,12 @@ function ManageCottagesPage() {
             {(() => {
               const sum = (k: keyof CottageCounts) =>
                 Object.values(counts).reduce((n, c) => n + c[k], 0);
+              const cz = (n: number, one: string, few: string, many: string) =>
+                `${n} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`;
+              const en = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
               return t(
-                `Celkem: ${sum("photos")} fotek · ${sum("manual")} v manuálu · ${sum("documents")} dokumentů · ${sum("tasks")} úkolů údržby`,
-                `In total: ${sum("photos")} photos · ${sum("manual")} manual sections · ${sum("documents")} documents · ${sum("tasks")} maintenance tasks`,
+                `Celkem: ${cz(sum("photos"), "fotka", "fotky", "fotek")} · ${sum("manual")} v manuálu · ${cz(sum("documents"), "dokument", "dokumenty", "dokumentů")} · ${cz(sum("tasks"), "úkol", "úkoly", "úkolů")} údržby`,
+                `In total: ${en(sum("photos"), "photo")} · ${en(sum("manual"), "manual section")} · ${en(sum("documents"), "document")} · ${en(sum("tasks"), "maintenance task")}`,
               );
             })()}
           </p>

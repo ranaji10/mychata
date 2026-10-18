@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import {
   ArrowLeft,
   CalendarDays,
@@ -23,11 +23,20 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   const { t } = useLang();
+  const router = useRouter();
   return (
     <div className="mb-4 mt-2 flex items-center gap-3">
       {back && (
         <Link
           to={back}
+          // Back goes back (bug 8): Photos opened from Settings → Manage cottages returns to
+          // Settings with the list still open, not to the overview. `back` is the fallback
+          // for a page opened directly (a bookmark, a reload with no history).
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || !router.history.canGoBack()) return;
+            e.preventDefault();
+            router.history.back();
+          }}
           aria-label={t("Zpět", "Back")}
           className="grid size-11 shrink-0 place-items-center rounded-full bg-card text-foreground shadow-floating"
         >

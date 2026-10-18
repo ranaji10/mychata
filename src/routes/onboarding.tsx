@@ -145,7 +145,7 @@ function OnboardingPage() {
           _type: type,
           _account_name:
             accountName.trim() || (type === "FAMILY" ? t("Moje rodina", "My family") : first.name),
-          _property_name: first.name,
+          _property_name: first.name.trim(),
           _address: first.address,
           ...(first.city ? { _city: first.city } : {}),
           ...(first.rooms ? { _rooms: Number(first.rooms) } : {}),
@@ -165,7 +165,7 @@ function OnboardingPage() {
       for (const extra of addToCurrentAccount ? chatas : chatas.slice(1)) {
         if (!extra.name.trim()) continue;
         const { data: extraId, error: addError } = await supabase.rpc("add_property", {
-          _name: extra.name,
+          _name: extra.name.trim(),
           _address: extra.address,
           ...(extra.city ? { _city: extra.city } : {}),
           ...(extra.rooms ? { _rooms: Number(extra.rooms) } : {}),

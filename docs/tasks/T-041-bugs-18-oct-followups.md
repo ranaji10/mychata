@@ -1,6 +1,6 @@
 # T-041 What T-040 left open of the bugs of 18 Oct 2026
 
-Owner: Claude (cloud session) · Status: review
+Owner: Claude (cloud session) · Status: done (live since `d6260db`; signed-in checks passed 18 Oct, see T-042)
 
 Goal: after the T-040 / migration 0030 publish (`7ab6f5e`), re-check every one of the 18 bugs in `private/Screenshots/Bugs/18102026_BugsList.rtf` (outside the repo) against the code and its screenshots, fix what is still open, and bring the records up to date.
 Non-goals: anything needing a migration; emails or push for notifications; the cookie banner (F-03).

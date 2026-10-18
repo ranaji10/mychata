@@ -210,12 +210,15 @@ function BookingDetail() {
               .map((member) => member.name)
               .join(", ") || t("Správce chaty", "The cottage administrator")}
           </p>
-          <p>
-            {t(
-              "Správce rozhodne a uvidíte to tady.",
-              "The administrator decides and you'll see it here.",
-            )}
-          </p>
+          {/* Admins decide with the buttons below; this line is for the member who asked. */}
+          {!isAdmin && (
+            <p>
+              {t(
+                "Správce rozhodne a uvidíte to tady.",
+                "The administrator decides and you'll see it here.",
+              )}
+            </p>
+          )}
         </section>
       )}
 

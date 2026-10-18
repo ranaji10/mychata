@@ -9,5 +9,8 @@ export default defineConfig({
   use: {
     baseURL: process.env["E2E_BASE_URL"] ?? "http://localhost:4173",
     viewport: { width: 390, height: 844 }, // mobile first, like the app
+    // Cloud sessions ship a Chromium that doesn't match this Playwright's build (site check
+    // 18 Oct): PW_CHROMIUM_PATH=/opt/pw-browsers/chromium bun run e2e. Unset in CI.
+    launchOptions: { executablePath: process.env["PW_CHROMIUM_PATH"] || undefined },
   },
 });

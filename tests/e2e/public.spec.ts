@@ -30,6 +30,15 @@ test("an invalid guest link says so", async ({ page }) => {
   await expect(page.getByText(/no longer valid|už neplatí/)).toBeVisible();
 });
 
+// T-038: tab titles are Czech by default. Guards against a Lovable round putting English
+// head() titles back (Knowledge rule 13).
+test("public pages have Czech titles", async ({ page }) => {
+  await page.goto("/auth");
+  await expect(page).toHaveTitle("Přihlášení — My Chata");
+  await page.goto("/verejne/kalendar/not-a-real-token");
+  await expect(page).toHaveTitle("Kalendář chaty — My Chata");
+});
+
 // Guard for B-002: the page rendered on the server but crashed in the browser.
 test("sign-in page runs in the browser without console errors", async ({ page }) => {
   const errors: string[] = [];

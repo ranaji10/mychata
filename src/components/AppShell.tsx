@@ -410,9 +410,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           {acc?.type === "INSTITUTIONAL"
                             ? t("Účet organizace", "Organisation account")
                             : t("Rodinný účet", "Family account")}
-                          {cottages
-                            ? ` · ${cottageCount(cottages.length, t)}`
-                            : ""}
+                          {cottages ? ` · ${cottageCount(cottages.length, t)}` : ""}
                         </p>
                         <p className="truncate text-[16px] font-bold">{acc?.name ?? "—"}</p>
                       </div>

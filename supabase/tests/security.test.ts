@@ -1297,6 +1297,42 @@ describe("held bookings can be decided from the app (T-038)", () => {
     return (b as { id: string }).id;
   };
 
+  // The hold itself (PR #52 review): the member's overlapping booking is held by the trigger,
+  // then the admin confirms it in the same transaction, so the trigger runs on both writes.
+  it("an admin confirms a booking that the overlap rule held", async () => {
+    await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
+      ids.propA,
+    ]);
+    try {
+      await as(db, aMember, async (q) => {
+        // Anna's seeded stay is current_date + 10 .. + 12.
+        const [b] = await q<{ id: string; status: string }>(
+          `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status)
+           values ($1, 'Petr', $2, current_date + 11, current_date + 14, 'CONFIRMED') returning id, status`,
+          [ids.propA, ids.memberAMember],
+        );
+        expect(b!.status).toBe("PENDING");
+        // Same transaction, now as the account's admin.
+        await q("reset role");
+        await q("select set_config('request.jwt.claim.sub', $1, true)", [U.aAdmin]);
+        await q("select set_config('request.jwt.claims', $1, true)", [
+          JSON.stringify({ sub: U.aAdmin, email: EMAIL.aAdmin, role: "authenticated" }),
+        ]);
+        await q("set local role authenticated");
+        expect(
+          await q(
+            "update public.bookings set status = 'CONFIRMED' where id = $1 returning status",
+            [b!.id],
+          ),
+        ).toEqual([{ status: "CONFIRMED" }]);
+      });
+    } finally {
+      await admin(db, "update public.properties set overlap_allowed = null where id = $1", [
+        ids.propA,
+      ]);
+    }
+  });
+
   it("an admin confirms or declines a member's held booking; the member withdraws their own", async () => {
     await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
       ids.propA,

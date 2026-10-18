@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Link2, Plus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import {
   useMonthNav,
 } from "@/components/calendar";
 import { supabase } from "@/integrations/supabase/client";
+import { publishedCalendarToken } from "@/lib/public-calendar";
 import { useAccount } from "@/lib/account";
 import { fmtDate, guestCount, pickRange, todayISO, type Booking, type DateRange } from "@/lib/data";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
@@ -49,6 +50,7 @@ export const Route = createFileRoute("/kalendar")({
 function CalendarPage() {
   const { t, lang } = useLang();
   const { account, property, currentMember } = useAccount();
+  const queryClient = useQueryClient();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const { book } = Route.useSearch();
   const navigate = useNavigate();
@@ -123,12 +125,25 @@ function CalendarPage() {
     setManualLink(null);
     // Publishing the calendar is an explicit admin action; the link uses the share token.
     // A member only passes on a link that is already published (T-038: it used to fail with 403).
+    // Its cached flag can be out of date, so the member path re-reads it (PR #52 review).
     const { data: publicToken, error: publishError } = isAdmin
       ? await supabase.rpc("set_public_calendar", { _property_id: property!.id, _enabled: true })
-      : { data: property!.public_token, error: null };
+      : await publishedCalendarToken(property!.id).then(
+          (token) => ({ data: token, error: null }),
+          (error: Error) => ({ data: null, error }),
+        );
     if (publishError || !publicToken) {
+      if (!isAdmin) void queryClient.invalidateQueries({ queryKey: ["properties"] });
       toast.error(
-        t("Veřejný kalendář může zapnout jen správce.", "Only an admin can publish the calendar."),
+        isAdmin
+          ? t(
+              "Veřejný kalendář může zapnout jen správce.",
+              "Only an admin can publish the calendar.",
+            )
+          : t(
+              "Veřejný kalendář je vypnutý. Zapnout ho může jen správce.",
+              "The public calendar is switched off. Only an admin can switch it on.",
+            ),
       );
       return;
     }

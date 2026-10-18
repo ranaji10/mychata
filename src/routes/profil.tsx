@@ -39,8 +39,7 @@ export const Route = createFileRoute("/profil")({
 
 function ProfilePage() {
   const { t } = useLang();
-  const { user, profile, account, accounts, memberships, properties, currentMember } =
-    useAccount();
+  const { user, profile, account, accounts, memberships, properties, currentMember } = useAccount();
   const { data: myCottages } = useMyCottages(user?.id);
   const [showAllAccounts, setShowAllAccounts] = useState(false);
   const search = Route.useSearch();
@@ -64,8 +63,7 @@ function ProfilePage() {
   // Same starting point whichever way the person signed up (bug 14): their saved name, else
   // the name Google or the sign-up form gave, else the name on their membership.
   const fullName = (user?.user_metadata?.["full_name"] ?? user?.user_metadata?.["name"]) as
-    | string
-    | undefined;
+    string | undefined;
   const memberName = currentMember?.name;
   useEffect(() => {
     setName(profile?.display_name || fullName || memberName || "");

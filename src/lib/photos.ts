@@ -190,7 +190,8 @@ export function pickPhotoUrls(
   signed: { path: string | null; signedUrl: string | null; error: string | null }[],
 ): Record<string, string> {
   const byPath = new Map<string, string>();
-  for (const row of signed) if (row.path && row.signedUrl && !row.error) byPath.set(row.path, row.signedUrl);
+  for (const row of signed)
+    if (row.path && row.signedUrl && !row.error) byPath.set(row.path, row.signedUrl);
   const out: Record<string, string> = {};
   for (const p of photos) {
     const url = byPath.get(previewPathFor(p.storage_path)) ?? byPath.get(p.storage_path);

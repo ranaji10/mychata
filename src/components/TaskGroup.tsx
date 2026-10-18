@@ -57,7 +57,9 @@ export function TaskGroup({
       writeOpen(groupId, next);
       return next;
     });
-  const [doneOpen, setDoneOpen] = useState(() => readOpen(groupId ? `${groupId}:done` : undefined) ?? false);
+  const [doneOpen, setDoneOpen] = useState(
+    () => readOpen(groupId ? `${groupId}:done` : undefined) ?? false,
+  );
   const toggleDone = () =>
     setDoneOpen((value) => {
       writeOpen(groupId ? `${groupId}:done` : undefined, !value);

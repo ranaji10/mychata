@@ -188,7 +188,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             city: p.city ?? null,
           }))
         : null;
-  const totalCottages = memberships.reduce((n, m) => n + (cottagesOf(m.account_id)?.length ?? 1), 0);
+  const totalCottages = memberships.reduce(
+    (n, m) => n + (cottagesOf(m.account_id)?.length ?? 1),
+    0,
+  );
   const filterText = switcherFilter.trim().toLowerCase();
 
   // Phone: one column with the tab bar at the bottom (the original design).

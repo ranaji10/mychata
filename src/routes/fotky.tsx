@@ -10,7 +10,14 @@ import { PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { classifyUploadError, preparePhoto, uploadErrorMessage, pickPhotoUrls, preparePreview, previewPathFor } from "@/lib/photos";
+import {
+  classifyUploadError,
+  preparePhoto,
+  uploadErrorMessage,
+  pickPhotoUrls,
+  preparePreview,
+  previewPathFor,
+} from "@/lib/photos";
 
 export const Route = createFileRoute("/fotky")({
   staticData: { sitemap: false },

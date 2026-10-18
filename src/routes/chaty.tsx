@@ -1,7 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Building2, Camera, FileText, Home, Plus, ScrollText, Wrench } from "lucide-react";
+import {
+  BookOpen,
+  Building2,
+  Camera,
+  FileText,
+  Home,
+  Plus,
+  ScrollText,
+  Wrench,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";

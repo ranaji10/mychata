@@ -78,10 +78,11 @@ export function installNetworkRetry(supabaseUrl: string | undefined) {
   };
 
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url =
-      typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (!url.startsWith(base)) return originalFetch(input, init);
-    const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
+    const method = (
+      init?.method ?? (input instanceof Request ? input.method : "GET")
+    ).toUpperCase();
     const repeatable = isRepeatable(method, url);
     const quiet = Date.now() - lastAnswer > IDLE_MS || hiddenSince !== null;
     if (!repeatable && quiet) {

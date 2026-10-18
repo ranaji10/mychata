@@ -1399,9 +1399,7 @@ describe("cross-account summaries (T-040, migration 0030)", () => {
         await expect(q("select * from public.my_cottages()")).rejects.toThrow(/permission denied/);
       });
     } finally {
-      await admin(db, "delete from public.members where id = $1", [
-        (m as { id: string }).id,
-      ]);
+      await admin(db, "delete from public.members where id = $1", [(m as { id: string }).id]);
     }
   });
 

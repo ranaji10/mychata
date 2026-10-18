@@ -115,9 +115,7 @@ export function SetPasswordForm({
         variant="fresh"
         size="fresh"
         className="btn-primary w-full"
-        disabled={
-          busy || password.length < 8 || password !== again || (needCurrent && !current)
-        }
+        disabled={busy || password.length < 8 || password !== again || (needCurrent && !current)}
         onClick={save}
       >
         {busy ? t("Ukládám…", "Saving…") : (submitLabel ?? t("Uložit heslo", "Save password"))}

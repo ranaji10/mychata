@@ -171,7 +171,12 @@ function DocumentsPage() {
             expiry_date: form.expiryDate || null,
             visibility: form.visibility,
             ...(fileUrl
-              ? { file_url: fileUrl, text_status: "pending", extracted_text: null, text_error: null }
+              ? {
+                  file_url: fileUrl,
+                  text_status: "pending",
+                  extracted_text: null,
+                  text_error: null,
+                }
               : {}),
           })
           .eq("id", editing.id)

@@ -64,7 +64,10 @@ function MorePage() {
   } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
   const [cottagesOpen, setCottagesOpen] = useState(false);
-  const myName = (profile?.display_name ?? "").trim() || members.find((m) => m.id === currentMemberId)?.name || "";
+  const myName =
+    (profile?.display_name ?? "").trim() ||
+    members.find((m) => m.id === currentMemberId)?.name ||
+    "";
   const [stopOpen, setStopOpen] = useState(false);
   const [stopping, setStopping] = useState(false);
 
@@ -184,14 +187,20 @@ function MorePage() {
       >
         <Avatar name={myName} src={avatarSource(profile, user)} className="size-12" />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-bold">{myName || t("Doplňte své jméno", "Add your name")}</h3>
+          <h3 className="truncate font-bold">
+            {myName || t("Doplňte své jméno", "Add your name")}
+          </h3>
           <p className="text-[16px] text-muted-foreground">{t("Můj profil", "My profile")}</p>
         </div>
         <ChevronRight className="size-5 text-muted-foreground" />
       </Link>
 
       <section className="card mt-4 divide-y divide-divider overflow-hidden px-4 py-1">
-        <SettingsRow to="/clenove" icon={Users} label={t("Členové a oprávnění", "Members & permissions")} />
+        <SettingsRow
+          to="/clenove"
+          icon={Users}
+          label={t("Členové a oprávnění", "Members & permissions")}
+        />
         {/* Manage cottages opens its pages right here (bug 4a); the overview page stays the
             summary hub for every cottage (bug 4c). */}
         <SettingsRow
@@ -222,7 +231,11 @@ function MorePage() {
             ))}
           </div>
         )}
-        <SettingsRow to="/predani" icon={ClipboardCheck} label={t("Odjezdové úkoly", "Checkout Tasks")} />
+        <SettingsRow
+          to="/predani"
+          icon={ClipboardCheck}
+          label={t("Odjezdové úkoly", "Checkout Tasks")}
+        />
         {isFamily && (
           <>
             {showCalendarLink && (
@@ -311,7 +324,11 @@ function MorePage() {
       </section>
 
       <section className="card mt-4 divide-y divide-divider overflow-hidden px-4 py-1">
-        <SettingsRow to="/soukromi" icon={Shield} label={t("Soukromí a cookies", "Privacy & cookies")} />
+        <SettingsRow
+          to="/soukromi"
+          icon={Shield}
+          label={t("Soukromí a cookies", "Privacy & cookies")}
+        />
         <SettingsRow
           icon={LogOut}
           label={t("Odhlásit se", "Sign out")}

@@ -60,7 +60,8 @@ export interface NotificationInput {
   members: Pick<Member, "id" | "name">[];
   invitations?: PendingInvitation[] | null | undefined;
   bookings?: Booking[] | null | undefined;
-  guestRequests?: { id: string; guest_name: string; start_date: string; created_at: string }[] | null | undefined;
+  guestRequests?:
+    { id: string; guest_name: string; start_date: string; created_at: string }[] | null | undefined;
   requests?: InstitutionalRequest[] | null | undefined;
   tasks?: Task[] | null | undefined;
   splits?: ExpenseSplit[] | null | undefined;
@@ -136,7 +137,10 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
         tone: "action",
         at: g.created_at,
         title: [`Žádost hosta: ${g.guest_name}`, `Guest request: ${g.guest_name}`],
-        detail: [`Od ${g.start_date}. Rozhodněte na Domů.`, `From ${g.start_date}. Decide on Home.`],
+        detail: [
+          `Od ${g.start_date}. Rozhodněte na Domů.`,
+          `From ${g.start_date}. Decide on Home.`,
+        ],
         to: "/domu",
       });
     }
@@ -244,4 +248,3 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
 
   return out.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
 }
-

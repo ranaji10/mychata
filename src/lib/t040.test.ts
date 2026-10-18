@@ -55,9 +55,7 @@ describe("notifications (bug 5)", () => {
   });
 
   it("asks for a name when the profile has none (bug 7)", () => {
-    expect(buildNotifications({ ...base, hasName: false }).map((n) => n.kind)).toEqual([
-      "profile",
-    ]);
+    expect(buildNotifications({ ...base, hasName: false }).map((n) => n.kind)).toEqual(["profile"]);
   });
 
   it("lists invitations, my tasks, overdue and recently added tasks, and money I owe", () => {
@@ -125,7 +123,12 @@ describe("notifications (bug 5)", () => {
       created_at: "2026-10-17T10:00:00Z",
     };
     const guests = [
-      { id: "g1", guest_name: "Host", start_date: "2026-11-05", created_at: "2026-10-17T11:00:00Z" },
+      {
+        id: "g1",
+        guest_name: "Host",
+        start_date: "2026-11-05",
+        created_at: "2026-10-17T11:00:00Z",
+      },
     ];
     expect(buildNotifications({ ...base, bookings: [held], guestRequests: guests })).toEqual([]);
     const admin = buildNotifications({
@@ -198,9 +201,9 @@ describe("password change while signed in (bug 15)", () => {
     expect(needsCurrentPassword({ message: "Password should be at least 8 characters" })).toBe(
       false,
     );
-    expect(
-      explainPasswordError("Current password required when setting new password.", en),
-    ).toBe("To change your password, also enter your current password.");
+    expect(explainPasswordError("Current password required when setting new password.", en)).toBe(
+      "To change your password, also enter your current password.",
+    );
   });
 });
 
@@ -253,11 +256,7 @@ describe("one look for list rows (bug 6)", () => {
   function files(dir: string): string[] {
     return readdirSync(dir).flatMap((name) => {
       const path = join(dir, name);
-      return statSync(path).isDirectory()
-        ? files(path)
-        : path.endsWith(".tsx")
-          ? [path]
-          : [];
+      return statSync(path).isDirectory() ? files(path) : path.endsWith(".tsx") ? [path] : [];
     });
   }
   it("no full-width row button keeps the pill shape", () => {

@@ -80,10 +80,7 @@ function NotificationsPage() {
       />
       {failed && (
         <p role="alert" className="card mb-3 p-4 font-semibold text-destructive">
-          {t(
-            "Některá upozornění se nepodařilo načíst.",
-            "Some notifications could not be loaded.",
-          )}
+          {t("Některá upozornění se nepodařilo načíst.", "Some notifications could not be loaded.")}
         </p>
       )}
       {loading ? (
@@ -103,7 +100,11 @@ function NotificationsPage() {
             <Group title={t("Čeká na vás", "Needs you")} items={needsYou} seen={seenBefore} />
           )}
           {fyi.length > 0 && (
-            <Group title={t("Pro informaci", "For your information")} items={fyi} seen={seenBefore} />
+            <Group
+              title={t("Pro informaci", "For your information")}
+              items={fyi}
+              seen={seenBefore}
+            />
           )}
         </div>
       )}

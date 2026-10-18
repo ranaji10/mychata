@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, CalendarDays, ChevronDown, ChevronRight, Wallet, type LucideIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";

@@ -17,7 +17,9 @@ export function hasPassword(
 }
 
 /** Supabase refused because the current password is missing or wrong (bug 15). */
-export function needsCurrentPassword(error: { message?: string; code?: string } | null) {
+export function needsCurrentPassword(
+  error: { message?: string | undefined; code?: string | undefined } | null,
+) {
   if (!error) return false;
   const code = error.code ?? "";
   const m = (error.message ?? "").toLowerCase();

@@ -58,14 +58,14 @@ export interface NotificationInput {
   isFamily: boolean;
   hasName: boolean;
   members: Pick<Member, "id" | "name">[];
-  invitations?: PendingInvitation[] | null;
-  bookings?: Booking[] | null;
-  guestRequests?: { id: string; guest_name: string; start_date: string; created_at: string }[] | null;
-  requests?: InstitutionalRequest[] | null;
-  tasks?: Task[] | null;
-  splits?: ExpenseSplit[] | null;
-  expenses?: { id: string; paid_by_member_id: string | null }[] | null;
-  documents?: DocumentLite[] | null;
+  invitations?: PendingInvitation[] | null | undefined;
+  bookings?: Booking[] | null | undefined;
+  guestRequests?: { id: string; guest_name: string; start_date: string; created_at: string }[] | null | undefined;
+  requests?: InstitutionalRequest[] | null | undefined;
+  tasks?: Task[] | null | undefined;
+  splits?: ExpenseSplit[] | null | undefined;
+  expenses?: { id: string; paid_by_member_id: string | null }[] | null | undefined;
+  documents?: DocumentLite[] | null | undefined;
 }
 
 function daysBetween(a: string, b: string) {

@@ -151,6 +151,8 @@ Phone: 2 columns. Desktop: `repeat(auto-fit, minmax(200px, 1fr))`.
 
 **List card** (tasks, items): white, radius 22, padding 4px 16px; rows min 60px with `--divider` between. Title 16px 600, caption 14px muted. Trailing control: done = 26px square radius 8 `--primary` with white check (stroke 3); open = 24px circle, 2px `--control-border`. Done title: `--subtle` + line-through.
 
+**Settings row** (`SettingsRow` in `bits.tsx`, T-040): the only way to draw a row in a divided settings list. Min 60px, square corners, 34px tinted icon bubble, 16px 700 label with an optional 14px muted hint, chevron right (or down for a row that opens a sub-list). A link and a button look identical. Never use a pill `<Button>` as a full-width list row: its rounded corners show as curved lines at the dividers (bug 6, guarded by `t040.test.ts`).
+
 **Quick action chip**: 48px pill, white, chip shadow, 16px 600, 20px icon coloured by category (stay `--primary`, task `--cat-tasks`, expense `--cat-expenses`). Horizontal row; scrolls on overflow.
 
 **Stay row**: white, radius 20, padding 14, gap 12. 44px date badge (radius 14, 800): confirmed `--primary-soft`/`--primary`, pending `--warn-soft`/`--warn-foreground`. Title 16px 700, caption 14px muted ("18.–21. 10. · 3 hosté"). Trailing status pill.
@@ -165,9 +167,9 @@ Phone: 2 columns. Desktop: `repeat(auto-fit, minmax(200px, 1fr))`.
 
 **Bottom tab bar (phone/tablet)**: 84px incl. safe-area padding, white, 1px `--border` top. Equal columns, item min 52px tall, 26px icon (stroke 1.7) over a 12px label. Inactive `--nav-foreground` 600; active `--primary` 700 with the icon filled `--primary-soft` (Home icon filled `--primary`). No pill highlight behind the active item.
 
-**Desktop sidebar**: logo mark 44px + wordmark 19px 800, 20px below it. Items 48px tall, radius 16, 16px, 22px icon, gap 12. Active: white background, chip shadow, `--primary` 700. Inactive: `--sidebar-foreground` 600, hover `--secondary`.
+**Desktop sidebar**: logo mark 44px + wordmark 19px 800, 20px below it. Items 48px tall, radius 16, 16px, 22px icon, gap 12. Active: white background, chip shadow, `--primary` 700. Inactive: `--sidebar-foreground` 600, hover `--secondary`. Inside Settings, its pages are listed under the Settings item (44px, 15px, left rule in `--divider`; active `--primary-soft`/`--primary` 700), and the open cottage's pages under Manage cottages (`src/lib/settings-nav.ts`).
 
-**App header**: keep today's content and behaviour (cottage switcher, account label). Restyle: logo mark on phone (instead of "M"), account label 15px 500 muted, cottage name 17px 700 + 18px chevron. On Home the label reads "Dobrý den, {jméno}" / "Hello, {name}" with a 48px initial avatar (white circle, `--primary` 800 letter) instead of the logo mark. Do not add a notification bell: there is no notifications feature yet.
+**App header**: logo mark on phone (avatar on Home), cottage name 17px 700 + 18px chevron opening the switcher. No account line above the cottage name (T-040: an account named after an email read as the signed-in person); the switcher shows each account's name over its cottages, My profile shows the email. Notifications are a tab (bell icon, red count badge), not a header bell.
 
 **Sheets and dialogs**: white, radius 28 (top corners only for phone bottom sheets), 20px padding, 44px round close button.
 

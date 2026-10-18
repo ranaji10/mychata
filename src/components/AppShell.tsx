@@ -169,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     to === "/upozorneni" && unseen > 0 ? (
       <span
         aria-label={t(`${unseen} nových`, `${unseen} new`)}
-        className="grid min-w-5 place-items-center rounded-full bg-destructive px-1 text-[12px] font-bold leading-5 text-white"
+        className="grid min-w-5 place-items-center rounded-full bg-destructive px-1 text-[12px] font-bold leading-5 text-primary-foreground"
       >
         {unseen > 9 ? "9+" : unseen}
       </span>

@@ -28,3 +28,9 @@ export function avatarSource(
   const google = (meta["avatar_url"] ?? meta["picture"]) as string | undefined;
   return profile?.avatar_url || google || null;
 }
+
+/** "1 chata", "3 chaty", "5 chat" / "1 cottage", "3 cottages" (switcher headings, T-041). */
+export function cottageCount(n: number, t: (cs: string, en: string) => string): string {
+  const cs = n === 1 ? "chata" : n >= 2 && n <= 4 ? "chaty" : "chat";
+  return t(`${n} ${cs}`, `${n} ${n === 1 ? "cottage" : "cottages"}`);
+}

@@ -249,10 +249,12 @@ function CalendarPage() {
           )}
         </div>
 
-        <CalendarLegend picking={isFamily && !!range.start} />
-        {isFamily && <OverlapNotice selection={range} bookings={calendarStays} />}
+        {/* Organisations book from the calendar too (bug 17): the legend, the overlap notice and
+            "Continue to booking" were still family-only, so picked days led nowhere (T-041). */}
+        <CalendarLegend picking={!!range.start} />
+        <OverlapNotice selection={range} bookings={calendarStays} />
 
-        {isFamily && range.start && (
+        {range.start && (
           <div className="mt-4 flex gap-2">
             <Button
               variant="fresh"

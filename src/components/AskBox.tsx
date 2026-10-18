@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
+import { MAX_EARLIER_TURNS } from "@/lib/manual-answers";
 import { askManual, type AskManualResult } from "@/lib/manual-qa.functions";
 
 /**
@@ -32,7 +33,15 @@ export function AskBox({
     setAsking(q);
     setQuestion("");
     try {
-      const result = await askManual({ data: { propertyId, question: q, lang } });
+      // Earlier answered turns go along, so "and in winter?" knows what it follows (T-041).
+      const earlier = thread
+        .filter((item) => item.result?.answer)
+        .slice(-MAX_EARLIER_TURNS)
+        .map((item) => ({
+          question: item.question.slice(0, 500),
+          answer: (item.result?.answer ?? "").slice(0, 2000),
+        }));
+      const result = await askManual({ data: { propertyId, question: q, lang, earlier } });
       setThread((items) => [...items, { question: q, result, failed: null }]);
     } catch (e) {
       console.error("[ask] failed", e);

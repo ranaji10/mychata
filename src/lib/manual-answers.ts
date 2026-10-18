@@ -229,3 +229,37 @@ export function fileKind(name: string, mime = ""): FileKind {
     return "image";
   return "unsupported";
 }
+
+/** An earlier question and its answer in the same Ask box (bug 12 of 18 Oct, T-041). */
+export interface EarlierTurn {
+  question: string;
+  answer: string;
+}
+
+/** How many earlier turns go with a follow-up; older ones are dropped. */
+export const MAX_EARLIER_TURNS = 3;
+
+/**
+ * Words to rank the sources by: the new question first, then the previous one, so a short
+ * follow-up ("and in winter?") still finds the sources the conversation is about.
+ */
+export function retrievalQuery(question: string, earlier: EarlierTurn[] = []): string {
+  const previous = earlier.at(-1)?.question;
+  return previous ? `${question} ${previous}` : question;
+}
+
+/**
+ * Earlier turns as chat messages, oldest first, in the JSON shape the model is asked to answer
+ * in. Members' own words: the system prompt already treats them as data, not instructions.
+ */
+export function earlierMessages(
+  earlier: EarlierTurn[] = [],
+): { role: "user" | "assistant"; content: string }[] {
+  return earlier.slice(-MAX_EARLIER_TURNS).flatMap((turn) => [
+    { role: "user" as const, content: turn.question },
+    {
+      role: "assistant" as const,
+      content: JSON.stringify({ answer: turn.answer, sources: [] }),
+    },
+  ]);
+}

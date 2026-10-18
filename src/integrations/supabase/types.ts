@@ -1537,7 +1537,7 @@ export type Database = {
         Args: never
         Returns: {
           account_id: string
-          city: string | null
+          city: string
           created_at: string
           name: string
           property_id: string
@@ -1550,8 +1550,8 @@ export type Database = {
           account_type: string
           created_at: string
           expires_at: string
-          invited_by: string | null
-          property_name: string | null
+          invited_by: string
+          property_name: string
           role: string
           token: string
         }[]

@@ -18,12 +18,12 @@ export const Route = createFileRoute("/vydaje/vyrovnani")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Settlement — My Chata" },
+      { title: "Vyrovnání — My Chata" },
       {
         name: "description",
         content: "Settlement suggestions for shared expenses between members.",
       },
-      { property: "og:title", content: "Settlement — My Chata" },
+      { property: "og:title", content: "Vyrovnání — My Chata" },
       {
         property: "og:description",
         content: "Settlement suggestions for shared expenses between members.",

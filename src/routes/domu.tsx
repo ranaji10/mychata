@@ -31,12 +31,12 @@ export const Route = createFileRoute("/domu")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Home — My Chata" },
+      { title: "Domů — My Chata" },
       {
         name: "description",
         content: "Cottage overview: upcoming stay, tasks, expenses and requests.",
       },
-      { property: "og:title", content: "Home — My Chata" },
+      { property: "og:title", content: "Domů — My Chata" },
       {
         property: "og:description",
         content: "Cottage overview: upcoming stay, tasks, expenses and requests.",
@@ -182,6 +182,9 @@ function HomePage() {
   const today = todayISO();
   const upcoming = bookings?.filter((b) => b.end_date >= today && b.status === "CONFIRMED") ?? [];
   const nextBooking = upcoming[0];
+  // Checkout tasks belong to a stay that has started, not to one weeks away (F-17).
+  const stayStarted = !!nextBooking && nextBooking.start_date <= today;
+  const heldBookings = bookings?.filter((b) => b.status === "PENDING" && b.end_date >= today) ?? [];
   const overdueTasks =
     tasks?.filter((t) => t.status !== "DONE" && t.due_date && t.due_date < today) ?? [];
   const openTasks = tasks?.filter((t) => t.status !== "DONE") ?? [];
@@ -257,27 +260,22 @@ function HomePage() {
               {nextBooking ? t("Připravená", "Ready") : t("Volná", "Free")}
             </span>
           </div>
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-2xl bg-card/95 px-4 py-3 shadow-chip">
+          {/* The next stay has its own card below, so the photo links to the calendar
+              instead of repeating "Next stay" (F-17). */}
+          <Link
+            to="/kalendar"
+            className="absolute bottom-3 left-3 right-3 flex min-h-11 items-center justify-between rounded-2xl bg-card/95 px-4 py-3 shadow-chip"
+          >
             <div>
+              <p className="text-base font-bold leading-tight">{t("Kalendář", "Calendar")}</p>
               <p className="text-[16px] font-semibold text-muted-foreground">
-                {t("Nejbližší pobyt", "Next stay")}
+                {t("Všechny pobyty a volné dny", "All stays and free days")}
               </p>
-              {nextBooking ? (
-                <p className="text-base font-bold leading-tight">
-                  {fmtDate(nextBooking.start_date)} – {fmtDate(nextBooking.end_date)}
-                </p>
-              ) : (
-                <p className="text-base font-bold leading-tight">{t("Zatím žádný", "None yet")}</p>
-              )}
             </div>
-            <Link
-              to="/kalendar"
-              className="grid size-11 place-items-center rounded-2xl bg-secondary text-foreground"
-              aria-label={t("Otevřít kalendář", "Open calendar")}
-            >
+            <span className="grid size-11 place-items-center rounded-2xl bg-secondary text-foreground">
               <CalendarDays className="size-5" />
-            </Link>
-          </div>
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -290,7 +288,11 @@ function HomePage() {
           }
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
+            <h3 className="text-lg font-bold">
+              {stayStarted
+                ? t("Probíhající pobyt", "Current stay")
+                : t("Nejbližší pobyt", "Next stay")}
+            </h3>
             {nextBooking && <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>}
           </div>
           {nextBooking ? (
@@ -311,13 +313,15 @@ function HomePage() {
                 >
                   {t("Detail pobytu", "Stay details")}
                 </Link>
-                <Link
-                  to="/predani"
-                  onClick={(e) => e.stopPropagation()}
-                  className="btn-secondary flex-1"
-                >
-                  {t("Odjezd", "Check Out")}
-                </Link>
+                {stayStarted && (
+                  <Link
+                    to="/predani"
+                    onClick={(e) => e.stopPropagation()}
+                    className="btn-secondary flex-1"
+                  >
+                    {t("Odjezdové úkoly", "Checkout Tasks")}
+                  </Link>
+                )}
               </div>
             </>
           ) : (
@@ -403,6 +407,33 @@ function HomePage() {
           </div>
           <ArrowRight className="size-5 text-muted-foreground" />
         </Link>
+      )}
+
+      {/* Family: members' stays held for the admin by the overlap rule (T-036, T-038) */}
+      {isFamily && isAdmin && heldBookings.length > 0 && (
+        <section className="card mt-4 p-4">
+          <h3 className="text-lg font-bold">
+            {t("Pobyty ke schválení", "Stays awaiting approval")}
+          </h3>
+          <div className="mt-2 space-y-2">
+            {heldBookings.map((b) => (
+              <Link
+                key={b.id}
+                to="/rezervace/$id"
+                params={{ id: b.id }}
+                className="flex min-h-14 items-center gap-3 rounded-2xl bg-secondary p-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[16px] font-bold">{b.requester_name}</p>
+                  <p className="text-[16px] text-muted-foreground">
+                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
+                  </p>
+                </div>
+                <PillWarn>{t("Rozhodnout", "Decide")}</PillWarn>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Guest booking requests (no-account guests) */}
@@ -502,7 +533,11 @@ function HomePage() {
             onClick={() => navigate({ to: "/rezervace/$id", params: { id: nextBooking.id } })}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">{t("Nejbližší pobyt", "Next stay")}</h3>
+              <h3 className="text-lg font-bold">
+                {stayStarted
+                  ? t("Probíhající pobyt", "Current stay")
+                  : t("Nejbližší pobyt", "Next stay")}
+              </h3>
               <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
             </div>
             <p className="mt-1 text-xl font-bold">
@@ -520,13 +555,15 @@ function HomePage() {
               >
                 {t("Detail pobytu", "Stay details")}
               </Link>
-              <Link
-                to="/predani"
-                onClick={(e) => e.stopPropagation()}
-                className="btn-secondary flex-1"
-              >
-                {t("Odjezdové úkoly", "Checkout Tasks")}
-              </Link>
+              {stayStarted && (
+                <Link
+                  to="/predani"
+                  onClick={(e) => e.stopPropagation()}
+                  className="btn-secondary flex-1"
+                >
+                  {t("Odjezdové úkoly", "Checkout Tasks")}
+                </Link>
+              )}
             </div>
           </section>
         )}

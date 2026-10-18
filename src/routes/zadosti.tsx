@@ -25,9 +25,9 @@ export const Route = createFileRoute("/zadosti")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Requests — My Chata" },
+      { title: "Žádosti — My Chata" },
       { name: "description", content: "Employee cottage stay requests awaiting approval." },
-      { property: "og:title", content: "Requests — My Chata" },
+      { property: "og:title", content: "Žádosti — My Chata" },
       { property: "og:description", content: "Employee cottage stay requests awaiting approval." },
     ],
   }),
@@ -372,7 +372,17 @@ function RequestsPage() {
               {t("Důvod zamítnutí", "Decline reason")}
             </h2>
             <p className="mt-1 text-[16px] text-muted-foreground">
-              {declining.length} {t("žádostí bude zamítnuto.", "request(s) will be declined.")}
+              {declining.length === 1
+                ? t("1 žádost bude zamítnuta.", "1 request will be declined.")
+                : declining.length < 5
+                  ? t(
+                      `${declining.length} žádosti budou zamítnuty.`,
+                      `${declining.length} requests will be declined.`,
+                    )
+                  : t(
+                      `${declining.length} žádostí bude zamítnuto.`,
+                      `${declining.length} requests will be declined.`,
+                    )}
             </p>
             <select
               value={declineReason}

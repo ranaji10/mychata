@@ -17,10 +17,10 @@ export const Route = createFileRoute("/chaty")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Manage cottages — My Chata" },
+      { title: "Spravovat chaty — My Chata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Your cottages, their photos, house manual and documents." },
-      { property: "og:title", content: "Manage cottages — My Chata" },
+      { property: "og:title", content: "Spravovat chaty — My Chata" },
       {
         property: "og:description",
         content: "Your cottages, their photos, house manual and documents.",

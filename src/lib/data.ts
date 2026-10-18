@@ -264,7 +264,12 @@ export function fmtKc(amount: number): string {
 }
 
 export function todayISO(): string {
-  const d = new Date();
+  return localISO(new Date());
+}
+
+/** A date as YYYY-MM-DD in local time. `toISOString()` is UTC, which is the previous day
+ *  in Czechia between midnight and 1–2 am, and for any local-midnight date. */
+export function localISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
@@ -629,4 +634,22 @@ export function normalizePhone(input: string): { value: string | null } | null {
 export function guestCount(n: number, lang: "cs" | "en"): string {
   if (lang === "en") return `${n} ${n === 1 ? "guest" : "guests"}`;
   return `${n} ${n === 1 ? "host" : n >= 2 && n <= 4 ? "hosté" : "hostů"}`;
+}
+
+/** House manual section categories, stored as codes ("wifi", "rules"); shown as words (T-038). */
+const MANUAL_CATEGORY: Record<string, [cs: string, en: string]> = {
+  wifi: ["Wi-Fi", "Wi-Fi"],
+  heating: ["Topení", "Heating"],
+  water: ["Voda", "Water"],
+  waste: ["Odpad", "Waste"],
+  emergency: ["Nouzové situace", "Emergencies"],
+  rules: ["Pravidla domu", "House rules"],
+  other: ["Ostatní", "Other"],
+};
+
+export const MANUAL_CATEGORIES = Object.keys(MANUAL_CATEGORY);
+
+export function manualCategoryLabel(code: string, lang: "cs" | "en"): string {
+  const hit = MANUAL_CATEGORY[code.toLowerCase()];
+  return hit ? hit[lang === "en" ? 1 : 0] : code;
 }

@@ -11,6 +11,7 @@ import { EmptyState, LoadingCards, PageHeader, PillNeutral } from "@/components/
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
+import { MANUAL_CATEGORIES, manualCategoryLabel } from "@/lib/data";
 import { rebuildManualChunks } from "@/lib/manual-qa.functions";
 import { AskBox } from "@/components/AskBox";
 
@@ -18,12 +19,12 @@ export const Route = createFileRoute("/manual")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "House Manual — My Chata" },
+      { title: "Manuál chaty — My Chata" },
       {
         name: "description",
         content: "Bilingual instructions and house information for your cottage.",
       },
-      { property: "og:title", content: "House Manual — My Chata" },
+      { property: "og:title", content: "Manuál chaty — My Chata" },
       {
         property: "og:description",
         content: "Bilingual instructions and house information for your cottage.",
@@ -34,8 +35,6 @@ export const Route = createFileRoute("/manual")({
   }),
   component: ManualPage,
 });
-
-const categories = ["wifi", "heating", "water", "waste", "emergency", "rules", "other"];
 
 function ManualPage() {
   const { property, currentMember } = useAccount();
@@ -235,7 +234,7 @@ function ManualPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[16px] font-bold uppercase text-muted-foreground">
-                    {section.category}
+                    {manualCategoryLabel(section.category, lang)}
                   </p>
                   <h2 className="text-lg font-bold">
                     {lang === "en" ? section.title_en : section.title_cs}
@@ -270,8 +269,10 @@ function ManualPage() {
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="field"
             >
-              {categories.map((category) => (
-                <option key={category}>{category}</option>
+              {MANUAL_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {manualCategoryLabel(category, lang)}
+                </option>
               ))}
             </select>
             <input

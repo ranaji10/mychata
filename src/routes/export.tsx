@@ -19,9 +19,9 @@ export const Route = createFileRoute("/export")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Usage export — My Chata" },
+      { title: "Export využití — My Chata" },
       { name: "description", content: "CSV export of cottage usage by month." },
-      { property: "og:title", content: "Usage export — My Chata" },
+      { property: "og:title", content: "Export využití — My Chata" },
       { property: "og:description", content: "CSV export of cottage usage by month." },
     ],
   }),
@@ -86,7 +86,7 @@ function ExportPage() {
           : r.status === "DECLINED"
             ? t("Zamítnuto", "Declined")
             : t("Čeká", "Pending"),
-        fmtDate(r.created_at.slice(0, 10)),
+        fmtDate(r.created_at),
       ]),
     );
     const csv = "\uFEFF" + [header, ...rows].join("\n");

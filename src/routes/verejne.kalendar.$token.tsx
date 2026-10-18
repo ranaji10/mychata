@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/bits";
 import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtDate, todayISO, type Booking } from "@/lib/data";
+import { fmtDate, localISO, todayISO, type Booking } from "@/lib/data";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/verejne/kalendar/$token")({
@@ -33,7 +33,6 @@ export const Route = createFileRoute("/verejne/kalendar/$token")({
 
 /** The next Saturday (from today on) whose Saturday and Sunday are both free. */
 function nextFreeWeekend(bookings: Booking[]): { start: string; end: string } | null {
-  const toISO = (d: Date) => d.toISOString().slice(0, 10);
   const start = new Date(`${todayISO()}T00:00:00`);
   for (let i = 0; i < 366; i++) {
     const day = new Date(start);
@@ -41,8 +40,8 @@ function nextFreeWeekend(bookings: Booking[]): { start: string; end: string } | 
     if (day.getDay() !== 6) continue; // Saturdays only
     const sun = new Date(day);
     sun.setDate(day.getDate() + 1);
-    const sat = toISO(day);
-    const sunday = toISO(sun);
+    const sat = localISO(day);
+    const sunday = localISO(sun);
     const busy = bookings.some((b) => b.start_date <= sunday && b.end_date >= sat);
     if (!busy) return { start: sat, end: sunday };
   }

@@ -26,12 +26,12 @@ export const Route = createFileRoute("/kalendar")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Calendar — My Chata" },
+      { title: "Kalendář — My Chata" },
       {
         name: "description",
         content: "Shared cottage stay calendar with an overview of availability.",
       },
-      { property: "og:title", content: "Calendar — My Chata" },
+      { property: "og:title", content: "Kalendář — My Chata" },
       {
         property: "og:description",
         content: "Shared cottage stay calendar with an overview of availability.",
@@ -122,10 +122,10 @@ function CalendarPage() {
   const copyPublicLink = async () => {
     setManualLink(null);
     // Publishing the calendar is an explicit admin action; the link uses the share token.
-    const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
-      _property_id: property!.id,
-      _enabled: true,
-    });
+    // A member only passes on a link that is already published (T-038: it used to fail with 403).
+    const { data: publicToken, error: publishError } = isAdmin
+      ? await supabase.rpc("set_public_calendar", { _property_id: property!.id, _enabled: true })
+      : { data: property!.public_token, error: null };
     if (publishError || !publicToken) {
       toast.error(
         t("Veřejný kalendář může zapnout jen správce.", "Only an admin can publish the calendar."),
@@ -301,7 +301,7 @@ function CalendarPage() {
         )}
       </section>
 
-      {isFamily && (
+      {isFamily && (isAdmin || property?.public_calendar_enabled) && (
         <>
           <Button
             variant="fresh"

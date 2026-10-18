@@ -32,9 +32,9 @@ export const Route = createFileRoute("/rezervace/nova")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "New booking — My Chata" },
+      { title: "Nová rezervace — My Chata" },
       { name: "description", content: "Book a stay at the cottage." },
-      { property: "og:title", content: "New booking — My Chata" },
+      { property: "og:title", content: "Nová rezervace — My Chata" },
       { property: "og:description", content: "Book a stay at the cottage." },
     ],
   }),
@@ -281,7 +281,10 @@ function NewBooking() {
                       "Tato chata překrývání pobytů nepovoluje (nebo je překročen počet hostů). Rezervace půjde ke schválení správci.",
                       "This cottage doesn't allow overlapping stays (or the guest limit is reached). Your booking goes to the admin for approval.",
                     )
-                : t("Překryv je v rodinném účtu povolen.", "Overlapping family stays are allowed.")}
+                : t(
+                    "Překrývání pobytů je u této chaty povolené.",
+                    "This cottage allows overlapping stays.",
+                  )}
             </p>
           </div>
         )}
@@ -305,7 +308,11 @@ function NewBooking() {
         disabled={saving || invalid}
         className="btn-primary mt-4 w-full disabled:opacity-40"
       >
-        {saving ? t("Ukládám…", "Saving…") : t("Potvrdit rezervaci", "Confirm booking")}
+        {saving
+          ? t("Ukládám…", "Saving…")
+          : overlapNeedsApproval && !isAdmin
+            ? t("Poslat ke schválení", "Send for approval")
+            : t("Potvrdit rezervaci", "Confirm booking")}
       </Button>
       <p className="mt-2 text-center text-[16px] text-muted-foreground">
         {overlapNeedsApproval && !isAdmin
@@ -314,8 +321,8 @@ function NewBooking() {
               "The booking is saved as waiting for the admin's approval.",
             )
           : t(
-              "Rezervace se ihned zapíše do rodinného kalendáře.",
-              "The booking is added to the family calendar immediately.",
+              "Rezervace se ihned zapíše do kalendáře chaty.",
+              "The booking is added to the cottage calendar immediately.",
             )}
       </p>
     </AppShell>

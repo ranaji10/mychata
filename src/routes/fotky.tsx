@@ -18,10 +18,10 @@ export const Route = createFileRoute("/fotky")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Photos — My Chata" },
+      { title: "Fotky — My Chata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Shared cottage photos and the main cottage picture." },
-      { property: "og:title", content: "Photos — My Chata" },
+      { property: "og:title", content: "Fotky — My Chata" },
       {
         property: "og:description",
         content: "Shared cottage photos and the main cottage picture.",

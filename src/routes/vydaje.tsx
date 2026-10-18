@@ -23,6 +23,7 @@ import {
   fmtDate,
   fmtKc,
   parseAmount,
+  todayISO,
 } from "@/lib/data";
 import { expenseDataKey, useExpenseData } from "@/lib/expenses";
 import { useLang } from "@/lib/i18n";
@@ -33,9 +34,9 @@ export const Route = createFileRoute("/vydaje")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Expenses — My Chata" },
+      { title: "Výdaje — My Chata" },
       { name: "description", content: "Shared cottage expenses and their split between members." },
-      { property: "og:title", content: "Expenses — My Chata" },
+      { property: "og:title", content: "Výdaje — My Chata" },
       {
         property: "og:description",
         content: "Shared cottage expenses and their split between members.",
@@ -150,7 +151,7 @@ function ExpensesPage() {
           description: desc.trim(),
           category,
           split_method: splitMethod,
-          date: new Date().toISOString().slice(0, 10),
+          date: todayISO(),
         })
         .select()
         .single();

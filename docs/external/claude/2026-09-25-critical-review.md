@@ -14,24 +14,25 @@ tab: Now
 
 18 Oct 2026 · Tuik
 
-**Live:** `9fce136` (PR #48 T-036 + Lovable's 0029 marker, PR #49), published 18 Oct 00:35, migrations up to 0029. Re-checked live: overlap hold (F-14) and sign-out cleanup (F-15) pass; the Requests list is still stale after a full reload (F-16, fix in PR #50). **Waiting on you:** set the tag `release-2026-10-18` on `9fce136`, merge PR #49 and PR #50, publish, say "published" for the reload check. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `a8b0b84` (PR #50 T-037 on top of PR #49 and #48), published 18 Oct 00:54, migrations up to 0029. Signed-in live test on 18 Oct (Test 2 and Test 3, `2026-10-18-site-check.md`): F-16 and F-02 closed, most of F-01 passed; 14 defects found and fixed in T-038 on branch `claude/laughing-einstein-llxpc1` (not live; F-17, F-18, F-19). **Waiting on you:** open and merge a PR for that branch, publish, then the Test 1 checks in N-10; tag `release-2026-10-18` on `a8b0b84`. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-3 | **Remaining two-person checks:** the 17 Oct release check covered invitations, a member's view, family and institution onboarding and overlaps with the three test accounts. Still open: a demoted member's own view, the debtor's side of Settle debts, a member's pending stay with admin names, the empty Expenses page, iPhone clipboard and Document Vault "Open" on an iPhone (`prompts/2026-10-13/12-release-two-person-checks.md`) | You, Rajat | To do | F-01 |
-| N-4 | **Switch off the test chata's public calendar** in Settings ("Vypnout veřejný kalendář", live since T-032), then prompt `10` again | You | To do | |
+| N-3 | **Remaining two-person checks:** passed live on 18 Oct with Test 2 and Test 3: a demoted member's own view, the debtor's side of Settle debts, a member's pending stay with admin names, the empty Expenses page. Still open: iPhone clipboard, Document Vault "Open" on an iPhone, avatar upload on iOS (`prompts/2026-10-13/12-release-two-person-checks.md`) | You | To do | F-01 |
+| N-4 | **Switch off the test chata's public calendar** in Settings ("Vypnout veřejný kalendář", live since T-032), then prompt `10` again. On 18 Oct `Chata Alfa (test)` already read as switched off (the app hid the link for a member with the T-038 build); check the other test cottages | You | To do | |
 | N-5 | **E-mail:** Lovable reported on 15 Oct that `notify.mychata.cz` failed verification. Check its DNS records in Lovable's e-mail settings and at the registrar. Then L-E (`05`), CC-3 (`06`) and L-3 (`07`) once G-1's Czech content is reviewed | You | To do | F-07 |
 | N-6 | **Document search:** plan first (`08-CC-4-plan-document-search.md`). T-021 reads the manual's full text without embeddings, so re-check the T-007 and T-020 plans before anyone builds | Claude | To do | |
-| N-8 | **Tag and finish the release:** set `release-2026-10-18` on `9fce136` (GitHub → Releases → Draft a new release; Claude's session can't push tags). Merge PR #49 (Lovable's 0029 marker, already live) and PR #50 (T-037: Requests fresh after a reload), publish, then Claude checks the reload case | You, then Claude | To do | F-16 |
-| N-9 | **Record the test accounts:** done in PR #48 for `docs/runbooks/test-cottages.md` as Test 1, 2, 3. Left: add the same labels to Lovable's Knowledge | You | To do | F-02 |
+| N-8 | **Tag the release:** PR #49 and PR #50 are merged and live (`a8b0b84`); the reload check passed on 18 Oct. Left: set `release-2026-10-18` on `a8b0b84` (GitHub → Releases → Draft a new release; Claude's session can't push tags) | You | To do | |
+| N-10 | **Ship T-038:** open a PR from `claude/laughing-einstein-llxpc1` (Claude can do it when asked), run the `09` review, merge, publish (no migration). Then as Test 1 (Google, needs you): a member's held stay shows under "Pobyty ke schválení" on Home and Approve on the stay page works; as Test 2: "Poslat ke schválení" and "Stáhnout žádost". Also decide Test 1's pending guest request "Host Claude (test)" | You, then Claude | To do | F-17, F-18, F-19 |
+| N-9 | **Record the test accounts:** done in PR #48 for `docs/runbooks/test-cottages.md` as Test 1, 2, 3. Left: add the same labels to Lovable's Knowledge | You | To do |  |
 
 ## Decisions waiting on you
 
 Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" rows stay until they become an N row; anything with a note, write the ID in chat or comment on the row.
 
-**New 16 Oct:** D-18 to D-21 decide pricing. The strategy and its build steps (P-1 to P-13) are in Reference, section 10. **New 18 Oct:** D-22 to D-24.
+**New 16 Oct:** D-18 to D-21 decide pricing. The strategy and its build steps (P-1 to P-13) are in Reference, section 10. **New 18 Oct:** D-22 to D-25.
 
 | ID | Question | Why it matters | Raised | Decision |
 | --- | --- | --- | --- | --- |
@@ -59,13 +60,13 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | D-22 | "Owner" = the account's founding member (founders are stored as admins; no owner role exists). Keep that, or store an explicit owner (and owner transfer) before billing (T-009)? | Decides who may convert an account and, later, who pays. If the founder leaves, the next-oldest member becomes owner; in accounts older than sign-in, an unclaimed early member row could make its claimer the founder (worth a data check) | 18 Oct | |
 | D-23 | Should an admin's own overlapping booking also wait, or stay confirmed (as built in T-036)? | With "No" to overlaps, admins can still double-book; the screen warns them | 18 Oct | |
 | D-24 | Lovable's own platform updates (its build package, files under `src/integrations/`): accept them as they come, but ask that they arrive in a separate commit, never mixed into a migration or app round (as on 17 Oct)? | Mixed rounds make a broken publish harder to trace; the runbook now says how to handle them (two-person-workflow, "Lovable platform updates") | 18 Oct | |
+| D-25 | Home's "Nevyrovnané" tile shows every open debt in the cottage (250 Kč), not what the viewer owes or is owed (100 Kč for Test 3). Keep the cottage total, or show "you owe / you are owed"? | Members aged 45–68 may read it as their own debt | 18 Oct | |
 
 ## Open defects
 
 | ID | Defect | Why still open | Next | Status |
 | --- | --- | --- | --- | --- |
-| F-01 | Not yet tested live: the demoted member's own view, the debtor's side of Settle debts, a member's pending stay with admin names, the empty Expenses page, iPhone clipboard, Document Vault "Open" on an iPhone, avatar upload on iOS. Passed 17 Oct: family and institution onboarding, a plain member not seeing someone else's "Cancel stay" | Needs a second person, a fresh account or an iPhone | N-3 | Waiting |
-| F-02 | L-5c states still unopened: guest page, public manual, error states, the cookie banner on `/pozvanka` and public pages. Passed 17 Oct: invitation page (valid, wrong account), institution request (form and success), Requests approval, blue screens with real data | Not reached in the 17 Oct check | N-3 | Waiting |
+| F-01 | Not yet tested live: iPhone clipboard, Document Vault "Open" on an iPhone, avatar upload on iOS. Passed 17 Oct: family and institution onboarding, a plain member not seeing someone else's "Cancel stay". Passed 18 Oct: demoted member's view, debtor's side of Settle debts, a member's pending stay with admin names, empty Expenses page | Needs an iPhone | N-3 | Waiting |
 | F-03 | Cookie banner on phones covers all the sign-in options until dismissed (seen in Czechia, 14 Oct) | Deferred by decision. PR #42 only removes the 12px gap under it | Next design round | Waiting |
 | F-04 | Guest and invitation pages are always green, even for an institution's cottage | Their data has no institution flag; needs a server change | With the next public-page task | To do |
 | F-05 | B-004: Google sign-in fails on Brave | In Lovable's sign-in broker; e-mail sign-up works | Ask Lovable about your own Google credentials | To do |
@@ -74,8 +75,9 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | F-08 | iPhone photos (HEIC) can't be converted in Chrome or Firefox | The app explains how to switch to JPG; Safari works | Optional: a HEIC converter in the browser | To do |
 | F-09 | B-005: slow CORS / HTTP/3 errors on Supabase hosting (Firefox) | Three other B-005 items fixed in PR #21 | Watch; T-002 | Waiting |
 | F-12 | Site check 4: hero photo downloaded twice | Not reproduced on 15 Oct (one request per load on `/`, `/auth`, `/verejne/zadost/x`) | Recheck in the next site check | Waiting |
-| F-16 | Requests (institutions) showed "No requests" for up to a minute after a new public request. T-036 fixed it when moving between pages; after a full reload the restored offline copy still counts as fresh (re-check 18 Oct) | Fix in PR #50 (T-037): no stale copy for requests | N-8 | Doing |
-| F-17 | Low items from 17 Oct: "expires in 6 days" right after making a 7-day link; wrong-account notice on an invitation is green, not a warning; page titles stay Czech in English; Members and Requests pages lack a main landmark; Home shows "Next stay" twice; "Check Out" offered on a stay 9 days away; pre-0026 invitation batches can't be cancelled | Small, none blocks the release | Next design or polish round | To do |
+| F-17 | Low items from 17 Oct: "expires in 6 days" right after making a 7-day link (reproduced 18 Oct); wrong-account notice on an invitation is green; page titles in the wrong language (live: English titles on the Czech app); Home shows "Next stay" twice; "Check Out" offered on a stay 9 days away; pre-0026 invitation batches can't be cancelled. ("Members and Requests lack a main landmark" no longer applies: every page has one main, checked 18 Oct) | All fixed in T-038, not live | N-10 | Doing |
+| F-18 | Family admins cannot approve or decline a member's held stay (T-036 hold): the stay page showed Approve/Decline only for institutions and Approvals redirects families. The member can't withdraw it either. Database allows both (new test) | Fixed in T-038 (stay page, Home card, "Stáhnout žádost", "Poslat ke schválení"), not live; family side unverified until Test 1 checks | N-10 | Doing |
+| F-19 | Found 18 Oct: a member's "Veřejný odkaz na kalendář" fails with 403 (Settings, Calendar); manual categories as raw codes ("RULES", "wifi"); dates by UTC day (expense after midnight, public calendar's free weekend a day early, invitation and export dates); "1 žádostí bude zamítnuto"; service worker caches server-function answers forever; 404 title; HTTP 406 after removing a stay | All fixed in T-038, not live | N-10 | Doing |
 
 ## How to use this doc
 

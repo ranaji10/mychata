@@ -22,10 +22,10 @@ export const Route = createFileRoute("/profil")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "My profile — My Chata" },
+      { title: "Můj profil — My Chata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Your My Chata profile and contact details." },
-      { property: "og:title", content: "My profile — My Chata" },
+      { property: "og:title", content: "Můj profil — My Chata" },
       { property: "og:description", content: "Your My Chata profile and contact details." },
     ],
   }),

@@ -1284,3 +1284,57 @@ describe("release check of 17 Oct (T-036, migration 0028)", () => {
     });
   });
 });
+
+describe("held bookings can be decided from the app (T-038)", () => {
+  // A member's booking held back by the overlap rule (T-036), written as a fixture.
+  const holdFixture = async () => {
+    const [b] = await admin(
+      db,
+      `insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status)
+       values ($1, 'Petr', $2, current_date + 11, current_date + 14, 'PENDING') returning id`,
+      [ids.propA, ids.memberAMember],
+    );
+    return (b as { id: string }).id;
+  };
+
+  it("an admin confirms or declines a member's held booking; the member withdraws their own", async () => {
+    await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
+      ids.propA,
+    ]);
+    const id = await holdFixture();
+    try {
+      await as(db, aAdmin, async (q) => {
+        expect(
+          await q(
+            "update public.bookings set status = 'CONFIRMED' where id = $1 returning status",
+            [id],
+          ),
+        ).toEqual([{ status: "CONFIRMED" }]);
+      });
+      await as(db, aAdmin, async (q) => {
+        expect(await q("delete from public.bookings where id = $1 returning id", [id])).toEqual([
+          { id },
+        ]);
+      });
+      await as(db, aMember, async (q) => {
+        expect(await q("delete from public.bookings where id = $1 returning id", [id])).toEqual([
+          { id },
+        ]);
+      });
+      // Another account's admin can do neither.
+      await as(db, bAdmin, async (q) => {
+        expect(
+          await q("update public.bookings set status = 'CONFIRMED' where id = $1 returning id", [
+            id,
+          ]),
+        ).toEqual([]);
+        expect(await q("delete from public.bookings where id = $1 returning id", [id])).toEqual([]);
+      });
+    } finally {
+      await admin(db, "delete from public.bookings where id = $1", [id]);
+      await admin(db, "update public.properties set overlap_allowed = null where id = $1", [
+        ids.propA,
+      ]);
+    }
+  });
+});

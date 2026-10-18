@@ -30,12 +30,12 @@ export const Route = createFileRoute("/vice")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Settings — My Chata" },
+      { title: "Nastavení — My Chata" },
       {
         name: "description",
         content: "Account settings, members, language and other My Chata options.",
       },
-      { property: "og:title", content: "Settings — My Chata" },
+      { property: "og:title", content: "Nastavení — My Chata" },
       {
         property: "og:description",
         content: "Account settings, members, language and other My Chata options.",
@@ -51,6 +51,11 @@ function MorePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isFamily = account?.type === "FAMILY";
+  const myRole = members.find((m) => m.id === currentMemberId)?.role;
+  const isAdmin = myRole === "ADMIN" || myRole === "OWNER";
+  // A member may pass on a calendar link the admin already published, but not publish one:
+  // the row used to call the admin-only function and fail with a 403 (T-038).
+  const showCalendarLink = isAdmin || !!property?.public_calendar_enabled;
   const [manualLink, setManualLink] = useState<{
     source: "calendar" | "guest";
     url: string;
@@ -82,6 +87,13 @@ function MorePage() {
 
   const copyPublicLink = async () => {
     if (!property) return;
+    if (!isAdmin) {
+      await shareLink(
+        `${window.location.origin}/verejne/kalendar/${property.public_token}`,
+        "calendar",
+      );
+      return;
+    }
     // Publishing the calendar is an explicit admin action; the link uses the share token.
     const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
       _property_id: property.id,
@@ -199,24 +211,26 @@ function MorePage() {
         </Link>
         {isFamily && (
           <>
-            <Button
-              variant="fresh"
-              size="fresh"
-              onClick={copyPublicLink}
-              className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
-            >
-              <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                <Link2 className="size-[22px]" />
-              </span>
-              <span className="flex-1 text-[16px] font-bold">
-                {t("Veřejný odkaz na kalendář", "Public calendar link")}
-              </span>
-              <ChevronRight className="size-5 text-muted-foreground" />
-            </Button>
+            {showCalendarLink && (
+              <Button
+                variant="fresh"
+                size="fresh"
+                onClick={copyPublicLink}
+                className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
+              >
+                <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                  <Link2 className="size-[22px]" />
+                </span>
+                <span className="flex-1 text-[16px] font-bold">
+                  {t("Veřejný odkaz na kalendář", "Public calendar link")}
+                </span>
+                <ChevronRight className="size-5 text-muted-foreground" />
+              </Button>
+            )}
             <div className="px-4">
               <ManualCopyLink url={manualLink?.source === "calendar" ? manualLink.url : null} />
             </div>
-            {property?.public_calendar_enabled && (
+            {isAdmin && property?.public_calendar_enabled && (
               <Button
                 variant="fresh"
                 size="fresh"

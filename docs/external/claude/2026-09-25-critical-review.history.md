@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-15
+updated: 2026-10-18
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Done & history
@@ -97,6 +97,9 @@ Everything finished, oldest first. Details are in the repo: `docs/STATUS.md`, `d
 | 18 Oct, 00:30 | Reviewer and RLS audit of T-036: a member could still bypass the hold (UPDATE to CONFIRMED, null requester) and a co-admin could demote the founder. Fixed before the PR: trigger on insert and update, per-night guest count, founder protected. PR #48 opened, check 0 errors, 140 tests. | PR #48, `2026-10-18-pr-t036-review.md` |
 | 18 Oct, 00:30–00:35 | PR #48 merged. Lovable applied 0028 through the empty marker 0029 and nothing else (PR #49); published as `9fce136`. Prompt 20's first check query used a wrong function name (Claude's error); Lovable checked the right one. Closes N-7. | PR #48, PR #49, prompt 20 |
 | 18 Oct, 00:45–01:00 | Re-check live on `9fce136`: a plain member's overlapping booking on a "No" cottage is held, and approving it yourself is refused (F-14 closed); sign-out from My profile clears the offline copy (F-15 closed). Requests still stale after a full reload: T-037 (PR #50). Lovable's extra changes of 17 Oct reviewed: platform files only, no effect on mychata.cz; rule added to the two-person runbook. The tag can't be pushed from Claude's session: left to a maintainer. | PR #50, release-check report |
+| 18 Oct, 00:54 | PR #50 (T-037) and PR #49 published as `a8b0b84`; site check 6/6, no errors. | `2026-10-17-site-check.md` |
+| 18 Oct, 01:25–02:10 | Signed-in live test with Test 2 and Test 3 (phone, desktop, English). Passed: Requests fresh after a full reload (**F-16 closed**); guest page, public manual, invalid-link and 404 states, wrong-account invitation, cookie banner on `/pozvanka` and public pages with a simulated CZ response (**F-02 closed**); demoted member's view, debtor's side of Settle debts, member's pending stay with admin names, empty Expenses (most of F-01, N-3). Found 14 defects, the worst: family admins could not approve a held stay (F-18). Test 2 is now also a member of Test Institute. | `2026-10-18-site-check.md` |
+| 18 Oct, 02:30 | T-038 on branch `claude/laughing-einstein-llxpc1`: held stays decidable by any admin and withdrawable by the member, page titles in the chosen language, Home and invitation polish (F-17), member calendar-link 403, manual category words, Czech-day dates, service-worker cache. Check passes; verified on a local dev server against the live database as Test 2. No PR yet (the session was not asked to open one). | T-038 brief |
 
 ## GitHub settings check (found 4 Oct, done 12 Oct)
 

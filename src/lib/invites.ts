@@ -133,3 +133,12 @@ export function groupInvitations(rows: InvitationRow[], now: Date = new Date()):
 export function daysUntil(iso: string, now: Date = new Date()): number {
   return Math.floor((new Date(iso).getTime() - now.getTime()) / 86_400_000);
 }
+
+/** Calendar days from today until the day of `iso`, in local time: a 7-day link made now
+ *  says "7 days", not "6" (F-17). 0 means it ends today. */
+export function calendarDaysUntil(iso: string, now: Date = new Date()): number {
+  const end = new Date(iso);
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((endDay.getTime() - today.getTime()) / 86_400_000);
+}

@@ -5,11 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader } from "@/components/bits";
+import { Avatar, PageHeader } from "@/components/bits";
 import { InstitutionSetup } from "@/components/InstitutionSetup";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
+import { avatarSource } from "@/lib/account-label";
+import { useMyCottages } from "@/lib/my-cottages";
 import { avatarDataUrl } from "@/lib/avatar";
 import { normalizePhone, type Profile } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
@@ -37,10 +39,13 @@ export const Route = createFileRoute("/profil")({
 
 function ProfilePage() {
   const { t } = useLang();
-  const { user, profile, account, accounts, memberships, switchAccount } = useAccount();
+  const { user, profile, account, accounts, memberships, properties, currentMember } = useAccount();
+  const { data: myCottages } = useMyCottages(user?.id);
+  const [showAllAccounts, setShowAllAccounts] = useState(false);
   const search = Route.useSearch();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const nameInput = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -55,11 +60,15 @@ function ProfilePage() {
 
   // Keyed on the stored values, not on the user/profile objects: those are replaced on every
   // auth event (token refresh, returning to the tab), which reset the fields mid-edit (B-008).
-  const fullName = user?.user_metadata?.["full_name"] as string | undefined;
+  // Same starting point whichever way the person signed up (bug 14): their saved name, else
+  // the name Google or the sign-up form gave, else the name on their membership.
+  const fullName = (user?.user_metadata?.["full_name"] ?? user?.user_metadata?.["name"]) as
+    string | undefined;
+  const memberName = currentMember?.name;
   useEffect(() => {
-    setName(profile?.display_name ?? fullName ?? "");
+    setName(profile?.display_name || fullName || memberName || "");
     setPhone(profile?.phone ?? "");
-  }, [profile?.display_name, profile?.phone, fullName]);
+  }, [profile?.display_name, profile?.phone, fullName, memberName]);
 
   const save = async () => {
     if (!user) return;
@@ -124,8 +133,7 @@ function ProfilePage() {
     navigate({ to: "/auth", replace: true });
   };
 
-  const avatarUrl =
-    profile?.avatar_url ?? (user?.user_metadata?.["avatar_url"] as string | undefined) ?? null;
+  const avatarUrl = avatarSource(profile, user);
 
   // Profile photo (bug 6): a small square, saved on the person's own profile row.
   const savePhoto = async (dataUrl: string | null) => {
@@ -167,15 +175,27 @@ function ProfilePage() {
       if (photoInput.current) photoInput.current.value = "";
     }
   };
-  const signInMethod = canSignInWithPassword
-    ? user?.identities?.some((i) => i.provider === "google")
-      ? t("Google nebo e-mail a heslo", "Google or email and password")
-      : t("E-mail a heslo", "Email and password")
-    : t("Google", "Google");
+  const usesGoogle = !!user?.identities?.some((i) => i.provider === "google");
+  const signInMethod = [
+    usesGoogle ? "Google" : null,
+    canSignInWithPassword ? t("e-mail a heslo", "email and password") : null,
+  ]
+    .filter(Boolean)
+    .join(t(" nebo ", " or "));
   const roleIn = (accountId: string) => {
     const role = memberships.find((m) => m.account_id === accountId)?.role;
     return role === "ADMIN" || role === "OWNER" ? t("správce", "admin") : t("člen", "member");
   };
+  // A summary only (bug 9): no switching from here, and it stays short with many accounts.
+  const ACCOUNTS_SHOWN = 5;
+  const listedAccounts = showAllAccounts ? accounts : accounts.slice(0, ACCOUNTS_SHOWN);
+  const cottageNames = (accountId: string): string[] | null =>
+    myCottages
+      ? (myCottages[accountId] ?? []).map((c) => c.name)
+      : accountId === account?.id
+        ? properties.map((p) => p.name)
+        : null;
+  const savedName = (profile?.display_name ?? "").trim();
 
   return (
     <AppShell>
@@ -184,22 +204,19 @@ function ProfilePage() {
           after a work email looked like the sign-in). */}
       <div className="card mt-4 p-4">
         <div className="flex items-center gap-4">
-          <div className="relative shrink-0">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt=""
-                className="size-20 rounded-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="grid size-20 place-items-center rounded-full bg-secondary text-2xl font-bold text-muted-foreground">
-                {(name || "?").slice(0, 1).toUpperCase()}
-              </div>
-            )}
-          </div>
+          <Avatar name={name} src={avatarUrl} className="size-20 text-2xl" />
           <div className="min-w-0">
-            <p className="truncate text-lg font-bold">{name || t("Bez jména", "No name")}</p>
+            {savedName ? (
+              <p className="truncate text-lg font-bold">{savedName}</p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => nameInput.current?.focus()}
+                className="min-h-11 text-left text-lg font-bold text-primary underline"
+              >
+                {t("Doplňte své jméno", "Add your name")}
+              </button>
+            )}
             <p className="text-[16px] text-muted-foreground">
               {t("Přihlášen(a) jako", "Signed in as")}
             </p>
@@ -249,8 +266,11 @@ function ProfilePage() {
         <label className="block">
           <span className="text-[16px] font-bold">{t("Zobrazované jméno", "Display name")}</span>
           <input
+            ref={nameInput}
             className="field mt-1 w-full"
             value={name}
+            autoComplete="name"
+            placeholder={t("Jméno a příjmení", "First and last name")}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
@@ -297,7 +317,7 @@ function ProfilePage() {
       <section ref={passwordSection} className="card mt-4 p-4">
         <h2 className="flex items-center gap-2 text-[16px] font-bold">
           <KeyRound className="size-5 text-primary" />
-          {canSignInWithPassword ? t("Heslo", "Password") : t("Nastavit heslo", "Set a password")}
+          {t("Heslo", "Password")}
         </h2>
         <p className="mt-1 text-[16px] text-muted-foreground">
           {canSignInWithPassword
@@ -306,13 +326,16 @@ function ProfilePage() {
                 "You use the password to sign in on other devices with “Sign in”.",
               )
             : t(
-                "Registrovali jste se přes Google, takže zatím nemáte heslo. Nastavte si ho, pokud se chcete přihlašovat i e-mailem a heslem (např. na cizím zařízení).",
-                "You signed up with Google, so you have no password yet. Set one if you also want to sign in with email and password (e.g. on someone else's device).",
+                "Zatím nemáte heslo. Nastavte si ho, pokud se chcete přihlašovat i e-mailem a heslem (např. na cizím zařízení).",
+                "You have no password yet. Set one if you also want to sign in with email and password (e.g. on someone else's device).",
               )}
         </p>
         {passwordOpen ? (
           <div className="mt-3">
-            <SetPasswordForm onDone={() => setPasswordOpen(false)} />
+            <SetPasswordForm
+              askCurrent={canSignInWithPassword}
+              onDone={() => setPasswordOpen(false)}
+            />
           </div>
         ) : (
           <Button
@@ -333,35 +356,56 @@ function ProfilePage() {
         </h2>
         <p className="mt-1 text-[16px] text-muted-foreground">
           {t(
-            `Všechny účty, ke kterým patří ${user?.email ?? ""}. Otevřený je zvýrazněný.`,
-            `Every account ${user?.email ?? ""} belongs to. The open one is highlighted.`,
+            "Přehled účtů a chat, ke kterým patříte. Otevřený účet je zvýrazněný; chaty spravujete ve Spravovat chaty.",
+            "The accounts and cottages you belong to. The open one is highlighted; manage cottages in Manage cottages.",
           )}
         </p>
-        <div className="mt-3 space-y-2">
-          {accounts.map((a) => (
-            <Button
-              variant="fresh"
-              size="fresh"
-              key={a.id}
-              className={`${a.id === account?.id ? "btn-primary" : "btn-secondary"} w-full justify-between text-left disabled:opacity-100`}
-              disabled={a.id === account?.id}
-              aria-current={a.id === account?.id ? "true" : undefined}
-              onClick={() =>
-                switchAccount(a.id)
-                  .then(() => navigate({ to: "/domu" }))
-                  .catch(() => toast.error(t("Přepnutí se nezdařilo.", "Could not switch.")))
-              }
-            >
-              <span className="min-w-0 truncate">{a.name}</span>
-              <span className="shrink-0 text-[14px] font-semibold opacity-80">
-                {a.type === "INSTITUTIONAL"
-                  ? t("organizace", "organisation")
-                  : t("rodina", "family")}{" "}
-                · {roleIn(a.id)}
-              </span>
-            </Button>
-          ))}
-        </div>
+        <ul className="mt-3 space-y-2">
+          {listedAccounts.map((a) => {
+            const names = cottageNames(a.id);
+            return (
+              <li
+                key={a.id}
+                className={`rounded-2xl p-3 ${a.id === account?.id ? "bg-primary-soft" : "bg-secondary"}`}
+                aria-current={a.id === account?.id ? "true" : undefined}
+              >
+                <div className="flex flex-wrap items-center gap-x-2">
+                  <p className="min-w-0 flex-1 truncate font-bold">{a.name}</p>
+                  <span className="shrink-0 text-[14px] font-semibold text-muted-foreground">
+                    {a.type === "INSTITUTIONAL"
+                      ? t("organizace", "organisation")
+                      : t("rodina", "family")}{" "}
+                    · {roleIn(a.id)}
+                  </span>
+                </div>
+                {names && (
+                  <p className="mt-0.5 text-[15px] text-muted-foreground">
+                    {names.length === 0
+                      ? t("Zatím žádná chata", "No cottage yet")
+                      : names.length <= 3
+                        ? names.join(", ")
+                        : t(
+                            `${names.slice(0, 3).join(", ")} a ${names.length - 3} dalších`,
+                            `${names.slice(0, 3).join(", ")} and ${names.length - 3} more`,
+                          )}
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {accounts.length > ACCOUNTS_SHOWN && (
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary mt-2 w-full"
+            onClick={() => setShowAllAccounts((v) => !v)}
+          >
+            {showAllAccounts
+              ? t("Zobrazit méně", "Show fewer")
+              : t(`Zobrazit všechny (${accounts.length})`, `Show all (${accounts.length})`)}
+          </Button>
+        )}
         <Link
           to="/chaty"
           className="mt-3 flex min-h-11 items-center justify-between text-[16px] font-bold text-primary"

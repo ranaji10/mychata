@@ -19,22 +19,29 @@ export function AskBox({
 }) {
   const { t, lang } = useLang();
   const [question, setQuestion] = useState("");
-  const [asking, setAsking] = useState(false);
-  const [result, setResult] = useState<AskManualResult | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
+  const [asking, setAsking] = useState<string | null>(null);
+  // Earlier questions stay on screen and the box empties after each one, so a follow-up
+  // doesn't mean deleting the last question first (bug 12 of 18 Oct).
+  const [thread, setThread] = useState<
+    { question: string; result: AskManualResult | null; failed: string | null }[]
+  >([]);
 
   const ask = async () => {
-    if (!propertyId || question.trim().length < 2 || asking) return;
-    setAsking(true);
-    setResult(null);
-    setFailed(null);
+    const q = question.trim();
+    if (!propertyId || q.length < 2 || asking) return;
+    setAsking(q);
+    setQuestion("");
     try {
-      setResult(await askManual({ data: { propertyId, question: question.trim(), lang } }));
+      const result = await askManual({ data: { propertyId, question: q, lang } });
+      setThread((items) => [...items, { question: q, result, failed: null }]);
     } catch (e) {
       console.error("[ask] failed", e);
-      setFailed((e as { message?: string } | null)?.message ?? String(e));
+      const failed = (e as { message?: string } | null)?.message ?? String(e);
+      setThread((items) => [...items, { question: q, result: null, failed }]);
+      // Give the question back so it can be sent again.
+      setQuestion((current) => current || q);
     } finally {
-      setAsking(false);
+      setAsking(null);
     }
   };
 
@@ -60,8 +67,39 @@ export function AskBox({
         <Sparkles className="size-5 text-primary" />
         {title}
       </h2>
+      {thread.length > 0 && (
+        <ol className="mt-3 space-y-3" aria-live="polite">
+          {thread.map((item, index) => (
+            <li key={index} className="space-y-2">
+              <p className="ml-8 rounded-2xl bg-primary-soft p-3 text-[16px] font-semibold text-primary">
+                {item.question}
+              </p>
+              {item.failed ? (
+                <p className="rounded-2xl bg-destructive-soft p-3 text-[16px] font-semibold text-destructive">
+                  {t(
+                    `Odpověď se nepodařilo získat: ${item.failed}`,
+                    `Could not get an answer: ${item.failed}`,
+                  )}
+                </p>
+              ) : item.result ? (
+                <Answer result={item.result} reasonText={reasonText} />
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      )}
+      {asking && (
+        <div className="mt-3 space-y-2" aria-live="polite">
+          <p className="ml-8 rounded-2xl bg-primary-soft p-3 text-[16px] font-semibold text-primary">
+            {asking}
+          </p>
+          <p className="text-[16px] font-semibold text-muted-foreground">
+            {t("Hledám v manuálu a dokumentech…", "Looking through the manual and documents…")}
+          </p>
+        </div>
+      )}
       <form
-        className="mt-2 flex gap-2"
+        className="mt-3 flex gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           void ask();
@@ -69,60 +107,71 @@ export function AskBox({
       >
         <input
           className="field min-w-0 flex-1"
-          placeholder={placeholder}
+          placeholder={thread.length ? t("Další otázka…", "Ask a follow-up…") : placeholder}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           aria-label={title}
+          enterKeyHint="send"
         />
         <Button
           variant="fresh"
           size="fresh"
           type="submit"
           className="btn-primary shrink-0"
-          disabled={asking || question.trim().length < 2 || !propertyId}
+          disabled={!!asking || question.trim().length < 2 || !propertyId}
         >
           {asking ? <Loader2 className="size-5 animate-spin" /> : t("Zeptat se", "Ask")}
         </Button>
       </form>
-      {asking && (
-        <p className="mt-3 text-[16px] font-semibold text-muted-foreground" aria-live="polite">
-          {t("Hledám v manuálu a dokumentech…", "Looking through the manual and documents…")}
-        </p>
-      )}
-      {failed && (
-        <p className="mt-3 rounded-2xl bg-destructive-soft p-3 text-[16px] font-semibold text-destructive">
-          {t(`Odpověď se nepodařilo získat: ${failed}`, `Could not get an answer: ${failed}`)}
-        </p>
-      )}
-      {result && (
-        <div className="mt-3 space-y-2" aria-live="polite">
-          <p className="whitespace-pre-wrap rounded-2xl bg-secondary p-3 text-[16px]">
-            {result.answer ?? (result.reason ? reasonText[result.reason] : reasonText.no_match)}
-          </p>
-          {result.excerptOnly && (
-            <p className="text-[16px] text-muted-foreground">
-              {t(
-                "Toto je nejbližší úryvek ze zdroje níže (odpověď AI teď není dostupná).",
-                "This is the closest passage from the source below (an AI answer isn't available right now).",
-              )}
-            </p>
-          )}
-          {!!result.sources.length && (
-            <div className="flex flex-wrap gap-1.5">
-              {result.sources.map((s) => (
-                <span key={`${s.kind}:${s.id}`} className="pill bg-primary-soft text-primary">
-                  {s.kind === "manual" ? (
-                    <BookOpen className="size-3.5" />
-                  ) : (
-                    <FileText className="size-3.5" />
-                  )}
-                  {s.title}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+      {thread.length > 0 && !asking && (
+        <Button
+          variant="fresh"
+          size="fresh"
+          className="mt-2 min-h-11 px-2 text-[16px] font-bold text-primary"
+          onClick={() => setThread([])}
+        >
+          {t("Začít znovu", "Start over")}
+        </Button>
       )}
     </section>
+  );
+}
+
+function Answer({
+  result,
+  reasonText,
+}: {
+  result: AskManualResult;
+  reasonText: Record<NonNullable<AskManualResult["reason"]>, string>;
+}) {
+  const { t } = useLang();
+  return (
+    <div className="space-y-2">
+      <p className="mr-8 whitespace-pre-wrap rounded-2xl bg-secondary p-3 text-[16px]">
+        {result.answer ?? (result.reason ? reasonText[result.reason] : reasonText.no_match)}
+      </p>
+      {result.excerptOnly && (
+        <p className="text-[16px] text-muted-foreground">
+          {t(
+            "Toto je nejbližší úryvek ze zdroje níže (odpověď AI teď není dostupná).",
+            "This is the closest passage from the source below (an AI answer isn't available right now).",
+          )}
+        </p>
+      )}
+      {!!result.sources.length && (
+        <div className="flex flex-wrap gap-1.5">
+          {result.sources.map((s) => (
+            <span key={`${s.kind}:${s.id}`} className="pill bg-primary-soft text-primary">
+              {s.kind === "manual" ? (
+                <BookOpen className="size-3.5" />
+              ) : (
+                <FileText className="size-3.5" />
+              )}
+              {s.title}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

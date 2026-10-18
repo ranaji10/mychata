@@ -27,6 +27,7 @@ import { Route as SchvalovaniRouteImport } from './routes/schvalovani'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SoukromiRouteImport } from './routes/soukromi'
 import { Route as UkolyRouteImport } from './routes/ukoly'
+import { Route as UpozorneniRouteImport } from './routes/upozorneni'
 import { Route as ViceRouteImport } from './routes/vice'
 import { Route as VydajeRouteImport } from './routes/vydaje'
 import { Route as ZadostiRouteImport } from './routes/zadosti'
@@ -131,6 +132,11 @@ const UkolyRoute = UkolyRouteImport.update({
   path: '/ukoly',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UpozorneniRoute = UpozorneniRouteImport.update({
+  id: '/upozorneni',
+  path: '/upozorneni',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ViceRoute = ViceRouteImport.update({
   id: '/vice',
   path: '/vice',
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
+  '/upozorneni': typeof UpozorneniRoute
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
+  '/upozorneni': typeof UpozorneniRoute
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/soukromi': typeof SoukromiRoute
   '/ukoly': typeof UkolyRouteWithChildren
+  '/upozorneni': typeof UpozorneniRoute
   '/vice': typeof ViceRoute
   '/vydaje': typeof VydajeRouteWithChildren
   '/zadosti': typeof ZadostiRoute
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/soukromi'
     | '/ukoly'
+    | '/upozorneni'
     | '/vice'
     | '/vydaje'
     | '/zadosti'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/soukromi'
     | '/ukoly'
+    | '/upozorneni'
     | '/vice'
     | '/vydaje'
     | '/zadosti'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/soukromi'
     | '/ukoly'
+    | '/upozorneni'
     | '/vice'
     | '/vydaje'
     | '/zadosti'
@@ -418,6 +430,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SoukromiRoute: typeof SoukromiRoute
   UkolyRoute: typeof UkolyRouteWithChildren
+  UpozorneniRoute: typeof UpozorneniRoute
   ViceRoute: typeof ViceRoute
   VydajeRoute: typeof VydajeRouteWithChildren
   ZadostiRoute: typeof ZadostiRoute
@@ -559,6 +572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UkolyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/upozorneni': {
+      id: '/upozorneni'
+      path: '/upozorneni'
+      fullPath: '/upozorneni'
+      preLoaderRoute: typeof UpozorneniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vice': {
       id: '/vice'
       path: '/vice'
@@ -693,6 +713,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SoukromiRoute: SoukromiRoute,
   UkolyRoute: UkolyRouteWithChildren,
+  UpozorneniRoute: UpozorneniRoute,
   ViceRoute: ViceRoute,
   VydajeRoute: VydajeRouteWithChildren,
   ZadostiRoute: ZadostiRoute,

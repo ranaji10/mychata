@@ -10,7 +10,14 @@ import { PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { classifyUploadError, preparePhoto, uploadErrorMessage } from "@/lib/photos";
+import {
+  classifyUploadError,
+  preparePhoto,
+  uploadErrorMessage,
+  pickPhotoUrls,
+  preparePreview,
+  previewPathFor,
+} from "@/lib/photos";
 
 export const Route = createFileRoute("/fotky")({
   staticData: { sitemap: false },
@@ -75,6 +82,17 @@ function PhotosPage() {
         .from("my-chata-files")
         .upload(path, photo, { contentType: photo.type });
       if (upError) throw upError;
+      // The smaller copy for the grid and Home (bug 13). Without it the full photo is shown,
+      // so a failure here is only logged.
+      try {
+        const preview = await preparePreview(photo);
+        const { error: previewError } = await supabase.storage
+          .from("my-chata-files")
+          .upload(previewPathFor(path), preview, { contentType: preview.type });
+        if (previewError) console.error("[fotky] preview upload", previewError);
+      } catch (previewError) {
+        console.error("[fotky] preview", previewError);
+      }
       const { error } = await supabase.from("property_photos").insert({
         property_id: property.id,
         storage_path: path,
@@ -85,7 +103,7 @@ function PhotosPage() {
         // Don't leave an orphan file behind when the row is refused.
         const { error: cleanupError } = await supabase.storage
           .from("my-chata-files")
-          .remove([path]);
+          .remove([path, previewPathFor(path)]);
         if (cleanupError) console.error("[fotky] cleanup", cleanupError);
         throw error;
       }
@@ -159,7 +177,7 @@ function PhotosPage() {
         );
       const { error: fileError } = await supabase.storage
         .from("my-chata-files")
-        .remove([photo.storage_path]);
+        .remove([photo.storage_path, previewPathFor(photo.storage_path)]);
       // The photo is gone from the app; a leftover file is only logged.
       if (fileError) console.error("[fotky] remove file", fileError);
     },
@@ -188,22 +206,13 @@ function PhotosPage() {
       // One request for all photos instead of one per photo (B-005, T-014).
       // A plain object, not a Map: the offline cache stores queries as JSON, which turns a Map
       // into {} and crashed this page after a reload (T-026).
-      const urlsById: Record<string, string> = {};
+      // Previews first (bug 13); photos from before 18 Oct have none and use the full photo.
       const { data, error } = await supabase.storage.from("my-chata-files").createSignedUrls(
-        photos!.map((p) => p.storage_path),
+        photos!.flatMap((p) => [previewPathFor(p.storage_path), p.storage_path]),
         3600,
       );
       if (error) throw error;
-      const byPath = new Map<string, string>();
-      for (const row of data ?? []) {
-        if (row.error) console.error("[fotky] signed url", row.path, row.error);
-        if (row.path && row.signedUrl) byPath.set(row.path, row.signedUrl);
-      }
-      for (const p of photos!) {
-        const url = byPath.get(p.storage_path);
-        if (url) urlsById[p.id] = url;
-      }
-      return urlsById;
+      return pickPhotoUrls(photos!, data ?? []);
     },
   });
 
@@ -238,7 +247,13 @@ function PhotosPage() {
             className={`relative overflow-hidden rounded-[18px] bg-card shadow-chip ${p.is_primary ? "ring-2 ring-primary" : ""}`}
           >
             {urls?.[p.id] ? (
-              <img src={urls[p.id]} alt="" className="aspect-square w-full object-cover" />
+              <img
+                src={urls[p.id]}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="aspect-square w-full object-cover"
+              />
             ) : (
               <div className="aspect-square w-full bg-secondary" />
             )}

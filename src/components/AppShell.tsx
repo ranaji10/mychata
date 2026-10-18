@@ -1,22 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  Bell,
   CalendarDays,
   ChevronDown,
-  ClipboardList,
   Home,
   Inbox,
   Menu,
   Plus,
+  Search,
   Wallet,
   X,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAccount } from "@/lib/account";
-import { accountContextLine, sameName } from "@/lib/account-label";
+import { avatarSource } from "@/lib/account-label";
 import { useBrand } from "@/lib/brand";
 import { Avatar } from "@/components/bits";
 import { LanguageToggle, useLang } from "@/lib/i18n";
+import { useMyCottages, type MyCottage } from "@/lib/my-cottages";
+import { readSeen, useNotifications } from "@/lib/notifications";
+import { isCottagePath, isSettingsPath, SETTINGS_LINKS } from "@/lib/settings-nav";
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { useIsMutating } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -46,6 +50,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const mutating = useIsMutating();
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [switcherFilter, setSwitcherFilter] = useState("");
+  const { data: myCottages } = useMyCottages(user?.id);
+  const notifications = useNotifications();
+  const unseen = useUnseenCount(notifications.items, notifications.userId);
 
   // Tell the consent banner (rendered at root) that the mobile tab bar is present. Only when
   // the shell actually draws it: the loading and error screens below return early without it.
@@ -101,7 +109,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const FAMILY_TABS = [
     { to: "/domu", label: t("Domů", "Home"), icon: Home },
     { to: "/kalendar", label: t("Kalendář", "Calendar"), icon: CalendarDays },
-    { to: "/ukoly", label: t("Úkoly", "Tasks"), icon: ClipboardList },
+    // Tasks moved under Settings → Manage cottages → Maintenance (bug 4); Notifications took
+    // its place (bug 5).
+    { to: "/upozorneni", label: t("Upozornění", "Notifications"), icon: Bell },
     { to: "/vydaje", label: t("Výdaje", "Expenses"), icon: Wallet },
     { to: "/vice", label: t("Nastavení", "Settings"), icon: Menu },
   ] as const;
@@ -110,7 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/domu", label: t("Domů", "Home"), icon: Home },
     { to: "/zadosti", label: t("Žádosti", "Requests"), icon: Inbox },
     { to: "/kalendar", label: t("Kalendář", "Calendar"), icon: CalendarDays },
-    { to: "/ukoly", label: t("Úkoly", "Tasks"), icon: ClipboardList },
+    { to: "/upozorneni", label: t("Upozornění", "Notifications"), icon: Bell },
     { to: "/vice", label: t("Nastavení", "Settings"), icon: Menu },
   ] as const;
 
@@ -144,14 +154,45 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  // The small line above the cottage name says which account this is, but only when that adds
-  // something: "Testing with Gemini" over "Testing with Gemini" read as a duplicate (bug 13),
-  // and an organisation named after an email looked like the sign-in email (bug 2).
-  const contextLine = accountContextLine(account, property?.name, t);
-  const avatarSrc =
-    profile?.avatar_url ?? (user.user_metadata?.["avatar_url"] as string | undefined) ?? null;
+  // No account line above the cottage name any more (bugs 1 and 7 of 18 Oct): an account
+  // named after someone's email read as the signed-in person. Which account a cottage belongs
+  // to is in the switcher; the person's own email is on My profile.
+  const avatarSrc = avatarSource(profile, user);
 
-  const isActive = (to: string) => pathname === to || (to !== "/domu" && pathname.startsWith(to));
+  // Pages reached from Settings keep the Settings tab lit (bug 10).
+  const isActive = (to: string) =>
+    to === "/vice"
+      ? isSettingsPath(pathname)
+      : pathname === to || (to !== "/domu" && pathname.startsWith(to));
+  const inSettings = isSettingsPath(pathname);
+  const badge = (to: string) =>
+    to === "/upozorneni" && unseen > 0 ? (
+      <span
+        aria-label={t(`${unseen} nových`, `${unseen} new`)}
+        className="grid min-w-5 place-items-center rounded-full bg-destructive px-1 text-[12px] font-bold leading-5 text-primary-foreground"
+      >
+        {unseen > 9 ? "9+" : unseen}
+      </span>
+    ) : null;
+
+  // The switcher lists every cottage of every account under the account's name (bug 16).
+  // Until the database has my_cottages() (migration 0030), other accounts show "Switch to …".
+  const cottagesOf = (accountId: string): MyCottage[] | null =>
+    myCottages
+      ? (myCottages[accountId] ?? [])
+      : accountId === account?.id
+        ? properties.map((p) => ({
+            account_id: accountId,
+            property_id: p.id,
+            name: p.name,
+            city: p.city ?? null,
+          }))
+        : null;
+  const totalCottages = memberships.reduce(
+    (n, m) => n + (cottagesOf(m.account_id)?.length ?? 1),
+    0,
+  );
+  const filterText = switcherFilter.trim().toLowerCase();
 
   // Phone: one column with the tab bar at the bottom (the original design).
   // Tablet (md, 768px+): the same column, wider. Desktop (lg, 1024px+): the tabs move into a
@@ -175,19 +216,45 @@ export function AppShell({ children }: { children: ReactNode }) {
             {tabs.map(({ to, label, icon: Icon }) => {
               const active = isActive(to);
               return (
-                <Link
-                  key={to}
-                  to={to}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex min-h-12 items-center gap-3 rounded-[16px] px-3 text-[16px] font-semibold ${
-                    active
-                      ? "bg-card text-primary shadow-chip"
-                      : "text-sidebar-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <Icon className="size-[22px] shrink-0" strokeWidth={1.7} />
-                  {label}
-                </Link>
+                <div key={to}>
+                  <Link
+                    to={to}
+                    aria-current={active && pathname === to ? "page" : undefined}
+                    className={`flex min-h-12 items-center gap-3 rounded-[16px] px-3 text-[16px] font-semibold ${
+                      active
+                        ? "bg-card text-primary shadow-chip"
+                        : "text-sidebar-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <Icon className="size-[22px] shrink-0" strokeWidth={1.7} />
+                    <span className="flex-1">{label}</span>
+                    {badge(to)}
+                  </Link>
+                  {/* Inside Settings the sidebar shows where you are and lets you jump between
+                      its pages without going back to the list (bug 4b). */}
+                  {to === "/vice" && inSettings && (
+                    <ul className="mt-1 space-y-0.5 border-l-2 border-divider pl-2 ml-5">
+                      {SETTINGS_LINKS.map((link) => (
+                        <li key={link.to}>
+                          <SideLink to={link.to} pathname={pathname} label={t(...link.label)} />
+                          {link.children && isCottagePath(pathname) && (
+                            <ul className="ml-3 space-y-0.5 border-l-2 border-divider pl-2">
+                              {link.children.map((child) => (
+                                <li key={child.to}>
+                                  <SideLink
+                                    to={child.to}
+                                    pathname={pathname}
+                                    label={t(...child.label)}
+                                  />
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -226,11 +293,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             )}
             <div className="min-w-0 flex-1">
-              {contextLine && (
-                <p className="truncate text-[16px] font-medium text-muted-foreground">
-                  {contextLine}
-                </p>
-              )}
               {/* Chata switcher: the cottage name is always tappable and opens the sheet below. */}
               <Button
                 variant="fresh"
@@ -269,10 +331,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                   active ? "text-primary" : "text-nav-foreground"
                 }`}
               >
-                <Icon
-                  className={`size-[26px] ${active ? (to === "/domu" ? "fill-primary" : "fill-primary-soft") : ""}`}
-                  strokeWidth={1.7}
-                />
+                <span className="relative">
+                  <Icon
+                    className={`size-[26px] ${active ? (to === "/domu" ? "fill-primary" : "fill-primary-soft") : ""}`}
+                    strokeWidth={1.7}
+                  />
+                  <span className="absolute -right-3 -top-1.5">{badge(to)}</span>
+                </span>
                 <span className="text-[12px] font-bold">{label}</span>
               </Link>
             );
@@ -306,24 +371,41 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </div>
 
+            {totalCottages > 8 && (
+              <label className="field mt-3 flex items-center gap-2">
+                <Search className="size-5 shrink-0 text-muted-foreground" />
+                <input
+                  value={switcherFilter}
+                  onChange={(e) => setSwitcherFilter(e.target.value)}
+                  className="min-w-0 flex-1 bg-transparent outline-none"
+                  placeholder={t("Najít chatu", "Find a cottage")}
+                  aria-label={t("Najít chatu", "Find a cottage")}
+                />
+              </label>
+            )}
             <div className="mt-3 space-y-4">
               {memberships.map((m) => {
                 const acc = accounts.find((a) => a.id === m.account_id);
-                const isActiveAccount = m.account_id === account?.id;
-                // Say the account's name once (bug 13): not above a cottage of the same name,
-                // and not above a "Switch to …" button that already names it.
-                const showTitle =
-                  isActiveAccount && !properties.some((p) => sameName(p.name, acc?.name));
+                const cottages = cottagesOf(m.account_id);
+                const shown = (cottages ?? []).filter(
+                  (c) =>
+                    !filterText ||
+                    c.name.toLowerCase().includes(filterText) ||
+                    (acc?.name ?? "").toLowerCase().includes(filterText),
+                );
+                if (filterText && cottages && !shown.length) return null;
                 return (
-                  <div key={m.id}>
-                    <div className="flex items-center gap-2">
-                      {showTitle ? (
-                        <p className="min-w-0 flex-1 truncate text-[16px] font-bold">
-                          {acc?.name ?? "—"}
-                        </p>
-                      ) : (
-                        <span className="flex-1" />
-                      )}
+                  <section
+                    key={m.id}
+                    aria-label={acc?.name ?? undefined}
+                    className="rounded-[20px] bg-background p-3"
+                  >
+                    {/* Every group says which account it is, so cottages of one account never
+                        look nested inside a cottage of the same name (bug 16). */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="min-w-0 flex-1 truncate text-[16px] font-bold">
+                        {acc?.name ?? "—"}
+                      </p>
                       {acc?.type === "INSTITUTIONAL" && (
                         <span className="pill bg-primary-soft text-primary">
                           {t("Organizace", "Organisation")}
@@ -333,26 +415,34 @@ export function AppShell({ children }: { children: ReactNode }) {
                         {roleLabel(m.role)}
                       </span>
                     </div>
-                    {isActiveAccount ? (
+                    {cottages ? (
                       <div className="mt-2 space-y-1.5">
-                        {properties.map((p) => (
-                          <Button
-                            variant="fresh"
-                            size="fresh"
-                            key={p.id}
-                            disabled={switching}
-                            aria-current={p.id === property?.id ? "true" : undefined}
-                            onClick={() => pickCottage(m.account_id, p.id)}
-                            className={`flex min-h-[44px] w-full items-center rounded-2xl px-3 py-2 text-left text-[16px] font-bold ${
-                              p.id === property?.id
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-secondary"
-                            }`}
-                          >
-                            {p.name}
-                          </Button>
-                        ))}
-                        {!properties.length && (
+                        {shown.map((c) => {
+                          const current = c.property_id === property?.id;
+                          return (
+                            <Button
+                              variant="fresh"
+                              size="fresh"
+                              key={c.property_id}
+                              disabled={switching}
+                              aria-current={current ? "true" : undefined}
+                              onClick={() => pickCottage(m.account_id, c.property_id)}
+                              className={`flex min-h-[44px] w-full items-center justify-between gap-2 rounded-2xl px-3 py-2 text-left text-[16px] font-bold ${
+                                current ? "bg-primary text-primary-foreground" : "bg-card"
+                              }`}
+                            >
+                              <span className="min-w-0 truncate">{c.name}</span>
+                              {c.city && (
+                                <span
+                                  className={`shrink-0 text-[14px] font-semibold ${current ? "opacity-80" : "text-muted-foreground"}`}
+                                >
+                                  {c.city}
+                                </span>
+                              )}
+                            </Button>
+                          );
+                        })}
+                        {!cottages.length && (
                           <p className="text-[16px] text-muted-foreground">
                             {t("Zatím žádná chata.", "No cottage yet.")}
                           </p>
@@ -364,7 +454,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         size="fresh"
                         disabled={switching}
                         onClick={() => pickCottage(m.account_id)}
-                        className="mt-2 flex min-h-[44px] w-full items-center rounded-full bg-secondary px-3 py-2 text-left text-[16px] font-semibold"
+                        className="mt-2 flex min-h-[44px] w-full items-center rounded-2xl bg-card px-3 py-2 text-left text-[16px] font-semibold"
                       >
                         {t(
                           `Přepnout na ${acc?.name ?? "tento účet"}`,
@@ -372,7 +462,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         )}
                       </Button>
                     )}
-                  </div>
+                  </section>
                 );
               })}
             </div>
@@ -392,4 +482,37 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
     </div>
   );
+}
+
+function SideLink({ to, pathname, label }: { to: string; pathname: string; label: string }) {
+  const active = pathname === to || pathname.startsWith(`${to}/`);
+  return (
+    <Link
+      to={to}
+      aria-current={active ? "page" : undefined}
+      className={`flex min-h-11 items-center rounded-[12px] px-3 text-[15px] ${
+        active
+          ? "bg-primary-soft font-bold text-primary"
+          : "font-semibold text-sidebar-foreground hover:bg-secondary"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+/** Notifications not seen yet; updates when the Notifications page marks them seen. */
+function useUnseenCount(items: { key: string }[], userId: string | undefined) {
+  const [seen, setSeen] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const refresh = () => setSeen(readSeen(userId));
+    refresh();
+    window.addEventListener("mychata:notifications-seen", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("mychata:notifications-seen", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, [userId]);
+  return items.filter((i) => !seen.has(i.key)).length;
 }

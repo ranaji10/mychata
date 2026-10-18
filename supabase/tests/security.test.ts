@@ -1374,3 +1374,69 @@ describe("held bookings can be decided from the app (T-038)", () => {
     }
   });
 });
+
+describe("cross-account summaries (T-040, migration 0030)", () => {
+  it("my_cottages lists the cottages of every account the caller belongs to, and no others", async () => {
+    // Petr also joins B as a plain member.
+    const [m] = await admin(
+      db,
+      "insert into public.members (account_id, name, email, role, user_id) values ($1,'Petr',$2,'MEMBER',$3) returning id",
+      [ids.acctB, EMAIL.aMember, U.aMember],
+    );
+    try {
+      await as(db, aMember, async (q) => {
+        const rows = await q<{ property_id: string }>(
+          "select property_id from public.my_cottages()",
+        );
+        expect(rows.map((r) => r.property_id).sort()).toEqual([ids.propA, ids.propB].sort());
+      });
+      await as(db, bAdmin, async (q) => {
+        expect(await q("select property_id from public.my_cottages()")).toEqual([
+          { property_id: ids.propB },
+        ]);
+      });
+      await as(db, anon, async (q) => {
+        await expect(q("select * from public.my_cottages()")).rejects.toThrow(/permission denied/);
+      });
+    } finally {
+      await admin(db, "delete from public.members where id = $1", [(m as { id: string }).id]);
+    }
+  });
+
+  it("my_invitations shows only open invitations to the caller's own email", async () => {
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, created_by_member_id)
+       values ($1,'MEMBER','t040-for-nova', $2, $4),
+              ($1,'MEMBER','t040-for-bara', $3, $4)`,
+      [ids.acctA, EMAIL.newcomer, EMAIL.bAdmin, ids.memberAAdmin],
+    );
+    await admin(
+      db,
+      `insert into public.invitations (account_id, role, token, email, created_by_member_id, expires_at)
+       values ($1,'MEMBER','t040-expired', $2, $3, now() - interval '1 day')`,
+      [ids.acctA, EMAIL.newcomer, ids.memberAAdmin],
+    );
+    try {
+      await as(db, newcomer, async (q) => {
+        // Other tests leave their own invitations for Nova; look at this test's only.
+        expect(
+          await q(
+            "select token, account_name from public.my_invitations() where token like 't040-%'",
+          ),
+        ).toEqual([{ token: "t040-for-nova", account_name: "Rodina A" }]);
+      });
+      // Already a member of A: nothing to show. Another email: nothing either.
+      await as(db, aMember, async (q) => {
+        expect(await q("select token from public.my_invitations()")).toEqual([]);
+      });
+      await as(db, anon, async (q) => {
+        await expect(q("select * from public.my_invitations()")).rejects.toThrow(
+          /permission denied/,
+        );
+      });
+    } finally {
+      await admin(db, "delete from public.invitations where token like 't040-%'");
+    }
+  });
+});

@@ -159,7 +159,7 @@ function GuestBookingPage() {
             </h2>
             {upcomingAvailability.length === 0 ? (
               <p className="mt-2 text-[16px] text-muted-foreground">
-                {t("Zatím je vše volné.", "Everything is free so far.")}
+                {t("Zatím je vše volné.", "Everything is available so far.")}
               </p>
             ) : (
               <ul className="mt-2 space-y-1 text-[16px]">

@@ -168,17 +168,17 @@ function CalendarPage() {
     <AppShell>
       <div className="mb-5 mt-2 flex items-center justify-between gap-3">
         <h2 className="text-[28px] font-extrabold leading-[1.15]">{t("Kalendář", "Calendar")}</h2>
-        {isFamily && (
-          <Button
-            variant="fresh"
-            size="fresh"
-            onClick={startPicking}
-            className="btn-primary min-h-[44px] px-4 py-2 text-[16px]"
-          >
-            <Plus className="size-[18px]" />
-            {t("Pobyt", "Stay")}
-          </Button>
-        )}
+        {/* Organisations book from the calendar too (bug 17 of 18 Oct: picking was family-only,
+            so days on an institution's calendar did nothing). The database decides who may. */}
+        <Button
+          variant="fresh"
+          size="fresh"
+          onClick={startPicking}
+          className="btn-primary min-h-[44px] px-4 py-2 text-[16px]"
+        >
+          <Plus className="size-[18px]" />
+          {t("Pobyt", "Stay")}
+        </Button>
       </div>
       <div
         role="group"
@@ -205,7 +205,7 @@ function CalendarPage() {
       >
         <MonthHeader {...nav} />
 
-        {isFamily && picking && (
+        {picking && (
           <p className="mt-3 rounded-2xl bg-primary-soft p-3 text-[16px] font-semibold text-primary">
             {!range.start
               ? t("Klepněte na den příjezdu.", "Tap your arrival day.")
@@ -243,7 +243,8 @@ function CalendarPage() {
               year={nav.year}
               month={nav.month}
               bookings={calendarStays}
-              {...(isFamily ? { selection: range, onPickDay } : {})}
+              selection={range}
+              onPickDay={onPickDay}
             />
           )}
         </div>

@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  ChevronDown,
   ChevronRight,
   ClipboardCheck,
   Globe,
   Home,
+  LayoutGrid,
   Link2,
   Link2Off,
   LogOut,
@@ -17,9 +17,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { Avatar, PageHeader } from "@/components/bits";
+import { Avatar, PageHeader, SettingsRow } from "@/components/bits";
 import { useAccount } from "@/lib/account";
-import { accountContextLine } from "@/lib/account-label";
+import { avatarSource } from "@/lib/account-label";
+import { COTTAGE_PAGES } from "@/lib/settings-nav";
 import { useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { publishedCalendarToken } from "@/lib/public-calendar";
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/vice")({
 });
 
 function MorePage() {
-  const { account, property, members, currentMemberId } = useAccount();
+  const { account, property, members, currentMemberId, profile, user } = useAccount();
   const { t, lang, setLang } = useLang();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -62,6 +63,11 @@ function MorePage() {
     url: string;
   } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
+  const [cottagesOpen, setCottagesOpen] = useState(false);
+  const myName =
+    (profile?.display_name ?? "").trim() ||
+    members.find((m) => m.id === currentMemberId)?.name ||
+    "";
   const [stopOpen, setStopOpen] = useState(false);
   const [stopping, setStopping] = useState(false);
 
@@ -164,119 +170,104 @@ function MorePage() {
 
   return (
     <AppShell>
+      {/* Organisations keep a one-line reminder of whose settings these are; a family account
+          named after an email no longer shows here (bug 7). */}
       <PageHeader
         title={t("Nastavení", "Settings")}
-        subtitle={accountContextLine(account, property?.name, t) ?? undefined}
+        subtitle={
+          account?.type === "INSTITUTIONAL"
+            ? t(`Organizace · ${account.name}`, `Organisation · ${account.name}`)
+            : undefined
+        }
       />
 
       <Link
         to="/profil"
-        className="card flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+        className="card flex min-h-[60px] items-center gap-3 px-4 py-3 active:bg-secondary"
       >
-        <Avatar name={members.find((m) => m.id === currentMemberId)?.name ?? ""} />
+        <Avatar name={myName} src={avatarSource(profile, user)} className="size-12" />
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold">{members.find((m) => m.id === currentMemberId)?.name}</h3>
+          <h3 className="truncate font-bold">
+            {myName || t("Doplňte své jméno", "Add your name")}
+          </h3>
           <p className="text-[16px] text-muted-foreground">{t("Můj profil", "My profile")}</p>
         </div>
         <ChevronRight className="size-5 text-muted-foreground" />
       </Link>
 
       <section className="card mt-4 divide-y divide-divider overflow-hidden px-4 py-1">
-        <Link
+        <SettingsRow
           to="/clenove"
-          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
-        >
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <Users className="size-[22px]" />
-          </span>
-          <span className="flex-1 text-[16px] font-bold">
-            {t("Členové a oprávnění", "Members & permissions")}
-          </span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
-        {/* Add a cottage, photos, house manual and documents live in Manage cottages (bug 7). */}
-        <Link to="/chaty" className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary">
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <Home className="size-[22px]" />
-          </span>
-          <span className="flex-1">
-            <span className="block text-[16px] font-bold">
-              {t("Spravovat chaty", "Manage cottages")}
-            </span>
-            <span className="block text-[14px] text-muted-foreground">
-              {t(
-                "Přidat chatu, fotky, manuál, dokumenty",
-                "Add a cottage, photos, manual, documents",
-              )}
-            </span>
-          </span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
-        <Link
+          icon={Users}
+          label={t("Členové a oprávnění", "Members & permissions")}
+        />
+        {/* Manage cottages opens its pages right here (bug 4a); the overview page stays the
+            summary hub for every cottage (bug 4c). */}
+        <SettingsRow
+          icon={Home}
+          label={t("Spravovat chaty", "Manage cottages")}
+          hint={t(
+            "Přehled, fotky, manuál, dokumenty, údržba",
+            "Overview, photos, manual, documents, maintenance",
+          )}
+          expanded={cottagesOpen}
+          onClick={() => setCottagesOpen((v) => !v)}
+        />
+        {cottagesOpen && (
+          <div className="py-1 pl-6">
+            <SettingsRow
+              to="/chaty"
+              icon={LayoutGrid}
+              label={t("Přehled všech chat", "All cottages overview")}
+            />
+            {COTTAGE_PAGES.map((page) => (
+              <SettingsRow
+                key={page.to}
+                to={page.to}
+                icon={page.icon}
+                label={t(...page.label)}
+                hint={property?.name}
+              />
+            ))}
+          </div>
+        )}
+        <SettingsRow
           to="/predani"
-          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
-        >
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <ClipboardCheck className="size-[22px]" />
-          </span>
-          <span className="flex-1 text-[16px] font-bold">
-            {t("Odjezdové úkoly", "Checkout Tasks")}
-          </span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
+          icon={ClipboardCheck}
+          label={t("Odjezdové úkoly", "Checkout Tasks")}
+        />
         {isFamily && (
           <>
             {showCalendarLink && (
-              <Button
-                variant="fresh"
-                size="fresh"
-                onClick={copyPublicLink}
-                className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
-              >
-                <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                  <Link2 className="size-[22px]" />
-                </span>
-                <span className="flex-1 text-[16px] font-bold">
-                  {t("Veřejný odkaz na kalendář", "Public calendar link")}
-                </span>
-                <ChevronRight className="size-5 text-muted-foreground" />
-              </Button>
+              <SettingsRow
+                icon={Link2}
+                label={t("Veřejný odkaz na kalendář", "Public calendar link")}
+                onClick={() => void copyPublicLink()}
+              />
             )}
-            <div className="px-4">
-              <ManualCopyLink url={manualLink?.source === "calendar" ? manualLink.url : null} />
-            </div>
+            {manualLink?.source === "calendar" && (
+              <div className="px-4">
+                <ManualCopyLink url={manualLink.url} />
+              </div>
+            )}
             {isAdmin && property?.public_calendar_enabled && (
-              <Button
-                variant="fresh"
-                size="fresh"
+              <SettingsRow
+                icon={Link2Off}
+                tone="danger"
+                label={t("Vypnout veřejný kalendář", "Switch off the public calendar")}
                 onClick={() => setStopOpen(true)}
-                className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
-              >
-                <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-destructive-soft text-destructive">
-                  <Link2Off className="size-[22px]" />
-                </span>
-                <span className="flex-1 text-[16px] font-bold">
-                  {t("Vypnout veřejný kalendář", "Switch off the public calendar")}
-                </span>
-              </Button>
+              />
             )}
-            <Button
-              variant="fresh"
-              size="fresh"
-              onClick={createGuestLink}
-              className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
-            >
-              <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                <Link2 className="size-[22px]" />
-              </span>
-              <span className="flex-1 text-[16px] font-bold">
-                {t("Odkaz pro hosta bez účtu", "Guest booking link (no account)")}
-              </span>
-              <ChevronRight className="size-5 text-muted-foreground" />
-            </Button>
-            <div className="px-4">
-              <ManualCopyLink url={manualLink?.source === "guest" ? manualLink.url : null} />
-            </div>
+            <SettingsRow
+              icon={Link2}
+              label={t("Odkaz pro hosta bez účtu", "Guest booking link (no account)")}
+              onClick={() => void createGuestLink()}
+            />
+            {manualLink?.source === "guest" && (
+              <div className="px-4">
+                <ManualCopyLink url={manualLink.url} />
+              </div>
+            )}
           </>
         )}
         {!isFamily && (
@@ -284,7 +275,7 @@ function MorePage() {
             to="/verejne/zadost/$token"
             params={{ token: property?.public_token ?? "" }}
             disabled={!property}
-            className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
+            className="settings-row flex min-h-[60px] items-center gap-3 rounded-none py-3 active:bg-secondary"
           >
             <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
               <Link2 className="size-[22px]" />
@@ -298,27 +289,20 @@ function MorePage() {
       </section>
 
       {/* Language: collapsed row near the bottom */}
-      <section className="card mt-4 p-0">
-        <Button
-          variant="fresh"
-          size="fresh"
+      <section className="card mt-4 overflow-hidden px-4 py-1">
+        <SettingsRow
+          icon={Globe}
+          label={t("Jazyk", "Language")}
+          expanded={langOpen}
           onClick={() => setLangOpen((v) => !v)}
-          className="flex min-h-[60px] w-full justify-start gap-3 px-4 py-3 text-left"
-          aria-expanded={langOpen}
-        >
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <Globe className="size-[22px]" />
-          </span>
-          <span className="flex-1 text-[16px] font-bold">{t("Jazyk", "Language")}</span>
-          <span className="text-[16px] font-semibold text-muted-foreground">
-            {lang === "cs" ? "Čeština" : "English"}
-          </span>
-          <ChevronDown
-            className={`size-5 text-muted-foreground transition-transform ${langOpen ? "rotate-180" : ""}`}
-          />
-        </Button>
+          trailing={
+            <span className="text-[16px] font-semibold text-muted-foreground">
+              {lang === "cs" ? "Čeština" : "English"}
+            </span>
+          }
+        />
         {langOpen && (
-          <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+          <div className="grid grid-cols-2 gap-2 pb-4">
             <Button
               variant="fresh"
               size="fresh"
@@ -340,21 +324,14 @@ function MorePage() {
       </section>
 
       <section className="card mt-4 divide-y divide-divider overflow-hidden px-4 py-1">
-        <Link
+        <SettingsRow
           to="/soukromi"
-          className="flex min-h-[60px] items-center gap-3 py-3 active:bg-secondary"
-        >
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <Shield className="size-[22px]" />
-          </span>
-          <span className="flex-1 text-[16px] font-bold">
-            {t("Soukromí a cookies", "Privacy & cookies")}
-          </span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
-        <Button
-          variant="fresh"
-          size="fresh"
+          icon={Shield}
+          label={t("Soukromí a cookies", "Privacy & cookies")}
+        />
+        <SettingsRow
+          icon={LogOut}
+          label={t("Odhlásit se", "Sign out")}
           onClick={() => {
             supabase.auth.signOut().then(() => {
               queryClient.clear();
@@ -362,13 +339,7 @@ function MorePage() {
               navigate({ to: "/auth", replace: true });
             });
           }}
-          className="flex min-h-[60px] w-full justify-start gap-3 py-3 text-left active:bg-secondary"
-        >
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <LogOut className="size-[22px]" />
-          </span>
-          <span className="flex-1 text-[16px] font-bold">{t("Odhlásit se", "Sign out")}</span>
-        </Button>
+        />
       </section>
       <ConfirmDialog
         open={stopOpen}

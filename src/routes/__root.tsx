@@ -26,6 +26,15 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CONSENT_REGIONS } from "../lib/consent-regions";
 import { brandAssets } from "../lib/brand-assets";
 import { BUILD_SHA, BUILD_TIME } from "../lib/build-info";
+import { installDomGuard } from "../lib/dom-guard";
+import { installNetworkRetry } from "../lib/network-retry";
+
+// Bug 3 of 18 Oct: page translation and dropped phone connections made saves look failed.
+// Both run before the first request and the first render (see the two files).
+if (typeof window !== "undefined") {
+  installDomGuard();
+  installNetworkRetry(import.meta.env["VITE_SUPABASE_URL"] as string | undefined);
+}
 
 const GA_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"] as
   string | undefined;
@@ -212,6 +221,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "google-site-verification", content: "hWHZFgtJQ226BHwT__LZOK4_EErIe_jdWwb21NqiElk" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      // No Chrome page translation (bug 3 of 18 Oct); the app has its own CZ/EN switch.
+      { name: "google", content: "notranslate" },
       // Which commit is live (T-033); release.md tells how to read it.
       { name: "build-sha", content: BUILD_SHA },
       { name: "build-time", content: BUILD_TIME },
@@ -264,7 +275,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="cs">
+    // translate="no": the app has its own Czech/English switch, and Chrome's translation broke
+    // React's updates (bug 3 of 18 Oct). lang follows the chosen language (LanguageProvider).
+    <html lang="cs" translate="no">
       <head>
         <HeadContent />
       </head>
@@ -287,12 +300,19 @@ function RootComponent() {
   useEffect(() => {
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    // Bug 18 of 18 Oct: Chrome on Android briefly offered "Install My Chata". The app is not
+    // meant to be installed, so the offer is switched off (the manifest also says "browser").
+    const noInstallPrompt = (event: Event) => event.preventDefault();
+    window.addEventListener("beforeinstallprompt", noInstallPrompt);
     // Vite's own signal that a preloaded chunk of an older release failed (bug 1).
     const onPreloadError = (event: Event) => {
       if (reloadOnceForNewVersion()) event.preventDefault();
     };
     window.addEventListener("vite:preloadError", onPreloadError);
-    return () => window.removeEventListener("vite:preloadError", onPreloadError);
+    return () => {
+      window.removeEventListener("vite:preloadError", onPreloadError);
+      window.removeEventListener("beforeinstallprompt", noInstallPrompt);
+    };
   }, []);
   const persister =
     typeof window === "undefined"

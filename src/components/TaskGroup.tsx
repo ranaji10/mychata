@@ -1,11 +1,36 @@
 import { Link } from "@tanstack/react-router";
 import { Check, ChevronDown, Circle } from "lucide-react";
 import { useState } from "react";
+import { PillNeutral } from "@/components/bits";
 import { Button } from "@/components/ui/button";
 import { fmtDate, taskCategoryLabel, taskTitle, todayISO, type Task } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
+const OPEN_KEY = "mychata.task-groups-open";
+
+/** Which checklists are open, kept for this tab so Back from a task lands on the same view (bug 8). */
+function readOpen(groupId: string | undefined): boolean | null {
+  if (!groupId) return null;
+  try {
+    const all = JSON.parse(sessionStorage.getItem(OPEN_KEY) ?? "{}") as Record<string, boolean>;
+    return typeof all[groupId] === "boolean" ? all[groupId] : null;
+  } catch {
+    return null;
+  }
+}
+function writeOpen(groupId: string | undefined, open: boolean) {
+  if (!groupId) return;
+  try {
+    const all = JSON.parse(sessionStorage.getItem(OPEN_KEY) ?? "{}") as Record<string, boolean>;
+    all[groupId] = open;
+    sessionStorage.setItem(OPEN_KEY, JSON.stringify(all));
+  } catch {
+    /* private mode: groups just start closed */
+  }
+}
+
 export function TaskGroup({
+  groupId,
   title,
   tasks,
   totalTasks = tasks,
@@ -14,6 +39,8 @@ export function TaskGroup({
   busy,
   defaultOpen = false,
 }: {
+  /** The checklist's id; remembers whether the group was open. */
+  groupId?: string;
   title?: string;
   tasks: Task[];
   totalTasks?: Task[];
@@ -23,8 +50,22 @@ export function TaskGroup({
   defaultOpen?: boolean;
 }) {
   const { t, lang } = useLang();
-  const [open, setOpen] = useState(!title || defaultOpen);
-  const [doneOpen, setDoneOpen] = useState(false);
+  const [open, setOpenState] = useState(() => !title || (readOpen(groupId) ?? defaultOpen));
+  const setOpen = (fn: (value: boolean) => boolean) =>
+    setOpenState((value) => {
+      const next = fn(value);
+      writeOpen(groupId, next);
+      return next;
+    });
+  const [doneOpen, setDoneOpen] = useState(
+    () => readOpen(groupId ? `${groupId}:done` : undefined) ?? false,
+  );
+  const toggleDone = () =>
+    setDoneOpen((value) => {
+      writeOpen(groupId ? `${groupId}:done` : undefined, !value);
+      return !value;
+    });
+  const inProgress = totalTasks.filter((task) => task.status === "IN_PROGRESS").length;
   const completed = tasks.filter((task) => task.status === "DONE");
   const remaining = tasks.filter((task) => task.status !== "DONE");
   const count = totalTasks.filter((task) => task.status === "DONE").length;
@@ -69,6 +110,12 @@ export function TaskGroup({
           <p className="font-semibold text-destructive">{t("Po termínu", "Overdue")}</p>
         )}
       </div>
+      {/* In-progress tasks are visible in the list, not only on the task page (bug 8a). */}
+      {task.status === "IN_PROGRESS" && (
+        <span className="pointer-events-none shrink-0">
+          <PillNeutral>{t("Probíhá", "In progress")}</PillNeutral>
+        </span>
+      )}
     </div>
   );
   return (
@@ -87,6 +134,7 @@ export function TaskGroup({
             <span className="block break-words text-[18px] font-bold">{title}</span>
             <span className="block text-muted-foreground">
               {t(`${count} z ${totalTasks.length} hotovo`, `${count} of ${totalTasks.length} done`)}
+              {inProgress > 0 && t(` · ${inProgress} probíhá`, ` · ${inProgress} in progress`)}
             </span>
           </span>
           <ChevronDown className={`shrink-0 ${open ? "rotate-180" : ""}`} />
@@ -99,7 +147,7 @@ export function TaskGroup({
             <div>
               <Button
                 variant="ghost"
-                onClick={() => setDoneOpen((value) => !value)}
+                onClick={toggleDone}
                 aria-expanded={doneOpen}
                 className="flex min-h-[60px] w-full justify-between whitespace-normal rounded-none px-0 text-[16px] font-bold"
               >

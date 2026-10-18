@@ -29,7 +29,16 @@ export const Route = createFileRoute("/ukoly")({
   component: TasksRoute,
 });
 
-type Filter = "all" | "mine" | "overdue" | "seasonal";
+type Filter = "all" | "mine" | "in_progress" | "overdue" | "seasonal";
+const FILTER_KEY = "mychata.tasks-filter";
+function readFilter(): Filter {
+  try {
+    const v = sessionStorage.getItem(FILTER_KEY);
+    return v === "mine" || v === "in_progress" || v === "overdue" || v === "seasonal" ? v : "all";
+  } catch {
+    return "all";
+  }
+}
 
 // /ukoly/$id (task detail) is a child of this route in the file-based router, so it
 // renders inside this component. Without an <Outlet /> the address changed but the list stayed on screen (T-022).
@@ -42,7 +51,16 @@ function TasksPage() {
   const { property, currentMember, members } = useAccount();
   const { t, lang } = useLang();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<Filter>("all");
+  // Kept for this tab, so coming back from a task shows the same filter (bug 8).
+  const [filter, setFilterState] = useState<Filter>(() => readFilter());
+  const setFilter = (value: Filter) => {
+    setFilterState(value);
+    try {
+      sessionStorage.setItem(FILTER_KEY, value);
+    } catch {
+      /* private mode */
+    }
+  };
   const [title, setTitle] = useState("");
   // Adding waits for the translation, which can take a few seconds; a second tap meanwhile
   // used to create the task (or the whole checklist) twice (T-026).
@@ -64,6 +82,7 @@ function TasksPage() {
   const FILTERS: { key: Filter; label: string }[] = [
     { key: "all", label: t("Vše", "All") },
     { key: "mine", label: t("Moje", "Mine") },
+    { key: "in_progress", label: t("Probíhá", "In progress") },
     { key: "overdue", label: t("Po termínu", "Overdue") },
     { key: "seasonal", label: t("Sezónní", "Seasonal") },
   ];
@@ -233,6 +252,7 @@ function TasksPage() {
   const today = todayISO();
   const filtered = (tasks ?? []).filter((t) => {
     if (filter === "mine") return t.assignee_member_id === currentMember?.id;
+    if (filter === "in_progress") return t.status === "IN_PROGRESS";
     if (filter === "overdue") return t.status !== "DONE" && t.due_date && t.due_date < today;
     if (filter === "seasonal") return t.category === "seasonal";
     return true;
@@ -242,9 +262,14 @@ function TasksPage() {
 
   return (
     <AppShell>
+      {/* Tasks live under Settings → Manage cottages → Maintenance (bug 4 of 18 Oct). */}
       <PageHeader
-        title={t("Úkoly", "Tasks")}
-        subtitle={t("Co je potřeba na chatě udělat.", "What needs doing at the cottage.")}
+        title={t("Údržba", "Maintenance")}
+        subtitle={t(
+          `Úkoly pro ${property?.name ?? "chatu"}: co je potřeba udělat.`,
+          `Tasks for ${property?.name ?? "the cottage"}: what needs doing.`,
+        )}
+        back="/chaty"
       />
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -317,6 +342,7 @@ function TasksPage() {
             .map((list) => (
               <TaskGroup
                 key={`${filter}-${list.id}`}
+                groupId={list.id}
                 defaultOpen={filter !== "all"}
                 title={list.title}
                 tasks={filtered.filter((task) => task.checklist_id === list.id)}

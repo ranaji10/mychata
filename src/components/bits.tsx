@@ -1,7 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, CalendarDays, Wallet, type LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { useLang } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 export function PageHeader({
   title,
@@ -134,13 +142,16 @@ export function Avatar({
   /** A photo (the person's own profile photo); initials when missing. */
   src?: string | null | undefined;
 }) {
-  if (src) {
+  // A photo that fails to load (an expired Google link) falls back to the initials.
+  const [broken, setBroken] = useState<string | null>(null);
+  if (src && broken !== src) {
     return (
       <img
         src={src}
         alt=""
+        onError={() => setBroken(src)}
         referrerPolicy="no-referrer"
-        className={`size-10 shrink-0 rounded-full object-cover ${className}`}
+        className={cn("size-10 shrink-0 rounded-full object-cover", className)}
       />
     );
   }
@@ -152,10 +163,82 @@ export function Avatar({
     .join("")
     .toUpperCase();
   return (
+    // translate="no": Chrome's page translation turned the initials "RD" into "Family house"
+    // (Czech "RD" = rodinný dům) and spilled it out of the circle (bug 14a).
     <div
-      className={`grid size-10 shrink-0 place-items-center rounded-full bg-card text-base font-extrabold text-primary ${className}`}
+      translate="no"
+      className={cn(
+        "grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-base font-extrabold text-primary",
+        className,
+      )}
     >
       {initials || "?"}
     </div>
+  );
+}
+
+/**
+ * One row of a settings list (bug 6). Links and buttons look exactly the same: no rounded
+ * corners (a pill-shaped button inside a divided list drew curved "shadows" at the dividers),
+ * same height, icon bubble and chevron.
+ */
+export function SettingsRow({
+  icon: Icon,
+  label,
+  hint,
+  to,
+  onClick,
+  tone = "default",
+  trailing,
+  expanded,
+}: {
+  icon: LucideIcon;
+  label: string;
+  hint?: string | undefined;
+  to?: string;
+  onClick?: () => void;
+  tone?: "default" | "danger";
+  trailing?: ReactNode;
+  /** Set for a row that opens and closes a sub-list. */
+  expanded?: boolean | undefined;
+}) {
+  const body = (
+    <>
+      <span
+        className={`grid size-[34px] shrink-0 place-items-center rounded-full ${
+          tone === "danger"
+            ? "bg-destructive-soft text-destructive"
+            : "bg-primary-soft text-primary"
+        }`}
+      >
+        <Icon className="size-[22px]" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[16px] font-bold">{label}</span>
+        {hint && <span className="block text-[14px] text-muted-foreground">{hint}</span>}
+      </span>
+      {trailing}
+      {expanded !== undefined ? (
+        <ChevronDown
+          className={`size-5 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+        />
+      ) : tone === "danger" ? null : (
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
+      )}
+    </>
+  );
+  const cls =
+    "settings-row flex min-h-[60px] w-full items-center gap-3 rounded-none py-3 text-left active:bg-secondary";
+  if (to) {
+    return (
+      <Link to={to} className={cls}>
+        {body}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} aria-expanded={expanded} className={cls}>
+      {body}
+    </button>
   );
 }

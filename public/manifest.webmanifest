@@ -3,7 +3,7 @@
   "short_name": "My Chata",
   "description": "Správa sdílené chaty pro rodiny a organizace.",
   "start_url": "/domu",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#F5F8F5",
   "theme_color": "#1F7A4D",
   "icons": [

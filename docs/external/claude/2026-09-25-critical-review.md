@@ -14,7 +14,7 @@ tab: Now
 
 18 Oct 2026 · Tuik
 
-**Live:** `d52dfd0` (T-038 and its review fixes, PR #52 and #54), published 18 Oct 03:06, migrations up to 0029. Site check 2 on 18 Oct (`2026-10-18-site-check-2.md`): public pages pass, Czech titles live. Re-read of every change from `9e52d10` to `b50a296` (T-039): all correct; two small fixes and test updates in the T-039 PR. **Waiting on you:** the signed-in T-038 checks (N-10), tag `release-2026-10-18b` on `d52dfd0` (N-8), merge the T-039 PR and publish it (N-11). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `d52dfd0` (T-038 and its review fixes, PR #52 and #54), published 18 Oct 03:06, migrations up to 0029. Site check 2 on 18 Oct (`2026-10-18-site-check-2.md`): public pages pass, Czech titles live. Re-read of every change from `9e52d10` to `b50a296` (T-039): all correct; two small fixes and test updates in PR #57. **Waiting on you:** the signed-in T-038 checks (N-10), tag `release-2026-10-18b` on `d52dfd0` (N-8), merge PR #57 and publish it (N-11). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
@@ -26,7 +26,7 @@ tab: Now
 | N-6 | **Document search:** plan first (`08-CC-4-plan-document-search.md`). T-021 reads the manual's full text without embeddings, so re-check the T-007 and T-020 plans before anyone builds | Claude | To do | |
 | N-8 | **Tag the release:** `release-2026-10-18` already exists on `9fce136` (T-036, set 17 Oct). Left: tag what is live now, `release-2026-10-18b` on `d52dfd0` (GitHub → Releases → Draft a new release; Claude's session can't push tags) | You | To do | |
 | N-10 | **Check T-038 signed in:** published as `d52dfd0` (Knowledge rules 13–15 and prompt 21 done). Left: as Test 1 (Google, needs you), a member's held stay shows under "Pobyty ke schválení" on Home and Approve on the stay page confirms it; as Test 2 in `Chata Alfa (test)`, an overlapping booking says "Poslat ke schválení" and the held stay has "Stáhnout žádost". Also decide Test 1's pending guest request "Host Claude (test)" | You, then Claude | Doing | F-17, F-18, F-19 |
-| N-11 | **Merge and publish T-039:** PR from `agent/claude/T-039-post-publish-sync` (records after the T-038 publish, two small fixes, test updates). After merge: Lovable prompt 22 (`2026-10-18-lovable-prompt-22.md`, no migration), publish, `release.md` | You | To do | |
+| N-11 | **Merge and publish T-039:** [PR #57](https://github.com/ranaji10/mychata/pull/57) (records after the T-038 publish, two small fixes, test updates). After merge: Lovable prompt 22 (`2026-10-18-lovable-prompt-22.md`, no migration), publish, `release.md` | You | To do | |
 | N-9 | **Record the test accounts:** done in PR #48 for `docs/runbooks/test-cottages.md` as Test 1, 2, 3 (the repo is public; addresses in `private/test-accounts.md`). Left: add the same labels to Lovable's Knowledge | You | To do |  |
 
 ## Decisions waiting on you

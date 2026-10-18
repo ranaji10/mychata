@@ -1604,4 +1604,36 @@ describe("auto booking approval and account names (T-042, migration 0032)", () =
       );
     });
   });
+
+  it("guest and invitation pages learn whether the cottage is an organisation's (F-04)", async () => {
+    await admin(
+      db,
+      "insert into public.guest_links (property_id, token) values ($1, 't042-guest-b')",
+      [ids.propB],
+    );
+    await admin(
+      db,
+      "insert into public.invitations (account_id, role, token, email) values ($1,'MEMBER','t042-inv-b','x@example.org')",
+      [ids.acctB],
+    );
+    try {
+      await as(db, anon, async (q) => {
+        expect(
+          await q("select is_institution from public.public_guest_link('guest-token-a')"),
+        ).toEqual([{ is_institution: false }]);
+        expect(
+          await q("select is_institution from public.public_guest_link('t042-guest-b')"),
+        ).toEqual([{ is_institution: true }]);
+        expect(
+          await q("select state, is_institution from public.invitation_preview('t042-inv-b')"),
+        ).toEqual([{ state: "valid", is_institution: true }]);
+        expect(
+          await q("select state, is_institution from public.invitation_preview('t042-nope')"),
+        ).toEqual([{ state: "not_found", is_institution: null }]);
+      });
+    } finally {
+      await admin(db, "delete from public.guest_links where token = 't042-guest-b'");
+      await admin(db, "delete from public.invitations where token = 't042-inv-b'");
+    }
+  });
 });

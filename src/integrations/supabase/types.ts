@@ -1531,6 +1531,7 @@ export type Database = {
           email_hint: string
           email_matches: boolean
           invited_by: string
+          is_institution: boolean
           property_name: string
           role: string
           state: string
@@ -1598,6 +1599,7 @@ export type Database = {
         Args: { _token: string }
         Returns: {
           id: string
+          is_institution: boolean
           property_address: string
           property_id: string
           property_name: string

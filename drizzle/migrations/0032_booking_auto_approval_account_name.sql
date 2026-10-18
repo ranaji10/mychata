@@ -13,6 +13,8 @@
 -- 3. A family account must not carry the same name as its first cottage (bug 16 of 18 Oct: an
 --    account "Chata Alfa" holding Alfa, Beta and Gama looked like Beta was inside Alfa).
 --    create_account_onboarding refuses it, and rename_account lets an admin fix older accounts.
+-- 4. invitation_preview and public_guest_link say whether the cottage is an organisation's, so
+--    the invitation and guest pages use its blue (tracker F-04).
 
 -- 1, 2. Columns ------------------------------------------------------------------------------
 alter table public.accounts add column if not exists booking_auto_approve boolean;
@@ -186,3 +188,80 @@ end;
 $$;
 revoke execute on function public.create_account_onboarding(text, text, text, text, text, int, text[], int, text, boolean) from public, anon;
 grant execute on function public.create_account_onboarding(text, text, text, text, text, int, text[], int, text, boolean) to authenticated;
+
+-- 4. Guest and invitation pages in the organisation's colour (tracker F-04) -----------------
+-- They were always green: neither function said whether the cottage is an organisation's.
+-- Same functions as 0007 and 0026 with one more column; the return type changes, so they are
+-- dropped first. Anonymous callers learn only the flag the public calendar already shows.
+drop function if exists public.invitation_preview(text);
+create or replace function public.invitation_preview(_token text)
+returns table (
+  state text,
+  account_name text,
+  property_name text,
+  role text,
+  invited_by text,
+  email_hint text,
+  email_matches boolean,
+  is_institution boolean
+)
+language plpgsql stable security definer set search_path = public as $$
+declare inv public.invitations; caller_email text; is_group boolean := false; hints text;
+begin
+  caller_email := nullif(lower(coalesce(auth.jwt()->>'email', '')), '');
+  select * into inv from public.invitations where token = _token;
+  if not found then
+    select * into inv from public.invitations
+    where group_token = _token and caller_email is not null and lower(coalesce(email, '')) = caller_email
+    order by (status = 'PENDING') desc, created_at desc
+    limit 1;
+    if not found then
+      -- Not on the batch (or not signed in): describe the batch.
+      select * into inv from public.invitations
+      where group_token = _token
+      order by (status = 'PENDING' and expires_at > now()) desc, created_at desc
+      limit 1;
+      if not found then
+        return query select 'not_found'::text, null::text, null::text, null::text, null::text, null::text, null::boolean, null::boolean;
+        return;
+      end if;
+      is_group := true;
+      select string_agg(left(split_part(i.email, '@', 1), 1) || '***@' || split_part(i.email, '@', 2), ', ' order by i.email)
+        into hints
+      from public.invitations i
+      where i.group_token = _token and coalesce(i.email, '') <> '';
+    end if;
+  end if;
+  return query
+  select
+    case when inv.status <> 'PENDING' then 'used'
+         when inv.expires_at <= now() then 'expired'
+         else 'valid' end,
+    (select a.name from public.accounts a where a.id = inv.account_id),
+    (select p.name from public.properties p where p.id = inv.property_id),
+    upper(inv.role),
+    (select m.name from public.members m where m.id = inv.created_by_member_id),
+    case when is_group then hints
+         when coalesce(inv.email, '') = '' then null
+         else left(split_part(inv.email, '@', 1), 1) || '***@' || split_part(inv.email, '@', 2) end,
+    case when caller_email is null then null
+         when is_group then false
+         else coalesce(inv.email, '') = '' or lower(inv.email) = caller_email end,
+    (select a.type = 'INSTITUTIONAL' from public.accounts a where a.id = inv.account_id);
+end;
+$$;
+grant execute on function public.invitation_preview(text) to anon, authenticated;
+
+drop function if exists public.public_guest_link(text);
+create or replace function public.public_guest_link(_token text)
+returns table(id uuid, property_id uuid, property_name text, property_address text, valid_from date, valid_to date,
+              is_institution boolean)
+language sql stable security definer set search_path = public as $$
+  select gl.id, gl.property_id, p.name, p.address, gl.valid_from, gl.valid_to, a.type = 'INSTITUTIONAL'
+  from public.guest_links gl
+  join public.properties p on p.id = gl.property_id
+  join public.accounts a on a.id = p.account_id
+  where gl.token = _token and gl.revoked_at is null and (gl.expires_at is null or gl.expires_at > now())
+  limit 1
+$$;
+grant execute on function public.public_guest_link(text) to anon, authenticated;

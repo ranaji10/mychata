@@ -26,6 +26,7 @@ import { accountContextLine } from "@/lib/account-label";
 import { useLang } from "@/lib/i18n";
 import { fmtDate } from "@/lib/data";
 import {
+  calendarDaysUntil,
   daysUntil,
   groupInvitations,
   inviteLink,
@@ -39,10 +40,10 @@ export const Route = createFileRoute("/clenove")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Members — My Chata" },
+      { title: "Členové — My Chata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Members and invitations for your shared cottage." },
-      { property: "og:title", content: "Members — My Chata" },
+      { property: "og:title", content: "Členové — My Chata" },
       { property: "og:description", content: "Members and invitations for your shared cottage." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -333,7 +334,7 @@ function MembersPage() {
   const renderBatch = (b: InvitationBatch) => {
     const token = batchToken(b);
     const open = !!expanded[b.key];
-    const days = daysUntil(b.expiresAt);
+    const days = calendarDaysUntil(b.expiresAt);
     const people = b.rows.length;
     const title =
       people === 1
@@ -367,16 +368,10 @@ function MembersPage() {
           )}
         </div>
         <p className="text-[15px] text-muted-foreground">
-          {t(
-            `Vytvořeno ${fmtDate(b.createdAt.slice(0, 10))}`,
-            `Created ${fmtDate(b.createdAt.slice(0, 10))}`,
-          )}
+          {t(`Vytvořeno ${fmtDate(b.createdAt)}`, `Created ${fmtDate(b.createdAt)}`)}
           {" · "}
           {b.state === "expired"
-            ? t(
-                `vypršelo ${fmtDate(b.expiresAt.slice(0, 10))}`,
-                `expired ${fmtDate(b.expiresAt.slice(0, 10))}`,
-              )
+            ? t(`vypršelo ${fmtDate(b.expiresAt)}`, `expired ${fmtDate(b.expiresAt)}`)
             : days < 1
               ? t("vyprší dnes", "expires today")
               : t(
@@ -427,6 +422,19 @@ function MembersPage() {
               <span className="text-[16px] font-bold">{t("Zrušit", "Cancel")}</span>
             </Button>
           </div>
+        )}
+        {b.state === "active" && !token && (
+          // Invitations made before 0026 have one link per person and no shared link,
+          // but they must still be cancellable (F-17).
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary w-full"
+            onClick={() => setCancelling(b)}
+          >
+            <X className="size-5" />
+            {t("Zrušit pozvánku", "Cancel invitation")}
+          </Button>
         )}
         {b.state === "active" && token && people > 1 && (
           <p className="text-[15px] text-muted-foreground">

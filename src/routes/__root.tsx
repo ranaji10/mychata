@@ -15,7 +15,7 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 // Reads a password-reset link's address before Supabase clears it (bug 4). Keep it early.
 import { clearRecovery, markRecovery, recoveryPending } from "../lib/password";
@@ -49,6 +49,9 @@ function NotFoundComponent() {
 
 function NotFoundBody() {
   const { t } = useLang();
+  useEffect(() => {
+    document.title = `${t("Stránka nebyla nalezena", "Page not found")} — My Chata`;
+  }, [t]);
   return (
     <main className="page-fresh flex min-h-screen flex-col items-center justify-center gap-6 px-5 text-center">
       <span className="grid size-11 place-items-center rounded-[14px] bg-primary text-primary-foreground">
@@ -276,11 +279,11 @@ function RootShell({ children }: { children: ReactNode }) {
 import { AccountProvider } from "../lib/account";
 import { ConsentBanner, ConsentProvider } from "../lib/consent";
 import { trackPageView } from "../lib/analytics";
+import { pageTitle } from "../lib/page-title";
 import { Toaster } from "../components/ui/sonner";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
   useEffect(() => {
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
@@ -291,11 +294,6 @@ function RootComponent() {
     window.addEventListener("vite:preloadError", onPreloadError);
     return () => window.removeEventListener("vite:preloadError", onPreloadError);
   }, []);
-  useEffect(() => {
-    trackPageView(router.state.location.pathname);
-    return router.subscribe("onResolved", ({ toLocation }) => trackPageView(toLocation.pathname));
-  }, [router]);
-
   const persister =
     typeof window === "undefined"
       ? undefined
@@ -328,6 +326,7 @@ function RootComponent() {
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <RecoveryGuard />
             <SignOutCleanup />
+            <PageTitleSync />
             <Outlet />
             <ConsentBanner />
             <Toaster position="top-center" richColors />
@@ -336,4 +335,35 @@ function RootComponent() {
       </LanguageProvider>
     </PersistQueryClientProvider>
   );
+}
+
+/** Keeps the tab title in the chosen language and sends page views with that title (F-17). */
+function PageTitleSync() {
+  const { lang } = useLang();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const langRef = useRef(lang);
+  langRef.current = lang;
+
+  useEffect(() => {
+    const wanted = pageTitle(pathname, lang);
+    if (!wanted) return;
+    const apply = () => {
+      if (document.title !== wanted) document.title = wanted;
+    };
+    apply();
+    // The router writes each route's Czech head title after loading; put ours back.
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [pathname, lang]);
+
+  useEffect(() => {
+    const send = (path: string) =>
+      trackPageView(path, pageTitle(path, langRef.current) ?? document.title);
+    send(router.state.location.pathname);
+    return router.subscribe("onResolved", ({ toLocation }) => send(toLocation.pathname));
+  }, [router]);
+
+  return null;
 }

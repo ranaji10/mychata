@@ -18,9 +18,9 @@ export const Route = createFileRoute("/schvalovani")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Approvals — My Chata" },
+      { title: "Ke schválení — My Chata" },
       { name: "description", content: "Overview of bookings awaiting approval." },
-      { property: "og:title", content: "Approvals — My Chata" },
+      { property: "og:title", content: "Ke schválení — My Chata" },
       { property: "og:description", content: "Overview of bookings awaiting approval." },
     ],
   }),

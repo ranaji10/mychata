@@ -10,9 +10,9 @@ export const Route = createFileRoute("/soukromi")({
   head: () => ({
     meta: [
       { name: "twitter:card", content: "summary" },
-      { title: "Privacy & cookies — My Chata" },
+      { title: "Soukromí a cookies — My Chata" },
       { name: "description", content: "How My Chata handles your data and cookies." },
-      { property: "og:title", content: "Privacy & cookies — My Chata" },
+      { property: "og:title", content: "Soukromí a cookies — My Chata" },
       { property: "og:description", content: "How My Chata handles your data and cookies." },
       { property: "og:type", content: "website" },
     ],

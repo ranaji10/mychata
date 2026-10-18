@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { EmptyState, LoadingCards } from "@/components/bits";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { manualCategoryLabel } from "@/lib/data";
 
 export const Route = createFileRoute("/verejne/manual/$token")({
   staticData: { sitemap: false },
@@ -92,7 +93,9 @@ function PublicManual() {
         <div className="space-y-3">
           {data.sections.map((section) => (
             <article key={section.id} className="card p-4">
-              <p className="text-[16px] font-bold text-muted-foreground">{section.category}</p>
+              <p className="text-[16px] font-bold text-muted-foreground">
+                {manualCategoryLabel(section.category, lang)}
+              </p>
               <h2 className="text-xl font-bold">
                 {lang === "en" ? section.title_en : section.title_cs}
               </h2>

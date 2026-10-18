@@ -29,12 +29,12 @@ export const Route = createFileRoute("/dokumenty")({
     typeof search["task"] === "string" && search["task"] ? { task: search["task"] } : {},
   head: () => ({
     meta: [
-      { title: "Document Vault — My Chata" },
+      { title: "Dokumenty — My Chata" },
       {
         name: "description",
         content: "Private cottage documents, warranties, and expiry reminders.",
       },
-      { property: "og:title", content: "Document Vault — My Chata" },
+      { property: "og:title", content: "Dokumenty — My Chata" },
       {
         property: "og:description",
         content: "Private cottage documents, warranties, and expiry reminders.",

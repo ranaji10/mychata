@@ -25,9 +25,9 @@ export const Route = createFileRoute("/predani")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Checkout tasks — My Chata" },
+      { title: "Odjezdové úkoly — My Chata" },
       { name: "description", content: "Cottage handover checklist and handover history." },
-      { property: "og:title", content: "Checkout tasks — My Chata" },
+      { property: "og:title", content: "Odjezdové úkoly — My Chata" },
       { property: "og:description", content: "Cottage handover checklist and handover history." },
     ],
   }),

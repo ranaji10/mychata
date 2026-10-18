@@ -18,9 +18,9 @@ export const Route = createFileRoute("/rezervace/$id")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Stay detail — My Chata" },
+      { title: "Detail pobytu — My Chata" },
       { name: "description", content: "Details of a cottage stay booking." },
-      { property: "og:title", content: "Stay detail — My Chata" },
+      { property: "og:title", content: "Detail pobytu — My Chata" },
       { property: "og:description", content: "Details of a cottage stay booking." },
     ],
   }),
@@ -44,7 +44,11 @@ function BookingDetail() {
     queryKey: bookingKey,
     enabled: !!account,
     queryFn: async () => {
-      const { data, error } = await supabase.from("bookings").select("*").eq("id", id).single();
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data as Booking;
     },
@@ -74,17 +78,21 @@ function BookingDetail() {
   });
 
   const remove = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (_v: { withdrawn: boolean }) => {
       // Row-level security turns a refused delete into "0 rows", not an error (T-026: it said
       // "removed" while the stay stayed in the calendar).
       const { data, error } = await supabase.from("bookings").delete().eq("id", id).select("id");
       if (error) throw error;
       if (!data?.length) throw new Error("nothing_changed");
     },
-    onSuccess: () => {
+    onSuccess: (_d, v) => {
       setConfirmRemove(false);
       invalidate();
-      toast.success(t("Rezervace byla odstraněna.", "The booking has been removed."));
+      toast.success(
+        v.withdrawn
+          ? t("Žádost o pobyt byla stažena.", "The stay request was withdrawn.")
+          : t("Rezervace byla odstraněna.", "The booking has been removed."),
+      );
       navigate({ to: "/kalendar" });
     },
     onError: (e: Error) => {
@@ -119,9 +127,6 @@ function BookingDetail() {
     );
   }
 
-  const isAdmin =
-    account?.type === "INSTITUTIONAL" &&
-    (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
   const pending = booking.status === "PENDING";
   // Who may cancel: the person who booked it, or an admin (the database policy says the same).
   // A stay that has already ended stays in the history (T-026: anyone saw "Cancel stay" on
@@ -129,6 +134,11 @@ function BookingDetail() {
   const isAnyAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const isBooker = !!currentMember && booking.requester_member_id === currentMember.id;
   const canCancel = (isBooker || isAnyAdmin) && booking.end_date >= todayISO();
+  // Any admin decides a held stay: since T-036 a family cottage holds a member's overlapping
+  // booking too, and family admins had no Approve button anywhere (T-038).
+  const isAdmin = isAnyAdmin;
+  // The member who asked can take a waiting request back.
+  const withdraw = pending && isBooker && !isAdmin;
 
   const guestsLabel =
     lang === "en"
@@ -209,6 +219,17 @@ function BookingDetail() {
         </section>
       )}
 
+      {withdraw && (
+        <Button
+          variant="fresh"
+          size="fresh"
+          onClick={() => setConfirmRemove(true)}
+          className="btn-secondary mt-4 w-full"
+        >
+          {t("Stáhnout žádost", "Withdraw request")}
+        </Button>
+      )}
+
       {pending && isAdmin && (
         <div className="mt-4 flex gap-2">
           <Button
@@ -245,17 +266,25 @@ function BookingDetail() {
         open={confirmRemove}
         onOpenChange={setConfirmRemove}
         title={
-          pending
-            ? t("Zamítnout tuto žádost o pobyt?", "Decline this stay request?")
-            : t("Zrušit tento pobyt?", "Cancel this stay?")
+          withdraw
+            ? t("Stáhnout žádost o pobyt?", "Withdraw this stay request?")
+            : pending
+              ? t("Zamítnout tuto žádost o pobyt?", "Decline this stay request?")
+              : t("Zrušit tento pobyt?", "Cancel this stay?")
         }
         description={t(
           `${booking.requester_name}, ${fmtDate(booking.start_date)} – ${fmtDate(booking.end_date)}. Pobyt zmizí z kalendáře a nelze ho vrátit.`,
           `${booking.requester_name}, ${fmtDate(booking.start_date)} – ${fmtDate(booking.end_date)}. The stay will disappear from the calendar; this can't be undone.`,
         )}
-        confirmLabel={pending ? t("Zamítnout", "Decline") : t("Zrušit pobyt", "Cancel stay")}
+        confirmLabel={
+          withdraw
+            ? t("Stáhnout", "Withdraw")
+            : pending
+              ? t("Zamítnout", "Decline")
+              : t("Zrušit pobyt", "Cancel stay")
+        }
         busy={remove.isPending}
-        onConfirm={() => remove.mutate()}
+        onConfirm={() => remove.mutate({ withdrawn: withdraw })}
       />
 
       {pending && !isAdmin && (

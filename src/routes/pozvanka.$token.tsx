@@ -194,7 +194,7 @@ function InvitePage() {
           </>
         ) : wrongAccount ? (
           <>
-            <Explain>
+            <Explain tone="warn">
               {t(
                 `Jste přihlášeni jako ${userEmail}, ale pozvánka je pro ${preview?.email_hint ?? "jiný e-mail"}.`,
                 `You're signed in as ${userEmail}, but this invitation is for ${preview?.email_hint ?? "another email"}.`,
@@ -258,9 +258,17 @@ function InvitePage() {
   );
 }
 
-function Explain({ children }: { children: ReactNode }) {
+function Explain({ children, tone = "info" }: { children: ReactNode; tone?: "info" | "warn" }) {
+  // A problem the person has to act on (wrong account) reads as a warning, not as brand colour (F-17).
+  const colours =
+    tone === "warn"
+      ? "border border-warn-border bg-warn-soft text-warn-foreground"
+      : "bg-primary-soft text-primary";
   return (
-    <p className="mt-3 rounded-2xl bg-primary-soft p-3 text-left font-semibold text-primary">
+    <p
+      className={`mt-3 rounded-2xl p-3 text-left font-semibold ${colours}`}
+      role={tone === "warn" ? "alert" : undefined}
+    >
       {children}
     </p>
   );

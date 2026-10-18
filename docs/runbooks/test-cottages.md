@@ -16,7 +16,7 @@ The addresses and passwords stay with the maintainers (`private/` folder, outsid
 | Sign-in                    | Kind                                 | What it holds                                                                                                |
 | -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | Test 1 (Gmail)             | Google                               | Admin of the family account `Chata Alfa (test)` with three test cottages (Alfa, Beta, Gama)                  |
-| Test 2 (Gmail)             | Email + password, also Google        | Member of `Chata Alfa (test)` (joined by group link)                                                         |
+| Test 2 (Gmail)             | Email + password, also Google        | Member of `Chata Alfa (test)` (joined by group link); since 18 Oct also a member of `Test Institute`         |
 | Test 3 (work-style domain) | Email + password (work-style domain) | Admin of the organisation `Test Institute` (`Institutní chata (test)`), also a member of `Chata Alfa (test)` |
 
 The Lovable cottage is created by Lovable itself, in its own account, with the prompt in `prompts/2026-10-13/11-L-T-test-cottage.md` (maintainers' folder, outside the repo). If Lovable's test user ever turns out to be a member of a real family's account, stop: remove that membership first, then continue.

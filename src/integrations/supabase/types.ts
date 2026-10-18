@@ -1533,6 +1533,29 @@ export type Database = {
       is_admin_only_file: { Args: { _name: string }; Returns: boolean }
       is_member: { Args: { _account_id: string }; Returns: boolean }
       is_property_admin: { Args: { _property_id: string }; Returns: boolean }
+      my_cottages: {
+        Args: never
+        Returns: {
+          account_id: string
+          city: string
+          created_at: string
+          name: string
+          property_id: string
+        }[]
+      }
+      my_invitations: {
+        Args: never
+        Returns: {
+          account_name: string
+          account_type: string
+          created_at: string
+          expires_at: string
+          invited_by: string
+          property_name: string
+          role: string
+          token: string
+        }[]
+      }
       overlap_peak_guests: {
         Args: {
           _end: string

@@ -1419,9 +1419,12 @@ describe("cross-account summaries (T-040, migration 0030)", () => {
     );
     try {
       await as(db, newcomer, async (q) => {
-        expect(await q("select token, account_name from public.my_invitations()")).toEqual([
-          { token: "t040-for-nova", account_name: "Rodina A" },
-        ]);
+        // Other tests leave their own invitations for Nova; look at this test's only.
+        expect(
+          await q(
+            "select token, account_name from public.my_invitations() where token like 't040-%'",
+          ),
+        ).toEqual([{ token: "t040-for-nova", account_name: "Rodina A" }]);
       });
       // Already a member of A: nothing to show. Another email: nothing either.
       await as(db, aMember, async (q) => {

@@ -232,6 +232,13 @@
       "when": 1792328555225,
       "tag": "0032_booking_auto_approval_account_name",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792331100117,
+      "tag": "0033_0033_apply_journaled_0032",
+      "breakpoints": true
     }
   ]
 }

@@ -18,3 +18,13 @@ export function accountContextLine(
   }
   return sameName(account.name, propertyName) ? null : account.name;
 }
+
+/** The person's photo: their own upload first, then the one Google gave at sign-up (bug 14a). */
+export function avatarSource(
+  profile: { avatar_url?: string | null } | null | undefined,
+  user: { user_metadata?: Record<string, unknown> } | null | undefined,
+): string | null {
+  const meta = user?.user_metadata ?? {};
+  const google = (meta["avatar_url"] ?? meta["picture"]) as string | undefined;
+  return profile?.avatar_url || google || null;
+}

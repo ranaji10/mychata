@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/PasswordInput";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/i18n";
-import { explainPasswordError } from "@/lib/password";
+import { explainPasswordError, needsCurrentPassword } from "@/lib/password";
 
 /**
  * New password twice, with show/hide. Used for "set a password" after a Google sign-up
@@ -13,11 +13,21 @@ import { explainPasswordError } from "@/lib/password";
 export function SetPasswordForm({
   submitLabel,
   onDone,
+  askCurrent = false,
 }: {
   submitLabel?: string;
   onDone?: () => void;
+  /**
+   * Ask for the current password too. Supabase is set to require it when someone who already
+   * has a password changes it while signed in (bug 15 of 18 Oct: "Current password required
+   * when setting new password"). Not for the reset link, where the old one is forgotten.
+   */
+  askCurrent?: boolean;
 }) {
   const { t } = useLang();
+  const [current, setCurrent] = useState("");
+  // Shown from the start when we know there is a password, or once the server asks for it.
+  const [needCurrent, setNeedCurrent] = useState(askCurrent);
   const [password, setPassword] = useState("");
   const [again, setAgain] = useState("");
   const [busy, setBusy] = useState(false);
@@ -28,16 +38,21 @@ export function SetPasswordForm({
   const save = async () => {
     setBusy(true);
     setError("");
-    const { error: err } = await supabase.auth.updateUser({
+    // `current_password` is sent as is by supabase-js; older type definitions don't list it.
+    const attributes = {
       password,
       data: { password_set: true },
-    });
+      ...(needCurrent && current ? { current_password: current } : {}),
+    } as Parameters<typeof supabase.auth.updateUser>[0];
+    const { error: err } = await supabase.auth.updateUser(attributes);
     setBusy(false);
     if (err) {
       console.error("[password] update", err);
+      if (needsCurrentPassword(err)) setNeedCurrent(true);
       setError(explainPasswordError(err.message, t));
       return;
     }
+    setCurrent("");
     setPassword("");
     setAgain("");
     toast.success(t("Heslo uloženo.", "Password saved."));
@@ -53,6 +68,18 @@ export function SetPasswordForm({
         >
           {error}
         </p>
+      )}
+      {needCurrent && (
+        <label className="block">
+          <span className="text-[16px] font-bold">{t("Současné heslo", "Current password")}</span>
+          <div className="mt-1">
+            <PasswordInput
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              autoComplete="current-password"
+            />
+          </div>
+        </label>
       )}
       <label className="block">
         <span className="text-[16px] font-bold">{t("Nové heslo", "New password")}</span>
@@ -88,7 +115,9 @@ export function SetPasswordForm({
         variant="fresh"
         size="fresh"
         className="btn-primary w-full"
-        disabled={busy || password.length < 8 || password !== again}
+        disabled={
+          busy || password.length < 8 || password !== again || (needCurrent && !current)
+        }
         onClick={save}
       >
         {busy ? t("Ukládám…", "Saving…") : (submitLabel ?? t("Uložit heslo", "Save password"))}

@@ -49,7 +49,7 @@ export const Route = createFileRoute("/domu")({
 function HomePage() {
   const defaultPhoto = useDefaultChataPhoto();
   const { t, lang } = useLang();
-  const { account, property, currentMember, loading } = useAccount();
+  const { account, property, currentMember, loading, profile } = useAccount();
   const navigate = useNavigate();
 
   // The last leaving checklist, so whoever comes next sees what was done (T-019). Emailing it
@@ -224,12 +224,25 @@ function HomePage() {
           </Button>
         </div>
       )}
+      {/* No saved name: others would see an email (bug 7 of 18 Oct). */}
+      {!(profile?.display_name ?? "").trim() && (
+        <Link
+          to="/profil"
+          className="mb-3 flex min-h-11 items-center justify-between gap-2 rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground"
+        >
+          {t(
+            "Doplňte své jméno, ať ostatní vědí, kdo jste.",
+            "Add your name so others know who you are.",
+          )}
+          <ArrowRight className="size-5 shrink-0" />
+        </Link>
+      )}
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <h2 className="text-[32px] font-extrabold leading-[1.12] lg:text-[40px]">
           {nextBooking && nextBooking.start_date > today
             ? t(
                 `Chata je volná do ${fmtDate(nextBooking.start_date)}.`,
-                `The chata is free until ${fmtDate(nextBooking.start_date)}.`,
+                `The chata is available until ${fmtDate(nextBooking.start_date)}.`,
               )
             : t(
                 `Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`,
@@ -257,7 +270,8 @@ function HomePage() {
           <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 shadow-chip">
             <span className="size-2 rounded-full bg-ok" />
             <span className="text-[16px] font-bold">
-              {nextBooking ? t("Připravená", "Ready") : t("Volná", "Free")}
+              {/* "Free" read like a price (bug 2 of 18 Oct). */}
+              {nextBooking ? t("Připravená", "Ready") : t("Volná", "Available")}
             </span>
           </div>
           {/* The next stay has its own card below, so the photo links to the calendar
@@ -269,7 +283,7 @@ function HomePage() {
             <div>
               <p className="text-base font-bold leading-tight">{t("Kalendář", "Calendar")}</p>
               <p className="text-[16px] font-semibold text-muted-foreground">
-                {t("Všechny pobyty a volné dny", "All stays and free days")}
+                {t("Všechny pobyty a volné dny", "All stays and available days")}
               </p>
             </div>
             <span className="grid size-11 place-items-center rounded-2xl bg-secondary text-foreground">
@@ -601,8 +615,8 @@ function HomePage() {
                   "All tasks are done. You have the cottage under control.",
                 )
               : t(
-                  "Zatím tu nejsou žádné úkoly. Přidejte první nebo sezónní seznam v Úkolech.",
-                  "No tasks yet. Add the first one, or a seasonal checklist, in Tasks.",
+                  "Zatím tu nejsou žádné úkoly. Přidejte první nebo sezónní seznam v Nastavení → Spravovat chaty → Údržba.",
+                  "No tasks yet. Add the first one, or a seasonal checklist, in Settings → Manage cottages → Maintenance.",
                 )}
           </p>
         </div>

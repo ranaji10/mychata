@@ -16,9 +16,31 @@ export function hasPassword(
   return Array.isArray(providers) && providers.includes("email");
 }
 
+/** Supabase refused because the current password is missing or wrong (bug 15). */
+export function needsCurrentPassword(error: { message?: string; code?: string } | null) {
+  if (!error) return false;
+  const code = error.code ?? "";
+  const m = (error.message ?? "").toLowerCase();
+  return (
+    code === "current_password_required" ||
+    code === "current_password_mismatch" ||
+    m.includes("current password")
+  );
+}
+
 /** Friendly text for Supabase's password errors. */
 export function explainPasswordError(message: string, t: (cs: string, en: string) => string) {
   const m = message.toLowerCase();
+  if (m.includes("current password") && m.includes("required"))
+    return t(
+      "Pro změnu hesla zadejte i své současné heslo.",
+      "To change your password, also enter your current password.",
+    );
+  if (m.includes("current password"))
+    return t(
+      "Současné heslo nesouhlasí. Zkuste ho zadat znovu.",
+      "The current password is not right. Please type it again.",
+    );
   if (m.includes("known to be weak") || m.includes("pwned"))
     return t(
       "Toto heslo se objevilo v únicích dat. Zvolte jiné.",

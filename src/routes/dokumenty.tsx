@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileText, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Download, FileText, Loader2, Pencil, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -69,6 +69,8 @@ function DocumentsPage() {
   } | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [adding, setAdding] = useState(!!linkedTaskId);
+  // The document being edited (bug 11 of 18 Oct: tiles could not be changed after saving).
+  const [editing, setEditing] = useState<{ id: string; fileUrl: string | null } | null>(null);
   const [form, setForm] = useState({
     title: "",
     category: linkedTaskId ? "WARRANTIES" : "OTHER",
@@ -111,6 +113,42 @@ function DocumentsPage() {
       ),
     [documents, category, query],
   );
+  const emptyForm = {
+    title: "",
+    category: "OTHER",
+    notes: "",
+    issueDate: "",
+    expiryDate: "",
+    visibility: "ALL_MEMBERS",
+  };
+  const closeForm = () => {
+    setAdding(false);
+    setEditing(null);
+    setFile(null);
+    setForm(emptyForm);
+  };
+  const startEdit = (document: {
+    id: string;
+    title: string;
+    category: string;
+    notes: string | null;
+    issue_date: string | null;
+    expiry_date: string | null;
+    visibility: string;
+    file_url: string | null;
+  }) => {
+    setForm({
+      title: document.title,
+      category: document.category,
+      notes: document.notes ?? "",
+      issueDate: document.issue_date ?? "",
+      expiryDate: document.expiry_date ?? "",
+      visibility: document.visibility,
+    });
+    setFile(null);
+    setEditing({ id: document.id, fileUrl: document.file_url });
+    setAdding(true);
+  };
   const save = useMutation({
     mutationFn: async () => {
       if (!property) return;
@@ -121,6 +159,33 @@ function DocumentsPage() {
         const { error } = await supabase.storage.from("my-chata-files").upload(path, file);
         if (error) throw error;
         fileUrl = path;
+      }
+      if (editing) {
+        const { data: updated, error } = await supabase
+          .from("documents")
+          .update({
+            title: form.title,
+            category: form.category,
+            notes: form.notes || null,
+            issue_date: form.issueDate || null,
+            expiry_date: form.expiryDate || null,
+            visibility: form.visibility,
+            ...(fileUrl
+              ? { file_url: fileUrl, text_status: "pending", extracted_text: null, text_error: null }
+              : {}),
+          })
+          .eq("id", editing.id)
+          .select("id");
+        if (error) throw error;
+        // Row-level security turns a refused update into "0 rows", not an error.
+        if (!updated?.length) throw new Error("not_allowed");
+        if (fileUrl && editing.fileUrl) {
+          const { error: oldFileError } = await supabase.storage
+            .from("my-chata-files")
+            .remove([editing.fileUrl]);
+          if (oldFileError) console.error("[dokumenty] remove replaced file", oldFileError);
+        }
+        return fileUrl ? editing.id : null;
       }
       const { data: inserted, error } = await supabase
         .from("documents")
@@ -145,25 +210,25 @@ function DocumentsPage() {
       queryClient.invalidateQueries({ queryKey: ["documents", property?.id] });
       // Read the file right away so questions can use it (T-021).
       if (documentId) readText.mutate(documentId);
-      setAdding(false);
-      setFile(null);
-      setForm({
-        title: "",
-        category: "OTHER",
-        notes: "",
-        issueDate: "",
-        expiryDate: "",
-        visibility: "ALL_MEMBERS",
-      });
-      toast.success(t("Dokument uložen.", "Document saved."));
+      const wasEditing = !!editing;
+      closeForm();
+      toast.success(
+        wasEditing
+          ? t("Změny uloženy.", "Changes saved.")
+          : t("Dokument uložen.", "Document saved."),
+      );
     },
-    onError: () =>
+    onError: (error) => {
+      console.error("[dokumenty] save", error);
       toast.error(
-        t(
-          "Dokument se nepodařilo uložit. Přihlaste se a zkuste to znovu.",
-          "Could not save the document. Sign in and try again.",
-        ),
-      ),
+        error.message === "not_allowed"
+          ? t("Upravovat dokumenty může jen správce.", "Only an admin can edit documents.")
+          : t(
+              `Dokument se nepodařilo uložit: ${error.message}`,
+              `Could not save the document: ${error.message}`,
+            ),
+      );
+    },
   });
   const [reading, setReading] = useState<string | null>(null);
   const readText = useMutation({
@@ -273,7 +338,10 @@ function DocumentsPage() {
             <Button
               variant="fresh"
               size="fresh"
-              onClick={() => setAdding(true)}
+              onClick={() => {
+                closeForm();
+                setAdding(true);
+              }}
               className="grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"
               aria-label={t("Přidat dokument", "Add document")}
             >
@@ -324,7 +392,24 @@ function DocumentsPage() {
             const days = document.expiry_date ? daysUntil(document.expiry_date) : null;
             return (
               <article key={document.id} className="card p-4">
-                <div className="flex items-start gap-3">
+                {/* Admins tap the tile to change it (bug 11). */}
+                <div
+                  className={`flex items-start gap-3 ${isAdmin ? "cursor-pointer" : ""}`}
+                  {...(isAdmin
+                    ? {
+                        role: "button",
+                        tabIndex: 0,
+                        "aria-label": t(`Upravit ${document.title}`, `Edit ${document.title}`),
+                        onClick: () => startEdit(document),
+                        onKeyDown: (e: KeyboardEvent) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            startEdit(document);
+                          }
+                        },
+                      }
+                    : {})}
+                >
                   <div className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary">
                     <FileText className="size-5" />
                   </div>
@@ -403,6 +488,17 @@ function DocumentsPage() {
                     <Button
                       variant="fresh"
                       size="fresh"
+                      onClick={() => startEdit(document)}
+                      className="btn-secondary flex-1"
+                    >
+                      <Pencil className="size-4" />
+                      {t("Upravit", "Edit")}
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button
+                      variant="fresh"
+                      size="fresh"
                       onClick={() =>
                         setDeleting({
                           id: document.id,
@@ -432,9 +528,11 @@ function DocumentsPage() {
             className="w-full max-w-[400px] max-h-[90vh] space-y-3 overflow-auto rounded-[28px] bg-card p-5 shadow-2xl"
           >
             <h2 className="text-xl font-bold">
-              {linkedTaskId
-                ? t("Záruka k dokončenému úkolu", "Warranty for completed task")
-                : t("Nový dokument", "New document")}
+              {editing
+                ? t("Upravit dokument", "Edit document")
+                : linkedTaskId
+                  ? t("Záruka k dokončenému úkolu", "Warranty for completed task")
+                  : t("Nový dokument", "New document")}
             </h2>
             <input
               required
@@ -486,6 +584,14 @@ function DocumentsPage() {
               <option value="ALL_MEMBERS">{t("Všichni členové", "All members")}</option>
               <option value="ADMINS_ONLY">{t("Jen správci", "Admins only")}</option>
             </select>
+            {editing?.fileUrl && (
+              <p className="text-[16px] text-muted-foreground">
+                {t(
+                  "Soubor zůstane stejný. Vyberte nový jen pokud ho chcete nahradit.",
+                  "The file stays the same. Pick a new one only to replace it.",
+                )}
+              </p>
+            )}
             <input
               type="file"
               accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,.docx,.txt,.md,.csv"
@@ -511,7 +617,7 @@ function DocumentsPage() {
                 variant="fresh"
                 size="fresh"
                 type="button"
-                onClick={() => setAdding(false)}
+                onClick={closeForm}
                 className="btn-secondary"
               >
                 {t("Zrušit", "Cancel")}

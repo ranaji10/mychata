@@ -137,7 +137,7 @@ function PublicCalendar() {
         <LanguageToggle className="shrink-0" />
       </div>
       <p className="mt-1 text-[16px] text-muted-foreground">
-        {t("Podívejte se, kdy je chata volná.", "See when the cottage is free.")}
+        {t("Podívejte se, kdy je chata volná.", "See when the cottage is available.")}
       </p>
 
       {loadingProperty && (
@@ -179,7 +179,7 @@ function PublicCalendar() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-semibold text-muted-foreground">
-                  {t("Nejbližší volný víkend", "Next free weekend")}
+                  {t("Nejbližší volný víkend", "Next available weekend")}
                 </p>
                 <p className="text-[16px] font-bold">
                   {fmtDate(freeWeekend.start)} – {fmtDate(freeWeekend.end)}
@@ -217,7 +217,7 @@ function PublicCalendar() {
             </div>
             <CalendarLegend />
             <p className="mt-2 text-[12px] font-semibold text-muted-foreground">
-              {t("Zeleně zvýrazněno: volný víkend", "Green outline: free weekend")}
+              {t("Zeleně zvýrazněno: volný víkend", "Green outline: available weekend")}
             </p>
           </section>
 

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, ClipboardList, FileBadge, User } from "lucide-react";
 import { useState } from "react";
@@ -50,6 +50,7 @@ function TaskDetail() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { t, lang } = useLang();
   const navigate = useNavigate();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   // maybeSingle: a deleted task, or one from another account, is "not found", not an error
@@ -149,7 +150,7 @@ function TaskDetail() {
               </Button>
             ) : (
               <Link to="/ukoly" className="btn-primary w-full">
-                {t("Zpět na úkoly", "Back to tasks")}
+                {t("Zpět na údržbu", "Back to maintenance")}
               </Link>
             )
           }
@@ -168,7 +169,10 @@ function TaskDetail() {
         <Button
           variant="fresh"
           size="fresh"
-          onClick={() => navigate({ to: "/ukoly" })}
+          // Back returns to the list as it was (open checklists, filter, scroll): bug 8.
+          onClick={() =>
+            router.history.canGoBack() ? router.history.back() : navigate({ to: "/ukoly" })
+          }
           aria-label={t("Zpět", "Back")}
           className="grid size-11 place-items-center rounded-full bg-secondary"
         >

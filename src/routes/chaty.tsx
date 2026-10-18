@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Building2, Camera, FileText, Home, Plus, ScrollText } from "lucide-react";
+import { BookOpen, Building2, Camera, FileText, Home, Plus, ScrollText, Wrench } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -12,6 +12,7 @@ import { useAccount } from "@/lib/account";
 import type { Property } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { rebuildManualChunks } from "@/lib/manual-qa.functions";
+import { useMyCottages } from "@/lib/my-cottages";
 
 export const Route = createFileRoute("/chaty")({
   staticData: { sitemap: false },
@@ -32,6 +33,8 @@ export const Route = createFileRoute("/chaty")({
   component: ManageCottagesPage,
 });
 
+type CottagePage = "/fotky" | "/manual" | "/dokumenty" | "/ukoly";
+
 /**
  * Manage cottages (bug 7, 17 Oct 2026): every cottage in one list, which ones an organisation
  * manages, and per cottage the photos, house manual, house rules and documents that used to be
@@ -49,7 +52,9 @@ function ManageCottagesPage() {
     setActivePropertyId,
     switchAccount,
     currentMember,
+    user,
   } = useAccount();
+  const { data: myCottages } = useMyCottages(user?.id);
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const ids = properties.map((p) => p.id);
   const [switching, setSwitching] = useState<string | null>(null);
@@ -69,7 +74,7 @@ function ManageCottagesPage() {
   });
 
   // Photos, manual and documents work on the cottage that is open, so open it first.
-  const openFor = (p: Property, to: "/fotky" | "/manual" | "/dokumenty") => {
+  const openFor = (p: Property, to: CottagePage) => {
     if (p.id !== property?.id) setActivePropertyId(p.id);
     navigate({ to });
   };
@@ -142,6 +147,12 @@ function ManageCottagesPage() {
                     <p className="min-w-0 flex-1 truncate font-bold">{acc?.name ?? "—"}</p>
                     <TypeBadge institutional={acc?.type === "INSTITUTIONAL"} />
                   </div>
+                  {myCottages && (
+                    <p className="mt-1 text-[15px] text-muted-foreground">
+                      {(myCottages[m.account_id] ?? []).map((c) => c.name).join(", ") ||
+                        t("Zatím žádná chata", "No cottage yet")}
+                    </p>
+                  )}
                   <Button
                     variant="fresh"
                     size="fresh"
@@ -187,7 +198,7 @@ function CottageCard({
   open: boolean;
   hasRules: boolean;
   isAdmin: boolean;
-  onOpen: (to: "/fotky" | "/manual" | "/dokumenty") => void;
+  onOpen: (to: CottagePage) => void;
 }) {
   const { t } = useLang();
   const queryClient = useQueryClient();
@@ -244,7 +255,8 @@ function CottageCard({
           {[property.address, property.city].filter(Boolean).join(", ")}
         </p>
       )}
-      <div className="mt-2 grid grid-cols-3 gap-2">
+      {/* The cottage's own pages; Maintenance holds its tasks (bugs 4, 4a). */}
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Button variant="fresh" size="fresh" className={action} onClick={() => onOpen("/fotky")}>
           <Camera className="size-5" />
           {t("Fotky", "Photos")}
@@ -261,6 +273,10 @@ function CottageCard({
         >
           <FileText className="size-5" />
           {t("Dokumenty", "Documents")}
+        </Button>
+        <Button variant="fresh" size="fresh" className={action} onClick={() => onOpen("/ukoly")}>
+          <Wrench className="size-5" />
+          {t("Údržba", "Maintenance")}
         </Button>
       </div>
       <div className="mt-2 flex items-center gap-2 text-[16px]">

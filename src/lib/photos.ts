@@ -5,6 +5,19 @@
 
 export const MAX_PHOTO_SIDE = 2000;
 export const TARGET_PHOTO_BYTES = 1_000_000;
+/**
+ * A smaller copy for lists and Home (bug 13 of 18 Oct): the photo grid and the Home picture
+ * used to download every full 2000 px photo (~1 MB each). 1000 px is sharp enough for a phone
+ * screen and Home on a computer, at roughly a fifth of the size. ADR-0009.
+ */
+export const PREVIEW_SIDE = 1000;
+export const TARGET_PREVIEW_BYTES = 200_000;
+
+/** Where a photo's preview is stored: next to it, in a "preview" folder. */
+export function previewPathFor(path: string): string {
+  const i = path.lastIndexOf("/");
+  return `${path.slice(0, i)}/preview/${path.slice(i + 1)}`;
+}
 
 export type PhotoErrorKind = "too_large" | "wrong_type" | "permission" | "network" | "unknown";
 
@@ -124,7 +137,10 @@ function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null
  * Returns a JPEG of at most MAX_PHOTO_SIDE px on the long side and about TARGET_PHOTO_BYTES.
  * HEIC works where the browser can decode it (Safari); elsewhere it is a clear "wrong_type".
  */
-export async function preparePhoto(file: File): Promise<File> {
+export async function preparePhoto(
+  file: File,
+  { maxSide = MAX_PHOTO_SIDE, targetBytes = TARGET_PHOTO_BYTES } = {},
+): Promise<File> {
   if (!file.type.startsWith("image/") && !isHeic(file)) {
     throw new PhotoError("wrong_type", `not an image: ${file.type || file.name}`);
   }
@@ -134,7 +150,7 @@ export async function preparePhoto(file: File): Promise<File> {
   } catch {
     throw new PhotoError("wrong_type", `cannot decode ${file.type || file.name}`);
   }
-  let { width, height } = fitWithin(image.width, image.height);
+  let { width, height } = fitWithin(image.width, image.height, maxSide);
   const canvas = document.createElement("canvas");
   let blob: Blob | null = null;
   // Lower quality first, then size, until the photo is small enough.
@@ -148,9 +164,9 @@ export async function preparePhoto(file: File): Promise<File> {
     ctx.drawImage(image, 0, 0, width, height);
     for (const quality of [0.85, 0.75, 0.65]) {
       blob = await toJpeg(canvas, quality);
-      if (blob && blob.size <= TARGET_PHOTO_BYTES) break;
+      if (blob && blob.size <= targetBytes) break;
     }
-    if (blob && blob.size <= TARGET_PHOTO_BYTES) break;
+    if (blob && blob.size <= targetBytes) break;
     width = Math.round(width * 0.8);
     height = Math.round(height * 0.8);
   }
@@ -158,4 +174,27 @@ export async function preparePhoto(file: File): Promise<File> {
   if (!blob) throw new PhotoError("unknown", "could not encode the photo");
   const base = file.name.replace(/\.[^.]+$/, "") || "photo";
   return new File([blob], `${base}.jpg`, { type: "image/jpeg" });
+}
+
+/** The preview copy, made from the already-shrunk photo. */
+export function preparePreview(photo: File): Promise<File> {
+  return preparePhoto(photo, { maxSide: PREVIEW_SIDE, targetBytes: TARGET_PREVIEW_BYTES });
+}
+
+/**
+ * Picks the preview's signed link when the preview exists (photos added before 18 Oct have
+ * none) and the full photo's link otherwise.
+ */
+export function pickPhotoUrls(
+  photos: { id: string; storage_path: string }[],
+  signed: { path: string | null; signedUrl: string | null; error: string | null }[],
+): Record<string, string> {
+  const byPath = new Map<string, string>();
+  for (const row of signed) if (row.path && row.signedUrl && !row.error) byPath.set(row.path, row.signedUrl);
+  const out: Record<string, string> = {};
+  for (const p of photos) {
+    const url = byPath.get(previewPathFor(p.storage_path)) ?? byPath.get(p.storage_path);
+    if (url) out[p.id] = url;
+  }
+  return out;
 }

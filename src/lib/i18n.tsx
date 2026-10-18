@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type Lang = "cs" | "en";
 
@@ -23,6 +23,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       return "cs";
     }
   });
+
+  // The page says which language it is in, also after a reload in English; with "cs" on an
+  // English page, browsers offered to translate it from Czech (bug 3 of 18 Oct).
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const value = useMemo<LangState>(
     () => ({

@@ -132,6 +132,11 @@ function CalendarPage() {
           (token) => ({ data: token, error: null }),
           (error: Error) => ({ data: null, error }),
         );
+    // A failed read is not the same as "switched off" (Settings already tells them apart).
+    if (!isAdmin && publishError) {
+      toast.error(t("Odkaz se nepodařilo načíst.", "Could not load the link."));
+      return;
+    }
     if (publishError || !publicToken) {
       if (!isAdmin) void queryClient.invalidateQueries({ queryKey: ["properties"] });
       toast.error(

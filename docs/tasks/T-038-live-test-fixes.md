@@ -1,6 +1,6 @@
 # T-038 Fixes from the live test of 18 Oct
 
-Owner: Claude · Status: done (PR #52), review follow-up open
+Owner: Claude · Status: done (PR #52, PR #54), live since `d52dfd0` (18 Oct); finding 4 open until the Test 1 checks (tracker N-10)
 
 Goal: fix what the signed-in live test of 18 Oct found (report `docs/external/claude/2026-10-18-site-check.md`) and the F-17 polish items, without schema changes.
 Non-goals: D-16 (who may approve institution requests), the cookie banner's size (F-03), anything needing a migration.

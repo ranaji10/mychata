@@ -1451,6 +1451,7 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: string }
+      account_founder: { Args: { _account_id: string }; Returns: string }
       account_plan: { Args: { _account_id: string }; Returns: string }
       add_checklist: {
         Args: {
@@ -1532,6 +1533,15 @@ export type Database = {
       is_admin_only_file: { Args: { _name: string }; Returns: boolean }
       is_member: { Args: { _account_id: string }; Returns: boolean }
       is_property_admin: { Args: { _property_id: string }; Returns: boolean }
+      overlap_peak_guests: {
+        Args: {
+          _end: string
+          _except: string
+          _property_id: string
+          _start: string
+        }
+        Returns: number
+      }
       plan_limit: { Args: { _account_id: string; _key: string }; Returns: Json }
       public_calendar: {
         Args: { _token: string }

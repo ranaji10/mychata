@@ -31,7 +31,6 @@ export const Route = createFileRoute("/host/$token")({
 function GuestBookingPage() {
   const { token } = Route.useParams();
   const { t } = useLang();
-  useBrand("family");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [start, setStart] = useState("");
@@ -55,6 +54,8 @@ function GuestBookingPage() {
     queryKey: ["guest-link", token],
     queryFn: () => getGuestLinkInfo({ data: { token } }),
   });
+  // An organisation's cottage in its blue (tracker F-04, migration 0032).
+  useBrand(data?.isInstitution ? "institution" : "family");
 
   if (isLoading)
     return (

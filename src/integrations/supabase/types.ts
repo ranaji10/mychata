@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          booking_auto_approve: boolean | null
           created_at: string
           id: string
           name: string
           type: string
         }
         Insert: {
+          booking_auto_approve?: boolean | null
           created_at?: string
           id?: string
           name: string
           type: string
         }
         Update: {
+          booking_auto_approve?: boolean | null
           created_at?: string
           id?: string
           name?: string
@@ -108,6 +111,7 @@ export type Database = {
       }
       bookings: {
         Row: {
+          auto_approved: boolean
           created_at: string
           end_date: string
           guests: number
@@ -121,6 +125,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_approved?: boolean
           created_at?: string
           end_date: string
           guests?: number
@@ -134,6 +139,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_approved?: boolean
           created_at?: string
           end_date?: string
           guests?: number
@@ -1487,6 +1493,7 @@ export type Database = {
         Args: {
           _account_name: string
           _address?: string
+          _booking_auto_approve?: boolean
           _city?: string
           _house_rules?: string
           _overlap_max_guests?: number
@@ -1524,6 +1531,7 @@ export type Database = {
           email_hint: string
           email_matches: boolean
           invited_by: string
+          is_institution: boolean
           property_name: string
           role: string
           state: string
@@ -1591,6 +1599,7 @@ export type Database = {
         Args: { _token: string }
         Returns: {
           id: string
+          is_institution: boolean
           property_address: string
           property_id: string
           property_name: string
@@ -1619,6 +1628,10 @@ export type Database = {
           property_name: string
         }[]
       }
+      rename_account: {
+        Args: { _account_id: string; _name: string }
+        Returns: undefined
+      }
       rotate_public_token: { Args: { _property_id: string }; Returns: string }
       search_manual: {
         Args: {
@@ -1635,6 +1648,10 @@ export type Database = {
         }[]
       }
       set_active_account: { Args: { _account_id: string }; Returns: string }
+      set_booking_auto_approve: {
+        Args: { _account_id: string; _enabled: boolean }
+        Returns: undefined
+      }
       set_member_role: {
         Args: { _member_id: string; _role: string }
         Returns: undefined

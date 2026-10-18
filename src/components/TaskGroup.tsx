@@ -118,6 +118,9 @@ export function TaskGroup({
       )}
     </div>
   );
+  // The standalone group has no heading, so with no tasks it drew an empty white strip under
+  // "No tasks in this filter" (seen live 18 Oct).
+  if (!title && tasks.length === 0) return null;
   return (
     <section
       className="card min-w-0 px-4 py-1"

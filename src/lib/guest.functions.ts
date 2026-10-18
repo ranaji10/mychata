@@ -38,6 +38,8 @@ export const getGuestLinkInfo = createServerFn({ method: "GET" })
       propertyAddress: row.property_address,
       validFrom: row.valid_from,
       validTo: row.valid_to,
+      // Older databases (before migration 0032) don't return the flag: green, as before.
+      isInstitution: !!(row as { is_institution?: boolean | null }).is_institution,
       availability: availability ?? [],
     };
   });

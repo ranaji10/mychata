@@ -10,7 +10,12 @@ import { InstitutionSetup } from "@/components/InstitutionSetup";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { avatarSource } from "@/lib/account-label";
+import {
+  accountNameFromEmail,
+  avatarSource,
+  familyAccountsNamedLikeCottage,
+  sameName,
+} from "@/lib/account-label";
 import { useMyCottages } from "@/lib/my-cottages";
 import { avatarDataUrl } from "@/lib/avatar";
 import { normalizePhone, type Profile } from "@/lib/data";
@@ -196,10 +201,27 @@ function ProfilePage() {
         ? properties.map((p) => p.name)
         : null;
   const savedName = (profile?.display_name ?? "").trim();
+  // Family accounts named like one of their cottages (T-042): the admin is asked to rename.
+  const cottagesByAccount: Record<string, { name: string }[]> =
+    myCottages ?? (account ? { [account.id]: properties } : {});
+  const toRename = familyAccountsNamedLikeCottage(
+    accounts,
+    memberships.filter((m) => m.role === "ADMIN" || m.role === "OWNER").map((m) => m.account_id),
+    cottagesByAccount,
+  );
 
   return (
     <AppShell>
       <PageHeader title={t("Můj profil", "My profile")} back="/vice" />
+      {toRename.map((a) => (
+        <RenameAccountCard
+          key={a.id}
+          accountId={a.id}
+          currentName={a.name}
+          cottageNames={(cottagesByAccount[a.id] ?? []).map((c) => c.name)}
+          suggestion={accountNameFromEmail(user?.email)}
+        />
+      ))}
       {/* Who is signed in, separate from which account is open (bug 2: an organisation named
           after a work email looked like the sign-in). */}
       <div className="card mt-4 p-4">
@@ -419,5 +441,98 @@ function ProfilePage() {
         {t("Odhlásit se", "Sign out")}
       </Button>
     </AppShell>
+  );
+}
+
+/**
+ * T-042: a family account must not be called like its cottage ("Chata Alfa" over Alfa, Beta
+ * and Gama read as Beta inside Alfa). Shown to the account's admins until it is renamed.
+ */
+function RenameAccountCard({
+  accountId,
+  currentName,
+  cottageNames,
+  suggestion,
+}: {
+  accountId: string;
+  currentName: string;
+  cottageNames: string[];
+  suggestion: string;
+}) {
+  const { t } = useLang();
+  const { user } = useAccount();
+  const queryClient = useQueryClient();
+  const [value, setValue] = useState(suggestion);
+  const [busy, setBusy] = useState(false);
+  const clash = cottageNames.some((n) => sameName(n, value));
+  const tooShort = value.trim().length < 2;
+
+  const rename = async () => {
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc("rename_account", {
+        _account_id: accountId,
+        _name: value.trim(),
+      });
+      if (error) throw error;
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["accounts", user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["my-cottages", user?.id] }),
+      ]);
+      toast.success(t("Účet přejmenován.", "Account renamed."));
+    } catch (error) {
+      console.error("[profil] rename account", error);
+      const message = (error as { message?: string } | null)?.message ?? String(error);
+      toast.error(
+        message.includes("account_name_same_as_cottage")
+          ? t(
+              "Účet se nesmí jmenovat jako některá z jeho chat.",
+              "The account can't have the name of one of its cottages.",
+            )
+          : t(`Přejmenování se nepodařilo: ${message}`, `Could not rename: ${message}`),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section
+      className="card mt-4 space-y-2 p-4 ring-2 ring-warn"
+      aria-label={t("Přejmenovat účet", "Rename the account")}
+    >
+      <h2 className="text-lg font-bold">
+        {t("Přejmenujte prosím účet", "Please rename your account")}
+      </h2>
+      <p className="text-[16px] text-muted-foreground">
+        {t(
+          `Váš rodinný účet se jmenuje stejně jako chata („${currentName}“). Dejte účtu vlastní název, třeba příjmení rodiny; chaty se pod ním pak neztratí.`,
+          `Your family account has the same name as a cottage ("${currentName}"). Give the account its own name, e.g. the family name, so the cottages under it are easy to tell apart.`,
+        )}
+      </p>
+      <label className="block">
+        <span className="text-[16px] font-bold">{t("Nový název účtu", "New account name")}</span>
+        <input
+          className="field mt-1 w-full"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={t("Např. Novákovi", "E.g. The Novák family")}
+        />
+      </label>
+      {clash && (
+        <p className="text-[16px] font-semibold text-warn-foreground">
+          {t("Tento název už má jedna z chat.", "One of the cottages already has this name.")}
+        </p>
+      )}
+      <Button
+        variant="fresh"
+        size="fresh"
+        className="btn-primary w-full"
+        disabled={busy || clash || tooShort}
+        onClick={() => void rename()}
+      >
+        {busy ? t("Ukládám…", "Saving…") : t("Přejmenovat účet", "Rename the account")}
+      </Button>
+    </section>
   );
 }

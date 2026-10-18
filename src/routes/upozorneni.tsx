@@ -48,6 +48,7 @@ export const Route = createFileRoute("/upozorneni")({
 const ICONS: Record<NotificationKind, LucideIcon> = {
   invitation: Mail,
   approval: CalendarCheck,
+  auto_approved: CalendarCheck,
   guest_request: CalendarCheck,
   institution_request: Inbox,
   task_assigned: Wrench,

@@ -40,6 +40,8 @@ interface Preview {
   invited_by: string | null;
   email_hint: string | null;
   email_matches: boolean | null;
+  /** Since migration 0032: the invitation is to an organisation's account (F-04). */
+  is_institution?: boolean | null;
 }
 
 // Before 28 Sep this page accepted silently, sent signed-out people to /auth and lost the link,
@@ -48,7 +50,6 @@ interface Preview {
 function InvitePage() {
   const { token } = Route.useParams();
   const { t } = useLang();
-  useBrand("family");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
@@ -69,6 +70,7 @@ function InvitePage() {
       return ((data ?? [])[0] ?? { state: "not_found" }) as Preview;
     },
   });
+  useBrand(preview?.is_institution ? "institution" : "family");
 
   const signIn = () => {
     savePendingInvite(token);

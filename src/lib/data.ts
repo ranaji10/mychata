@@ -4,6 +4,8 @@ export interface Account {
   id: string;
   type: "FAMILY" | "INSTITUTIONAL";
   name: string;
+  /** Organisations: members' bookings confirmed without an admin. null = not decided yet (0032). */
+  booking_auto_approve?: boolean | null;
 }
 
 export interface Property {
@@ -57,6 +59,8 @@ export interface Booking {
   note: string | null;
   status: "CONFIRMED" | "PENDING";
   created_at: string;
+  /** Confirmed on creation for the booker, with nobody deciding (migration 0032). */
+  auto_approved?: boolean;
 }
 
 export interface InstitutionalRequest {

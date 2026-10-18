@@ -14,7 +14,9 @@ import { isPublicEmailDomain, signupMetadata } from "@/lib/signup";
 import { hasPassword } from "@/lib/password";
 import { forgetPersonalEmail, personalEmailToLink } from "@/lib/institution-link";
 import { inviteLink } from "@/lib/invites";
+import { accountNameFromEmail, sameName } from "@/lib/account-label";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
+import { AutoApproveChoice } from "@/components/AutoApproveChoice";
 
 export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
@@ -100,8 +102,23 @@ function OnboardingPage() {
   const [overlapAllowed, setOverlapAllowed] = useState<boolean | null>(null);
   const [overlapMaxGuests, setOverlapMaxGuests] = useState("");
   const [houseRules, setHouseRules] = useState("");
+  // Organisations answer "Auto booking approval" (T-042); null = not answered yet.
+  const [autoApprove, setAutoApprove] = useState<boolean | null>(null);
 
   const email = user?.email ?? "";
+  // A family account gets its own name, not the first cottage's (T-042); start from the part
+  // of the email before the @, which the person can change.
+  useEffect(() => {
+    if (type === "FAMILY" && email)
+      setAccountName((current) => current || accountNameFromEmail(email));
+  }, [type, email]);
+  // Chatas can be added to the current account only by its admins. Anyone else
+  // (new people, or plain members of someone else's account) gets their own account,
+  // where they are admin. See B-003.
+  const addToCurrentAccount =
+    !search.fresh && (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
+  const familyNameClash =
+    !addToCurrentAccount && type === "FAMILY" && sameName(accountName, chatas[0]?.name ?? "");
   const institutionBlocked = type === "INSTITUTIONAL" && isPublicEmailDomain(email);
 
   const steps = [
@@ -122,16 +139,12 @@ function OnboardingPage() {
         .upsert({ user_id: user.id, display_name: fullName.trim() }, { onConflict: "user_id" });
       if (nameError) throw nameError;
       const first = chatas[0]!;
-      // Chatas can be added to the current account only by its admins. Anyone else
-      // (new people, or plain members of someone else's account) gets their own account,
-      // where they are admin. See B-003.
-      const addToCurrentAccount =
-        !search.fresh && (currentMember?.role === "ADMIN" || currentMember?.role === "OWNER");
       const newPropertyIds: string[] = [];
       if (!addToCurrentAccount) {
         const { data: firstId, error } = await supabase.rpc("create_account_onboarding", {
           _type: type,
-          _account_name: accountName || first.name || "My Chata",
+          _account_name:
+            accountName.trim() || (type === "FAMILY" ? t("Moje rodina", "My family") : first.name),
           _property_name: first.name,
           _address: first.address,
           ...(first.city ? { _city: first.city } : {}),
@@ -141,6 +154,9 @@ function OnboardingPage() {
             ? { _overlap_max_guests: Number(overlapMaxGuests) }
             : {}),
           _house_rules: houseRules,
+          ...(type === "INSTITUTIONAL" && autoApprove !== null
+            ? { _booking_auto_approve: autoApprove }
+            : {}),
         });
         if (error) throw error;
         if (firstId) newPropertyIds.push(firstId as string);
@@ -253,13 +269,19 @@ function OnboardingPage() {
       else navigate({ to: "/domu", replace: true });
     } catch (e) {
       const code = (e as { code?: string } | null)?.code;
+      const message = (e as { message?: string } | null)?.message ?? "";
       toast.error(
-        code === "42501"
+        message.includes("account_name_same_as_cottage")
           ? t(
-              "Nemáte oprávnění správce pro tento účet.",
-              "You don't have admin rights for this account.",
+              "Účet a první chata nesmí mít stejný název. Změňte název účtu v prvním kroku.",
+              "The account and its first cottage can't have the same name. Change the account name in the first step.",
             )
-          : t("Něco se nepodařilo. Zkuste to znovu.", "Something went wrong. Please try again."),
+          : code === "42501"
+            ? t(
+                "Nemáte oprávnění správce pro tento účet.",
+                "You don't have admin rights for this account.",
+              )
+            : t("Něco se nepodařilo. Zkuste to znovu.", "Something went wrong. Please try again."),
       );
       console.error(e);
     } finally {
@@ -271,11 +293,12 @@ function OnboardingPage() {
     step === 0
       ? fullName.trim().length > 1 &&
         !institutionBlocked &&
-        (type === "INSTITUTIONAL" ? accountName.trim().length > 1 : true)
+        (addToCurrentAccount || accountName.trim().length > 1)
       : step === 1
-        ? chatas.every((c) => c.name.trim().length > 1)
+        ? chatas.every((c) => c.name.trim().length > 1) && !familyNameClash
         : step === 3
-          ? chatas.every((c) => !c.rooms || Number(c.rooms) <= 3) || overlapAllowed !== null
+          ? (chatas.every((c) => !c.rooms || Number(c.rooms) <= 3) || overlapAllowed !== null) &&
+            (type !== "INSTITUTIONAL" || addToCurrentAccount || autoApprove !== null)
           : true;
 
   if (done) {
@@ -393,6 +416,23 @@ function OnboardingPage() {
                 autoComplete="name"
               />
             </label>
+            {type === "FAMILY" && !addToCurrentAccount && (
+              <label className="block">
+                <span className="text-[16px] font-bold">{t("Název účtu", "Account name")}</span>
+                <input
+                  className="field mt-1 w-full"
+                  placeholder={t("Např. Novákovi", "E.g. The Novák family")}
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                />
+                <span className="mt-1 block text-[15px] text-muted-foreground">
+                  {t(
+                    "Pod tímto názvem budou všechny vaše chaty. Chata pak dostane vlastní název.",
+                    "All your cottages sit under this name. Each cottage gets its own name next.",
+                  )}
+                </span>
+              </label>
+            )}
             {type === "INSTITUTIONAL" && (
               <label className="block">
                 <span className="text-[16px] font-bold">
@@ -490,6 +530,14 @@ function OnboardingPage() {
                 </div>
               </div>
             ))}
+            {familyNameClash && (
+              <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
+                {t(
+                  `Chata se nemůže jmenovat stejně jako účet („${accountName.trim()}“). Zvolte jiný název chaty, nebo se vraťte a změňte název účtu.`,
+                  `The cottage can't have the same name as the account ("${accountName.trim()}"). Pick another cottage name, or go back and change the account name.`,
+                )}
+              </p>
+            )}
             <Button
               variant="fresh"
               size="fresh"
@@ -583,6 +631,9 @@ function OnboardingPage() {
                   "For smaller cottages overlaps are allowed automatically — the family works it out.",
                 )}
               </p>
+            )}
+            {type === "INSTITUTIONAL" && !addToCurrentAccount && (
+              <AutoApproveChoice value={autoApprove} onChange={setAutoApprove} />
             )}
           </div>
         )}

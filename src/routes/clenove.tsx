@@ -17,6 +17,7 @@ import {
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { AutoApproveChoice } from "@/components/AutoApproveChoice";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
@@ -527,6 +528,8 @@ function MembersPage() {
         back="/vice"
       />
 
+      {isAdmin && account?.type === "INSTITUTIONAL" && <BookingApprovalCard />}
+
       {isAdmin && (
         <div className="card mt-4 space-y-3 p-4">
           <h2 className="flex items-center gap-2 text-lg font-bold">
@@ -701,5 +704,66 @@ function MembersPage() {
         }
       />
     </AppShell>
+  );
+}
+
+/**
+ * Auto booking approval (T-042). Organisations set up before the onboarding question get a
+ * prompt here until an admin answers; after that the answer stays changeable.
+ */
+function BookingApprovalCard() {
+  const { t } = useLang();
+  const { account, user } = useAccount();
+  const queryClient = useQueryClient();
+  const value = account?.booking_auto_approve ?? null;
+  const save = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { error } = await supabase.rpc("set_booking_auto_approve", {
+        _account_id: account!.id,
+        _enabled: enabled,
+      });
+      if (error) throw error;
+      return enabled;
+    },
+    onSuccess: async (enabled) => {
+      await queryClient.invalidateQueries({ queryKey: ["accounts", user?.id] });
+      toast.success(
+        enabled
+          ? t(
+              "Rezervace členů se budou potvrzovat hned.",
+              "Members' bookings will be confirmed straight away.",
+            )
+          : t(
+              "Rezervace členů bude schvalovat správce.",
+              "An admin will approve members' bookings.",
+            ),
+      );
+    },
+    onError: (error) => {
+      console.error("[clenove] auto approval", error);
+      toast.error(t(`Uložení se nepodařilo: ${error.message}`, `Could not save: ${error.message}`));
+    },
+  });
+  return (
+    <section
+      className={`card mt-4 space-y-2 p-4 ${value === null ? "ring-2 ring-warn" : ""}`}
+      aria-label={t("Automatické schvalování rezervací", "Auto booking approval")}
+    >
+      {value === null && (
+        <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
+          {t(
+            "Prosím rozhodněte: mají se rezervace členů potvrzovat automaticky? Do té doby každou schvaluje správce.",
+            "Please decide: should members' bookings be approved automatically? Until then an admin approves each one.",
+          )}
+        </p>
+      )}
+      <AutoApproveChoice
+        value={value}
+        disabled={save.isPending}
+        onChange={(enabled) => {
+          if (enabled !== value) save.mutate(enabled);
+        }}
+      />
+    </section>
   );
 }

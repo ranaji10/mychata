@@ -1440,3 +1440,168 @@ describe("cross-account summaries (T-040, migration 0030)", () => {
     }
   });
 });
+
+describe("auto booking approval and account names (T-042, migration 0032)", () => {
+  const cyril = {
+    role: "authenticated" as const,
+    userId: "10000000-0000-4000-8000-0000000000e1",
+    email: "cyril@example.org",
+  };
+  let cyrilMember = "";
+  beforeAll(async () => {
+    const [m] = await admin(
+      db,
+      "insert into public.members (account_id, name, email, role, user_id) values ($1,'Cyril',$2,'MEMBER',$3) returning id",
+      [ids.acctB, cyril.email, cyril.userId],
+    );
+    cyrilMember = (m as { id: string }).id;
+  });
+  const bookInB = (
+    q: <R = Record<string, unknown>>(sql: string, params?: unknown[]) => Promise<R[]>,
+    member: string,
+    start = 40,
+  ) =>
+    q<{ status: string; auto_approved: boolean }>(
+      `insert into public.bookings (property_id, requester_member_id, start_date, end_date, status)
+       values ($1, $2, current_date + $3::int, current_date + $3::int + 2, 'CONFIRMED')
+       returning status, auto_approved`,
+      [ids.propB, member, start],
+    );
+
+  it("an organisation that has not answered still holds members' bookings; Yes confirms them", async () => {
+    await as(db, cyril, async (q) => {
+      expect(await bookInB(q, cyrilMember)).toEqual([{ status: "PENDING", auto_approved: false }]);
+    });
+    await admin(db, "update public.accounts set booking_auto_approve = true where id = $1", [
+      ids.acctB,
+    ]);
+    try {
+      await as(db, cyril, async (q) => {
+        expect(await bookInB(q, cyrilMember)).toEqual([
+          { status: "CONFIRMED", auto_approved: true },
+        ]);
+      });
+      // "No" holds them again.
+      await admin(db, "update public.accounts set booking_auto_approve = false where id = $1", [
+        ids.acctB,
+      ]);
+      await as(db, cyril, async (q) => {
+        expect(await bookInB(q, cyrilMember)).toEqual([
+          { status: "PENDING", auto_approved: false },
+        ]);
+      });
+    } finally {
+      await admin(db, "update public.accounts set booking_auto_approve = null where id = $1", [
+        ids.acctB,
+      ]);
+    }
+  });
+
+  it("an admin's own booking is confirmed whatever the answer, and marked auto-approved", async () => {
+    await admin(db, "update public.accounts set booking_auto_approve = false where id = $1", [
+      ids.acctB,
+    ]);
+    try {
+      await as(db, bAdmin, async (q) => {
+        expect(await bookInB(q, ids.memberBAdmin!)).toEqual([
+          { status: "CONFIRMED", auto_approved: true },
+        ]);
+        // Booking for someone else is the admin's decision, not an auto-approval.
+        expect(await bookInB(q, cyrilMember, 50)).toEqual([
+          { status: "CONFIRMED", auto_approved: false },
+        ]);
+      });
+    } finally {
+      await admin(db, "update public.accounts set booking_auto_approve = null where id = $1", [
+        ids.acctB,
+      ]);
+    }
+  });
+
+  it("the client cannot mark a booking auto-approved, and an approval is not one", async () => {
+    await as(db, cyril, async (q) => {
+      const [b] = await q<{ id: string; status: string; auto_approved: boolean }>(
+        `insert into public.bookings (property_id, requester_member_id, start_date, end_date, status, auto_approved)
+         values ($1, $2, current_date + 60, current_date + 62, 'CONFIRMED', true)
+         returning id, status, auto_approved`,
+        [ids.propB, cyrilMember],
+      );
+      expect(b).toMatchObject({ status: "PENDING", auto_approved: false });
+      expect(
+        await q(
+          "update public.bookings set auto_approved = true where id = $1 returning auto_approved",
+          [b!.id],
+        ),
+      ).toEqual([{ auto_approved: false }]);
+    });
+  });
+
+  it("only the organisation's admin answers, and only for an organisation", async () => {
+    await as(db, cyril, async (q) => {
+      await expect(
+        q("select public.set_booking_auto_approve($1, true)", [ids.acctB]),
+      ).rejects.toThrow(/Admin role required/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await expect(
+        q("select public.set_booking_auto_approve($1, true)", [ids.acctB]),
+      ).rejects.toThrow(/Admin role required/);
+      await expect(
+        q("select public.set_booking_auto_approve($1, true)", [ids.acctA]),
+      ).rejects.toThrow(/institution_only/);
+    });
+    await as(db, bAdmin, async (q) => {
+      await q("select public.set_booking_auto_approve($1, true)", [ids.acctB]);
+      expect(
+        await q("select booking_auto_approve from public.accounts where id = $1", [ids.acctB]),
+      ).toEqual([{ booking_auto_approve: true }]);
+    });
+    await as(db, anon, async (q) => {
+      await expect(
+        q("select public.set_booking_auto_approve($1, true)", [ids.acctB]),
+      ).rejects.toThrow(/permission denied/);
+    });
+  });
+
+  it("onboarding stores the organisation's answer and refuses a family named like its cottage", async () => {
+    await as(db, newcomer, async (q) => {
+      await expect(
+        q(
+          "select public.create_account_onboarding('FAMILY', ' chata nova ', 'Chata Nova', '', null, null, '{}', null, '')",
+        ),
+      ).rejects.toThrow(/account_name_same_as_cottage/);
+      const [r] = await q<{ id: string }>(
+        "select public.create_account_onboarding(_type => 'INSTITUTIONAL', _account_name => 'Skola N', _property_name => 'Chata N', _booking_auto_approve => true) as id",
+      );
+      expect(
+        await q(
+          "select a.booking_auto_approve from public.properties p join public.accounts a on a.id = p.account_id where p.id = $1",
+          [r!.id],
+        ),
+      ).toEqual([{ booking_auto_approve: true }]);
+    });
+  });
+
+  it("only an admin renames an account, and a family not to its cottage's name", async () => {
+    await as(db, aMember, async (q) => {
+      await expect(
+        q("select public.rename_account($1, 'Novak family')", [ids.acctA]),
+      ).rejects.toThrow(/Admin role required/);
+    });
+    await as(db, aAdmin, async (q) => {
+      await expect(q("select public.rename_account($1, 'CHATA A')", [ids.acctA])).rejects.toThrow(
+        /account_name_same_as_cottage/,
+      );
+      await expect(q("select public.rename_account($1, 'x')", [ids.acctA])).rejects.toThrow(
+        /bad_name/,
+      );
+      await q("select public.rename_account($1, '  Rodina Novakova ')", [ids.acctA]);
+      expect(await q("select name from public.accounts where id = $1", [ids.acctA])).toEqual([
+        { name: "Rodina Novakova" },
+      ]);
+      await expect(q("select public.rename_account($1, 'Hijack')", [ids.acctB])).rejects.toThrow(
+        /Admin role required/,
+      );
+    });
+  });
+});

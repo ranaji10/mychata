@@ -34,3 +34,26 @@ export function cottageCount(n: number, t: (cs: string, en: string) => string): 
   const cs = n === 1 ? "chata" : n >= 2 && n <= 4 ? "chaty" : "chat";
   return t(`${n} ${cs}`, `${n} ${n === 1 ? "cottage" : "cottages"}`);
 }
+
+/** A starting account name from the email: "jan.novak@seznam.cz" → "jan.novak" (T-042). */
+export function accountNameFromEmail(email: string | null | undefined): string {
+  return (email ?? "").split("@")[0]?.trim() ?? "";
+}
+
+/**
+ * Family accounts the person runs whose name is the same as one of their cottages (T-042):
+ * My profile asks the admin to rename them, so "Chata Alfa" over Alfa, Beta and Gama stops
+ * reading as Beta inside Alfa.
+ */
+export function familyAccountsNamedLikeCottage(
+  accounts: { id: string; type: string; name: string }[],
+  adminAccountIds: string[],
+  cottagesByAccount: Record<string, { name: string }[]>,
+): { id: string; name: string }[] {
+  return accounts.filter(
+    (a) =>
+      a.type === "FAMILY" &&
+      adminAccountIds.includes(a.id) &&
+      (cottagesByAccount[a.id] ?? []).some((c) => sameName(c.name, a.name)),
+  );
+}

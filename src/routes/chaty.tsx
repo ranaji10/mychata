@@ -44,6 +44,13 @@ export const Route = createFileRoute("/chaty")({
 
 type CottagePage = "/fotky" | "/manual" | "/dokumenty" | "/ukoly";
 
+interface CottageCounts {
+  photos: number;
+  manual: number;
+  documents: number;
+  tasks: number;
+}
+
 /**
  * Manage cottages (bug 7, 17 Oct 2026): every cottage in one list, which ones an organisation
  * manages, and per cottage the photos, house manual, house rules and documents that used to be
@@ -82,6 +89,32 @@ function ManageCottagesPage() {
     },
   });
 
+  // How much each cottage already has (T-042): photos, manual sections, documents (those the
+  // viewer may see) and maintenance tasks. One small query per table for all cottages.
+  const { data: counts } = useQuery({
+    queryKey: ["cottage-counts", ids.join(",")],
+    enabled: ids.length > 0,
+    // Coming back from Photos or Documents after adding one shows the new number.
+    staleTime: 0,
+    queryFn: async () => {
+      const tables = ["property_photos", "manual_sections", "documents", "tasks"] as const;
+      const results = await Promise.all(
+        tables.map((table) => supabase.from(table).select("property_id").in("property_id", ids)),
+      );
+      const out: Record<string, CottageCounts> = {};
+      for (const id of ids) out[id] = { photos: 0, manual: 0, documents: 0, tasks: 0 };
+      const keys = ["photos", "manual", "documents", "tasks"] as const;
+      results.forEach(({ data, error }, i) => {
+        if (error) throw error;
+        for (const row of data ?? []) {
+          const c = out[row.property_id];
+          if (c) c[keys[i]!] += 1;
+        }
+      });
+      return out;
+    },
+  });
+
   // Photos, manual and documents work on the cottage that is open, so open it first.
   const openFor = (p: Property, to: CottagePage) => {
     if (p.id !== property?.id) setActivePropertyId(p.id);
@@ -116,6 +149,18 @@ function ManageCottagesPage() {
             ? t("Tyto chaty spravuje organizace.", "An organisation manages these cottages.")
             : t("Rodinné chaty.", "Family cottages.")}
         </p>
+        {counts && properties.length > 1 && (
+          <p className="mt-1 text-[16px] font-semibold" data-testid="cottage-totals">
+            {(() => {
+              const sum = (k: keyof CottageCounts) =>
+                Object.values(counts).reduce((n, c) => n + c[k], 0);
+              return t(
+                `Celkem: ${sum("photos")} fotek · ${sum("manual")} v manuálu · ${sum("documents")} dokumentů · ${sum("tasks")} úkolů údržby`,
+                `In total: ${sum("photos")} photos · ${sum("manual")} manual sections · ${sum("documents")} documents · ${sum("tasks")} maintenance tasks`,
+              );
+            })()}
+          </p>
+        )}
         <div className="mt-3 space-y-3">
           {properties.map((p) => (
             <CottageCard
@@ -123,6 +168,7 @@ function ManageCottagesPage() {
               property={p}
               open={p.id === property?.id}
               hasRules={!!rulesFor?.includes(p.id)}
+              counts={counts?.[p.id]}
               isAdmin={isAdmin}
               onOpen={(to) => openFor(p, to)}
             />
@@ -200,12 +246,14 @@ function CottageCard({
   property,
   open,
   hasRules,
+  counts,
   isAdmin,
   onOpen,
 }: {
   property: Property;
   open: boolean;
   hasRules: boolean;
+  counts: CottageCounts | undefined;
   isAdmin: boolean;
   onOpen: (to: CottagePage) => void;
 }) {
@@ -266,27 +314,31 @@ function CottageCard({
       )}
       {/* The cottage's own pages; Maintenance holds its tasks (bugs 4, 4a). */}
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Button variant="fresh" size="fresh" className={action} onClick={() => onOpen("/fotky")}>
-          <Camera className="size-5" />
-          {t("Fotky", "Photos")}
-        </Button>
-        <Button variant="fresh" size="fresh" className={action} onClick={() => onOpen("/manual")}>
-          <BookOpen className="size-5" />
-          {t("Manuál", "Manual")}
-        </Button>
-        <Button
-          variant="fresh"
-          size="fresh"
-          className={action}
-          onClick={() => onOpen("/dokumenty")}
-        >
-          <FileText className="size-5" />
-          {t("Dokumenty", "Documents")}
-        </Button>
-        <Button variant="fresh" size="fresh" className={action} onClick={() => onOpen("/ukoly")}>
-          <Wrench className="size-5" />
-          {t("Údržba", "Maintenance")}
-        </Button>
+        {(
+          [
+            ["/fotky", Camera, t("Fotky", "Photos"), counts?.photos],
+            ["/manual", BookOpen, t("Manuál", "Manual"), counts?.manual],
+            ["/dokumenty", FileText, t("Dokumenty", "Documents"), counts?.documents],
+            ["/ukoly", Wrench, t("Údržba", "Maintenance"), counts?.tasks],
+          ] as const
+        ).map(([to, Icon, label, count]) => (
+          <Button
+            key={to}
+            variant="fresh"
+            size="fresh"
+            className={action}
+            aria-label={count === undefined ? label : `${label}: ${count}`}
+            onClick={() => onOpen(to)}
+          >
+            <Icon className="size-5" />
+            {label}
+            {count !== undefined && (
+              <span className="text-[14px] font-semibold text-muted-foreground">
+                {count === 0 ? t("zatím nic", "none yet") : count}
+              </span>
+            )}
+          </Button>
+        ))}
       </div>
       <div className="mt-2 flex items-center gap-2 text-[16px]">
         <ScrollText className="size-5 shrink-0 text-muted-foreground" />

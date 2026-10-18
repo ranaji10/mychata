@@ -8,6 +8,7 @@ import type { Booking, ExpenseSplit, InstitutionalRequest, Member, Task } from "
 export type NotificationKind =
   | "invitation"
   | "approval"
+  | "auto_approved"
   | "guest_request"
   | "institution_request"
   | "task_assigned"
@@ -57,7 +58,11 @@ export interface NotificationInput {
   isAdmin: boolean;
   isFamily: boolean;
   hasName: boolean;
+  /** Family accounts the person runs that are named like one of their cottages (T-042). */
+  accountsToRename?: { id: string; name: string }[] | undefined;
   members: Pick<Member, "id" | "name">[];
+  /** The open cottage, for "4 bookings were confirmed automatically for …" (T-042). */
+  propertyName?: string | undefined;
   invitations?: PendingInvitation[] | null | undefined;
   bookings?: Booking[] | null | undefined;
   guestRequests?:
@@ -77,6 +82,20 @@ function daysBetween(a: string, b: string) {
   );
 }
 
+/** The local calendar day of a timestamp (created_at is UTC). */
+function localDay(ts: string) {
+  if (ts.length <= 10) return ts;
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return ts.slice(0, 10);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** "4 pobyty byly automaticky potvrzeny", "5 pobytů bylo automaticky potvrzeno". */
+const czBookings = (n: number) =>
+  n >= 2 && n <= 4
+    ? `${n} pobyty byly automaticky potvrzeny`
+    : `${n} pobytů bylo automaticky potvrzeno`;
+
 const kc = (n: number) => `${Math.round(n).toLocaleString("cs-CZ")} Kč`;
 
 /** Pure: turns what the app has read into a list, newest first. Tested in t040.test.ts. */
@@ -95,6 +114,21 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
       detail: [
         "Ostatní pak uvidí, kdo jste, místo e-mailu.",
         "Others will then see who you are instead of an email.",
+      ],
+      to: "/profil",
+    });
+  }
+
+  for (const a of input.accountsToRename ?? []) {
+    out.push({
+      key: `profile:rename:${a.id}:${a.name}`,
+      kind: "profile",
+      tone: "action",
+      at: input.today,
+      title: [`Přejmenujte účet „${a.name}“`, `Rename the account "${a.name}"`],
+      detail: [
+        "Jmenuje se stejně jako chata. Změníte to v Mém profilu.",
+        "It has the same name as a cottage. Change it in My profile.",
       ],
       to: "/profil",
     });
@@ -128,6 +162,42 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
         detail: [`${b.start_date} – ${b.end_date}`, `${b.start_date} – ${b.end_date}`],
         to: "/rezervace/$id",
         params: { id: b.id },
+      });
+    }
+    // Bookings confirmed without anyone deciding (T-042), one item per day they were made:
+    // "4 bookings were confirmed automatically for Chata Alfa". The admin's own are left out.
+    const autoByDay = new Map<string, Booking[]>();
+    for (const b of input.bookings ?? []) {
+      if (!b.auto_approved || b.status !== "CONFIRMED") continue;
+      if (input.myMemberId && b.requester_member_id === input.myMemberId) continue;
+      const day = localDay(b.created_at);
+      if (daysBetween(day, input.today) > recent) continue;
+      autoByDay.set(day, [...(autoByDay.get(day) ?? []), b]);
+    }
+    const where = input.propertyName ?? "";
+    for (const [day, list] of autoByDay) {
+      const one = list.length === 1 ? list[0]! : null;
+      const names = [...new Set(list.map((b) => b.requester_name).filter(Boolean))].join(", ");
+      const latest = list.reduce((a, b) => (a.created_at > b.created_at ? a : b)).created_at;
+      out.push({
+        key: `auto:${day}:${list.length}`,
+        kind: "auto_approved",
+        tone: "info",
+        at: latest,
+        title: one
+          ? [
+              `Pobyt automaticky potvrzen: ${one.requester_name}${where ? ` (${where})` : ""}`,
+              `Booking confirmed automatically: ${one.requester_name}${where ? ` (${where})` : ""}`,
+            ]
+          : [
+              `${czBookings(list.length)}${where ? ` pro ${where}` : ""}`,
+              `${list.length} bookings were confirmed automatically${where ? ` for ${where}` : ""}`,
+            ],
+        detail: one
+          ? [`${one.start_date} – ${one.end_date}`, `${one.start_date} – ${one.end_date}`]
+          : [`${day} · ${names}`, `${day} · ${names}`],
+        to: one ? "/rezervace/$id" : "/kalendar",
+        params: one ? { id: one.id } : undefined,
       });
     }
     for (const g of input.guestRequests ?? []) {

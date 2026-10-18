@@ -5,7 +5,8 @@ import { useAccount } from "@/lib/account";
 import type { Booking, InstitutionalRequest, Task } from "@/lib/data";
 import { useExpenseData } from "@/lib/expenses";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
-import { isMissingFunction } from "@/lib/my-cottages";
+import { familyAccountsNamedLikeCottage } from "@/lib/account-label";
+import { isMissingFunction, useMyCottages } from "@/lib/my-cottages";
 import { buildNotifications, type PendingInvitation } from "@/lib/notification-list";
 
 export type { AppNotification, NotificationKind } from "@/lib/notification-list";
@@ -36,7 +37,18 @@ export function markSeen(userId: string | undefined, keys: string[]) {
 
 /** Everything the Notifications page and the tab badge need, from shared query caches. */
 export function useNotifications() {
-  const { user, account, property, currentMember, members, profile } = useAccount();
+  const {
+    user,
+    account,
+    accounts,
+    memberships,
+    properties,
+    property,
+    currentMember,
+    members,
+    profile,
+  } = useAccount();
+  const { data: myCottages } = useMyCottages(user?.id);
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const isFamily = account?.type === "FAMILY";
   const pid = property?.id;
@@ -117,6 +129,12 @@ export function useNotifications() {
     isFamily,
     hasName: !!(profile?.display_name ?? "").trim(),
     members,
+    propertyName: property?.name,
+    accountsToRename: familyAccountsNamedLikeCottage(
+      accounts,
+      memberships.filter((m) => m.role === "ADMIN" || m.role === "OWNER").map((m) => m.account_id),
+      myCottages ?? (account ? { [account.id]: properties } : {}),
+    ),
     invitations: invitations.data,
     bookings: bookings.data,
     guestRequests: guestRequests.data,

@@ -48,7 +48,7 @@ export const Route = createFileRoute("/rezervace/nova")({
 });
 
 function NewBooking() {
-  const { property, currentMember } = useAccount();
+  const { account, property, currentMember } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLang();
@@ -100,6 +100,13 @@ function NewBooking() {
     (property?.overlap_allowed === false ||
       (property?.overlap_max_guests != null && peakGuests + guests > property.overlap_max_guests));
   const invalid = end < start;
+  // Same rule as booking_defaults (migration 0032): an organisation that hasn't said Yes to
+  // auto booking approval, or a family cottage without auto-confirm, holds every member booking.
+  const alwaysHeld =
+    account?.type === "INSTITUTIONAL"
+      ? account.booking_auto_approve !== true
+      : property?.auto_confirm === false;
+  const needsApproval = !isAdmin && (alwaysHeld || overlapNeedsApproval);
 
   const save = async () => {
     if (!property || !currentMember || invalid) return;
@@ -310,12 +317,12 @@ function NewBooking() {
       >
         {saving
           ? t("Ukládám…", "Saving…")
-          : overlapNeedsApproval && !isAdmin
+          : needsApproval
             ? t("Poslat ke schválení", "Send for approval")
             : t("Potvrdit rezervaci", "Confirm booking")}
       </Button>
       <p className="mt-2 text-center text-[16px] text-muted-foreground">
-        {overlapNeedsApproval && !isAdmin
+        {needsApproval
           ? t(
               "Rezervace se zapíše jako čekající na schválení správcem.",
               "The booking is saved as waiting for the admin's approval.",

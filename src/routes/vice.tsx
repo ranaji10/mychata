@@ -47,6 +47,8 @@ export const Route = createFileRoute("/vice")({
   component: MorePage,
 });
 
+const COTTAGES_OPEN_KEY = "mychata.settings.cottages-open";
+
 function MorePage() {
   const { account, property, members, currentMemberId, profile, user } = useAccount();
   const { t, lang, setLang } = useLang();
@@ -63,7 +65,25 @@ function MorePage() {
     url: string;
   } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
-  const [cottagesOpen, setCottagesOpen] = useState(false);
+  // Back from Photos, Manual, Documents or Maintenance lands on the list still open, as Back
+  // from a task does (bug 8, applied to Settings in T-041). Kept for this tab only.
+  const [cottagesOpen, setCottagesOpenState] = useState(() => {
+    try {
+      return sessionStorage.getItem(COTTAGES_OPEN_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const setCottagesOpen = (update: (open: boolean) => boolean) =>
+    setCottagesOpenState((open) => {
+      const next = update(open);
+      try {
+        sessionStorage.setItem(COTTAGES_OPEN_KEY, next ? "1" : "0");
+      } catch {
+        /* private mode: the list just starts closed */
+      }
+      return next;
+    });
   const myName =
     (profile?.display_name ?? "").trim() ||
     members.find((m) => m.id === currentMemberId)?.name ||

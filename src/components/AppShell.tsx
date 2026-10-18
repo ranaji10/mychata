@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAccount } from "@/lib/account";
-import { avatarSource } from "@/lib/account-label";
+import { avatarSource, cottageCount } from "@/lib/account-label";
 import { useBrand } from "@/lib/brand";
 import { Avatar } from "@/components/bits";
 import { LanguageToggle, useLang } from "@/lib/i18n";
@@ -158,6 +158,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   // named after someone's email read as the signed-in person. Which account a cottage belongs
   // to is in the switcher; the person's own email is on My profile.
   const avatarSrc = avatarSource(profile, user);
+  // Bug 7 asked for the person's own name at the top, and a prompt when there is none. The
+  // avatar opens My profile, which shows the email (T-041).
+  const myName = (profile?.display_name ?? "").trim() || currentMember?.name?.trim() || "";
 
   // Pages reached from Settings keep the Settings tab lit (bug 10).
   const isActive = (to: string) =>
@@ -275,24 +278,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <header className="sticky top-0 z-20 bg-background/95 backdrop-blur flex items-center gap-3 px-5 pb-4 pt-5 md:px-6 lg:px-0">
-            {pathname === "/domu" ? (
-              <Link to="/profil" aria-label={t("Můj profil", "My profile")} className="shrink-0">
-                <Avatar
-                  name={currentMember?.name ?? ""}
-                  src={avatarSrc}
-                  className="size-12 shadow-floating"
-                />
-              </Link>
-            ) : (
-              <Link
-                to="/domu"
-                aria-label={t("Domů", "Home")}
-                className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-primary text-primary-foreground lg:hidden"
-              >
-                <Home className="size-6" strokeWidth={2} />
-              </Link>
-            )}
+            <Link to="/profil" aria-label={t("Můj profil", "My profile")} className="shrink-0">
+              <Avatar
+                name={myName}
+                src={avatarSrc}
+                className={pathname === "/domu" ? "size-12 shadow-floating" : "size-11"}
+              />
+            </Link>
             <div className="min-w-0 flex-1">
+              {/* Who is signed in: their name, never an email (bugs 1 and 7). */}
+              <p
+                className={`truncate px-1 text-[14px] font-semibold leading-tight ${myName ? "text-muted-foreground" : "text-primary"}`}
+              >
+                {myName || t("Doplňte své jméno v profilu", "Add your name in your profile")}
+              </p>
               {/* Chata switcher: the cottage name is always tappable and opens the sheet below. */}
               <Button
                 variant="fresh"
@@ -403,14 +402,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                     {/* Every group says which account it is, so cottages of one account never
                         look nested inside a cottage of the same name (bug 16). */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="min-w-0 flex-1 truncate text-[16px] font-bold">
-                        {acc?.name ?? "—"}
-                      </p>
-                      {acc?.type === "INSTITUTIONAL" && (
-                        <span className="pill bg-primary-soft text-primary">
-                          {t("Organizace", "Organisation")}
-                        </span>
-                      )}
+                      <div className="min-w-0 flex-1">
+                        {/* The account is labelled as an account, with its cottage count: a family
+                            account named like one of its cottages ("Chata Alfa (test)" holding
+                            Alfa, Beta and Gama) made Beta look nested inside Alfa (bug 16). */}
+                        <p className="text-[14px] font-semibold text-muted-foreground">
+                          {acc?.type === "INSTITUTIONAL"
+                            ? t("Účet organizace", "Organisation account")
+                            : t("Rodinný účet", "Family account")}
+                          {cottages
+                            ? ` · ${cottageCount(cottages.length, t)}`
+                            : ""}
+                        </p>
+                        <p className="truncate text-[16px] font-bold">{acc?.name ?? "—"}</p>
+                      </div>
                       <span className="pill bg-secondary text-muted-foreground">
                         {roleLabel(m.role)}
                       </span>

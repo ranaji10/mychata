@@ -1,6 +1,6 @@
 # T-040 Bugs of 18 Oct 2026 (live test on phones and desktop)
 
-Owner: Claude (cloud session) · Status: review
+Owner: Claude (cloud session) · Status: done (live since `7ab6f5e`; follow-ups in T-041)
 
 Goal: fix the 18 bugs in `private/Screenshots/Bugs/18102026_BugsList.rtf` (outside the repo), using its screenshots, a phone network recording (HAR) and a phone console log.
 Non-goals: emails or push for notifications; a notifications table; a backfill of photo previews.
@@ -37,5 +37,6 @@ Invariants touched (AGENTS.md): 1 (two caller-scoped definer functions), 2 (migr
 
 ## Needs a maintainer
 
-- Lovable applies migration 0030 at publish. Until then the switcher, profile summary and invitation notifications fall back to the old behaviour (no errors).
+- Lovable applied migration 0030 at publish (18 Oct, empty marker 0031); live since `7ab6f5e`.
+- Re-check after publish (T-041): bug 17 was only half fixed (no "Continue to booking" for organisations), bugs 7, 12 and 16 partly; see `T-041-bugs-18-oct-followups.md`.
 - Live checks after publish, in the test cottages only.

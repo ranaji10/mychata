@@ -240,7 +240,7 @@ function PublicCalendar() {
                   <p className="text-[16px] font-semibold">
                     {t(
                       "Chata je zatím volná — pořiďte si termín!",
-                      "The cottage is still free — grab a date!",
+                      "The cottage is still available — grab a date!",
                     )}
                   </p>
                 </div>

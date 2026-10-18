@@ -218,6 +218,13 @@
       "when": 1792316755075,
       "tag": "0030_my_cottages_and_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792318674319,
+      "tag": "0031_0031_apply_journaled_0030",
+      "breakpoints": true
     }
   ]
 }

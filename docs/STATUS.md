@@ -15,7 +15,7 @@ As of 2026-10-18. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-028 L-5c public pages (merged and live, partial: see below), T-020 document vault search (planned), T-014 performance, T-015/T-016 missing tests, T-001–T-013 as listed below (T-012's migration 0019 is applied; its brief is not closed yet). Done: T-017, T-018, T-019, T-021, T-022, T-024, T-025, T-026, T-027, T-029.                                                                                                                                                                                                                                                                                      |
 
-## Live-test fixes (T-038, 18 Oct 2026, not yet live)
+## Live-test fixes (T-038, 18 Oct 2026, merged in PR #52, not yet published)
 
 - A stay held for approval (T-036) can now be decided in the app by any admin, family included: Approve/Decline on the stay page and "Pobyty ke schválení" on Home. The member who asked can withdraw it ("Stáhnout žádost"). The booking button says "Poslat ke schválení" when the stay will be held. Before this, a family admin had no way to approve a held stay.
 - Page titles follow the chosen language (Czech by default); analytics page views carry the same title; the 404 page has its own title.
@@ -25,6 +25,7 @@ As of 2026-10-18. Update this file in every PR that changes behaviour.
 - Manual categories show as words ("Pravidla domu", "Wi-Fi") in the app, the public manual and the picker.
 - Dates use the Czech day, not UTC: an expense added after midnight, the public calendar's next free weekend, invitation and export dates.
 - The offline service worker no longer stores server-function answers (cache renamed to v2, old entries dropped).
+- Review follow-up (PR #52 review): a member's "Veřejný odkaz na kalendář" re-reads from the database whether the calendar is still published, and says so if the admin switched it off, instead of copying a dead link. Lovable prompt 21 (`docs/external/claude/2026-10-18-lovable-prompt-21.md`) and Knowledge rules 13–15 go with the publish.
 
 ## Release check fixes (T-036, 18 Oct 2026, live since `9fce136`)
 

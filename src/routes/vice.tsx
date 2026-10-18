@@ -22,6 +22,7 @@ import { useAccount } from "@/lib/account";
 import { accountContextLine } from "@/lib/account-label";
 import { useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { publishedCalendarToken } from "@/lib/public-calendar";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/vice")({
@@ -88,10 +89,24 @@ function MorePage() {
   const copyPublicLink = async () => {
     if (!property) return;
     if (!isAdmin) {
-      await shareLink(
-        `${window.location.origin}/verejne/kalendar/${property.public_token}`,
-        "calendar",
-      );
+      let token: string | null = null;
+      try {
+        token = await publishedCalendarToken(property.id);
+      } catch {
+        toast.error(t("Odkaz se nepodařilo načíst.", "Could not load the link."));
+        return;
+      }
+      if (!token) {
+        await queryClient.invalidateQueries({ queryKey: ["properties"] });
+        toast.error(
+          t(
+            "Veřejný kalendář je vypnutý. Zapnout ho může jen správce.",
+            "The public calendar is switched off. Only an admin can switch it on.",
+          ),
+        );
+        return;
+      }
+      await shareLink(`${window.location.origin}/verejne/kalendar/${token}`, "calendar");
       return;
     }
     // Publishing the calendar is an explicit admin action; the link uses the share token.

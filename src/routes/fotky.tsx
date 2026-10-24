@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { ImagePlus, Star, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
@@ -109,6 +110,7 @@ function PhotosPage() {
       }
       queryClient.invalidateQueries({ queryKey: ["property-photos"] });
       queryClient.invalidateQueries({ queryKey: ["primary-photo"] });
+      track("photo_uploaded", { source: "app" });
       toast.success(t("Fotka přidána.", "Photo added."));
     } catch (error) {
       console.error("[fotky] upload", error);

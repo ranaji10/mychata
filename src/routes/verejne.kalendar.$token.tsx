@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
 import { useState } from "react";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
+import { PublicBookingRequest } from "@/components/PublicBookingRequest";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarPlus, Share2, Sun } from "lucide-react";
@@ -220,6 +221,12 @@ function PublicCalendar() {
               {t("Zeleně zvýrazněno: volný víkend", "Green outline: available weekend")}
             </p>
           </section>
+
+          <PublicBookingRequest
+            token={token}
+            bookings={list}
+            propertyName={property.property_name ?? t("této chaty", "this cottage")}
+          />
 
           <section className="mt-4">
             <h3 className="mb-2 text-lg font-bold">{t("Nadcházející pobyty", "Upcoming stays")}</h3>

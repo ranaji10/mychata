@@ -22,3 +22,28 @@ export function usePendingGuestRequests(propertyId: string | undefined, isAdmin:
     },
   });
 }
+
+/**
+ * Requests an admin decided in the last two weeks (T-043): Notifications says who approved or
+ * declined each one, so the other admins know it is handled.
+ */
+export function useRecentlyDecidedGuestRequests(propertyId: string | undefined, isAdmin: boolean) {
+  return useQuery({
+    queryKey: ["guest-requests-decided", propertyId],
+    enabled: !!propertyId && isAdmin,
+    queryFn: async () => {
+      const since = new Date(Date.now() - 14 * 86400000).toISOString();
+      const { data, error } = await supabase
+        .from("guest_requests")
+        .select(
+          "id, guest_name, start_date, end_date, status, source, decided_at, decided_by_member_id",
+        )
+        .eq("property_id", propertyId!)
+        .neq("status", "PENDING")
+        .gte("decided_at", since)
+        .order("decided_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}

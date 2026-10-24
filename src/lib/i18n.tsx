@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type Lang = "cs" | "en";
@@ -35,6 +36,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       lang,
       setLang: (l) => {
         setLangState(l);
+        track("language_change", { app_language: l });
         try {
           localStorage.setItem(LS_LANG, l);
           document.documentElement.lang = l;

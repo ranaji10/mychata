@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, Inbox, Loader2 } from "lucide-react";
@@ -145,8 +146,13 @@ function HomePage() {
       if (error) throw error;
     },
     onSuccess: async (_d, { approve }) => {
+      track("booking_decided", {
+        result: approve ? "approved" : "declined",
+        source: "guest_request",
+      });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["guest-requests", property?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["guest-requests-decided", property?.id] }),
         queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] }),
       ]);
       toast.success(
@@ -453,7 +459,7 @@ function HomePage() {
       {/* Guest booking requests (no-account guests) */}
       {isAdmin && !!guestRequests?.length && (
         <section className="card mt-4 p-4">
-          <h3 className="text-lg font-bold">{t("Žádosti hostů", "Guest requests")}</h3>
+          <h3 className="text-lg font-bold">{t("Žádosti o pobyt", "Booking requests")}</h3>
           <div className="mt-2 space-y-2.5">
             {guestRequests.map((g) => (
               <div key={g.id} className="border-b border-divider py-3 last:border-0">
@@ -464,6 +470,13 @@ function HomePage() {
                 <p className="text-[16px] text-muted-foreground">
                   {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests}{" "}
                   {guestsLabel(g.guests)} · {g.guest_email}
+                </p>
+                {/* When and where it came from (T-043): the public calendar needs an account. */}
+                <p className="text-[14px] text-muted-foreground">
+                  {(g as { source?: string }).source === "public_calendar"
+                    ? t("Z veřejného kalendáře", "From the public calendar")
+                    : t("Z odkazu pro hosty", "From the guest link")}{" "}
+                  · {t("požádáno", "requested")} {fmtDateTime(g.created_at)}
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {(() => {

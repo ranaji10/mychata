@@ -1,6 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Cookie } from "lucide-react";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { initAnalytics } from "@/lib/analytics";
 import { getConsentRequired } from "@/lib/region.functions";
@@ -103,36 +111,70 @@ export function ConsentBanner() {
   const { choice, decide } = useConsent();
   const { t } = useLang();
   const [customising, setCustomising] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // F-03: on phones the banner covered every sign-in option. It is now a compact sheet, and
+  // the page gets room below it equal to its height, so everything can be scrolled into view.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const root = document.documentElement;
+    const apply = () => root.style.setProperty("--consent-h", `${el.offsetHeight}px`);
+    apply();
+    root.classList.add("has-consent-banner");
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.classList.remove("has-consent-banner");
+      root.style.removeProperty("--consent-h");
+    };
+  }, [choice]);
+
   if (choice) return null;
 
   return (
     <div
+      ref={ref}
       data-consent-banner
+      role="region"
+      aria-label={t("Nastavení cookies", "Cookie settings")}
       className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[420px] md:max-w-[640px] md:p-3 lg:inset-x-auto lg:bottom-4 lg:right-4 lg:max-w-[440px]"
     >
-      {/* Phones: a sheet flush with the bottom edge (top corners rounded, room for the home bar).
-          Tablets and computers: a floating card. */}
-      <div className="rounded-t-[28px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl md:rounded-[28px] md:pb-5">
+      {/* Phones: a short sheet flush with the bottom edge (top corners rounded, room for the
+          home bar). Tablets and computers: a floating card with the longer text. */}
+      <div className="rounded-t-[28px] bg-card px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4 shadow-2xl md:rounded-[28px] md:p-5">
         <div className="flex items-center gap-3">
-          <div className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <Cookie className="size-6" />
+          <div className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary md:size-11">
+            <Cookie className="size-5 md:size-6" />
           </div>
-          <h2 className="text-lg font-bold">
+          <h2 className="text-[16px] font-bold md:text-lg">
             {t("Sušenky? Jen ty nejlepší.", "Cookies? Only the good kind.")}
           </h2>
         </div>
-        <p className="mt-3 text-[16px] leading-relaxed text-muted-foreground">
-          {t(
-            "Používáme nezbytné cookies, aby chata fungovala. Pokud nám dovolíte i analytické, pomůžete nám ji zlepšovat. Žádné reklamy, žádné prodeje dat.",
-            "We use essential cookies to keep the cottage running. Allow analytics too and you help us improve it. No ads, no selling data.",
-          )}
+        <p className="mt-2 text-[14px] leading-snug text-muted-foreground md:mt-3 md:text-[16px] md:leading-relaxed">
+          <span className="md:hidden">
+            {t(
+              "Nezbytné cookies vždy. Analytické jen s vaším souhlasem, bez reklam.",
+              "Essential cookies always. Analytics only if you agree, no ads.",
+            )}
+          </span>
+          <span className="hidden md:inline">
+            {t(
+              "Používáme nezbytné cookies, aby chata fungovala. Pokud nám dovolíte i analytické, pomůžete nám ji zlepšovat. Žádné reklamy, žádné prodeje dat.",
+              "We use essential cookies to keep the cottage running. Allow analytics too and you help us improve it. No ads, no selling data.",
+            )}
+          </span>{" "}
+          <a href="/soukromi" className="font-semibold text-primary underline underline-offset-2">
+            {t("Co z nich vidíme", "What we see")}
+          </a>
         </p>
         {customising ? (
-          <div className="mt-4 space-y-3">
-            <label className="flex items-center justify-between rounded-2xl bg-secondary p-3">
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-between rounded-2xl bg-secondary p-3">
               <span className="text-[16px] font-bold">{t("Nezbytné", "Essential")}</span>
               <span className="pill bg-ok-soft text-ok">{t("Vždy zapnuté", "Always on")}</span>
-            </label>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="fresh"
@@ -153,33 +195,30 @@ export function ConsentBanner() {
             </div>
           </div>
         ) : (
-          <div className="mt-4 grid gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-secondary"
+              onClick={() => decide(false)}
+            >
+              {t("Jen nezbytné", "Essentials only")}
+            </Button>
             <Button
               variant="fresh"
               size="fresh"
               className="btn-primary"
               onClick={() => decide(true)}
             >
-              {t("Pomáhat zlepšovat", "Help us improve")}
+              {t("Povolit vše", "Allow all")}
             </Button>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="fresh"
-                size="fresh"
-                className="btn-secondary"
-                onClick={() => decide(false)}
-              >
-                {t("Jen nezbytné", "Essentials only")}
-              </Button>
-              <Button
-                variant="fresh"
-                size="fresh"
-                className="btn-secondary"
-                onClick={() => setCustomising(true)}
-              >
-                {t("Přizpůsobit", "Customise")}
-              </Button>
-            </div>
+            <button
+              type="button"
+              className="col-span-2 min-h-11 text-[15px] font-semibold text-muted-foreground underline underline-offset-2"
+              onClick={() => setCustomising(true)}
+            >
+              {t("Přizpůsobit", "Customise")}
+            </button>
           </div>
         )}
       </div>

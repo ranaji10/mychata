@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
+import { track } from "@/lib/analytics";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Plus, Sparkles } from "lucide-react";
@@ -176,6 +177,7 @@ function TasksPage() {
       toast.error(t("Úkol se nepodařilo přidat.", "Could not add the task."));
       return;
     }
+    track("task_created", { source: "app" });
     toast.success(t("Úkol přidán.", "Task added."));
     setTitle("");
     setAssignee(null);

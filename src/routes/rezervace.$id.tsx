@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Users } from "lucide-react";
@@ -71,6 +72,7 @@ function BookingDetail() {
     },
     onSuccess: () => {
       invalidate();
+      track("booking_decided", { result: "approved", source: "app" });
       toast.success(t("Pobyt schválen.", "Stay approved."));
       navigate({ to: "/kalendar" });
     },
@@ -194,8 +196,33 @@ function BookingDetail() {
         )}
 
         <p className="mt-3 text-[16px] text-muted-foreground">
-          {t("Vytvořeno", "Created")} {fmtDateTime(booking.created_at)}
+          {t("Požádáno", "Requested")} {fmtDateTime(booking.created_at)}
         </p>
+        {/* Who approved it and when (T-043, migration 0034); older stays don't know. */}
+        {!pending &&
+          (() => {
+            const b = booking as {
+              approved_by_member_id?: string | null;
+              approved_at?: string | null;
+            };
+            if (b.approved_at) {
+              const who =
+                members.find((m) => m.id === b.approved_by_member_id)?.name ??
+                t("správce", "an admin");
+              return (
+                <p className="text-[16px] text-muted-foreground">
+                  {t("Schválil(a)", "Approved by")} {who} · {fmtDateTime(b.approved_at)}
+                </p>
+              );
+            }
+            if (booking.auto_approved)
+              return (
+                <p className="text-[16px] text-muted-foreground">
+                  {t("Potvrzeno automaticky", "Confirmed automatically")}
+                </p>
+              );
+            return null;
+          })()}
       </section>
 
       {pending && (

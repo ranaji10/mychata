@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, ReceiptText } from "lucide-react";
@@ -180,6 +181,7 @@ function ExpensesPage() {
         }
       }
       await queryClient.invalidateQueries({ queryKey: expenseDataKey(property.id) });
+      track("expense_added", { result: splitRows.length ? "split" : "not_split" });
       toast.success(
         splitRows.length
           ? t("Výdaj přidán a rozdělen.", "Expense added and split.")

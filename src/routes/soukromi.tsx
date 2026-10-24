@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useConsent } from "@/lib/consent";
+import { AnalyticsSnapshotCard } from "@/components/AnalyticsSnapshotCard";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 
@@ -70,8 +71,8 @@ function PrivacyPage() {
           </li>
           <li>
             {t(
-              "Pouze se souhlasem: anonymní statistiky návštěv (Google Analytics).",
-              "Only with consent: anonymous visit statistics (Google Analytics).",
+              "Pouze se souhlasem: statistiky návštěv bez jména a e-mailu (Google Analytics). Co z nich vidíme, ukazujeme níže.",
+              "Only with consent: visit statistics without your name or email (Google Analytics). What we see from them is shown below.",
             )}
           </li>
         </ul>
@@ -109,6 +110,8 @@ function PrivacyPage() {
           {t("Změnit nastavení cookies", "Change cookie settings")}
         </Button>
       </section>
+
+      <AnalyticsSnapshotCard />
 
       <section className="card mt-4 space-y-2 p-4">
         <h2 className="text-lg font-bold">{t("Vaše práva (GDPR)", "Your rights (GDPR)")}</h2>

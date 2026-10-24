@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Home, LogIn, Mail } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { pendingInvite } from "@/lib/pending-invite";
+import { RETURN_CALENDAR_META, calendarFromMetadata, pendingCalendar } from "@/lib/pending-booking";
 import { recoveryPending } from "@/lib/password";
 import { PasswordInput } from "@/components/PasswordInput";
 import { authLinkError, isPublicEmailDomain } from "@/lib/signup";
@@ -65,22 +68,41 @@ function AuthPage() {
 
   // After any sign-in (including Google's redirect back to /auth), go to a waiting invitation
   // first, otherwise Home (B-013).
-  const goOn = useCallback(() => {
-    // A reset-password link signs the person in here: new password first (bug 4).
-    if (recoveryPending()) {
-      navigate({ to: "/reset-password", replace: true });
-      return;
-    }
-    const token = pendingInvite();
-    if (token) navigate({ to: "/pozvanka/$token", params: { token }, replace: true });
-    else navigate({ to: "/domu", replace: true });
-  }, [navigate]);
+  const goOn = useCallback(
+    (user?: User | null) => {
+      // A reset-password link signs the person in here: new password first (bug 4).
+      if (recoveryPending()) {
+        navigate({ to: "/reset-password", replace: true });
+        return;
+      }
+      const token = pendingInvite();
+      if (token) {
+        navigate({ to: "/pozvanka/$token", params: { token }, replace: true });
+        return;
+      }
+      // "Request a booking" on a public calendar (T-043): back to that calendar. The account's
+      // metadata covers a confirmation link opened in another browser.
+      const calendar =
+        pendingCalendar() ?? calendarFromMetadata(user?.user_metadata, user?.created_at);
+      if (calendar) {
+        navigate({ to: "/verejne/kalendar/$token", params: { token: calendar }, replace: true });
+        return;
+      }
+      navigate({ to: "/domu", replace: true });
+    },
+    [navigate],
+  );
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) goOn();
+      if (data.user) goOn(data.user);
     });
   }, [goOn]);
+
+  // Opened from a public calendar's "Request a booking": say why, and start at sign-up.
+  const [returnCalendar] = useState(() =>
+    typeof window === "undefined" ? null : pendingCalendar(),
+  );
 
   // A confirmation link opened a second time (or too late) lands here with an error in the
   // address. Opening it once already confirmed the email, so signing in works (T-021).
@@ -143,6 +165,7 @@ function AuthPage() {
   const signInGoogle = async () => {
     setBusy(true);
     setError("");
+    track("login_start", { method: "google", source: returnCalendar ? "public_calendar" : "app" });
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
     });
@@ -202,10 +225,15 @@ function AuthPage() {
               full_name: name.trim(),
               signup_kind: mode === "institute" ? "institution" : "personal",
               ...(mode === "institute" ? { organisation: organisation.trim() } : {}),
+              ...(returnCalendar ? { [RETURN_CALENDAR_META]: returnCalendar } : {}),
             },
           },
         });
         if (err) throw err;
+        track("sign_up", {
+          method: "email",
+          source: returnCalendar ? "public_calendar" : mode === "institute" ? "institution" : "app",
+        });
         if (data.session) {
           goOn();
           return;
@@ -246,6 +274,7 @@ function AuthPage() {
           if (err.message.toLowerCase().includes("email not confirmed")) setCanResend(true);
           throw err;
         }
+        track("login", { method: "email" });
         goOn();
       }
     } catch (e) {
@@ -312,6 +341,14 @@ function AuthPage() {
           )}
         </p>
 
+        {returnCalendar && (
+          <p className="mt-4 rounded-2xl bg-primary-soft p-3 font-semibold" role="status">
+            {t(
+              "Žádost o termín: založte si účet (nebo se přihlaste) a potvrďte e-mail. Pak vás vrátíme do kalendáře chaty, kde žádost dokončíte.",
+              "Booking request: create an account (or sign in) and confirm your email. We then bring you back to the cottage's calendar to finish the request.",
+            )}
+          </p>
+        )}
         {error && (
           <p className="mt-4 rounded-2xl bg-destructive-soft p-3 font-semibold text-destructive">
             {error}

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Loader2, Pencil, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
@@ -216,6 +217,7 @@ function DocumentsPage() {
       // Read the file right away so questions can use it (T-021).
       if (documentId) readText.mutate(documentId);
       const wasEditing = !!editing;
+      if (!wasEditing) track("document_uploaded", { source: "app" });
       closeForm();
       toast.success(
         wasEditing

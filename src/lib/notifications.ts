@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import type { Booking, InstitutionalRequest, Task } from "@/lib/data";
 import { useExpenseData } from "@/lib/expenses";
-import { usePendingGuestRequests } from "@/lib/guest-requests";
+import { usePendingGuestRequests, useRecentlyDecidedGuestRequests } from "@/lib/guest-requests";
 import { familyAccountsNamedLikeCottage } from "@/lib/account-label";
 import { isMissingFunction, useMyCottages } from "@/lib/my-cottages";
 import { buildNotifications, type PendingInvitation } from "@/lib/notification-list";
@@ -121,6 +121,7 @@ export function useNotifications() {
   });
   const expenseData = useExpenseData(pid, isFamily);
   const guestRequests = usePendingGuestRequests(pid, isAdmin);
+  const decidedGuestRequests = useRecentlyDecidedGuestRequests(pid, isAdmin);
 
   const items = buildNotifications({
     today: localToday(),
@@ -138,6 +139,7 @@ export function useNotifications() {
     invitations: invitations.data,
     bookings: bookings.data,
     guestRequests: guestRequests.data,
+    decidedGuestRequests: decidedGuestRequests.data,
     requests: requests.data,
     tasks: tasks.data,
     splits: expenseData.data?.splits,

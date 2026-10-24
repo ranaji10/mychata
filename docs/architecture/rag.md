@@ -1,6 +1,6 @@
 # House manual search (RAG)
 
-Stage 1, rebuilt on 2026-09-25 (ADR-0004). Stages 2–4 are planned.
+Stage 1, rebuilt on 2026-09-25 (ADR-0004); answers without embeddings since T-021 (ADR-0012, proposed 25 Oct 2026). Stages 2–4 are planned.
 
 ## Answers now (T-021, 29 Sep 2026)
 
@@ -12,6 +12,12 @@ Stage 1, rebuilt on 2026-09-25 (ADR-0004). Stages 2–4 are planned.
 2. A member asks → `askManual` checks the `ai_manual` switch and a 30/day cap, embeds the question, calls `search_manual()`.
 3. `search_manual()` merges vector similarity and full-text (`simple` config + `unaccent`) by reciprocal rank fusion. It runs as SECURITY INVOKER, so RLS limits it to the active account.
 4. Nothing found → "no answer" instead of guessing. No AI key → the best excerpt is shown.
+
+## Re-plan of 25 Oct 2026 (CC-4, T-044)
+
+- Limit in practice: our 150,000-character budget per question (about 40,000 tokens), not the model's context. A family cottage fits; two or three long documents (about 60,000 characters each, the per-source cap) push other sources out.
+- Embeddings are still computed on every manual save but not read by any answer; ADR-0012 proposes stopping that.
+- Full answers to the five CC-4 questions: `docs/tasks/T-044-tests-plans-content.md`.
 
 ## Known gaps
 

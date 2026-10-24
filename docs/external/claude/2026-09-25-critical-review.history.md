@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-18
+updated: 2026-10-25
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Done & history
@@ -108,6 +108,11 @@ Everything finished, oldest first. Details are in the repo: `docs/STATUS.md`, `d
 | 18 Oct, 12:50 | Re-check of all 18 bugs of 18 Oct against the live code (T-041). 13 fully fixed by T-040. Still open and fixed in PR #61: bug 17 (organisations had no "Continue to booking"), bug 7 (name at the top), bug 12 (follow-up context), bug 16 (account headings in the switcher), "free" on the public calendar; Settings keeps Manage cottages open after Back. STATUS.md and T-040 brought up to date (live `7ab6f5e`, migrations to 0031, next 0032). Type check, unit tests (101) and lint run on a clone with the maintainer machine's packages. | T-041 brief, PR #61 |
 | 18 Oct, ~13:00 | PR #61 (T-041) merged and published as `d6260db` (old N-11). | `build-sha` on `/auth` |
 | 18 Oct, 13:10–15:35 | T-042: signed-in check with four test sign-ins (old N-10 done: T-038 held stays, T-040, T-041 all pass live; bug 15 not exercised). F-12 not reproduced (closed). F-01 emulated in Chromium's iPhone profile (avatar, document Open, clipboard box pass). Fixed on the branch: Back arrow on cottage pages, organisation members' booking wording, empty task strip, F-04 (guest and invitation pages in the organisation's blue). Requests of 18 Oct built: cottage counts, auto booking approval (ADR-0010), auto-confirmed bookings in Notifications, account name apart from the first cottage. Migration 0032. | `docs/tasks/T-042-requests-18-oct.md`, `2026-10-18-site-check-4.md` |
+| 18 Oct, 15:58–16:05 | T-042 merged (PR #62); Lovable applied 0032 through its empty marker 0033 (PR #63, RLS audit passed); PR #64 published as `3b8bace`. Site check 5 passed (7/7 e2e, no errors). Closes N-12 and F-04. | PR #62–#65, `2026-10-18-site-check-5.md` |
+| 25 Oct, 00:45–01:40 | T-043 (requests of 25 Oct): family tab order Home, Expenses, Calendar, Notifications, Settings; "Request a booking" on public calendars (sign-up, return to the same link, always held for an admin, requested time and approver shown; migration 0034, ADR-0011); GA events and user properties; GA numbers on the privacy page; F-03 cookie banner; F-06 headers; gtag bootstrap once. STATUS said next migration 0033, but Lovable's marker already used it: 0034. | PR #66, `docs/tasks/T-043-requests-25-oct.md` |
+| 25 Oct, 01:20 | GA4 property "mychata.cz": event data retention 2 → 14 months; 8 custom dimensions and metric `guests`; unwanted referrals `accounts.google.`, `supabase.co`, `lovable.` (31 % of sessions were Google sign-in returns). Found: 44 users, 92 sessions, 1,299 page views in 28 days, about 40 % of users likely Claude's own US site checks; the maintainer's Chrome doesn't run gtag.js, so own visits don't count. Not changed: Google signals, user-provided data (D-26); key events wait for the new events (N-14). | `docs/runbooks/analytics.md` |
+| 25 Oct, 01:55 | Fresh reviewer on PR #66: merge after fixing approver forgery, overlap on approve, visitor e-mails readable by members, generic error when switched off, late session on `/auth`. All fixed in `1859a3e` with 3 more database tests; CI green. | `2026-10-25-pr66-review.md` |
+| 25 Oct, 02:10 | Prompts without dependencies run: CP-1 (15 tests, no defect), CC-4 (ADR-0012 proposed, T-007 on hold, T-020 re-planned; old N-6 done), G-1 drafted by Claude. Prompts 12, 18 and 22 moved to `completed/`. Lovable's platform update opened as PR #68. Prompt 23 (apply 0034) written. | PR #67, PR #68, `prompts/2026-10-25/` |
 
 ## GitHub settings check (found 4 Oct, done 12 Oct)
 

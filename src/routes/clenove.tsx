@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -133,6 +134,7 @@ function MembersPage() {
   const invite = useMutation({
     mutationFn: () => createBatch(parsed.valid, inviteRole),
     onSuccess: ({ count }) => {
+      track("invitation_sent", { result: count > 1 ? "batch" : "single" });
       setEmails("");
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
       toast.success(

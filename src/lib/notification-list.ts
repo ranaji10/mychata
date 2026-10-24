@@ -66,7 +66,21 @@ export interface NotificationInput {
   invitations?: PendingInvitation[] | null | undefined;
   bookings?: Booking[] | null | undefined;
   guestRequests?:
-    { id: string; guest_name: string; start_date: string; created_at: string }[] | null | undefined;
+    | { id: string; guest_name: string; start_date: string; created_at: string; source?: string }[]
+    | null
+    | undefined;
+  /** Booking requests decided in the last two weeks, with who decided (T-043). */
+  decidedGuestRequests?:
+    | {
+        id: string;
+        guest_name: string;
+        start_date: string;
+        status: string;
+        decided_at: string | null;
+        decided_by_member_id: string | null;
+      }[]
+    | null
+    | undefined;
   requests?: InstitutionalRequest[] | null | undefined;
   tasks?: Task[] | null | undefined;
   splits?: ExpenseSplit[] | null | undefined;
@@ -206,12 +220,41 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
         kind: "guest_request",
         tone: "action",
         at: g.created_at,
-        title: [`Žádost hosta: ${g.guest_name}`, `Guest request: ${g.guest_name}`],
+        title:
+          g.source === "public_calendar"
+            ? [
+                `Žádost z veřejného kalendáře: ${g.guest_name}`,
+                `Request from the public calendar: ${g.guest_name}`,
+              ]
+            : [`Žádost hosta: ${g.guest_name}`, `Guest request: ${g.guest_name}`],
         detail: [
           `Od ${g.start_date}. Rozhodněte na Domů.`,
           `From ${g.start_date}. Decide on Home.`,
         ],
         to: "/domu",
+      });
+    }
+    for (const g of input.decidedGuestRequests ?? []) {
+      if (!g.decided_at) continue;
+      const who = nameOf(g.decided_by_member_id) || "správce";
+      const whoEn = nameOf(g.decided_by_member_id) || "an admin";
+      const approved = g.status === "APPROVED";
+      out.push({
+        key: `guest-decided:${g.id}`,
+        kind: "guest_request",
+        tone: "info",
+        at: g.decided_at,
+        title: approved
+          ? [
+              `${who} schválil(a) žádost: ${g.guest_name}`,
+              `${whoEn} approved ${g.guest_name}'s request`,
+            ]
+          : [
+              `${who} zamítl(a) žádost: ${g.guest_name}`,
+              `${whoEn} declined ${g.guest_name}'s request`,
+            ],
+        detail: [`Od ${g.start_date}`, `From ${g.start_date}`],
+        to: approved ? "/kalendar" : "/domu",
       });
     }
   }

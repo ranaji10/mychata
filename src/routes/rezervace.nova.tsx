@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Minus, Plus } from "lucide-react";
@@ -131,6 +132,11 @@ function NewBooking() {
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["bookings", property.id] });
+    track("booking_created", {
+      booking_status: saved?.status ?? "CONFIRMED",
+      guests: Number(guests) || 0,
+      source: "app",
+    });
     // Where the chata doesn't auto-confirm, the database keeps a member's booking pending.
     toast.success(
       saved?.status === "PENDING"

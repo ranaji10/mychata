@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { setAnalyticsContext, setUserProperties } from "@/lib/analytics";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
@@ -44,7 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   } = useAccount();
   useBrand(account?.type === "INSTITUTIONAL" ? "institution" : "family");
   const navigate = useNavigate();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const online = useConnectivity();
   const mutating = useIsMutating();
@@ -63,6 +64,28 @@ export function AppShell({ children }: { children: ReactNode }) {
     document.documentElement.classList.add("has-tabbar");
     return () => document.documentElement.classList.remove("has-tabbar");
   }, [showsTabbar]);
+
+  // GA4 user-scoped dimensions and the context sent with every event (T-043). Types and roles
+  // only; nothing that identifies the person.
+  const accountType = account
+    ? account.type === "INSTITUTIONAL"
+      ? "institution"
+      : "family"
+    : null;
+  const memberRole = currentMember
+    ? currentMember.role === "ADMIN" || currentMember.role === "OWNER"
+      ? "admin"
+      : "member"
+    : null;
+  useEffect(() => {
+    if (!accountType) return;
+    setUserProperties({
+      account_type: accountType,
+      app_language: lang,
+      ...(memberRole ? { member_role: memberRole } : {}),
+    });
+    setAnalyticsContext({ account_type: accountType, language: lang });
+  }, [accountType, memberRole, lang]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
@@ -107,12 +130,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const FAMILY_TABS = [
+    // Order requested 25 Oct: Home, Expenses, Calendar, Notifications, Settings. Institutions
+    // have Requests in Expenses' place (they have no shared expenses).
     { to: "/domu", label: t("Domů", "Home"), icon: Home },
-    { to: "/kalendar", label: t("Kalendář", "Calendar"), icon: CalendarDays },
-    // Tasks moved under Settings → Manage cottages → Maintenance (bug 4); Notifications took
-    // its place (bug 5).
-    { to: "/upozorneni", label: t("Upozornění", "Notifications"), icon: Bell },
     { to: "/vydaje", label: t("Výdaje", "Expenses"), icon: Wallet },
+    { to: "/kalendar", label: t("Kalendář", "Calendar"), icon: CalendarDays },
+    { to: "/upozorneni", label: t("Upozornění", "Notifications"), icon: Bell },
     { to: "/vice", label: t("Nastavení", "Settings"), icon: Menu },
   ] as const;
 

@@ -1637,3 +1637,268 @@ describe("auto booking approval and account names (T-042, migration 0032)", () =
     }
   });
 });
+
+describe("booking requests from the public calendar (T-043, migration 0034)", () => {
+  const visitor = {
+    role: "authenticated" as const,
+    userId: "10000000-0000-4000-8000-0000000000f1",
+    email: "host43@example.org",
+  };
+  const unconfirmed = {
+    role: "authenticated" as const,
+    userId: "10000000-0000-4000-8000-0000000000f2",
+    email: "neover@example.org",
+  };
+  beforeAll(async () => {
+    await admin(
+      db,
+      "insert into auth.users (id, email, email_confirmed_at) values ($1,$2, now()), ($3,$4, null) on conflict do nothing",
+      [visitor.userId, visitor.email, unconfirmed.userId, unconfirmed.email],
+    );
+  });
+
+  it("anonymous callers cannot request or list", async () => {
+    await as(db, anon, async (q) => {
+      await expect(
+        q("select public.request_public_booking($1, current_date + 5, current_date + 7, 2)", [
+          ids.tokenB,
+        ]),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        q("select * from public.my_public_booking_requests($1)", [ids.tokenB]),
+      ).rejects.toThrow(/permission denied/);
+    });
+  });
+
+  it("checks the link, email confirmation, membership, dates and guests", async () => {
+    const ask = (
+      q: (s: string, p?: unknown[]) => Promise<Record<string, unknown>[]>,
+      token: string,
+      s = 5,
+      e = 7,
+      g = 2,
+    ) =>
+      q(
+        `select public.request_public_booking($1, current_date + ${s}, current_date + ${e}, ${g}) as r`,
+        [token],
+      ).then((rows) => rows[0]!["r"]);
+    await as(db, unconfirmed, async (q) => {
+      expect(await ask(q, ids.tokenB)).toBe("unconfirmed");
+    });
+    await as(db, visitor, async (q) => {
+      expect(await ask(q, "nope")).toBe("link");
+      // Family A's calendar is not published: same answer as a wrong link.
+      expect(await ask(q, ids.tokenA)).toBe("link");
+      expect(await ask(q, ids.tokenB, 7, 5)).toBe("dates");
+      expect(await ask(q, ids.tokenB, -3, 2)).toBe("dates");
+      expect(await ask(q, ids.tokenB, 5, 7, 0)).toBe("guests");
+    });
+    await as(db, bAdmin, async (q) => {
+      expect(await ask(q, ids.tokenB)).toBe("member");
+    });
+  });
+
+  it("a confirmed stay blocks the dates; same-day changeover does not", async () => {
+    await admin(
+      db,
+      "insert into public.bookings (property_id, requester_name, start_date, end_date, status) values ($1,'Obsazeno', current_date + 60, current_date + 63, 'CONFIRMED')",
+      [ids.propB],
+    );
+    try {
+      await as(db, visitor, async (q) => {
+        const r1 = await q(
+          "select public.request_public_booking($1, current_date + 61, current_date + 62, 2) as r",
+          [ids.tokenB],
+        );
+        expect(r1[0]!["r"]).toBe("busy");
+        const r2 = await q(
+          "select public.request_public_booking($1, current_date + 63, current_date + 65, 2) as r",
+          [ids.tokenB],
+        );
+        expect(r2[0]!["r"]).toBe("ok");
+      });
+    } finally {
+      await admin(db, "delete from public.bookings where requester_name = 'Obsazeno'");
+    }
+  });
+
+  it("goes to the admins, records who decided, and the visitor sees it", async () => {
+    await asCommitted(
+      db,
+      visitor,
+      "select public.request_public_booking($1, current_date + 90, current_date + 92, 3, 'Hezky den')",
+      [ids.tokenB],
+    );
+    try {
+      const [req] = (await admin(
+        db,
+        "select id, status, source, guest_email, guest_link_id from public.guest_requests where requester_user_id = $1",
+        [visitor.userId],
+      )) as {
+        id: string;
+        status: string;
+        source: string;
+        guest_email: string;
+        guest_link_id: string | null;
+      }[];
+      expect(req).toMatchObject({
+        status: "PENDING",
+        source: "public_calendar",
+        guest_email: visitor.email,
+        guest_link_id: null,
+      });
+      // Same dates again: refused as a duplicate.
+      await as(db, visitor, async (q) => {
+        const r = await q(
+          "select public.request_public_booking($1, current_date + 90, current_date + 92, 3) as r",
+          [ids.tokenB],
+        );
+        expect(r[0]!["r"]).toBe("duplicate");
+        // The visitor can't read the table itself, only their own rows through the function.
+        expect(await q("select * from public.guest_requests")).toHaveLength(0);
+      });
+      // Admins of the cottage see it; another account's admin doesn't.
+      await as(db, aAdmin, async (q) => {
+        expect(
+          await q("select * from public.guest_requests where id = $1", [req!.id]),
+        ).toHaveLength(0);
+        await expect(q("select public.decide_guest_request($1, true)", [req!.id])).rejects.toThrow(
+          /Admin/,
+        );
+      });
+      await asCommitted(db, bAdmin, "select public.decide_guest_request($1, true)", [req!.id]);
+      const [after] = (await admin(
+        db,
+        "select r.status, r.decided_by_member_id, r.decided_at is not null as stamped, b.approved_by_member_id, b.approved_at is not null as b_stamped, b.status as b_status from public.guest_requests r join public.bookings b on b.id = r.booking_id where r.id = $1",
+        [req!.id],
+      )) as Record<string, unknown>[];
+      expect(after).toEqual({
+        status: "APPROVED",
+        decided_by_member_id: ids.memberBAdmin,
+        stamped: true,
+        approved_by_member_id: ids.memberBAdmin,
+        b_stamped: true,
+        b_status: "CONFIRMED",
+      });
+      await as(db, visitor, async (q) => {
+        const mine = await q<{ status: string; decided_by_name: string }>(
+          "select status, decided_by_name from public.my_public_booking_requests($1)",
+          [ids.tokenB],
+        );
+        expect(mine[0]).toEqual({ status: "APPROVED", decided_by_name: "Bara" });
+      });
+      await as(db, newcomer, async (q) => {
+        expect(
+          await q("select * from public.my_public_booking_requests($1)", [ids.tokenB]),
+        ).toHaveLength(0);
+      });
+    } finally {
+      await admin(
+        db,
+        "delete from public.bookings where id in (select booking_id from public.guest_requests where requester_user_id = $1)",
+        [visitor.userId],
+      );
+      await admin(db, "delete from public.guest_requests where requester_user_id = $1", [
+        visitor.userId,
+      ]);
+    }
+  });
+
+  it("nobody can write approved_by themselves; approving a held stay stamps the admin", async () => {
+    await as(db, aAdmin, async (q) => {
+      const [b] = await q<{ id: string; approved_by_member_id: string | null }>(
+        "insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status, approved_by_member_id) values ($1,'Petr',$2, current_date + 120, current_date + 122, 'PENDING', $3) returning id, approved_by_member_id",
+        [ids.propA, ids.memberAMember, ids.memberAMember],
+      );
+      expect(b!.approved_by_member_id).toBeNull();
+      const [c] = await q<{ approved_by_member_id: string | null }>(
+        "update public.bookings set status = 'CONFIRMED' where id = $1 returning approved_by_member_id",
+        [b!.id],
+      );
+      expect(c!.approved_by_member_id).toBe(ids.memberAAdmin);
+      const [d] = await q<{ approved_by_member_id: string | null }>(
+        "update public.bookings set approved_by_member_id = $2, note = 'x' where id = $1 returning approved_by_member_id",
+        [b!.id, ids.memberAMember],
+      );
+      expect(d!.approved_by_member_id).toBe(ids.memberAAdmin);
+    });
+  });
+
+  it("a member can't name themselves approver of a booking confirmed in one step (PR #66 review)", async () => {
+    await as(db, aMember, async (q) => {
+      const [b] = await q<{
+        status: string;
+        approved_by_member_id: string | null;
+        approved_at: string | null;
+      }>(
+        "insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status, approved_by_member_id) values ($1,'Petr',$2, current_date + 140, current_date + 141, 'CONFIRMED', $2) returning status, approved_by_member_id, approved_at",
+        [ids.propA, ids.memberAMember],
+      );
+      expect(b!.approved_by_member_id).toBeNull();
+      expect(b!.approved_at).toBeNull();
+    });
+  });
+
+  it("approving re-checks the dates (PR #66 review)", async () => {
+    const r = await admin(
+      db,
+      "insert into public.guest_requests (property_id, guest_name, start_date, end_date, guests, source) values ($1,'Pozdě', current_date + 200, current_date + 202, 2, 'public_calendar') returning id",
+      [ids.propB],
+    );
+    const reqId = (r[0] as { id: string }).id;
+    await admin(
+      db,
+      "insert into public.bookings (property_id, requester_name, start_date, end_date, status) values ($1,'Dřív', current_date + 201, current_date + 203, 'CONFIRMED')",
+      [ids.propB],
+    );
+    try {
+      await as(db, bAdmin, async (q) => {
+        await expect(q("select public.decide_guest_request($1, true)", [reqId])).rejects.toThrow(
+          /dates_taken/,
+        );
+        await q("select public.decide_guest_request($1, false)", [reqId]);
+      });
+    } finally {
+      await admin(db, "delete from public.bookings where requester_name = 'Dřív'");
+      await admin(db, "delete from public.guest_requests where id = $1", [reqId]);
+    }
+  });
+
+  it("only admins read guest requests (visitor e-mails); a switched-off form says so", async () => {
+    const r = await admin(
+      db,
+      "insert into public.guest_requests (guest_link_id, property_id, guest_name, guest_email, start_date, end_date, guests) values ($1,$2,'Host E','host-e@example.org', current_date + 50, current_date + 51, 1) returning id",
+      [ids.guestLinkA, ids.propA],
+    );
+    const reqId = (r[0] as { id: string }).id;
+    try {
+      await as(db, aMember, async (q) => {
+        expect(await q("select * from public.guest_requests where id = $1", [reqId])).toHaveLength(
+          0,
+        );
+      });
+      await as(db, aAdmin, async (q) => {
+        expect(await q("select * from public.guest_requests where id = $1", [reqId])).toHaveLength(
+          1,
+        );
+      });
+      await admin(
+        db,
+        "update public.feature_flags set enabled = false where key = 'guest_requests'",
+      );
+      await as(db, visitor, async (q) => {
+        const x = await q(
+          "select public.request_public_booking($1, current_date + 5, current_date + 7, 2) as r",
+          [ids.tokenB],
+        );
+        expect(x[0]!["r"]).toBe("disabled");
+      });
+    } finally {
+      await admin(
+        db,
+        "update public.feature_flags set enabled = true where key = 'guest_requests'",
+      );
+      await admin(db, "delete from public.guest_requests where id = $1", [reqId]);
+    }
+  });
+});

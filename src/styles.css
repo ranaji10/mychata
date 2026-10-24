@@ -254,6 +254,12 @@
   }
 }
 
+/* F-03: while the consent banner is open, the page gets room below it, so sign-in options
+   and anything else under it can be scrolled into view (height set by ConsentBanner). */
+.has-consent-banner body {
+  padding-bottom: var(--consent-h, 0px);
+}
+
 /* Push the consent banner above the mobile tab bar (84px) when AppShell is mounted.
    The tab bar itself is lg:hidden, so at lg+ this rule doesn't matter. */
 @media (max-width: 1023px) {

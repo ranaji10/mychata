@@ -10,6 +10,7 @@ import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { pendingInvite } from "@/lib/pending-invite";
+import { pendingCalendar } from "@/lib/pending-booking";
 import { isPublicEmailDomain, signupMetadata } from "@/lib/signup";
 import { hasPassword } from "@/lib/password";
 import { forgetPersonalEmail, personalEmailToLink } from "@/lib/institution-link";
@@ -71,7 +72,14 @@ function OnboardingPage() {
   // a new one (B-013).
   useEffect(() => {
     const token = pendingInvite();
-    if (token) navigate({ to: "/pozvanka/$token", params: { token }, replace: true });
+    if (token) {
+      navigate({ to: "/pozvanka/$token", params: { token }, replace: true });
+      return;
+    }
+    // Signed up from a public calendar's "Request a booking" (T-043): finish that first.
+    const calendar = pendingCalendar();
+    if (calendar)
+      navigate({ to: "/verejne/kalendar/$token", params: { token: calendar }, replace: true });
   }, [navigate]);
   const queryClient = useQueryClient();
 

@@ -111,8 +111,6 @@ export type Database = {
       }
       bookings: {
         Row: {
-          approved_at: string | null
-          approved_by_member_id: string | null
           auto_approved: boolean
           created_at: string
           end_date: string
@@ -127,8 +125,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          approved_at?: string | null
-          approved_by_member_id?: string | null
           auto_approved?: boolean
           created_at?: string
           end_date: string
@@ -143,8 +139,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          approved_at?: string | null
-          approved_by_member_id?: string | null
           auto_approved?: boolean
           created_at?: string
           end_date?: string
@@ -509,18 +503,13 @@ export type Database = {
           created_at: string
           end_date: string
           guest_email: string | null
-          booking_id: string | null
-          decided_at: string | null
-          decided_by_member_id: string | null
-          guest_link_id: string | null
+          guest_link_id: string
           guest_name: string
           guest_phone: string | null
           guests: number
           id: string
           note: string | null
           property_id: string
-          requester_user_id: string | null
-          source: string
           start_date: string
           status: string
         }
@@ -528,18 +517,13 @@ export type Database = {
           created_at?: string
           end_date: string
           guest_email?: string | null
-          booking_id?: string | null
-          decided_at?: string | null
-          decided_by_member_id?: string | null
-          guest_link_id?: string | null
+          guest_link_id: string
           guest_name: string
           guest_phone?: string | null
           guests?: number
           id?: string
           note?: string | null
           property_id: string
-          requester_user_id?: string | null
-          source?: string
           start_date: string
           status?: string
         }
@@ -547,18 +531,13 @@ export type Database = {
           created_at?: string
           end_date?: string
           guest_email?: string | null
-          booking_id?: string | null
-          decided_at?: string | null
-          decided_by_member_id?: string | null
-          guest_link_id?: string | null
+          guest_link_id?: string
           guest_name?: string
           guest_phone?: string | null
           guests?: number
           id?: string
           note?: string | null
           property_id?: string
-          requester_user_id?: string | null
-          source?: string
           start_date?: string
           status?: string
         }
@@ -1572,20 +1551,6 @@ export type Database = {
           property_id: string
         }[]
       }
-      my_public_booking_requests: {
-        Args: { _token: string }
-        Returns: {
-          created_at: string
-          decided_at: string | null
-          decided_by_name: string | null
-          end_date: string
-          guests: number
-          id: string
-          note: string | null
-          start_date: string
-          status: string
-        }[]
-      }
       my_invitations: {
         Args: never
         Returns: {
@@ -1681,16 +1646,6 @@ export type Database = {
           score: number
           section_id: string
         }[]
-      }
-      request_public_booking: {
-        Args: {
-          _end: string
-          _guests: number
-          _note?: string
-          _start: string
-          _token: string
-        }
-        Returns: string
       }
       set_active_account: { Args: { _account_id: string }; Returns: string }
       set_booking_auto_approve: {

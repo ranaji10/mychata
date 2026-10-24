@@ -1,6 +1,6 @@
 # T-020 Document vault in the manual search
 
-Owner: planner (this brief), Claude Code builds · Status: todo · Depends on T-007 (embedding queue and worker) and T-R1 (`rag_chunks`, critical review §7)
+Owner: planner (this brief), Claude Code builds · Status: re-planned 25 Oct 2026 (T-044, ADR-0012): documents already answer through full text (T-021); steps 4–6 (page chunks, citations, chunk search) wait until a cottage exceeds 150,000 characters; T-020a (drop zone, statuses) can go ahead on its own · Depends on T-007 (embedding queue and worker) and T-R1 (`rag_chunks`, critical review §7)
 Goal: drop files into the Document vault (drag and drop on a computer; Files, Photos or camera on a phone) and, within minutes, the manual's question box can answer from them and cite them.
 Non-goals: Pinecone or any second vector store (vectors stay in Supabase at 768 dimensions, ADR-0004); OpenAI-style 3,072-dim embeddings; indexing bookings, expenses or tasks (those are SQL questions, not text search).
 

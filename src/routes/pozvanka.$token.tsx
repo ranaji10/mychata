@@ -1,4 +1,5 @@
 import { useBrand } from "@/lib/brand";
+import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -95,6 +96,7 @@ function InvitePage() {
       return;
     }
     clearPendingInvite();
+    track("invitation_accepted", { source: "invitation" });
     setAccepted(true);
     queryClient.clear();
     setTimeout(() => navigate({ to: "/domu", replace: true }), 1200);

@@ -27,6 +27,24 @@ export function setAnalyticsContext(ctx: AnalyticsContext) {
   sharedContext = ctx;
 }
 
+/**
+ * User-scoped dimensions in GA4 (T-043): account type, role and language of the person using
+ * the app. Never an id, name or email. Custom definitions with the same names exist in the
+ * GA4 property (docs/runbooks/analytics.md).
+ */
+export function setUserProperties(props: {
+  account_type?: "family" | "institution";
+  member_role?: "admin" | "member";
+  app_language?: "cs" | "en";
+}) {
+  if (typeof window === "undefined") return;
+  try {
+    window.gtag?.("set", "user_properties", props);
+  } catch {
+    /* never break the app for analytics */
+  }
+}
+
 /** Track a custom event. Consent Mode decides what Google stores; never throws. */
 export function track(event: string, params: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;

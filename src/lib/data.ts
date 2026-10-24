@@ -61,6 +61,9 @@ export interface Booking {
   created_at: string;
   /** Confirmed on creation for the booker, with nobody deciding (migration 0032). */
   auto_approved?: boolean;
+  /** Who approved a held stay or a booking request, and when (migration 0034). */
+  approved_by_member_id?: string | null;
+  approved_at?: string | null;
 }
 
 export interface InstitutionalRequest {

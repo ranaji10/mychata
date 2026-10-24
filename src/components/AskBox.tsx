@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { BookOpen, FileText, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
@@ -43,6 +44,8 @@ export function AskBox({
         }));
       const result = await askManual({ data: { propertyId, question: q, lang, earlier } });
       setThread((items) => [...items, { question: q, result, failed: null }]);
+      // Never the question or the answer: only whether it was answered (T-043).
+      track("manual_question", { result: result.reason ?? "answered", step: earlier.length + 1 });
     } catch (e) {
       console.error("[ask] failed", e);
       const failed = (e as { message?: string } | null)?.message ?? String(e);

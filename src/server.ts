@@ -44,18 +44,61 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/**
+ * F-06: security headers the hosting doesn't set. Safe everywhere: nosniff, referrer policy,
+ * no camera/microphone/location. Only on the production host (so Lovable's editor can still
+ * frame its preview): no framing by other sites, no plugins, HSTS. Exported for tests.
+ */
+export function withSecurityHeaders(response: Response, host: string): Response {
+  // Upgrades (101) and other non-standard statuses can't be rebuilt: leave them alone.
+  if (response.status < 200 || response.status > 599) return response;
+  let headers: Headers;
+  try {
+    headers = new Headers(response.headers);
+  } catch {
+    return response;
+  }
+  const set = (name: string, value: string) => {
+    if (!headers.has(name)) headers.set(name, value);
+  };
+  set("X-Content-Type-Options", "nosniff");
+  set("Referrer-Policy", "strict-origin-when-cross-origin");
+  set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  if (host === "mychata.cz" || host === "www.mychata.cz") {
+    set("X-Frame-Options", "SAMEORIGIN");
+    set("Content-Security-Policy", "frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
+    set("Strict-Transport-Security", "max-age=31536000");
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function hostOf(request: Request): string {
+  try {
+    return new URL(request.url).hostname;
+  } catch {
+    return "";
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), hostOf(request));
     } catch (error) {
       console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      return withSecurityHeaders(
+        new Response(renderErrorPage(), {
+          status: 500,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        }),
+        hostOf(request),
+      );
     }
   },
 };

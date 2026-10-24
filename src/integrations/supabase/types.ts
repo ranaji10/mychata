@@ -111,6 +111,8 @@ export type Database = {
       }
       bookings: {
         Row: {
+          approved_at: string | null
+          approved_by_member_id: string | null
           auto_approved: boolean
           created_at: string
           end_date: string
@@ -125,6 +127,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by_member_id?: string | null
           auto_approved?: boolean
           created_at?: string
           end_date: string
@@ -139,6 +143,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by_member_id?: string | null
           auto_approved?: boolean
           created_at?: string
           end_date?: string
@@ -153,6 +159,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_approved_by_member_id_fkey"
+            columns: ["approved_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_property_id_fkey"
             columns: ["property_id"]
@@ -500,48 +513,77 @@ export type Database = {
       }
       guest_requests: {
         Row: {
+          booking_id: string | null
           created_at: string
+          decided_at: string | null
+          decided_by_member_id: string | null
           end_date: string
           guest_email: string | null
-          guest_link_id: string
+          guest_link_id: string | null
           guest_name: string
           guest_phone: string | null
           guests: number
           id: string
           note: string | null
           property_id: string
+          requester_user_id: string | null
+          source: string
           start_date: string
           status: string
         }
         Insert: {
+          booking_id?: string | null
           created_at?: string
+          decided_at?: string | null
+          decided_by_member_id?: string | null
           end_date: string
           guest_email?: string | null
-          guest_link_id: string
+          guest_link_id?: string | null
           guest_name: string
           guest_phone?: string | null
           guests?: number
           id?: string
           note?: string | null
           property_id: string
+          requester_user_id?: string | null
+          source?: string
           start_date: string
           status?: string
         }
         Update: {
+          booking_id?: string | null
           created_at?: string
+          decided_at?: string | null
+          decided_by_member_id?: string | null
           end_date?: string
           guest_email?: string | null
-          guest_link_id?: string
+          guest_link_id?: string | null
           guest_name?: string
           guest_phone?: string | null
           guests?: number
           id?: string
           note?: string | null
           property_id?: string
+          requester_user_id?: string | null
+          source?: string
           start_date?: string
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "guest_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_requests_decided_by_member_id_fkey"
+            columns: ["decided_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "guest_requests_guest_link_id_fkey"
             columns: ["guest_link_id"]
@@ -1564,6 +1606,20 @@ export type Database = {
           token: string
         }[]
       }
+      my_public_booking_requests: {
+        Args: { _token: string }
+        Returns: {
+          created_at: string
+          decided_at: string
+          decided_by_name: string
+          end_date: string
+          guests: number
+          id: string
+          note: string
+          start_date: string
+          status: string
+        }[]
+      }
       overlap_peak_guests: {
         Args: {
           _end: string
@@ -1631,6 +1687,16 @@ export type Database = {
       rename_account: {
         Args: { _account_id: string; _name: string }
         Returns: undefined
+      }
+      request_public_booking: {
+        Args: {
+          _end: string
+          _guests: number
+          _note?: string
+          _start: string
+          _token: string
+        }
+        Returns: string
       }
       rotate_public_token: { Args: { _property_id: string }; Returns: string }
       search_manual: {

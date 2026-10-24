@@ -1823,4 +1823,82 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
       expect(d!.approved_by_member_id).toBe(ids.memberAAdmin);
     });
   });
+
+  it("a member can't name themselves approver of a booking confirmed in one step (PR #66 review)", async () => {
+    await as(db, aMember, async (q) => {
+      const [b] = await q<{
+        status: string;
+        approved_by_member_id: string | null;
+        approved_at: string | null;
+      }>(
+        "insert into public.bookings (property_id, requester_name, requester_member_id, start_date, end_date, status, approved_by_member_id) values ($1,'Petr',$2, current_date + 140, current_date + 141, 'CONFIRMED', $2) returning status, approved_by_member_id, approved_at",
+        [ids.propA, ids.memberAMember],
+      );
+      expect(b!.approved_by_member_id).toBeNull();
+      expect(b!.approved_at).toBeNull();
+    });
+  });
+
+  it("approving re-checks the dates (PR #66 review)", async () => {
+    const r = await admin(
+      db,
+      "insert into public.guest_requests (property_id, guest_name, start_date, end_date, guests, source) values ($1,'Pozdě', current_date + 200, current_date + 202, 2, 'public_calendar') returning id",
+      [ids.propB],
+    );
+    const reqId = (r[0] as { id: string }).id;
+    await admin(
+      db,
+      "insert into public.bookings (property_id, requester_name, start_date, end_date, status) values ($1,'Dřív', current_date + 201, current_date + 203, 'CONFIRMED')",
+      [ids.propB],
+    );
+    try {
+      await as(db, bAdmin, async (q) => {
+        await expect(q("select public.decide_guest_request($1, true)", [reqId])).rejects.toThrow(
+          /dates_taken/,
+        );
+        await q("select public.decide_guest_request($1, false)", [reqId]);
+      });
+    } finally {
+      await admin(db, "delete from public.bookings where requester_name = 'Dřív'");
+      await admin(db, "delete from public.guest_requests where id = $1", [reqId]);
+    }
+  });
+
+  it("only admins read guest requests (visitor e-mails); a switched-off form says so", async () => {
+    const r = await admin(
+      db,
+      "insert into public.guest_requests (guest_link_id, property_id, guest_name, guest_email, start_date, end_date, guests) values ($1,$2,'Host E','host-e@example.org', current_date + 50, current_date + 51, 1) returning id",
+      [ids.guestLinkA, ids.propA],
+    );
+    const reqId = (r[0] as { id: string }).id;
+    try {
+      await as(db, aMember, async (q) => {
+        expect(await q("select * from public.guest_requests where id = $1", [reqId])).toHaveLength(
+          0,
+        );
+      });
+      await as(db, aAdmin, async (q) => {
+        expect(await q("select * from public.guest_requests where id = $1", [reqId])).toHaveLength(
+          1,
+        );
+      });
+      await admin(
+        db,
+        "update public.feature_flags set enabled = false where key = 'guest_requests'",
+      );
+      await as(db, visitor, async (q) => {
+        const x = await q(
+          "select public.request_public_booking($1, current_date + 5, current_date + 7, 2) as r",
+          [ids.tokenB],
+        );
+        expect(x[0]!["r"]).toBe("disabled");
+      });
+    } finally {
+      await admin(
+        db,
+        "update public.feature_flags set enabled = true where key = 'guest_requests'",
+      );
+      await admin(db, "delete from public.guest_requests where id = $1", [reqId]);
+    }
+  });
 });

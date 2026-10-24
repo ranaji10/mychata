@@ -169,7 +169,12 @@ function HomePage() {
           ? t("Žádosti hostů vyřizuje jen správce.", "Only an admin can decide guest requests.")
           : m.includes("already_decided")
             ? t("O této žádosti už bylo rozhodnuto.", "This request has already been decided.")
-            : t(`Akce se nepodařila: ${m}`, `That didn't work: ${m}`),
+            : m.includes("dates_taken")
+              ? t(
+                  "Tyto dny už jsou mezitím obsazené. Žádost můžete zamítnout.",
+                  "These days have been booked in the meantime. You can decline the request.",
+                )
+              : t(`Akce se nepodařila: ${m}`, `That didn't work: ${m}`),
       );
       void queryClient.invalidateQueries({ queryKey: ["guest-requests", property?.id] });
     },

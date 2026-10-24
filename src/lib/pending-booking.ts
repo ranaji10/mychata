@@ -67,7 +67,8 @@ export type PublicRequestResult =
   | "guests"
   | "busy"
   | "rate"
-  | "duplicate";
+  | "duplicate"
+  | "disabled";
 
 /** What the page says for each answer of request_public_booking (migration 0034). */
 export function publicRequestMessage(result: string): [cs: string, en: string] {
@@ -110,6 +111,11 @@ export function publicRequestMessage(result: string): [cs: string, en: string] {
       return [
         "Žádost na tento termín už čeká na správce.",
         "A request for these dates is already waiting for the admins.",
+      ];
+    case "disabled":
+      return [
+        "Žádosti o pobyt jsou teď vypnuté. Zkuste to později, nebo se zeptejte správce chaty.",
+        "Booking requests are switched off right now. Try later, or ask the cottage's admin.",
       ];
     case "link":
     default:

@@ -11,7 +11,8 @@
 -- 3. request_public_booking(token, ...): signed-in, email confirmed, not a member of the
 --    account, calendar published, dates free of confirmed stays, rate limited.
 -- 4. my_public_booking_requests(token): the caller's own requests for that cottage.
--- 5. decide_guest_request: same rules as 0022, plus the approver on the booking.
+-- 5. decide_guest_request: same rules as 0022, plus an overlap re-check and the approver.
+-- 6. guest_requests readable by admins only (visitor e-mails).
 -- Safe to run once on a database with data: only adds nullable columns and a default.
 
 -- 1. Guest requests ------------------------------------------------------------------------
@@ -65,14 +66,10 @@ begin
   select account_id into acct from public.properties where id = new.property_id;
   me := (select id from public.members where account_id = acct and user_id = auth.uid() limit 1);
   if tg_op = 'INSERT' then
-    -- Only decide_guest_request (as the deciding admin) inserts an approved booking; a caller
-    -- can name only themselves.
-    if new.approved_by_member_id is distinct from me or new.status <> 'CONFIRMED' then
-      new.approved_by_member_id := null;
-      new.approved_at := null;
-    else
-      new.approved_at := now();
-    end if;
+    -- Nobody is "the approver" of a booking made in one step (PR #66 review): approval is a
+    -- change from PENDING to CONFIRMED, which decide_guest_request also goes through.
+    new.approved_by_member_id := null;
+    new.approved_at := null;
   elsif old.status = 'PENDING' and new.status = 'CONFIRMED' then
     new.approved_by_member_id := me;
     new.approved_at := now();
@@ -108,6 +105,7 @@ begin
   select * into who from auth.users where id = auth.uid();
   if not found then return 'sign_in'; end if;
   if who.email_confirmed_at is null then return 'unconfirmed'; end if;
+  if not public.feature_enabled('guest_requests') then return 'disabled'; end if;
   if _start is null or _end is null or _end <= _start or _start < current_date
      or _end > current_date + 730 then
     return 'dates';
@@ -167,7 +165,7 @@ grant execute on function public.my_public_booking_requests(text) to authenticat
 -- 5. Deciding: as in 0022, plus the approver on the booking and the booking on the request ----
 create or replace function public.decide_guest_request(_request_id uuid, _approve boolean)
 returns uuid language plpgsql security definer set search_path = public as $$
-declare req public.guest_requests; acct uuid; me uuid; new_booking uuid;
+declare req public.guest_requests; acct uuid; new_booking uuid;
 begin
   select * into req from public.guest_requests where id = _request_id for update;
   if not found then raise exception 'request_not_found' using errcode = '22023'; end if;
@@ -176,14 +174,20 @@ begin
     raise exception 'Admin role required' using errcode = '42501';
   end if;
   if req.status <> 'PENDING' then raise exception 'already_decided' using errcode = '22023'; end if;
-  me := (select id from public.members where account_id = acct and user_id = auth.uid() limit 1);
-
   if _approve then
+    -- Another stay may have been confirmed for these days since the request (PR #66 review).
+    if exists (select 1 from public.bookings b
+               where b.property_id = req.property_id and b.status = 'CONFIRMED'
+                 and b.start_date < req.end_date and b.end_date > req.start_date) then
+      raise exception 'dates_taken' using errcode = '22023';
+    end if;
+    -- Inserted as held, then confirmed, so the approval stamp names this admin.
     insert into public.bookings (property_id, requester_name, requester_member_id, start_date,
-                                 end_date, guests, note, status, approved_by_member_id)
+                                 end_date, guests, note, status)
     values (req.property_id, req.guest_name, null, req.start_date, req.end_date, req.guests,
-            req.note, 'CONFIRMED', me)
+            req.note, 'PENDING')
     returning id into new_booking;
+    update public.bookings set status = 'CONFIRMED' where id = new_booking;
   end if;
   update public.guest_requests
   set status = case when _approve then 'APPROVED' else 'DECLINED' end, booking_id = new_booking
@@ -193,3 +197,11 @@ end;
 $$;
 revoke execute on function public.decide_guest_request(uuid, boolean) from public, anon;
 grant execute on function public.decide_guest_request(uuid, boolean) to authenticated;
+
+-- 6. Visitors' e-mails are for the admins who decide (PR #66 review): members no longer read
+--    guest requests. The app only ever read them as an admin (Home, Calendar, Notifications).
+drop policy if exists "Members read own account guest requests" on public.guest_requests;
+drop policy if exists "Admins read guest requests" on public.guest_requests;
+create policy "Admins read guest requests" on public.guest_requests for select to authenticated
+  using (exists (select 1 from public.properties p
+                 where p.id = property_id and public.has_account_role(p.account_id, 'admin')));

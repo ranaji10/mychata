@@ -12,6 +12,7 @@ The 25 Oct request: a public calendar link gets "Request a booking"; the visitor
 - `request_public_booking(token, …)` is for signed-in callers only, needs `auth.users.email_confirmed_at`, refuses members of the account (they book in the app), dates that overlap a confirmed stay, and more than 3 a day per person / 20 a day per cottage.
 - Such requests always wait for an admin, also in organisations with auto approval (ADR-0010 covers members only).
 - The database stamps who decided and when (`guest_requests.decided_*`, `bookings.approved_*`) in triggers; callers can't set them.
+- Approving re-checks that the days are still free, and only admins read requests (they hold visitors' e-mails).
 - Approving does not make the visitor a member; the stay is booked under their name, as for guest links.
 
 ## Consequences

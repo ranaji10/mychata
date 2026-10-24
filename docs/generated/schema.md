@@ -131,7 +131,7 @@ Policies: Members manage own account guest links (ALL)
 
 `id` uuid · `guest_link_id` uuid? · `property_id` uuid · `guest_name` text · `guest_email` text? · `guest_phone` text? · `start_date` date · `end_date` date · `guests` integer · `note` text? · `status` text · `created_at` timestamp with time zone · `source` text · `requester_user_id` uuid? · `decided_by_member_id` uuid? · `decided_at` timestamp with time zone? · `booking_id` uuid?
 
-Policies: Admins decide guest requests (UPDATE); Members read own account guest requests (SELECT)
+Policies: Admins decide guest requests (UPDATE); Admins read guest requests (SELECT)
 
 ### handover_issues
 

@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { pendingInvite } from "@/lib/pending-invite";
 import { RETURN_CALENDAR_META, calendarFromMetadata, pendingCalendar } from "@/lib/pending-booking";
-import { recoveryPending } from "@/lib/password";
+import { captureRecoveryFromUrl, recoveryPending } from "@/lib/password";
 import { PasswordInput } from "@/components/PasswordInput";
 import { authLinkError, isPublicEmailDomain } from "@/lib/signup";
 import { useDefaultChataPhoto } from "@/lib/season";
@@ -97,6 +97,12 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) goOn(data.user);
     });
+    // A confirmation link's session can arrive a moment after the first check (PR #66 review).
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user && !captureRecoveryFromUrl(window.location.href))
+        goOn(session.user);
+    });
+    return () => sub.subscription.unsubscribe();
   }, [goOn]);
 
   // Opened from a public calendar's "Request a booking": say why, and start at sign-up.

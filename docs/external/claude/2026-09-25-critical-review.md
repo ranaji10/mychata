@@ -14,7 +14,7 @@ tab: Now
 
 25 Oct 2026 · Tuik
 
-**Live:** `06d9db3` (25 Oct 01:50; PR #69 and #70 merged, main = `d38564a`). **Ready but not on GitHub:** branch `agent/claude/T-045-decisions-25-oct`, the 25 Oct decisions with migration 0036 (owner role, account type changes, admin-only requests, Home debts tile, HEIC, GA user ID, visitor invitation); `bun run check` 240/240, fresh review done. **Waiting on you:** how it reaches GitHub (N-18), the visitor sign-up test (N-14), two clicks in GA4 and GitHub (N-19, N-21), pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `06d9db3` (25 Oct 01:50; PR #69 and #70 merged, main = `d38564a`). **In PR #72:** branch `agent/claude/T-045-decisions-25-oct`, the 25 Oct decisions with migration 0036 (owner role, account type changes, admin-only requests, Home debts tile, HEIC, GA user ID, visitor invitation); `bun run check` 240/240, fresh review done. **Waiting on you:** merge PR #72 once it's marked ready (N-18), the visitor sign-up test (N-14), pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
@@ -29,10 +29,8 @@ tab: Now
 | N-5 | **E-mail:** `notify.mychata.cz` failed verification (15 Oct). Check its DNS records in Lovable's e-mail settings and at the registrar. Then L-E (`05`), CC-3 (`06`) and L-3 (`07`, after N-15). Also turns on "Confirm email" (F-07, F-23) | You | To do | F-07, F-23 |
 | N-8 | **Tag the release:** PR #69 is merged, so tag `release-2026-10-25` on `095753d` (the merge of PR #69, live as `06d9db3`). GitHub → Releases → Draft a new release; Claude's session can't push tags | You | To do | |
 | N-9 | **Test account labels in Lovable's Knowledge:** Test 1, 2, 3 as in `docs/runbooks/test-cottages.md` | You | To do |  |
-| N-18 | Get branch `agent/claude/T-045-decisions-25-oct` onto GitHub as a PR (this session was refused push access), merge (D-04: Anna merges), Lovable applies 0036 and publishes, then run the owner check in `docs/tasks/T-045-decisions-25-oct.md` | You, then Claude | To do | N-8, N-22 |
-| N-19 | GA4: switch on Google signals and user-provided data (D-26 yes). Each asks to accept Google's terms; steps in `docs/runbooks/analytics.md` | You | To do | |
+| N-18 | PR #72 (draft until Claude's last review is in; it then marks it ready). Merge (D-04: Anna merges), Lovable applies 0036 and publishes, then run the owner check in `docs/tasks/T-045-decisions-25-oct.md` | You, then Claude | To do | N-8, N-22 |
 | N-20 | Live privacy numbers (D-28 yes): read-only service account as GA4 Viewer, `GA_PROPERTY_ID` and `GA_SERVICE_ACCOUNT_JSON` as hosting secrets (`docs/runbooks/analytics.md`). Until then the snapshot | You | Waiting | After N-18 |
-| N-21 | GitHub: `lovable-sync` allows force pushes (`main` doesn't). Rulesets → "lovable-sync - keep" → Block force pushes (D-14) | You | To do | |
 | N-22 | After 0036 is live: founders see My profile → Typ účtu and Members → Vlastník; an organisation member has no Requests tab; approving a public-calendar request offers an invitation; Home debts tile | Claude, you | Waiting | After N-18 |
 
 ## Decisions waiting on you

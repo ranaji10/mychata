@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { setAnalyticsContext, setUserProperties } from "@/lib/analytics";
+import { setAnalyticsContext, setAnalyticsUserId, setUserProperties } from "@/lib/analytics";
+import { useConsent } from "@/lib/consent";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
@@ -77,6 +78,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       ? "admin"
       : "member"
     : null;
+  // D-27: pseudonymous user ID (the sign-in's UUID), only with analytics consent.
+  const { choice: consentChoice } = useConsent();
+  const analyticsUserId = consentChoice?.analytics && user?.id ? user.id : null;
+  useEffect(() => {
+    setAnalyticsUserId(analyticsUserId);
+  }, [analyticsUserId]);
+
   useEffect(() => {
     if (!accountType) return;
     setUserProperties({

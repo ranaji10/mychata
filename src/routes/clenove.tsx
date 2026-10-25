@@ -230,7 +230,10 @@ function MembersPage() {
             ? t("Tento člen se ještě nepřihlásil.", "This member has not signed in yet.")
             : error.message.includes("owner_required")
               ? t("Vlastnictví předává jen vlastník.", "Only the owner can hand over ownership.")
-              : t(`Předání se nepodařilo: ${error.message}`, `Could not hand over: ${error.message}`),
+              : t(
+                  `Předání se nepodařilo: ${error.message}`,
+                  `Could not hand over: ${error.message}`,
+                ),
       );
     },
   });
@@ -735,6 +738,7 @@ function MembersPage() {
           "The new owner will be the only one who can change the account type (family / organisation) and hand the account on; later also manage the subscription. You stay an admin.",
         )}
         confirmLabel={t("Předat vlastnictví", "Hand over ownership")}
+        tone="primary"
         busy={transferOwner.isPending}
         onConfirm={() => transferTo && transferOwner.mutate(transferTo.id)}
       />

@@ -1,3 +1,14 @@
 #!/usr/bin/env bash
 # Installed with: git config core.hooksPath .githooks  (see docs/runbooks/two-person-workflow.md)
-exec bash "$(git rev-parse --show-toplevel)/scripts/sync-check.sh" pre-commit
+set -e
+root="$(git rev-parse --show-toplevel)"
+# D-17 (T-045): a commit that touches a migration or a route regenerates docs/generated/ and
+# includes it, so CI's "Generated docs are up to date" no longer fails on a forgotten run.
+if git diff --cached --name-only | grep -qE '^(drizzle/migrations/|src/routes/)'; then
+  if command -v bun >/dev/null 2>&1; then
+    (cd "$root" && bun scripts/gen-docs.ts >/dev/null) && git add "$root/docs/generated"
+  else
+    echo "pre-commit: bun not found; run 'bun run docs:gen' before pushing." >&2
+  fi
+fi
+exec bash "$root/scripts/sync-check.sh" pre-commit

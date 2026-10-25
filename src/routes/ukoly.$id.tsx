@@ -315,7 +315,8 @@ function TaskDetail() {
                     e.preventDefault();
                     remove.mutate();
                   }}
-                  className="btn-danger-soft min-h-11 text-[16px]"
+                  variant="destructive"
+                  className="min-h-11 text-[16px]"
                 >
                   {t("Smazat", "Delete")}
                 </AlertDialogAction>

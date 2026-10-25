@@ -68,3 +68,28 @@ describe("account type changes once in six months (D-03)", () => {
     expect(accountTypeChangeError("billing_change_required", t)).toContain("placený");
   });
 });
+
+describe("live analytics shares (D-28)", () => {
+  it("keeps the top rows as whole percents and folds the rest into Other", async () => {
+    const { toShares } = await import("./analytics-live.functions");
+    const report = {
+      rows: [
+        ["Chrome", 80],
+        ["Safari", 10],
+        ["Firefox", 6],
+        ["Edge", 2],
+        ["Opera", 2],
+      ].map(([v, n]) => ({
+        dimensionValues: [{ value: String(v) }],
+        metricValues: [{ value: String(n) }],
+      })),
+    };
+    expect(toShares(report, (v) => [v, v], 3)).toEqual([
+      { label: ["Chrome", "Chrome"], pct: 80 },
+      { label: ["Safari", "Safari"], pct: 10 },
+      { label: ["Firefox", "Firefox"], pct: 6 },
+      { label: ["Ostatní", "Other"], pct: 4 },
+    ]);
+    expect(toShares({}, (v) => [v, v])).toEqual([]);
+  });
+});

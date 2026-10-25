@@ -3,8 +3,10 @@ import { track } from "@/lib/analytics";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, Inbox, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { LoadingCards, PillDanger, PillOk, PillWarn, StatCard } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
@@ -24,6 +26,7 @@ import {
 } from "@/lib/data";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { useLang } from "@/lib/i18n";
+import { inviteLink, inviteMailto } from "@/lib/invites";
 import { useDefaultChataPhoto } from "@/lib/season";
 import { usePrimaryPhotoUrl } from "@/lib/use-primary-photo";
 import { useExpenseData } from "@/lib/expenses";
@@ -140,15 +143,79 @@ function HomePage() {
   // One admin-only database step writes the booking and the decision together (T-021).
   // The card shows progress and disappears as soon as the database confirms.
   const queryClient = useQueryClient();
+  // D-30: after approving a visitor from the public calendar, offer to invite them as a member
+  // so they book in the app next time. Never automatic: members see more than a visitor.
+  const [inviteOffer, setInviteOffer] = useState<{ email: string; name: string } | null>(null);
+  const inviteVisitor = useMutation({
+    mutationFn: async (visitor: { email: string; name: string }) => {
+      const token = crypto.randomUUID();
+      const { error } = await supabase.from("invitations").insert({
+        account_id: account!.id,
+        property_id: property?.id ?? null,
+        email: visitor.email.toLowerCase(),
+        role: "MEMBER",
+        token,
+        created_by_member_id: currentMember?.id ?? null,
+      });
+      if (error) throw error;
+      return { token, visitor };
+    },
+    onSuccess: ({ token, visitor }) => {
+      track("invitation_sent", { result: "single", source: "public_calendar" });
+      setInviteOffer(null);
+      void queryClient.invalidateQueries({ queryKey: ["invitations"] });
+      const mailto = inviteMailto({
+        to: visitor.email,
+        link: inviteLink(window.location.origin, token),
+        chata: property?.name ?? "",
+        inviter: currentMember?.name ?? null,
+        admin: false,
+      });
+      toast.success(
+        t(
+          `Pozvánka pro ${visitor.name} vytvořena. Najdete ji i v Členech a oprávněních.`,
+          `Invitation for ${visitor.name} created. It is also listed in Members & permissions.`,
+        ),
+        {
+          duration: 15000,
+          action: {
+            label: t("Poslat e-mailem", "Send by email"),
+            onClick: () => {
+              window.location.href = mailto;
+            },
+          },
+        },
+      );
+    },
+    onError: (error) => {
+      console.error("[domu] invite visitor", error);
+      setInviteOffer(null);
+      toast.error(
+        t(
+          `Pozvánku se nepodařilo vytvořit: ${error.message}`,
+          `The invitation could not be created: ${error.message}`,
+        ),
+      );
+    },
+  });
+
   const decideGuest = useMutation({
-    mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
+    mutationFn: async ({
+      id,
+      approve,
+    }: {
+      id: string;
+      approve: boolean;
+      visitor?: { email: string; name: string } | null;
+    }) => {
       const { error } = await supabase.rpc("decide_guest_request", {
         _request_id: id,
         _approve: approve,
       });
       if (error) throw error;
     },
-    onSuccess: async (_d, { approve }) => {
+    onSuccess: async (_d, { approve, visitor }) => {
+      if (approve && visitor?.email) setInviteOffer(visitor);
       track("booking_decided", {
         result: approve ? "approved" : "declined",
         source: "guest_request",
@@ -376,7 +443,10 @@ function HomePage() {
                 value={fmtKc(debts.youOwe)}
                 hint={[
                   debts.owedToYou > 0
-                    ? t(`Vám dluží ${fmtKc(debts.owedToYou)}`, `Owed to you ${fmtKc(debts.owedToYou)}`)
+                    ? t(
+                        `Vám dluží ${fmtKc(debts.owedToYou)}`,
+                        `Owed to you ${fmtKc(debts.owedToYou)}`,
+                      )
                     : null,
                   t(
                     `Nevyrovnané v chatě celkem ${fmtKc(debts.cottageTotal)}`,
@@ -528,7 +598,17 @@ function HomePage() {
                           className="btn-primary disabled:opacity-50"
                           disabled={decideGuest.isPending}
                           aria-busy={busyApprove}
-                          onClick={() => decideGuest.mutate({ id: g.id, approve: true })}
+                          onClick={() =>
+                            decideGuest.mutate({
+                              id: g.id,
+                              approve: true,
+                              visitor:
+                                (g as { source?: string }).source === "public_calendar" &&
+                                g.guest_email
+                                  ? { email: g.guest_email, name: g.guest_name }
+                                  : null,
+                            })
+                          }
                         >
                           {busyApprove ? (
                             <>
@@ -656,6 +736,22 @@ function HomePage() {
           </p>
         </div>
       )}
+      <ConfirmDialog
+        open={!!inviteOffer}
+        onOpenChange={(open) => !open && setInviteOffer(null)}
+        title={t(
+          `Pozvat ${inviteOffer?.name ?? ""} do chaty jako člena?`,
+          `Invite ${inviteOffer?.name ?? ""} to the cottage as a member?`,
+        )}
+        description={t(
+          `Pobyt je potvrzený. Jako člen si ${inviteOffer?.name ?? ""} příště zapíše pobyt sám v aplikaci, ale uvidí i kalendář, výdaje a manuál chaty. Pozvánka půjde na ${inviteOffer?.email ?? ""}.`,
+          `The stay is confirmed. As a member, ${inviteOffer?.name ?? ""} can book in the app next time, but will also see the cottage's calendar, expenses and manual. The invitation goes to ${inviteOffer?.email ?? ""}.`,
+        )}
+        confirmLabel={t("Pozvat", "Invite")}
+        tone="primary"
+        busy={inviteVisitor.isPending}
+        onConfirm={() => inviteOffer && inviteVisitor.mutate(inviteOffer)}
+      />
     </AppShell>
   );
 }

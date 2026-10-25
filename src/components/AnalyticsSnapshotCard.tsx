@@ -1,7 +1,9 @@
 import { BarChart3, EyeOff } from "lucide-react";
 import { fmtDate } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
-import { ANALYTICS_SNAPSHOT as S, formatDuration, type ShareRow } from "@/lib/analytics-snapshot";
+import { useQuery } from "@tanstack/react-query";
+import { getLiveAnalytics } from "@/lib/analytics-live.functions";
+import { ANALYTICS_SNAPSHOT, formatDuration, type ShareRow } from "@/lib/analytics-snapshot";
 
 /** One horizontal bar per row: label, value at the end, one hue (T-043). */
 function Bars({ title, rows }: { title: string; rows: ShareRow[] }) {
@@ -45,6 +47,14 @@ function Tile({ value, label }: { value: string; label: string }) {
 export function AnalyticsSnapshotCard() {
   const { t, lang } = useLang();
   const n = (v: number) => v.toLocaleString(lang === "en" ? "en-GB" : "cs-CZ");
+  // D-28: live numbers from the GA4 Data API when the hosting has its key; else the snapshot.
+  const { data: live } = useQuery({
+    queryKey: ["ga-live"],
+    queryFn: () => getLiveAnalytics(),
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  });
+  const S = live ?? ANALYTICS_SNAPSHOT;
   return (
     <section className="card mt-4 space-y-4 p-4" aria-labelledby="ga-snapshot-title">
       <div className="flex items-start gap-3">
@@ -57,8 +67,8 @@ export function AnalyticsSnapshotCard() {
           </h2>
           <p className="text-[15px] text-muted-foreground">
             {t(
-              `Skutečná čísla z Google Analytics za ${fmtDate(S.period.from)} – ${fmtDate(S.period.to)}. Víc z analytických cookies nevidíme.`,
-              `Real numbers from Google Analytics for ${fmtDate(S.period.from)} – ${fmtDate(S.period.to)}. This is all the analytics cookie gives us.`,
+              `Skutečná čísla z Google Analytics za ${fmtDate(S.period.from)} – ${fmtDate(S.period.to)}${live ? " (aktualizují se samy)" : ""}. Víc z analytických cookies nevidíme.`,
+              `Real numbers from Google Analytics for ${fmtDate(S.period.from)} – ${fmtDate(S.period.to)}${live ? " (updated automatically)" : ""}. This is all the analytics cookie gives us.`,
             )}
           </p>
         </div>

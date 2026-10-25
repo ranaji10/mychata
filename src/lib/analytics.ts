@@ -45,6 +45,20 @@ export function setUserProperties(props: {
   }
 }
 
+/**
+ * D-27 (T-045): a pseudonymous user ID so GA counts one person across phone and computer.
+ * It is the sign-in's internal id (a random UUID), never the email or name, and is sent only
+ * after the visitor agreed to analytics. null clears it (sign-out, or consent withdrawn).
+ */
+export function setAnalyticsUserId(userId: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    window.gtag?.("set", { user_id: userId ?? null });
+  } catch {
+    /* never break the app for analytics */
+  }
+}
+
 /** Track a custom event. Consent Mode decides what Google stores; never throws. */
 export function track(event: string, params: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;

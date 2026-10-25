@@ -232,6 +232,14 @@
   }
 }
 
+/* D-02 (T-045): "Sign up as an institution" in the institution's blue, so on a phone it reads
+   as the organisations' way in, not as a second e-mail button. */
+@utility btn-secondary-institution {
+  background: oklch(0.94599893 0.01599025 253.903551);
+  box-shadow: inset 0 0 0 1.5px oklch(0.48329151 0.13116865 253.656167);
+  color: oklch(0.4066923 0.10832464 253.518698);
+}
+
 @utility btn-danger-soft {
   display: flex;
   align-items: center;

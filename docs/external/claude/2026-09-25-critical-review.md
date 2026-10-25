@@ -14,7 +14,7 @@ tab: Now
 
 25 Oct 2026 · Tuik
 
-**Live:** `06d9db3` (25 Oct 01:50; PR #69 and #70 merged, main = `d38564a`). **In PR #72:** branch `agent/claude/T-045-decisions-25-oct`, the 25 Oct decisions with migration 0036 (owner role, account type changes, admin-only requests, Home debts tile, HEIC, GA user ID, visitor invitation); `bun run check` 240/240, fresh review done. **Waiting on you:** merge PR #72 (N-18, ready), the visitor sign-up test (N-14), pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** build of 25 Oct 11:06 UTC = `lovable-sync` `2ffa813`: T-045 (PR #72) with migration 0036 applied via Lovable's marker 0037. Site check passed (`2026-10-25-site-check-2.md`); its build-sha meta reads "unknown" this time. **Waiting on you:** merge PR #73 (Lovable's marker and types) and PR #74 (reports), then tag (N-8); the visitor sign-up test (N-14); pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
@@ -27,11 +27,10 @@ tab: Now
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload. All pass in Chromium's iPhone emulation (18 Oct) | You, Rajat | To do | F-01 |
 | N-4 | **Public calendars of the test cottages:** `Testovací chata (Lovable)` is on (25 Oct). Leave it on for N-14's request test, then switch it off (Settings → "Vypnout veřejný kalendář") and check the other test cottages | You | To do |  |
 | N-5 | **E-mail:** `notify.mychata.cz` failed verification (15 Oct). Check its DNS records in Lovable's e-mail settings and at the registrar. Then L-E (`05`), CC-3 (`06`) and L-3 (`07`, after N-15). Also turns on "Confirm email" (F-07, F-23) | You | To do | F-07, F-23 |
-| N-8 | **Tag the release:** PR #69 is merged, so tag `release-2026-10-25` on `095753d` (the merge of PR #69, live as `06d9db3`). GitHub → Releases → Draft a new release; Claude's session can't push tags | You | To do | |
+| N-8 | **Tag the release:** after PR #73 is merged, tag `release-2026-10-25` on its merge commit (live: T-045 with 0036). Claude can try pushing the tag now that the session has push access; else GitHub → Releases → Draft a new release | You | To do | |
 | N-9 | **Test account labels in Lovable's Knowledge:** Test 1, 2, 3 as in `docs/runbooks/test-cottages.md` | You | To do |  |
-| N-18 | PR #72 is ready (CI green, two fresh reviews, all findings fixed; also has ownership acceptance and Leave this account). Merge it (D-04: Anna merges), Lovable applies 0036 and publishes, then run the owner check in `docs/tasks/T-045-decisions-25-oct.md` | You, then Claude | To do | N-8, N-22 |
 | N-20 | Live privacy numbers (D-28 yes): read-only service account as GA4 Viewer, `GA_PROPERTY_ID` and `GA_SERVICE_ACCOUNT_JSON` as hosting secrets (`docs/runbooks/analytics.md`). Until then the snapshot | You | Waiting | After N-18 |
-| N-22 | After 0036 is live: founders see My profile → Typ účtu and Members → Vlastník; an organisation member has no Requests tab; approving a public-calendar request offers an invitation; Home debts tile | Claude, you | Waiting | After N-18 |
+| N-22 | 0036 is live; owners, Members owner pill, Leave card, Home debts tile and Settle debts checked 25 Oct. Left, with test sign-ins: founders see My profile → Typ účtu and Members → Vlastník; an organisation member has no Requests tab; approving a public-calendar request offers an invitation; Home debts tile | Claude, you | Waiting | After N-18 |
 
 ## Decisions waiting on you
 

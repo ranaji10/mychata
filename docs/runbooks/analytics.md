@@ -13,7 +13,7 @@ Property: GA4 "mychata.cz" (account MyChata), web stream "Chata_GoogleA4", measu
 | Product links                                                   | Search Console linked                                                                                                                |
 | Not on (decision D-26)                                          | Google signals, user-provided data (both need accepting Google's policies and a privacy-page update)                                 |
 
-After the next publish, in Admin → Events, star as key events: `sign_up`, `onboarding_completed`, `booking_created`, `booking_request_sent`, `invitation_accepted`.
+Key events (Admin → Events → star): `onboarding_completed` starred 25 Oct. Still to star once they appear in Recent events (GA lists a new event about a day after it first arrives; none had arrived by 25 Oct 10:45): `sign_up`, `booking_created`, `booking_request_sent`, `invitation_accepted`.
 
 ## Events the app sends
 

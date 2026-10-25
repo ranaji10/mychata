@@ -18,6 +18,7 @@ import {
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { LeaveAccountCard, OwnershipOffersToMe } from "@/components/OwnershipCards";
 import { AutoApproveChoice } from "@/components/AutoApproveChoice";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -26,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { accountContextLine } from "@/lib/account-label";
 import { useLang } from "@/lib/i18n";
+import { accountOfferKey, ownershipError, useOpenOwnershipOffer } from "@/lib/ownership";
 import { fmtDate } from "@/lib/data";
 import {
   calendarDaysUntil,
@@ -202,39 +204,34 @@ function MembersPage() {
     },
   });
 
-  // The owner hands the account to another admin with a sign-in (0036, D-22).
+  // The owner offers the account to a member with a sign-in; it moves when they accept (0036).
   const [transferTo, setTransferTo] = useState<{ id: string; name: string } | null>(null);
+  const isOwner = currentMember?.role === "OWNER";
+  const { data: openOffer } = useOpenOwnershipOffer(account?.id, isOwner);
   const transferOwner = useMutation({
     mutationFn: async (memberId: string) => {
-      const { error } = await supabase.rpc("transfer_account_ownership", {
+      const { error } = await supabase.rpc("offer_account_ownership", {
         _account_id: account!.id,
         _to_member_id: memberId,
       });
       if (error) throw error;
     },
-    onSuccess: async () => {
+    onSuccess: async (_d, memberId) => {
+      track("ownership_offered", {});
+      const who = members.find((m) => m.id === memberId)?.name ?? "";
       setTransferTo(null);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["members"] }),
-        queryClient.invalidateQueries({ queryKey: ["identity-members"] }),
-      ]);
-      toast.success(t("Vlastnictví účtu předáno.", "Ownership handed over."));
+      await queryClient.invalidateQueries({ queryKey: accountOfferKey(account?.id) });
+      toast.success(
+        t(
+          `Nabídka odeslána. ${who} ji uvidí v Upozorněních a v Členech; vlastnictví se předá, až ji přijme.`,
+          `Offer sent. ${who} sees it in Notifications and Members; ownership moves once they accept.`,
+        ),
+      );
     },
     onError: (error) => {
-      console.error("[clenove] transfer ownership", error);
+      console.error("[clenove] offer ownership", error);
       setTransferTo(null);
-      toast.error(
-        error.message.includes("new_owner_must_be_admin")
-          ? t("Vlastníkem může být jen správce.", "Only an admin can become the owner.")
-          : error.message.includes("member_has_no_sign_in")
-            ? t("Tento člen se ještě nepřihlásil.", "This member has not signed in yet.")
-            : error.message.includes("owner_required")
-              ? t("Vlastnictví předává jen vlastník.", "Only the owner can hand over ownership.")
-              : t(
-                  `Předání se nepodařilo: ${error.message}`,
-                  `Could not hand over: ${error.message}`,
-                ),
-      );
+      toast.error(ownershipError(error.message, t));
     },
   });
 
@@ -566,6 +563,8 @@ function MembersPage() {
         back="/vice"
       />
 
+      <OwnershipOffersToMe />
+
       {isAdmin && account?.type === "INSTITUTIONAL" && <BookingApprovalCard />}
 
       {isAdmin && (
@@ -687,6 +686,12 @@ function MembersPage() {
                       {t("Zatím nepřihlášen", "Not signed in yet")}
                     </span>
                   )}
+                  {openOffer?.to_member_id === m.id && (
+                    <span className="pill bg-warn-soft text-warn-foreground">
+                      <Crown className="size-3.5" />{" "}
+                      {t("Čeká na přijetí vlastnictví", "Ownership offer waiting")}
+                    </span>
+                  )}
                 </div>
               </div>
               {isAdmin && m.id !== currentMember?.id && m.user_id && m.role !== "OWNER" && (
@@ -710,7 +715,7 @@ function MembersPage() {
                     : t("Udělat správcem", "Make admin")}
                 </Button>
               )}
-              {currentMember?.role === "OWNER" && m.role === "ADMIN" && m.user_id && (
+              {isOwner && m.role !== "OWNER" && m.user_id && openOffer?.to_member_id !== m.id && (
                 <Button
                   variant="fresh"
                   size="fresh"
@@ -726,18 +731,19 @@ function MembersPage() {
           );
         })}
       </div>
+      <LeaveAccountCard />
       <ConfirmDialog
         open={!!transferTo}
         onOpenChange={(open) => !open && setTransferTo(null)}
         title={t(
-          `Předat vlastnictví účtu osobě ${transferTo?.name ?? ""}?`,
-          `Hand over the account to ${transferTo?.name ?? ""}?`,
+          `Nabídnout vlastnictví účtu osobě ${transferTo?.name ?? ""}?`,
+          `Offer the account to ${transferTo?.name ?? ""}?`,
         )}
         description={t(
-          "Nový vlastník bude jediný, kdo může měnit typ účtu (rodina / organizace) a předat účet dál; později i spravovat předplatné. Vy zůstanete správcem.",
-          "The new owner will be the only one who can change the account type (family / organisation) and hand the account on; later also manage the subscription. You stay an admin.",
+          `${transferTo?.name ?? ""} dostane upozornění a nabídku musí přijmout. Pak bude jediný, kdo mění typ účtu (rodina / organizace) a předává účet dál; později i spravuje předplatné. Vy zůstanete správcem a pak můžete z účtu odejít. Starší nabídku tím zrušíte.`,
+          `${transferTo?.name ?? ""} is notified and has to accept. Then they alone change the account type (family / organisation) and hand the account on; later also manage the subscription. You stay an admin and can then leave. This replaces any earlier offer.`,
         )}
-        confirmLabel={t("Předat vlastnictví", "Hand over ownership")}
+        confirmLabel={t("Nabídnout vlastnictví", "Offer ownership")}
         tone="primary"
         busy={transferOwner.isPending}
         onConfirm={() => transferTo && transferOwner.mutate(transferTo.id)}

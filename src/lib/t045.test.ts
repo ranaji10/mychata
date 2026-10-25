@@ -103,3 +103,29 @@ describe("debts are shown to the haléř (25 Oct check)", () => {
     expect(fmtKcExact(1234.5)).toBe("1 234,50 Kč");
   });
 });
+
+describe("ownership offers reach the person offered (25 Oct)", () => {
+  it("lists an offer as something that needs them, linking to Members", async () => {
+    const { buildNotifications } = await import("./notification-list");
+    const items = buildNotifications({
+      today: "2026-10-25",
+      myMemberId: "m2",
+      isAdmin: true,
+      isFamily: true,
+      hasName: true,
+      members: [],
+      ownershipOffers: [
+        {
+          id: "o1",
+          account_name: "Rodina A",
+          from_name: "Anna",
+          created_at: "2026-10-25T10:00:00Z",
+        },
+      ],
+    });
+    const offer = items.find((i) => i.kind === "ownership_offer");
+    expect(offer?.tone).toBe("action");
+    expect(offer?.to).toBe("/clenove");
+    expect(offer?.title[0]).toContain("Rodina A");
+  });
+});

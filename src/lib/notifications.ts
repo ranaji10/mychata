@@ -8,6 +8,7 @@ import { usePendingGuestRequests, useRecentlyDecidedGuestRequests } from "@/lib/
 import { familyAccountsNamedLikeCottage } from "@/lib/account-label";
 import { isMissingFunction, useMyCottages } from "@/lib/my-cottages";
 import { buildNotifications, type PendingInvitation } from "@/lib/notification-list";
+import { useMyOwnershipOffers } from "@/lib/ownership";
 
 export type { AppNotification, NotificationKind } from "@/lib/notification-list";
 
@@ -121,6 +122,7 @@ export function useNotifications() {
     },
   });
   const expenseData = useExpenseData(pid, isFamily);
+  const ownershipOffers = useMyOwnershipOffers(user?.id);
   const guestRequests = usePendingGuestRequests(pid, isAdmin);
   const decidedGuestRequests = useRecentlyDecidedGuestRequests(pid, isAdmin);
 
@@ -138,6 +140,7 @@ export function useNotifications() {
       myCottages ?? (account ? { [account.id]: properties } : {}),
     ),
     invitations: invitations.data,
+    ownershipOffers: ownershipOffers.data,
     bookings: bookings.data,
     guestRequests: guestRequests.data,
     decidedGuestRequests: decidedGuestRequests.data,

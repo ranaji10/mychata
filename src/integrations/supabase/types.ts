@@ -1052,6 +1052,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ownership_offers: {
+        Row: {
+          account_id: string
+          created_at: string
+          decided_at: string | null
+          from_member_id: string
+          id: string
+          status: string
+          to_member_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          decided_at?: string | null
+          from_member_id: string
+          id?: string
+          status?: string
+          to_member_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          decided_at?: string | null
+          from_member_id?: string
+          id?: string
+          status?: string
+          to_member_id?: string
+        }
+        Relationships: []
+      }
       org_join_requests: {
         Row: {
           account_id: string
@@ -1541,8 +1571,24 @@ export type Database = {
         Args: { _account_id: string; _name: string }
         Returns: undefined
       }
-      transfer_account_ownership: {
+      cancel_account_ownership: { Args: { _offer_id: string }; Returns: undefined }
+      leave_account: { Args: { _account_id: string }; Returns: string | null }
+      my_ownership_offers: {
+        Args: never
+        Returns: {
+          account_id: string
+          account_name: string
+          created_at: string
+          from_name: string
+          id: string
+        }[]
+      }
+      offer_account_ownership: {
         Args: { _account_id: string; _to_member_id: string }
+        Returns: string
+      }
+      respond_account_ownership: {
+        Args: { _accept: boolean; _offer_id: string }
         Returns: undefined
       }
       cover_expense: { Args: { _expense_id: string }; Returns: number }

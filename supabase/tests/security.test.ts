@@ -1961,37 +1961,108 @@ describe("owner, account type changes, institution requests (T-045, migration 00
     });
   });
 
-  it("only the owner hands the account to another admin with a sign-in", async () => {
+  it("ownership moves only when the person offered accepts; then the old owner may leave", async () => {
+    const become = (
+      q: (sql: string, p?: unknown[]) => Promise<unknown[]>,
+      userId: string,
+      email: string,
+    ) =>
+      q(
+        "select set_config('request.jwt.claim.sub', $1, true), set_config('request.jwt.claims', $2, true)",
+        [userId, JSON.stringify({ sub: userId, email, role: "authenticated" })],
+      );
     await as(db, aAdmin, async (q) => {
-      await expect(
-        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAMember]),
-      ).rejects.toThrow(/new_owner_must_be_admin/);
-      await q("select public.set_member_role($1,'ADMIN')", [ids.memberAMember]);
-      await q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAMember]);
+      // Only the owner offers; the offer changes nothing until it is accepted.
+      const [o] = await q<{ id: string }>("select public.offer_account_ownership($1, $2) as id", [
+        ids.acctA,
+        ids.memberAMember,
+      ]);
+      expect(await q("select role from public.members where id = $1", [ids.memberAAdmin])).toEqual([
+        { role: "OWNER" },
+      ]);
+      // The owner can't leave while they own the account.
+      await expect(q("select public.leave_account($1)", [ids.acctA])).rejects.toThrow(
+        /owner_must_transfer/,
+      );
+      // Nobody but the person offered can accept.
+      await become(q, U.bAdmin, EMAIL.bAdmin);
+      await expect(q("select public.respond_account_ownership($1, true)", [o!.id])).rejects.toThrow(
+        /not_your_offer/,
+      );
+      // The person offered sees it and accepts.
+      await become(q, U.aMember, EMAIL.aMember);
+      expect(await q("select account_name from public.my_ownership_offers()")).toHaveLength(1);
+      await q("select public.respond_account_ownership($1, true)", [o!.id]);
       expect(
-        await q("select id, role from public.members where account_id = $1 order by role", [
-          ids.acctA,
-        ]),
+        await q("select id, role from public.members where account_id = $1", [ids.acctA]),
       ).toEqual(
         expect.arrayContaining([
           { id: ids.memberAAdmin, role: "ADMIN" },
           { id: ids.memberAMember, role: "OWNER" },
         ]),
       );
-      // The former owner is now an ordinary admin: no more transfers or type changes.
+      await expect(q("select public.respond_account_ownership($1, true)", [o!.id])).rejects.toThrow(
+        /offer_closed/,
+      );
+      // The former owner is an admin now: no more offers, but they may leave.
+      await become(q, U.aAdmin, EMAIL.aAdmin);
       await expect(
-        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAAdmin]),
+        q("select public.offer_account_ownership($1, $2)", [ids.acctA, ids.memberAAdmin]),
       ).rejects.toThrow(/owner_required/);
     });
     await as(db, bAdmin, async (q) => {
       await expect(
-        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberBAdmin]),
+        q("select public.offer_account_ownership($1, $2)", [ids.acctA, ids.memberBAdmin]),
       ).rejects.toThrow(/owner_required/);
     });
     await as(db, anon, async (q) => {
       await expect(
-        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAMember]),
+        q("select public.offer_account_ownership($1, $2)", [ids.acctA, ids.memberAMember]),
       ).rejects.toThrow(/permission denied/);
+      await expect(q("select * from public.ownership_offers")).rejects.toThrow(/permission denied/);
+    });
+  });
+
+  it("a member leaves: open debts first; then no sign-in, no e-mail, no admin rows", async () => {
+    await as(db, aMember, async (q) => {
+      await q("reset role");
+      const [e] = await q<{ id: string }>(
+        "insert into public.expenses (property_id, amount, category, split_method, paid_by_member_id, description) values ($1, 100, 'other', 'EQUAL', $2, 'Pivo') returning id",
+        [ids.propA, ids.memberAAdmin],
+      );
+      await q(
+        "insert into public.expense_splits (expense_id, member_id, amount_owed, paid_back) values ($1, $2, 50, false)",
+        [e!.id, ids.memberAMember],
+      );
+      await q("set local role authenticated");
+      await expect(q("select public.leave_account($1)", [ids.acctA])).rejects.toThrow(/open_debts/);
+      await q("reset role");
+      // Settle everything they owe or are owed (earlier tests leave more).
+      await q(
+        "update public.expense_splits s set paid_back = true from public.expenses e where e.id = s.expense_id and (s.member_id = $1 or e.paid_by_member_id = $1)",
+        [ids.memberAMember],
+      );
+      await q("set local role authenticated");
+      await q("select public.leave_account($1)", [ids.acctA]);
+      await q("reset role");
+      expect(
+        await q("select user_id, email, role from public.members where id = $1", [
+          ids.memberAMember,
+        ]),
+      ).toEqual([{ user_id: null, email: "", role: "MEMBER" }]);
+      expect(
+        await q(
+          "select action from public.audit_log where action = 'member_left' and target_id = $1",
+          [ids.memberAMember],
+        ),
+      ).toHaveLength(1);
+      // Signing in again doesn't re-claim the row by e-mail.
+      await q("set local role authenticated");
+      await q("select public.claim_initial_membership()");
+      await q("reset role");
+      expect(
+        await q("select user_id from public.members where id = $1", [ids.memberAMember]),
+      ).toEqual([{ user_id: null }]);
     });
   });
 
@@ -2049,6 +2120,46 @@ describe("owner, account type changes, institution requests (T-045, migration 00
       await expect(
         q("select public.change_account_type($1, 'FAMILY', 'Rodina B')", [ids.acctB]),
       ).rejects.toThrow(/pending_requests/);
+    });
+  });
+
+  it("settling between two people clears both directions and leaves an audit row (25 Oct check)", async () => {
+    await as(db, aAdmin, async (q) => {
+      await q("reset role");
+      // aMember paid 8 000 for aAdmin (4 000 each); aAdmin paid 1 000 for aMember (333,34).
+      const [e1] = await q<{ id: string }>(
+        "insert into public.expenses (property_id, amount, category, split_method, paid_by_member_id, description) values ($1, 8000, 'other', 'EQUAL', $2, 'G') returning id",
+        [ids.propA, ids.memberAMember],
+      );
+      const [e2] = await q<{ id: string }>(
+        "insert into public.expenses (property_id, amount, category, split_method, paid_by_member_id, description) values ($1, 1000, 'supplies', 'EQUAL', $2, 'Fridge') returning id",
+        [ids.propA, ids.memberAAdmin],
+      );
+      await q(
+        "insert into public.expense_splits (expense_id, member_id, amount_owed, paid_back) values ($1, $2, 4000, false), ($3, $4, 333.34, false)",
+        [e1!.id, ids.memberAAdmin, e2!.id, ids.memberAMember],
+      );
+      await q("set local role authenticated");
+      // aAdmin owes the net 3 666,66 to aMember; as an admin they confirm for the receiver.
+      const [r] = await q<{ n: number }>("select public.settle_debt($1,$2,$3) as n", [
+        ids.propA,
+        ids.memberAAdmin,
+        ids.memberAMember,
+      ]);
+      // Earlier tests leave one more open share between the two: every one of them is cleared.
+      expect(r?.n).toBeGreaterThanOrEqual(2);
+      expect(
+        await q(
+          "select count(*)::int as open from public.expense_splits where expense_id in ($1,$2) and not paid_back",
+          [e1!.id, e2!.id],
+        ),
+      ).toEqual([{ open: 0 }]);
+      await q("reset role");
+      const log = await q<{ detail: { shares: number } }>(
+        "select detail from public.audit_log where action = 'debt_settled' and target_id = $1",
+        [ids.propA],
+      );
+      expect(log.at(-1)?.detail.shares).toBe(r?.n);
     });
   });
 

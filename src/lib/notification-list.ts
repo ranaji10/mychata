@@ -7,6 +7,7 @@ import type { Booking, ExpenseSplit, InstitutionalRequest, Member, Task } from "
 
 export type NotificationKind =
   | "invitation"
+  | "ownership_offer"
   | "approval"
   | "auto_approved"
   | "guest_request"
@@ -64,6 +65,11 @@ export interface NotificationInput {
   /** The open cottage, for "4 bookings were confirmed automatically for …" (T-042). */
   propertyName?: string | undefined;
   invitations?: PendingInvitation[] | null | undefined;
+  /** Someone wants to hand the person an account (25 Oct 2026); accepted in Members. */
+  ownershipOffers?:
+    | { id: string; account_name: string; from_name: string; created_at: string }[]
+    | null
+    | undefined;
   bookings?: Booking[] | null | undefined;
   guestRequests?:
     | { id: string; guest_name: string; start_date: string; created_at: string; source?: string }[]
@@ -145,6 +151,24 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
         "It has the same name as a cottage. Change it in My profile.",
       ],
       to: "/profil",
+    });
+  }
+
+  for (const o of input.ownershipOffers ?? []) {
+    out.push({
+      key: `ownership_offer:${o.id}`,
+      kind: "ownership_offer",
+      tone: "action",
+      at: o.created_at,
+      title: [
+        `${o.from_name} vám předává účet „${o.account_name}“`,
+        `${o.from_name} is handing you “${o.account_name}”`,
+      ],
+      detail: [
+        "Přijměte nebo odmítněte v Členech a oprávněních.",
+        "Accept or decline in Members & permissions.",
+      ],
+      to: "/clenove",
     });
   }
 

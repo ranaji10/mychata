@@ -2,7 +2,8 @@
 --
 -- 1. D-22: every account gets an explicit OWNER (the founding admin). OWNER counts as admin
 --    everywhere (has_account_role 'admin' already includes it). Exactly one per account; it
---    moves only with transfer_account_ownership(). New accounts: the first member row with a
+--    moves only when the new owner accepts an offer (offer/respond_account_ownership). Any
+--    member except the owner may leave (leave_account). New accounts: the first member row with a
 --    sign-in becomes OWNER.
 -- 2. D-03: change_account_type(): family <-> organisation, owner only, at most once in six
 --    months (accounts.type_changed_at), and refused while a paid subscription runs (billing
@@ -72,34 +73,180 @@ create trigger members_first_is_owner before insert or update of role, user_id o
   for each row execute function public.members_first_is_owner();
 --> statement-breakpoint
 
--- Hand the account to another admin who has a sign-in. The old owner stays an admin.
-create or replace function public.transfer_account_ownership(_account_id uuid, _to_member_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
-declare target public.members; me uuid;
+-- Ownership moves only when the new owner accepts (25 Oct): the owner offers it to a member
+-- with a sign-in, the member sees it in Notifications and Members, accepts or declines. On
+-- accept the old owner becomes an admin; only then may they leave (leave_account below).
+create table if not exists public.ownership_offers (
+  id uuid primary key default gen_random_uuid(),
+  account_id uuid not null references public.accounts (id) on delete cascade,
+  from_member_id uuid not null references public.members (id) on delete cascade,
+  to_member_id uuid not null references public.members (id) on delete cascade,
+  status text not null default 'PENDING'
+    check (status in ('PENDING', 'ACCEPTED', 'DECLINED', 'CANCELLED')),
+  created_at timestamptz not null default now(),
+  decided_at timestamptz
+);
+--> statement-breakpoint
+create unique index if not exists ownership_offers_one_pending
+  on public.ownership_offers (account_id) where status = 'PENDING';
+--> statement-breakpoint
+alter table public.ownership_offers enable row level security;
+--> statement-breakpoint
+revoke all on public.ownership_offers from anon, authenticated;
+--> statement-breakpoint
+grant select on public.ownership_offers to authenticated;
+--> statement-breakpoint
+create policy "Admins and the person offered read offers" on public.ownership_offers
+  for select to authenticated
+  using (public.has_account_role(account_id, 'admin')
+         or to_member_id in (select id from public.members where user_id = auth.uid()));
+--> statement-breakpoint
+
+create or replace function public.offer_account_ownership(_account_id uuid, _to_member_id uuid)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare target public.members; me uuid; offer uuid;
 begin
   if not public.has_account_role(_account_id, 'owner') then
     raise exception 'owner_required' using errcode = '42501';
   end if;
-  select * into target from public.members where id = _to_member_id for update;
+  select * into target from public.members where id = _to_member_id;
   if not found or target.account_id <> _account_id then
     raise exception 'member_not_in_account' using errcode = '22023';
   end if;
-  if target.role = 'OWNER' then return; end if;
+  if target.role = 'OWNER' then raise exception 'already_owner'; end if;
   if target.user_id is null then raise exception 'member_has_no_sign_in'; end if;
-  if target.role <> 'ADMIN' then raise exception 'new_owner_must_be_admin'; end if;
   select id into me from public.members
-  where account_id = _account_id and user_id = auth.uid() and role = 'OWNER' for update;
-  update public.members set role = 'ADMIN' where id = me;
-  update public.members set role = 'OWNER' where id = target.id;
+  where account_id = _account_id and user_id = auth.uid() and role = 'OWNER';
+  -- One open offer per account: a new one replaces the old.
+  update public.ownership_offers set status = 'CANCELLED', decided_at = now()
+  where account_id = _account_id and status = 'PENDING';
+  insert into public.ownership_offers (account_id, from_member_id, to_member_id)
+  values (_account_id, me, target.id) returning id into offer;
   insert into public.audit_log (account_id, actor_user_id, action, target_type, target_id, detail)
-  values (_account_id, auth.uid(), 'ownership_transferred', 'member', target.id,
-          jsonb_build_object('from_member', me));
+  values (_account_id, auth.uid(), 'ownership_offered', 'member', target.id,
+          jsonb_build_object('offer', offer));
+  return offer;
 end;
 $$;
 --> statement-breakpoint
-revoke execute on function public.transfer_account_ownership(uuid, uuid) from public, anon;
+revoke execute on function public.offer_account_ownership(uuid, uuid) from public, anon;
 --> statement-breakpoint
-grant execute on function public.transfer_account_ownership(uuid, uuid) to authenticated;
+grant execute on function public.offer_account_ownership(uuid, uuid) to authenticated;
+--> statement-breakpoint
+
+create or replace function public.respond_account_ownership(_offer_id uuid, _accept boolean)
+returns void language plpgsql security definer set search_path = public as $$
+declare o public.ownership_offers; target public.members; old_owner public.members;
+begin
+  select * into o from public.ownership_offers where id = _offer_id for update;
+  if not found then raise exception 'offer_not_found' using errcode = '22023'; end if;
+  select * into target from public.members where id = o.to_member_id for update;
+  if target.user_id is distinct from auth.uid() then
+    raise exception 'not_your_offer' using errcode = '42501';
+  end if;
+  if o.status <> 'PENDING' then raise exception 'offer_closed'; end if;
+  select * into old_owner from public.members where id = o.from_member_id for update;
+  if not found or old_owner.role <> 'OWNER' then
+    update public.ownership_offers set status = 'CANCELLED', decided_at = now() where id = o.id;
+    raise exception 'offer_closed';
+  end if;
+  if _accept then
+    update public.members set role = 'ADMIN' where id = old_owner.id;
+    update public.members set role = 'OWNER' where id = target.id;
+  end if;
+  update public.ownership_offers
+  set status = case when _accept then 'ACCEPTED' else 'DECLINED' end, decided_at = now()
+  where id = o.id;
+  insert into public.audit_log (account_id, actor_user_id, action, target_type, target_id, detail)
+  values (o.account_id, auth.uid(),
+          case when _accept then 'ownership_accepted' else 'ownership_declined' end,
+          'member', target.id, jsonb_build_object('offer', o.id, 'from_member', old_owner.id));
+end;
+$$;
+--> statement-breakpoint
+revoke execute on function public.respond_account_ownership(uuid, boolean) from public, anon;
+--> statement-breakpoint
+grant execute on function public.respond_account_ownership(uuid, boolean) to authenticated;
+--> statement-breakpoint
+
+create or replace function public.cancel_account_ownership(_offer_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare o public.ownership_offers;
+begin
+  select * into o from public.ownership_offers where id = _offer_id for update;
+  if not found or not public.has_account_role(o.account_id, 'owner') then
+    raise exception 'owner_required' using errcode = '42501';
+  end if;
+  update public.ownership_offers set status = 'CANCELLED', decided_at = now()
+  where id = o.id and status = 'PENDING';
+end;
+$$;
+--> statement-breakpoint
+revoke execute on function public.cancel_account_ownership(uuid) from public, anon;
+--> statement-breakpoint
+grant execute on function public.cancel_account_ownership(uuid) to authenticated;
+--> statement-breakpoint
+
+-- Offers waiting for the caller, in any of their accounts (Notifications, Members).
+create or replace function public.my_ownership_offers()
+returns table (id uuid, account_id uuid, account_name text, from_name text, created_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select o.id, o.account_id, a.name, f.name, o.created_at
+  from public.ownership_offers o
+  join public.members t on t.id = o.to_member_id
+  join public.members f on f.id = o.from_member_id
+  join public.accounts a on a.id = o.account_id
+  where o.status = 'PENDING' and t.user_id = auth.uid()
+  order by o.created_at
+$$;
+--> statement-breakpoint
+revoke execute on function public.my_ownership_offers() from public, anon;
+--> statement-breakpoint
+grant execute on function public.my_ownership_offers() to authenticated;
+--> statement-breakpoint
+
+-- Leaving an account (25 Oct). The owner hands the account over first. Open debts are settled
+-- first, so nobody leaves owing or being owed. The row stays for history (stays, expenses keep
+-- the name) but loses the sign-in, the e-mail (so it can't be re-claimed by e-mail match), admin
+-- rights and cottage admin rows. Returns the account the person lands in next, or null.
+create or replace function public.leave_account(_account_id uuid)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare me public.members; next_account uuid; next_member uuid;
+begin
+  select * into me from public.members
+  where account_id = _account_id and user_id = auth.uid() for update;
+  if not found then raise exception 'not_a_member' using errcode = '42501'; end if;
+  if me.role = 'OWNER' then raise exception 'owner_must_transfer' using errcode = '42501'; end if;
+  if exists (
+    select 1 from public.expense_splits s
+    join public.expenses e on e.id = s.expense_id
+    join public.properties p on p.id = e.property_id
+    where p.account_id = _account_id and not s.paid_back
+      and e.paid_by_member_id is distinct from s.member_id
+      and (s.member_id = me.id or e.paid_by_member_id = me.id)
+  ) then
+    raise exception 'open_debts';
+  end if;
+  update public.ownership_offers set status = 'CANCELLED', decided_at = now()
+  where status = 'PENDING' and to_member_id = me.id;
+  delete from public.property_admins where member_id = me.id;
+  update public.members set role = 'MEMBER', user_id = null, email = '' where id = me.id;
+  select m.account_id, m.id into next_account, next_member from public.members m
+  where m.user_id = auth.uid() order by m.created_at limit 1;
+  update public.profiles
+  set active_account_id = case when active_account_id = _account_id then next_account
+                               else active_account_id end,
+      member_id = case when member_id = me.id then next_member else member_id end
+  where user_id = auth.uid();
+  insert into public.audit_log (account_id, actor_user_id, action, target_type, target_id, detail)
+  values (_account_id, auth.uid(), 'member_left', 'member', me.id, '{}'::jsonb);
+  return next_account;
+end;
+$$;
+--> statement-breakpoint
+revoke execute on function public.leave_account(uuid) from public, anon;
+--> statement-breakpoint
+grant execute on function public.leave_account(uuid) to authenticated;
 --> statement-breakpoint
 
 -- 2. Account type changes ------------------------------------------------------------------
@@ -214,3 +361,44 @@ create policy "Admins decide requests" on public.institutional_requests for upda
 --> statement-breakpoint
 create policy "Admins delete requests" on public.institutional_requests for delete to authenticated
   using (public.in_current_account(property_id) and public.is_admin());
+--> statement-breakpoint
+
+-- 4. Settling up leaves a trace (25 Oct expense check) ------------------------------------
+-- A reported settlement could not be traced: expense_splits keep no time. Same function as 0022
+-- plus one audit row per call (who confirmed, between whom, how many shares).
+create or replace function public.settle_debt(_property_id uuid, _from uuid, _to uuid)
+returns integer language plpgsql security definer set search_path = public as $$
+declare acct uuid; me uuid; changed integer;
+begin
+  select account_id into acct from public.properties where id = _property_id;
+  if acct is null or not public.is_member(acct) then
+    raise exception 'not_a_member' using errcode = '42501';
+  end if;
+  select id into me from public.members where account_id = acct and user_id = auth.uid();
+  -- The person who receives the money confirms it; an admin may confirm for anyone.
+  if me is distinct from _to and not public.has_account_role(acct, 'admin') then
+    raise exception 'only_receiver_confirms' using errcode = '42501';
+  end if;
+  if (select count(*) from public.members where id in (_from, _to) and account_id = acct) <> 2 then
+    raise exception 'members_not_in_account' using errcode = '22023';
+  end if;
+
+  update public.expense_splits s
+  set paid_back = true, paid_back_confirmed_by = me
+  from public.expenses e
+  where e.id = s.expense_id
+    and e.property_id = _property_id
+    and not s.paid_back
+    and ((s.member_id = _from and e.paid_by_member_id = _to)
+      or (s.member_id = _to and e.paid_by_member_id = _from));
+  get diagnostics changed = row_count;
+  insert into public.audit_log (account_id, actor_user_id, action, target_type, target_id, detail)
+  values (acct, auth.uid(), 'debt_settled', 'property', _property_id,
+          jsonb_build_object('from', _from, 'to', _to, 'shares', changed));
+  return changed;
+end;
+$$;
+--> statement-breakpoint
+revoke execute on function public.settle_debt(uuid, uuid, uuid) from public, anon;
+--> statement-breakpoint
+grant execute on function public.settle_debt(uuid, uuid, uuid) to authenticated;

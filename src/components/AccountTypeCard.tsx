@@ -69,12 +69,12 @@ export function AccountTypeCard() {
             )
           : isOrg
             ? t(
-                "Jako vlastník můžete organizaci převést zpět na rodinný účet. Typ účtu lze měnit jednou za 6 měsíců.",
-                "As the owner you can turn the organisation back into a family account. The account type can change once in 6 months.",
+                "Jako vlastník můžete organizaci převést zpět na rodinný účet. Po každé změně lze typ znovu změnit až za 6 měsíců.",
+                "As the owner you can turn the organisation back into a family account. After each change, the type can change again only after 6 months.",
               )
             : t(
-                "Na organizaci účet převedete níže v části „Účet instituce“. Typ účtu lze měnit jednou za 6 měsíců.",
-                "To turn this account into an organisation, use “Institutional account” below. The account type can change once in 6 months.",
+                "Na organizaci účet převedete níže v části „Účet instituce“. Po každé změně lze typ znovu změnit až za 6 měsíců.",
+                "To turn this account into an organisation, use “Institutional account” below. After each change, the type can change again only after 6 months.",
               )}
       </p>
       {isOrg && !nextChange && !open && (

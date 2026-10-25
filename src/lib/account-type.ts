@@ -27,8 +27,8 @@ export function accountTypeChangeError(message: string, t: T): string {
   if (cooldown) {
     const [, y, m, d] = cooldown;
     return t(
-      `Typ účtu lze měnit jednou za 6 měsíců. Znovu to půjde od ${d}.${m}.${y}.`,
-      `The account type can change once in 6 months. You can change it again from ${d}.${m}.${y}.`,
+      `Po změně typu účtu lze typ znovu změnit až za 6 měsíců, tedy od ${d}.${m}.${y}.`,
+      `After a type change the next one is possible after 6 months, from ${d}.${m}.${y}.`,
     );
   }
   if (message.includes("owner_required") || message.includes("Admin role required"))

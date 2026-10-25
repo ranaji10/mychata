@@ -48,7 +48,17 @@ function SettlementPage() {
     [data],
   );
 
-  const name = (id: string) => members.find((m) => m.id === id)?.name ?? "—";
+  // Two members can share a name (Second Home has two "Ranaji Deb"): add "(you)" or the e-mail's
+  // first part, so nobody confirms the wrong person's debt (25 Oct check).
+  const name = (id: string) => {
+    const m = members.find((x) => x.id === id);
+    if (!m) return "—";
+    const twins = members.filter((x) => x.name.trim() === m.name.trim()).length > 1;
+    if (!twins) return m.name;
+    if (m.id === currentMember?.id) return `${m.name} (${t("vy", "you")})`;
+    const hint = m.email ? m.email.split("@")[0] : t("bez přihlášení", "no sign-in");
+    return `${m.name} (${hint})`;
+  };
 
   // One database step marks everything between the two people as paid, in both directions,
   // and refuses anyone but the receiver or an admin (settle_debt(), T-021).

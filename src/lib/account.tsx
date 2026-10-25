@@ -20,6 +20,8 @@ interface AccountState {
   properties: Property[];
   setActivePropertyId: (id: string) => void;
   members: Member[];
+  /** Members who haven't left (pickers for new expenses, tasks); `members` keeps everyone for names. */
+  activeMembers: Member[];
   loading: boolean;
   /** The member record securely linked to the signed-in user (null = not linked yet). */
   currentMember: Member | null;
@@ -244,6 +246,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     properties: properties ?? [],
     setActivePropertyId,
     members: members ?? [],
+    activeMembers: (members ?? []).filter((m) => !m.left_at),
     loading:
       authLoading ||
       (!!user && (loadingIdentity || loadingProfile)) ||

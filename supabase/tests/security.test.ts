@@ -2042,14 +2042,32 @@ describe("owner, account type changes, institution requests (T-045, migration 00
         "update public.expense_splits s set paid_back = true from public.expenses e where e.id = s.expense_id and (s.member_id = $1 or e.paid_by_member_id = $1)",
         [ids.memberAMember],
       );
+      const [task] = await q<{ id: string }>(
+        "insert into public.tasks (property_id, title, assignee_member_id) values ($1, 'Okapy', $2) returning id",
+        [ids.propA, ids.memberAMember],
+      );
       await q("set local role authenticated");
       await q("select public.leave_account($1)", [ids.acctA]);
+      await q("reset role");
+      // Their open tasks go back to nobody.
+      expect(
+        await q("select assignee_member_id from public.tasks where id = $1", [task!.id]),
+      ).toEqual([{ assignee_member_id: null }]);
+      await q("set local role authenticated");
       await q("reset role");
       expect(
         await q("select user_id, email, role from public.members where id = $1", [
           ids.memberAMember,
         ]),
       ).toEqual([{ user_id: null, email: "", role: "MEMBER" }]);
+      expect(
+        (
+          await q<{ left: boolean }>(
+            "select left_at is not null as left from public.members where id = $1",
+            [ids.memberAMember],
+          )
+        )[0]?.left,
+      ).toBe(true);
       expect(
         await q(
           "select action from public.audit_log where action = 'member_left' and target_id = $1",

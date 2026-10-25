@@ -56,7 +56,11 @@ function SettlementPage() {
     const twins = members.filter((x) => x.name.trim() === m.name.trim()).length > 1;
     if (!twins) return m.name;
     if (m.id === currentMember?.id) return `${m.name} (${t("vy", "you")})`;
-    const hint = m.email ? m.email.split("@")[0] : t("bez přihlášení", "no sign-in");
+    const hint = m.left_at
+      ? t("odešel/odešla", "left")
+      : m.email
+        ? m.email.split("@")[0]
+        : t("bez přihlášení", "no sign-in");
     return `${m.name} (${hint})`;
   };
 

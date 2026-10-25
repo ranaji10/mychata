@@ -60,3 +60,5 @@ Expected: none, or only accounts whose admins never signed in. Then check My pro
 - **Type change limit:** brand-new accounts may switch at once; the six months count from the first switch (already how 0036 works; wording on screen made explicit).
 - **Settle check:** the database function settles both directions correctly (test with the Second Home numbers). The reported settle left no trace, so `settle_debt` now writes an audit row (`debt_settled`, with how many shares). Settle debts adds "(you)" or the e-mail's first part when two members share a name.
 - **N-19 done:** GA4 Google signals and user-provided data on (25 Oct; automatic detection of user-provided data left off). **N-21 done:** `lovable-sync - keep` blocks force pushes.
+
+Second fresh review (ownership and leaving): nothing serious. Fixed: members who left are marked (`members.left_at`, "Odešel/odešla" in Members) and left out of the pickers for new expenses and tasks; their open tasks go back to nobody (their stays stay in the calendar for an admin to decide); a double offer is serialised and worded; `settle_debt` logs only when something was settled; a null answer counts as declined.

@@ -185,7 +185,7 @@ Policies: Admins manage own manual sections (ALL); Members read own manual secti
 
 ### members
 
-`id` uuid · `account_id` uuid · `name` text · `email` text · `phone` text? · `role` text · `branch` text · `created_at` timestamp with time zone · `user_id` uuid?
+`id` uuid · `account_id` uuid · `name` text · `email` text · `phone` text? · `role` text · `branch` text · `created_at` timestamp with time zone · `user_id` uuid? · `left_at` timestamp with time zone?
 
 Policies: Members read members of their accounts (SELECT); Members update self (UPDATE)
 

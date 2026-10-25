@@ -48,6 +48,8 @@ export interface Member {
   role: "OWNER" | "ADMIN" | "MEMBER";
   branch: string;
   user_id: string | null;
+  /** Set when the person left the account (0036); the row stays for history. */
+  left_at?: string | null;
 }
 
 export interface Booking {

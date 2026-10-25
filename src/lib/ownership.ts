@@ -82,5 +82,10 @@ export function ownershipError(message: string, t: T): string {
       "Nabídka už neplatí (vlastník ji zrušil nebo se změnil).",
       "The offer is no longer open (the owner cancelled it or changed).",
     );
+  if (/duplicate key|ownership_offers_one_pending/.test(message))
+    return t(
+      "Nabídka už odešla. Obnovte stránku.",
+      "The offer has already been sent. Reload the page.",
+    );
   return t(`Akce se nepodařila: ${message}`, `That didn't work: ${message}`);
 }

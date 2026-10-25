@@ -58,7 +58,7 @@ function ExpensesRoute() {
 
 function ExpensesPage() {
   const { t, lang } = useLang();
-  const { property, currentMember, members } = useAccount();
+  const { property, currentMember, members, activeMembers } = useAccount();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [desc, setDesc] = useState("");
@@ -360,7 +360,7 @@ function ExpensesPage() {
           <div>
             <span className="label-text text-[16px]">{t("Rozdělit mezi", "Split between")}</span>
             <div className="flex flex-wrap gap-2">
-              {members.map((m) => (
+              {activeMembers.map((m) => (
                 <Button
                   variant="fresh"
                   size="fresh"

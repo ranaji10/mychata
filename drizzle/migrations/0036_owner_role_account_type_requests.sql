@@ -115,8 +115,10 @@ begin
   end if;
   if target.role = 'OWNER' then raise exception 'already_owner'; end if;
   if target.user_id is null then raise exception 'member_has_no_sign_in'; end if;
+  -- Locks the owner's row, so two quick offers run one after the other (review, 25 Oct).
   select id into me from public.members
-  where account_id = _account_id and user_id = auth.uid() and role = 'OWNER';
+  where account_id = _account_id and user_id = auth.uid() and role = 'OWNER' for update;
+  if me is null then raise exception 'owner_required' using errcode = '42501'; end if;
   -- One open offer per account: a new one replaces the old.
   update public.ownership_offers set status = 'CANCELLED', decided_at = now()
   where account_id = _account_id and status = 'PENDING';
@@ -150,6 +152,7 @@ begin
     update public.ownership_offers set status = 'CANCELLED', decided_at = now() where id = o.id;
     raise exception 'offer_closed';
   end if;
+  _accept := coalesce(_accept, false);
   if _accept then
     update public.members set role = 'ADMIN' where id = old_owner.id;
     update public.members set role = 'OWNER' where id = target.id;
@@ -205,6 +208,9 @@ revoke execute on function public.my_ownership_offers() from public, anon;
 grant execute on function public.my_ownership_offers() to authenticated;
 --> statement-breakpoint
 
+alter table public.members add column if not exists left_at timestamptz;
+--> statement-breakpoint
+
 -- Leaving an account (25 Oct). The owner hands the account over first. Open debts are settled
 -- first, so nobody leaves owing or being owed. The row stays for history (stays, expenses keep
 -- the name) but loses the sign-in, the e-mail (so it can't be re-claimed by e-mail match), admin
@@ -230,7 +236,14 @@ begin
   update public.ownership_offers set status = 'CANCELLED', decided_at = now()
   where status = 'PENDING' and to_member_id = me.id;
   delete from public.property_admins where member_id = me.id;
-  update public.members set role = 'MEMBER', user_id = null, email = '' where id = me.id;
+  -- Their open maintenance tasks go back to "nobody" so someone else picks them up. Stays they
+  -- booked stay in the calendar under their name (an admin decides about them).
+  update public.tasks t set assignee_member_id = null
+  from public.properties p
+  where p.id = t.property_id and p.account_id = _account_id
+    and t.assignee_member_id = me.id and t.status <> 'DONE';
+  update public.members set role = 'MEMBER', user_id = null, email = '', left_at = now()
+  where id = me.id;
   select m.account_id, m.id into next_account, next_member from public.members m
   where m.user_id = auth.uid() order by m.created_at limit 1;
   update public.profiles
@@ -392,9 +405,11 @@ begin
     and ((s.member_id = _from and e.paid_by_member_id = _to)
       or (s.member_id = _to and e.paid_by_member_id = _from));
   get diagnostics changed = row_count;
-  insert into public.audit_log (account_id, actor_user_id, action, target_type, target_id, detail)
-  values (acct, auth.uid(), 'debt_settled', 'property', _property_id,
-          jsonb_build_object('from', _from, 'to', _to, 'shares', changed));
+  if changed > 0 then
+    insert into public.audit_log (account_id, actor_user_id, action, target_type, target_id, detail)
+    values (acct, auth.uid(), 'debt_settled', 'property', _property_id,
+            jsonb_build_object('from', _from, 'to', _to, 'shares', changed));
+  end if;
   return changed;
 end;
 $$;

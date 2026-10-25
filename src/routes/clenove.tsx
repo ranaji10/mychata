@@ -681,10 +681,16 @@ function MembersPage() {
                       {t("Správce této chaty", "Admin of this cottage")}
                     </span>
                   )}
-                  {!m.user_id && (
-                    <span className="pill bg-warn-soft text-warn-foreground">
-                      {t("Zatím nepřihlášen", "Not signed in yet")}
+                  {m.left_at ? (
+                    <span className="pill bg-secondary text-muted-foreground">
+                      {t(`Odešel/odešla ${fmtDate(m.left_at)}`, `Left on ${fmtDate(m.left_at)}`)}
                     </span>
+                  ) : (
+                    !m.user_id && (
+                      <span className="pill bg-warn-soft text-warn-foreground">
+                        {t("Zatím nepřihlášen", "Not signed in yet")}
+                      </span>
+                    )
                   )}
                   {openOffer?.to_member_id === m.id && (
                     <span className="pill bg-warn-soft text-warn-foreground">

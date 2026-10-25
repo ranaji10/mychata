@@ -14,21 +14,21 @@ tab: Now
 
 25 Oct 2026 · Tuik
 
-**Live:** `3b8bace` (PR #64), unchanged since 18 Oct: T-041 and T-042 with migration 0032 (applied via Lovable's marker 0033). **Built 25 Oct, not live:** PR #66 (T-043: tab order Home · Expenses · Calendar · Notifications · Settings; booking requests from the public calendar, migration 0034, ADR-0011; analytics events; GA numbers on the privacy page; F-03, F-06), PR #67 (T-044: 15 new tests, document-search re-plan ADR-0012, Czech content draft), PR #68 (Lovable's platform update). Google Analytics settings changed in GA4 itself (retention, custom dimensions, unwanted referrals; `docs/runbooks/analytics.md`). **Waiting on you:** merge #68, #66, #67 and publish with prompt 23 (N-13); decisions D-26 to D-30. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `06d9db3`, published 25 Oct about 01:50: T-043 (tab order, booking requests from the public calendar, analytics events, GA numbers on the privacy page, F-03, F-06), T-044 and migration 0034 (applied via Lovable's marker 0035). Site check passed (`2026-10-25-site-check.md`). Google Analytics settings changed in GA4 itself (`docs/runbooks/analytics.md`). **Waiting on you:** merge PR #69 (N-17), the visitor sign-up test (N-14), decisions D-26 to D-30. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-13 | **Merge and publish T-043:** merge PR #68 (Lovable's platform update) and PR #66 (tab order, booking requests from the public calendar, analytics, cookie-page numbers, F-03, F-06; reviewed, fixes in `1859a3e`). Send Lovable `prompts/2026-10-25/23-L-apply-migration-0034.md` (migration 0034), then publish and tell Claude "published" | You | To do | N-14, F-03, F-06 |
-| N-14 | **After the T-043 publish:** Claude runs the site check and stars the new key events in Google Analytics (`sign_up`, `onboarding_completed`, `booking_created`, `booking_request_sent`, `invitation_accepted`). You: in a test cottage, open its public calendar signed out → "Požádat o termín" → sign up with a fresh e-mail → confirm → back on the calendar → send; approve as admin; check "Schválil(a)" on the stay and "Vaše žádosti" (also once with the confirmation link opened in another browser: F-24) | Claude, then you | To do | F-24 |
+| N-17 | **Merge PR #69** (Lovable's commits: marker 0035 that applied 0034, regenerated `types.ts`; reviewed 25 Oct, CI green, nothing else changed). Until it is merged, `lovable-sync` stays ahead of `main` and the sync workflow leaves it alone | You | To do | N-8 |
+| N-14 | **Finish the T-043 checks** (live since `06d9db3`; site check 25 Oct passed: headers, tab order, privacy numbers, request form answers correctly). Left for you: in `Testovací chata (Lovable)` open the public calendar signed out (private window) → "Požádat o termín" → sign up with a fresh e-mail → confirm → back on the calendar → send; approve as admin; check "Schválil(a)" on the stay and "Vaše žádosti" (once with the confirmation link opened in another browser: F-24); the cookie banner on a phone. Left for Claude: star the key events in GA once `sign_up` etc. appear | You, then Claude | Doing | F-24 |
 | N-15 | **Review the Czech content draft** (G-1, written by Claude): `docs/external/claude/2026-10-25-g1-content-draft.md`. Correct it; a PR then adds `docs/content/` for L-3 | You | To do | N-5 |
 | N-16 | **Approve or reject ADR-0012** (PR #67, document search re-plan): full-text answers up to 150,000 characters per cottage, stop the unused embeddings on save, T-007 on hold. Yes → Claude stops the embeddings | You | To do |  |
 | N-10 | **Remaining T-042 checks** (passwords on the live site are yours to type): as Test 3, answer the auto-approval prompt in Members & permissions; as Test 2 in `Institutní chata (test)` a booking is confirmed at once and shows in Test 3's Notifications; as Test 1, rename `Chata Alfa (test)`; password change via the reset link (Test 2). Seen 25 Oct as Lovable's test user: the rename prompt shows for `Testovací chata (Lovable)` | You | To do |  |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload. All pass in Chromium's iPhone emulation (18 Oct) | You, Rajat | To do | F-01 |
 | N-4 | **Public calendars of the test cottages:** `Testovací chata (Lovable)` is on (25 Oct). Leave it on for N-14's request test, then switch it off (Settings → "Vypnout veřejný kalendář") and check the other test cottages | You | To do |  |
 | N-5 | **E-mail:** `notify.mychata.cz` failed verification (15 Oct). Check its DNS records in Lovable's e-mail settings and at the registrar. Then L-E (`05`), CC-3 (`06`) and L-3 (`07`, after N-15). Also turns on "Confirm email" (F-07, F-23) | You | To do | F-07, F-23 |
-| N-8 | **Tag the release:** tag what is live, `release-2026-10-18c` on `3b8bace` (T-041 and T-042); after N-13 a new tag (GitHub → Releases → Draft a new release; Claude's session can't push tags) | You | To do |  |
+| N-8 | **Tag the release:** after N-17, tag `release-2026-10-25` on the merge of PR #69 (live `06d9db3`) (GitHub → Releases → Draft a new release; Claude's session can't push tags) | You | To do |  |
 | N-9 | **Test account labels in Lovable's Knowledge:** Test 1, 2, 3 as in `docs/runbooks/test-cottages.md` | You | To do |  |
 
 ## Decisions waiting on you
@@ -75,13 +75,11 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | ID | Defect | Why still open | Next | Status |
 | --- | --- | --- | --- | --- |
 | F-01 | Not yet tested on a real iPhone: clipboard, Document Vault "Open", avatar upload | Needs an iPhone; all pass in Chromium's emulation | N-3 | Waiting |
-| F-03 | Cookie banner on phones covers all the sign-in options until dismissed | Fixed in T-043 (PR #66): short sheet on phones, the page gets room below it; not live | N-13 | Waiting |
 | F-05 | B-004: Google sign-in fails on Brave | In Lovable's sign-in broker; e-mail sign-up works | Ask Lovable about your own Google credentials | To do |
-| F-06 | Missing security headers (Content-Security-Policy, X-Frame-Options) | Partly fixed in T-043: headers on every app response, framing rules and HSTS on mychata.cz only; static files served by the hosting don't pass through | N-13, then the site check | Waiting |
 | F-07 | "Confirm email" for password sign-ups not verified | Someone could claim a relative's seat by e-mail match; public-calendar requests rely on it too | L-E turns it on (N-5) | Waiting |
 | F-08 | iPhone photos (HEIC) can't be converted in Chrome or Firefox | The app explains how to switch to JPG; a converter is a new package | D-29 | To do |
 | F-09 | B-005: slow CORS / HTTP/3 errors on Supabase hosting (Firefox) | Three other B-005 items fixed in PR #21 | Watch; T-002 | Waiting |
-| F-21 | Google Analytics tag diagnostics: "0 % consent rate"; the head script ran twice, repeating consent defaults after the visitor's choice | Script runs once since T-043 (not live). Ad consent is always denied by design, so the warning stays | N-13 | Waiting |
+| F-21 | Google Analytics tag diagnostics: "0 % consent rate" | The duplicate head script is fixed (live 25 Oct). Ad consent is always denied by design, so the warning stays unless D-26 changes that | Recheck tag diagnostics in a week | Waiting |
 | F-23 | Public-calendar requests: the 20-a-day cottage limit can be used up by throwaway accounts while "Confirm email" is off (PR #66 review) | Low; depends on F-07 | N-5 | Waiting |
 | F-24 | After sign-up, returning to the calendar when the confirmation link is opened in another browser is untested (PKCE may not sign that browser in) | Needs a real sign-up on the live site | N-14 | Waiting |
 

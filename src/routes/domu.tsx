@@ -16,6 +16,7 @@ import {
   fmtDate,
   fmtDateTime,
   fmtKc,
+  fmtKcExact,
   settlementSuggestions,
   taskTitle,
   todayISO,
@@ -440,17 +441,17 @@ function HomePage() {
             <Link to="/vydaje/vyrovnani">
               <StatCard
                 label={t("Vy dlužíte", "You owe")}
-                value={fmtKc(debts.youOwe)}
+                value={fmtKcExact(debts.youOwe)}
                 hint={[
                   debts.owedToYou > 0
                     ? t(
-                        `Vám dluží ${fmtKc(debts.owedToYou)}`,
-                        `Owed to you ${fmtKc(debts.owedToYou)}`,
+                        `Vám dluží ${fmtKcExact(debts.owedToYou)}`,
+                        `Owed to you ${fmtKcExact(debts.owedToYou)}`,
                       )
                     : null,
                   t(
-                    `Nevyrovnané v chatě celkem ${fmtKc(debts.cottageTotal)}`,
-                    `Unsettled in the cottage ${fmtKc(debts.cottageTotal)}`,
+                    `Nevyrovnané v chatě celkem ${fmtKcExact(debts.cottageTotal)}`,
+                    `Unsettled in the cottage ${fmtKcExact(debts.cottageTotal)}`,
                   ),
                 ]
                   .filter(Boolean)

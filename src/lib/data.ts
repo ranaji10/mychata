@@ -292,6 +292,20 @@ export function fmtKc(amount: number): string {
   );
 }
 
+/**
+ * Debts to pay back, to the haléř when not whole: 1 000 Kč split three ways is 333,34 + 333,33,
+ * and rounding each to 333 Kč made the rows disagree with the 667 Kč total (25 Oct check).
+ */
+export function fmtKcExact(amount: number): string {
+  const cents = Math.round(amount * 100);
+  if (cents % 100 === 0) return fmtKc(cents / 100);
+  const whole = Math.trunc(Math.abs(cents) / 100)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const frac = String(Math.abs(cents) % 100).padStart(2, "0");
+  return `${cents < 0 ? "−" : ""}${whole},${frac} Kč`;
+}
+
 export function todayISO(): string {
   return localISO(new Date());
 }

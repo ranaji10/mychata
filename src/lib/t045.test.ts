@@ -93,3 +93,13 @@ describe("live analytics shares (D-28)", () => {
     expect(toShares({}, (v) => [v, v])).toEqual([]);
   });
 });
+
+describe("debts are shown to the haléř (25 Oct check)", () => {
+  it("keeps whole amounts short and shows hellers when there are any", async () => {
+    const { fmtKcExact } = await import("./data");
+    expect(fmtKcExact(4000)).toBe("4 000 Kč");
+    expect(fmtKcExact(333.34)).toBe("333,34 Kč");
+    expect(fmtKcExact(666.67)).toBe("666,67 Kč");
+    expect(fmtKcExact(1234.5)).toBe("1 234,50 Kč");
+  });
+});

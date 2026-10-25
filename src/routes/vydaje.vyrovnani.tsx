@@ -8,7 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { Avatar, EmptyState, LoadingCards } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtKc, settlementSuggestions } from "@/lib/data";
+import { fmtKcExact, settlementSuggestions } from "@/lib/data";
 import { expenseDataKey, useExpenseData } from "@/lib/expenses";
 import { useLang } from "@/lib/i18n";
 
@@ -127,7 +127,7 @@ function SettlementPage() {
                   </p>
                   <p className="text-[16px] text-muted-foreground">{t("dluží", "owes")}</p>
                 </div>
-                <p className="text-xl font-bold">{fmtKc(s.amount)}</p>
+                <p className="text-xl font-bold">{fmtKcExact(s.amount)}</p>
               </div>
               {currentMember?.id === s.to || isAdmin ? (
                 <Button
@@ -150,8 +150,8 @@ function SettlementPage() {
                 <p className="mt-3 rounded-2xl bg-secondary p-3 text-[16px] font-semibold text-muted-foreground">
                   {currentMember?.id === s.from
                     ? t(
-                        `Pošlete ${fmtKc(s.amount)} osobě ${name(s.to)}. Jakmile platbu potvrdí, dluh zmizí.`,
-                        `Send ${fmtKc(s.amount)} to ${name(s.to)}. Once they confirm it, the debt disappears.`,
+                        `Pošlete ${fmtKcExact(s.amount)} osobě ${name(s.to)}. Jakmile platbu potvrdí, dluh zmizí.`,
+                        `Send ${fmtKcExact(s.amount)} to ${name(s.to)}. Once they confirm it, the debt disappears.`,
                       )
                     : t(
                         `Přijetí platby potvrzuje ${name(s.to)}.`,

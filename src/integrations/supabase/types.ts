@@ -1055,36 +1055,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ownership_offers: {
-        Row: {
-          account_id: string
-          created_at: string
-          decided_at: string | null
-          from_member_id: string
-          id: string
-          status: string
-          to_member_id: string
-        }
-        Insert: {
-          account_id: string
-          created_at?: string
-          decided_at?: string | null
-          from_member_id: string
-          id?: string
-          status?: string
-          to_member_id: string
-        }
-        Update: {
-          account_id?: string
-          created_at?: string
-          decided_at?: string | null
-          from_member_id?: string
-          id?: string
-          status?: string
-          to_member_id?: string
-        }
-        Relationships: []
-      }
       org_join_requests: {
         Row: {
           account_id: string
@@ -1116,6 +1086,58 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ownership_offers: {
+        Row: {
+          account_id: string
+          created_at: string
+          decided_at: string | null
+          from_member_id: string
+          id: string
+          status: string
+          to_member_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          decided_at?: string | null
+          from_member_id: string
+          id?: string
+          status?: string
+          to_member_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          decided_at?: string | null
+          from_member_id?: string
+          id?: string
+          status?: string
+          to_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_offers_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_offers_from_member_id_fkey"
+            columns: ["from_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_offers_to_member_id_fkey"
+            columns: ["to_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
         ]
@@ -1537,6 +1559,10 @@ export type Database = {
       accept_invitation: { Args: { _token: string }; Returns: string }
       account_founder: { Args: { _account_id: string }; Returns: string }
       account_plan: { Args: { _account_id: string }; Returns: string }
+      account_type_change_after: {
+        Args: { _account_id: string }
+        Returns: string
+      }
       add_checklist: {
         Args: {
           _force?: boolean
@@ -1561,37 +1587,17 @@ export type Database = {
         Args: { _daily_limit: number; _kind: string }
         Returns: boolean
       }
-      claim_initial_membership: { Args: never; Returns: string }
-      account_type_change_after: {
-        Args: { _account_id: string }
-        Returns: string | null
+      cancel_account_ownership: {
+        Args: { _offer_id: string }
+        Returns: undefined
       }
       change_account_type: {
         Args: { _account_id: string; _name?: string; _to: string }
         Returns: string
       }
+      claim_initial_membership: { Args: never; Returns: string }
       convert_account_to_institution: {
         Args: { _account_id: string; _name: string }
-        Returns: undefined
-      }
-      cancel_account_ownership: { Args: { _offer_id: string }; Returns: undefined }
-      leave_account: { Args: { _account_id: string }; Returns: string | null }
-      my_ownership_offers: {
-        Args: never
-        Returns: {
-          account_id: string
-          account_name: string
-          created_at: string
-          from_name: string
-          id: string
-        }[]
-      }
-      offer_account_ownership: {
-        Args: { _account_id: string; _to_member_id: string }
-        Returns: string
-      }
-      respond_account_ownership: {
-        Args: { _accept: boolean; _offer_id: string }
         Returns: undefined
       }
       cover_expense: { Args: { _expense_id: string }; Returns: number }
@@ -1647,6 +1653,7 @@ export type Database = {
       is_admin_only_file: { Args: { _name: string }; Returns: boolean }
       is_member: { Args: { _account_id: string }; Returns: boolean }
       is_property_admin: { Args: { _property_id: string }; Returns: boolean }
+      leave_account: { Args: { _account_id: string }; Returns: string }
       my_cottages: {
         Args: never
         Returns: {
@@ -1670,6 +1677,16 @@ export type Database = {
           token: string
         }[]
       }
+      my_ownership_offers: {
+        Args: never
+        Returns: {
+          account_id: string
+          account_name: string
+          created_at: string
+          from_name: string
+          id: string
+        }[]
+      }
       my_public_booking_requests: {
         Args: { _token: string }
         Returns: {
@@ -1683,6 +1700,10 @@ export type Database = {
           start_date: string
           status: string
         }[]
+      }
+      offer_account_ownership: {
+        Args: { _account_id: string; _to_member_id: string }
+        Returns: string
       }
       overlap_peak_guests: {
         Args: {
@@ -1761,6 +1782,10 @@ export type Database = {
           _token: string
         }
         Returns: string
+      }
+      respond_account_ownership: {
+        Args: { _accept: boolean; _offer_id: string }
+        Returns: undefined
       }
       rotate_public_token: { Args: { _property_id: string }; Returns: string }
       search_manual: {

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useConsent } from "@/lib/consent";
 import { AnalyticsSnapshotCard } from "@/components/AnalyticsSnapshotCard";
@@ -23,25 +23,30 @@ export const Route = createFileRoute("/soukromi")({
 
 function PrivacyPage() {
   const { t } = useLang();
-  const { choice, reopen } = useConsent();
+  const { current: choice, reopen } = useConsent();
   const { user } = useAccount();
+  const router = useRouter();
+  // Where Back goes when there is no page to go back to (opened directly or in a new tab).
+  const fallback = user ? "/vice" : "/auth";
 
   return (
     <main className="mx-auto min-h-screen max-w-[420px] bg-background p-5 pb-16 lg:max-w-[820px] lg:p-6 md:max-w-[720px] md:py-10">
       <div className="flex items-center justify-between">
-        {/* Signed-in visitors arrived from Settings; the cookie banner opens this page for
-            everyone, so the back arrow only appears for signed-in members. */}
-        {user ? (
-          <Link
-            to="/vice"
-            aria-label={t("Zpět na Nastavení", "Back to Settings")}
-            className="grid size-11 place-items-center rounded-full bg-card text-foreground shadow-sm ring-1 ring-border"
-          >
-            <ArrowLeft className="size-5" />
-          </Link>
-        ) : (
-          <span />
-        )}
+        {/* Back for everyone (26 Oct request): the cookie banner's "What we see" opens this
+            page for signed-out visitors too, who had no way back. Goes back when there is a page
+            to return to, otherwise to Settings (signed in) or sign-in. */}
+        <Link
+          to={fallback}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || !router.history.canGoBack()) return;
+            e.preventDefault();
+            router.history.back();
+          }}
+          aria-label={t("Zpět", "Back")}
+          className="grid size-11 place-items-center rounded-full bg-card text-foreground shadow-sm ring-1 ring-border"
+        >
+          <ArrowLeft className="size-5" />
+        </Link>
         <LanguageToggle />
       </div>
       <h1 className="mt-6 text-[28px] font-extrabold leading-[1.15]">

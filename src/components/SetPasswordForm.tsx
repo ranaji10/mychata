@@ -59,8 +59,19 @@ export function SetPasswordForm({
     onDone?.();
   };
 
+  const canSave =
+    !busy && password.length >= 8 && password === again && (!needCurrent || !!current);
+
   return (
-    <div className="space-y-3">
+    // A form, so Enter in a password field saves (26 Oct request).
+    <form
+      className="space-y-3"
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (canSave) void save();
+      }}
+    >
       {error && (
         <p
           role="alert"
@@ -115,11 +126,11 @@ export function SetPasswordForm({
         variant="fresh"
         size="fresh"
         className="btn-primary w-full"
-        disabled={busy || password.length < 8 || password !== again || (needCurrent && !current)}
-        onClick={save}
+        type="submit"
+        disabled={!canSave}
       >
         {busy ? t("Ukládám…", "Saving…") : (submitLabel ?? t("Uložit heslo", "Save password"))}
       </Button>
-    </div>
+    </form>
   );
 }

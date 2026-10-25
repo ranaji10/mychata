@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5 (drafted in place of Gemini; prompt prompts/2026-10-04/03-G-1-czech-content.md)
 date: 2026-10-25
-status: draft
+status: approved (26 Oct 2026, copied to docs/content/)
 ---
 
 > Draft for a native Czech speaker to read and correct. Once corrected, a later PR copies the parts into `docs/content/house-rules-cs-en.md` and `docs/content/manual-questions-cs-en.md`, which L-3 reads.

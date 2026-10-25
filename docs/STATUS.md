@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-25. Update this file in every PR that changes behaviour.
+As of 2026-10-26. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
@@ -14,6 +14,17 @@ As of 2026-10-25. Update this file in every PR that changes behaviour.
 | Open bugs                | See "Open defects" below. B-006–B-010 (T-017) and B-011–B-017 (T-019) are merged and live.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-043 (review), T-020 document vault search (re-planned in T-044), T-014 performance, T-015/T-016 missing tests (partly written in T-044), T-001–T-013 as listed below. Done: T-017–T-019, T-021–T-042.                                                                                                                                                                                                                                                                                                                                                                                                            |
+
+## Requests of 26 Oct (T-046, 26 Oct 2026, not yet live)
+
+Brief: `docs/tasks/T-046-requests-26-oct.md`. No migration.
+
+- Settings → **Nápověda a podpora** (`/pomoc`): common questions, `podpora@mychata.cz`, "Nahlásit problém", app version.
+- **Enter submits** sign-in, sign-up, Forgot password and the password forms.
+- **Privacy & cookies** has Back for everyone (the cookie banner's "Co z nich vidíme" left signed-out visitors stuck); a reopened cookie banner can be closed and keeps the earlier choice.
+- ADR-0012 accepted: saving the manual no longer computes embeddings; `askManual` logs each cottage's context size.
+- Approved content for L-3 in `docs/content/`.
+- Not verified: `/pomoc` signed in on the live site; mail to `podpora@mychata.cz`.
 
 ## Decisions of 25 Oct (T-045, 25 Oct 2026, live since the 11:06 UTC build with migration 0036)
 

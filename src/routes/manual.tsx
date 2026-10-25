@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
 import { MANUAL_CATEGORIES, manualCategoryLabel } from "@/lib/data";
-import { rebuildManualChunks } from "@/lib/manual-qa.functions";
 import { AskBox } from "@/components/AskBox";
 
 export const Route = createFileRoute("/manual")({
@@ -124,7 +123,7 @@ function ManualPage() {
         visibility: "MEMBERS_ONLY",
       });
       toast.success(t("Sekce přidána.", "Section added."));
-      if (property) void rebuildManualChunks({ data: { propertyId: property.id } });
+      // No embeddings on save any more: answers read the whole manual (ADR-0012).
     },
     onError: () => toast.error(t("Sekci se nepodařilo přidat.", "Could not add the section.")),
   });

@@ -20,6 +20,7 @@ import { Route as FotkyRouteImport } from './routes/fotky'
 import { Route as KalendarRouteImport } from './routes/kalendar'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PomocRouteImport } from './routes/pomoc'
 import { Route as PredaniRouteImport } from './routes/predani'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -95,6 +96,11 @@ const ManualRoute = ManualRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PomocRoute = PomocRouteImport.update({
+  id: '/pomoc',
+  path: '/pomoc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PredaniRoute = PredaniRouteImport.update({
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
+  '/pomoc': typeof PomocRoute
   '/predani': typeof PredaniRoute
   '/profil': typeof ProfilRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
+  '/pomoc': typeof PomocRoute
   '/predani': typeof PredaniRoute
   '/profil': typeof ProfilRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/kalendar': typeof KalendarRoute
   '/manual': typeof ManualRoute
   '/onboarding': typeof OnboardingRoute
+  '/pomoc': typeof PomocRoute
   '/predani': typeof PredaniRoute
   '/profil': typeof ProfilRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/kalendar'
     | '/manual'
     | '/onboarding'
+    | '/pomoc'
     | '/predani'
     | '/profil'
     | '/reset-password'
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
     | '/kalendar'
     | '/manual'
     | '/onboarding'
+    | '/pomoc'
     | '/predani'
     | '/profil'
     | '/reset-password'
@@ -388,6 +399,7 @@ export interface FileRouteTypes {
     | '/kalendar'
     | '/manual'
     | '/onboarding'
+    | '/pomoc'
     | '/predani'
     | '/profil'
     | '/reset-password'
@@ -423,6 +435,7 @@ export interface RootRouteChildren {
   KalendarRoute: typeof KalendarRoute
   ManualRoute: typeof ManualRoute
   OnboardingRoute: typeof OnboardingRoute
+  PomocRoute: typeof PomocRoute
   PredaniRoute: typeof PredaniRoute
   ProfilRoute: typeof ProfilRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pomoc': {
+      id: '/pomoc'
+      path: '/pomoc'
+      fullPath: '/pomoc'
+      preLoaderRoute: typeof PomocRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/predani': {
@@ -706,6 +726,7 @@ const rootRouteChildren: RootRouteChildren = {
   KalendarRoute: KalendarRoute,
   ManualRoute: ManualRoute,
   OnboardingRoute: OnboardingRoute,
+  PomocRoute: PomocRoute,
   PredaniRoute: PredaniRoute,
   ProfilRoute: ProfilRoute,
   ResetPasswordRoute: ResetPasswordRoute,

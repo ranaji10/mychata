@@ -4,13 +4,13 @@ Two partners push to this repo, plus Lovable and coding agents. These rules keep
 
 ## Who does what
 
-| Area                                                       | Rule                                                                                                                                                                                                    |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Merging to `main`                                          | Either maintainer merges their own PR once CI is green and the branch is up to date with main. No approvals needed; for migrations, auth, RLS or billing, tell the other person in chat before merging. |
-| Lovable                                                    | One Lovable operator at a time. Say "Lovable is mine until …" in your chat before you start a Lovable session.                                                                                          |
-| Migrations                                                 | One open migration PR at a time across both of you. Claim the next number in chat before you write it.                                                                                                  |
-| Publishing (Lovable → mychata.cz) and tagging              | Whoever publishes runs `release.md` to the end: five checks, tag, STATUS.md.                                                                                                                            |
-| Secrets (Lovable Cloud, Google, AI keys, database exports) | Never in the repo, chat or task briefs. Each maintainer keeps their own copy of the backup (`backup.md`).                                                                                               |
+| Area                                                       | Rule                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Merging to `main`                                          | Anna merges for now (D-04, 25 Oct), once CI is green, the branch is up to date with main and the reviewer report shows real `bun run check` output. No approvals needed; for migrations, auth, RLS or billing, tell the other person in chat before merging. |
+| Lovable                                                    | One Lovable operator at a time. Say "Lovable is mine until …" in your chat before you start a Lovable session.                                                                                                                                               |
+| Migrations                                                 | One open migration PR at a time across both of you. Claim the next number in chat before you write it.                                                                                                                                                       |
+| Publishing (Lovable → mychata.cz) and tagging              | Whoever publishes runs `release.md` to the end: five checks, tag, STATUS.md.                                                                                                                                                                                 |
+| Secrets (Lovable Cloud, Google, AI keys, database exports) | Never in the repo, chat or task briefs. Each maintainer keeps their own copy of the backup (`backup.md`).                                                                                                                                                    |
 
 ## Branches
 
@@ -76,6 +76,13 @@ These can't be set from a pull request. They need the owner's account, in the Gi
    Leave "Require review from Code Owners" off, in line with the no-approvals decision.
 
 5. **Notifications.** Both maintainers: Watch → All activity, so failed CI and the nightly production check reach both of you.
+
+## Decisions of 25 Oct (T-045)
+
+- **Lovable's "Fix error" button (D-09):** don't press it. It writes straight to `lovable-sync`, and Publish puts that live without a PR or review. Describe the error in a normal prompt instead; the change then goes through the usual PR.
+- **Ruleset History (D-13):** after every release tag, open Settings → Rules → Rulesets → each ruleset → History and check nobody changed it.
+- **Force pushes on `lovable-sync` (D-14):** `main` blocks them ("main - protect" and the classic protection). `lovable-sync - keep` only blocks deletion. To close it: Settings → Rules → Rulesets → "lovable-sync - keep" → tick **Block force pushes** → Save. The sync workflow only fast-forwards, so it is not affected. If Lovable later fails to push (it would need a force push only after a history rewrite on its side), untick it and tell Claude.
+- **Generated docs (D-17):** the pre-commit hook regenerates `docs/generated/` when a commit touches `drizzle/migrations/` or `src/routes/` (needs `git config core.hooksPath .githooks`, O-01). Lovable's commits skip hooks, so CI's check still catches those: run `bun run docs:gen` on the PR branch.
 
 ## Lovable platform updates
 

@@ -19,8 +19,9 @@ As of 2026-10-25. Update this file in every PR that changes behaviour.
 
 Brief: `docs/tasks/T-045-decisions-25-oct.md`. Decision: ADR-0013.
 
-- Every account has one **owner** (the founding admin, "Vlastník"). Only the owner changes the account type and hands the account to another admin ("Předat vlastnictví" in Members & permissions).
-- My profile → **Typ účtu** (owner only): an organisation can become a family account again; family → organisation stays under "Účet instituce". The type changes at most once in six months, and not while a paid plan runs (billing will do it, ADR-0013).
+- Every account has one **owner** (the founding admin, "Vlastník"). Only the owner changes the account type and offers the account to another member ("Předat vlastnictví" in Members & permissions); it moves when they accept in Notifications or Members.
+- **Leaving an account:** "Odejít z účtu" in Members & permissions, after settling debts; the owner hands over first. The name stays on past stays and expenses.
+- My profile → **Typ účtu** (owner only): an organisation can become a family account again; family → organisation stays under "Účet instituce". Free until the first change, then at most once in six months, and not while a paid plan runs (billing will do it, ADR-0013).
 - Organisation stay requests (public institution form) are for admins only: members no longer see the Requests tab or the requests.
 - Home's expenses tile: **Vy dlužíte** first, then "Vám dluží" and the cottage's open total, netted per pair like Settle debts (before, it added every open share, so it disagreed with that page).
 - After approving a public-calendar request, Home offers to invite the visitor as a member.

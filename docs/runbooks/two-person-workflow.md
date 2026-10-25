@@ -81,7 +81,7 @@ These can't be set from a pull request. They need the owner's account, in the Gi
 
 - **Lovable's "Fix error" button (D-09):** don't press it. It writes straight to `lovable-sync`, and Publish puts that live without a PR or review. Describe the error in a normal prompt instead; the change then goes through the usual PR.
 - **Ruleset History (D-13):** after every release tag, open Settings → Rules → Rulesets → each ruleset → History and check nobody changed it.
-- **Force pushes on `lovable-sync` (D-14):** `main` blocks them ("main - protect" and the classic protection). `lovable-sync - keep` only blocks deletion. To close it: Settings → Rules → Rulesets → "lovable-sync - keep" → tick **Block force pushes** → Save. The sync workflow only fast-forwards, so it is not affected. If Lovable later fails to push (it would need a force push only after a history rewrite on its side), untick it and tell Claude.
+- **Force pushes on `lovable-sync` (D-14):** `main` blocks them ("main - protect" and the classic protection). `lovable-sync - keep` blocks deletion and, since 25 Oct, force pushes too (Settings → Rules → Rulesets). The sync workflow only fast-forwards, so it is not affected. If Lovable later fails to push (it would need a force push only after a history rewrite on its side), untick it and tell Claude.
 - **Generated docs (D-17):** the pre-commit hook regenerates `docs/generated/` when a commit touches `drizzle/migrations/` or `src/routes/` (needs `git config core.hooksPath .githooks`, O-01). Lovable's commits skip hooks, so CI's check still catches those: run `bun run docs:gen` on the PR branch.
 
 ## Lovable platform updates

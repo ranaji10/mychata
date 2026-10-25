@@ -53,3 +53,10 @@ where not exists (select 1 from public.members m
 ```
 
 Expected: none, or only accounts whose admins never signed in. Then check My profile → Typ účtu as each test account's founder.
+
+## Added on 25 Oct, 11:40 (maintainer's answers)
+
+- **Leaving:** "Odejít z účtu" at the bottom of Members & permissions. Members and admins leave after settling debts; the owner first offers ownership, the person offered accepts in Notifications or Members, and only then the old owner (now an admin) can leave. Functions in 0036: `offer_account_ownership`, `respond_account_ownership`, `cancel_account_ownership`, `my_ownership_offers`, `leave_account`; table `ownership_offers`.
+- **Type change limit:** brand-new accounts may switch at once; the six months count from the first switch (already how 0036 works; wording on screen made explicit).
+- **Settle check:** the database function settles both directions correctly (test with the Second Home numbers). The reported settle left no trace, so `settle_debt` now writes an audit row (`debt_settled`, with how many shares). Settle debts adds "(you)" or the e-mail's first part when two members share a name.
+- **N-19 done:** GA4 Google signals and user-provided data on (25 Oct; automatic detection of user-provided data left off). **N-21 done:** `lovable-sync - keep` blocks force pushes.

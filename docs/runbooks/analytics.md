@@ -32,7 +32,7 @@ After sign-in and only with analytics consent the app sets `user_id` to the sign
 1. Google Cloud console (same Google account): create a project "mychata-analytics", enable "Google Analytics Data API".
 2. IAM → Service accounts → create `ga-reader`; Keys → Add key → JSON. Keep the file out of the repo.
 3. GA4 Admin → Property access management → add the service account's e-mail as **Viewer**.
-4. Hosting secrets (Lovable → Project settings → Secrets, later own hosting): `GA_PROPERTY_ID` = the numeric property id (Admin → Property details), `GA_SERVICE_ACCOUNT_JSON` = the whole JSON file.
+4. Hosting secrets (Lovable → Project settings → Secrets, later own hosting): `GA_PROPERTY_ID` = `555902424` (account 409479780; Admin → Property details), `GA_SERVICE_ACCOUNT_JSON` = the whole JSON file.
 5. Publish; `/soukromi` then says "(aktualizují se samy)". Rotate the key yearly; delete the old one.
 
 ## Events the app sends

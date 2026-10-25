@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Bell,
   CalendarCheck,
+  Crown,
   FileText,
   Inbox,
   Mail,
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/upozorneni")({
 
 const ICONS: Record<NotificationKind, LucideIcon> = {
   invitation: Mail,
+  ownership_offer: Crown,
   approval: CalendarCheck,
   auto_approved: CalendarCheck,
   guest_request: CalendarCheck,

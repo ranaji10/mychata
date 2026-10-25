@@ -271,18 +271,15 @@ describe("T-016 rule 6: consent log", () => {
 
 describe("T-016 rule 7: the owner role is fixed", () => {
   it("set_member_role refuses to change an OWNER", async () => {
+    // Since 0036 every account has exactly one OWNER (its founding admin).
     const o = await first(
-      "insert into public.members (account_id, name, email, role) values ($1,'Vlastník','vlastnik@example.org','OWNER') returning id",
+      "select id from public.members where account_id = $1 and role = 'OWNER'",
       [ids.fam],
     );
-    try {
-      await as(db, asAdmin, async (q) => {
-        await expect(q("select public.set_member_role($1,'MEMBER')", [o.id])).rejects.toThrow(
-          /owner_role_is_fixed/,
-        );
-      });
-    } finally {
-      await admin(db, "delete from public.members where id = $1", [o.id]);
-    }
+    await as(db, asAdmin, async (q) => {
+      await expect(q("select public.set_member_role($1,'MEMBER')", [o.id])).rejects.toThrow(
+        /owner_role_is_fixed/,
+      );
+    });
   });
 });

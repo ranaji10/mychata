@@ -21,6 +21,7 @@ export type Database = {
           id: string
           name: string
           type: string
+          type_changed_at: string | null
         }
         Insert: {
           booking_auto_approve?: boolean | null
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           name: string
           type: string
+          type_changed_at?: string | null
         }
         Update: {
           booking_auto_approve?: boolean | null
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           name?: string
           type?: string
+          type_changed_at?: string | null
         }
         Relationships: []
       }
@@ -994,6 +997,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          left_at: string | null
           name: string
           phone: string | null
           role: string
@@ -1005,6 +1009,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          left_at?: string | null
           name: string
           phone?: string | null
           role?: string
@@ -1016,6 +1021,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          left_at?: string | null
           name?: string
           phone?: string | null
           role?: string
@@ -1046,6 +1052,36 @@ export type Database = {
           answers?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      ownership_offers: {
+        Row: {
+          account_id: string
+          created_at: string
+          decided_at: string | null
+          from_member_id: string
+          id: string
+          status: string
+          to_member_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          decided_at?: string | null
+          from_member_id: string
+          id?: string
+          status?: string
+          to_member_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          decided_at?: string | null
+          from_member_id?: string
+          id?: string
+          status?: string
+          to_member_id?: string
         }
         Relationships: []
       }
@@ -1526,8 +1562,36 @@ export type Database = {
         Returns: boolean
       }
       claim_initial_membership: { Args: never; Returns: string }
+      account_type_change_after: {
+        Args: { _account_id: string }
+        Returns: string | null
+      }
+      change_account_type: {
+        Args: { _account_id: string; _name?: string; _to: string }
+        Returns: string
+      }
       convert_account_to_institution: {
         Args: { _account_id: string; _name: string }
+        Returns: undefined
+      }
+      cancel_account_ownership: { Args: { _offer_id: string }; Returns: undefined }
+      leave_account: { Args: { _account_id: string }; Returns: string | null }
+      my_ownership_offers: {
+        Args: never
+        Returns: {
+          account_id: string
+          account_name: string
+          created_at: string
+          from_name: string
+          id: string
+        }[]
+      }
+      offer_account_ownership: {
+        Args: { _account_id: string; _to_member_id: string }
+        Returns: string
+      }
+      respond_account_ownership: {
+        Args: { _accept: boolean; _offer_id: string }
         Returns: undefined
       }
       cover_expense: { Args: { _expense_id: string }; Returns: number }

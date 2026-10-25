@@ -2,6 +2,7 @@ import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
 import { cn } from "@/lib/utils";
+import type { VariantProps } from "class-variance-authority";
 import { buttonVariants } from "@/components/ui/button";
 
 const AlertDialog = AlertDialogPrimitive.Root;
@@ -80,11 +81,18 @@ const AlertDialogDescription = React.forwardRef<
 ));
 AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
 
+// D-05 (T-045): the action takes the button's variant, so a delete confirmation is red because
+// it asks for "destructive", not because btn-danger-soft happens to be built after btn-primary.
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Action ref={ref} className={cn(buttonVariants(), className)} {...props} />
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> &
+    VariantProps<typeof buttonVariants>
+>(({ className, variant, size, ...props }, ref) => (
+  <AlertDialogPrimitive.Action
+    ref={ref}
+    className={cn(buttonVariants({ variant, size }), className)}
+    {...props}
+  />
 ));
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 

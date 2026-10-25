@@ -6,6 +6,8 @@ export interface Account {
   name: string;
   /** Organisations: members' bookings confirmed without an admin. null = not decided yet (0032). */
   booking_auto_approve?: boolean | null;
+  /** Last family <-> organisation change; the owner may change again six months later (0036). */
+  type_changed_at?: string | null;
 }
 
 export interface Property {
@@ -46,6 +48,8 @@ export interface Member {
   role: "OWNER" | "ADMIN" | "MEMBER";
   branch: string;
   user_id: string | null;
+  /** Set when the person left the account (0036); the row stays for history. */
+  left_at?: string | null;
 }
 
 export interface Booking {
@@ -225,6 +229,26 @@ export function settlementSuggestions(
   return result.filter((r) => r.amount >= 1);
 }
 
+/**
+ * Home's expenses tile (T-045, D-25): what the viewer owes and is owed, and the cottage's open
+ * total, all from the same netted suggestions Settle debts shows, so the numbers agree.
+ */
+export function debtSummary(
+  suggestions: SettlementSuggestion[],
+  memberId: string | null | undefined,
+): { youOwe: number; owedToYou: number; cottageTotal: number } {
+  const round = (n: number) => Math.round(n * 100) / 100;
+  let youOwe = 0;
+  let owedToYou = 0;
+  let cottageTotal = 0;
+  for (const s of suggestions) {
+    cottageTotal += s.amount;
+    if (memberId && s.from === memberId) youOwe += s.amount;
+    if (memberId && s.to === memberId) owedToYou += s.amount;
+  }
+  return { youOwe: round(youOwe), owedToYou: round(owedToYou), cottageTotal: round(cottageTotal) };
+}
+
 /** Czech-style amounts: "1 250,50", "1250.5", "1 000" → number; anything else → NaN. */
 export function parseAmount(input: string): number {
   const cleaned = input
@@ -268,6 +292,20 @@ export function fmtKc(amount: number): string {
       .toString()
       .replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Kč"
   );
+}
+
+/**
+ * Debts to pay back, to the haléř when not whole: 1 000 Kč split three ways is 333,34 + 333,33,
+ * and rounding each to 333 Kč made the rows disagree with the 667 Kč total (25 Oct check).
+ */
+export function fmtKcExact(amount: number): string {
+  const cents = Math.round(amount * 100);
+  if (cents % 100 === 0) return fmtKc(cents / 100);
+  const whole = Math.trunc(Math.abs(cents) / 100)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const frac = String(Math.abs(cents) % 100).padStart(2, "0");
+  return `${cents < 0 ? "−" : ""}${whole},${frac} Kč`;
 }
 
 export function todayISO(): string {

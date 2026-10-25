@@ -49,7 +49,7 @@ function TasksRoute() {
 }
 
 function TasksPage() {
-  const { property, currentMember, members } = useAccount();
+  const { property, currentMember, members, activeMembers } = useAccount();
   const { t, lang } = useLang();
   const queryClient = useQueryClient();
   // Kept for this tab, so coming back from a task shows the same filter (bug 8).
@@ -386,7 +386,7 @@ function TasksPage() {
                 className="field"
               >
                 <option value="">{t("Nikdo", "Nobody")}</option>
-                {members.map((m) => (
+                {activeMembers.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
                   </option>
@@ -501,7 +501,7 @@ function TasksPage() {
                       onChange={(e) => setAssignAll(e.target.value)}
                     >
                       <option value="">{t("Nikdo", "Nobody")}</option>
-                      {members.map((m) => (
+                      {activeMembers.map((m) => (
                         <option key={m.id} value={m.id}>
                           {m.name}
                         </option>
@@ -521,7 +521,7 @@ function TasksPage() {
                             }
                           >
                             <option value="">{t("Nikdo", "Nobody")}</option>
-                            {members.map((m) => (
+                            {activeMembers.map((m) => (
                               <option key={m.id} value={m.id}>
                                 {m.name}
                               </option>

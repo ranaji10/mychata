@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
+import { accountTypeChangeError } from "@/lib/account-type";
 import { useLang } from "@/lib/i18n";
 import { rememberPersonalEmail } from "@/lib/institution-link";
 import { isPublicEmailDomain } from "@/lib/signup";
@@ -33,9 +34,9 @@ export function InstitutionSetup() {
   const [instEmail, setInstEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Family accounts this person runs: the ones that can become an organisation's.
+  // Family accounts this person owns: only the owner changes an account's type (0036, D-03).
   const adminFamily = memberships
-    .filter((m) => m.role === "ADMIN" || m.role === "OWNER")
+    .filter((m) => m.role === "OWNER")
     .map((m) => accounts.find((a) => a.id === m.account_id))
     .filter((a): a is NonNullable<typeof a> => !!a && a.type === "FAMILY");
   const [target, setTarget] = useState<string | null>(null);
@@ -54,21 +55,7 @@ export function InstitutionSetup() {
     setBusy(false);
     if (error) {
       console.error("[institution] convert", error);
-      toast.error(
-        error.message.includes("owner_required")
-          ? t(
-              "Převést účet na organizaci může jen ten, kdo účet založil.",
-              "Only the person who set up this account can convert it to an organisation.",
-            )
-          : error.message.includes("institution_email_required")
-            ? t(
-                "Organizaci může založit jen přihlášení pracovním e-mailem.",
-                "Only a work-email sign-in can set up an organisation.",
-              )
-            : error.code === "42501"
-              ? t("Převést účet může jen jeho správce.", "Only the account's admin can convert it.")
-              : t(`Převod se nepodařil: ${error.message}`, `Could not convert: ${error.message}`),
-      );
+      toast.error(accountTypeChangeError(error.message, t));
       return;
     }
     await queryClient.invalidateQueries();

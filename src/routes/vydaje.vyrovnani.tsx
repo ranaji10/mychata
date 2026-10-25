@@ -8,7 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { Avatar, EmptyState, LoadingCards } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtKc, settlementSuggestions } from "@/lib/data";
+import { fmtKcExact, settlementSuggestions } from "@/lib/data";
 import { expenseDataKey, useExpenseData } from "@/lib/expenses";
 import { useLang } from "@/lib/i18n";
 
@@ -48,7 +48,21 @@ function SettlementPage() {
     [data],
   );
 
-  const name = (id: string) => members.find((m) => m.id === id)?.name ?? "—";
+  // Two members can share a name (Second Home has two "Ranaji Deb"): add "(you)" or the e-mail's
+  // first part, so nobody confirms the wrong person's debt (25 Oct check).
+  const name = (id: string) => {
+    const m = members.find((x) => x.id === id);
+    if (!m) return "—";
+    const twins = members.filter((x) => x.name.trim() === m.name.trim()).length > 1;
+    if (!twins) return m.name;
+    if (m.id === currentMember?.id) return `${m.name} (${t("vy", "you")})`;
+    const hint = m.left_at
+      ? t("odešel/odešla", "left")
+      : m.email
+        ? m.email.split("@")[0]
+        : t("bez přihlášení", "no sign-in");
+    return `${m.name} (${hint})`;
+  };
 
   // One database step marks everything between the two people as paid, in both directions,
   // and refuses anyone but the receiver or an admin (settle_debt(), T-021).
@@ -127,7 +141,7 @@ function SettlementPage() {
                   </p>
                   <p className="text-[16px] text-muted-foreground">{t("dluží", "owes")}</p>
                 </div>
-                <p className="text-xl font-bold">{fmtKc(s.amount)}</p>
+                <p className="text-xl font-bold">{fmtKcExact(s.amount)}</p>
               </div>
               {currentMember?.id === s.to || isAdmin ? (
                 <Button
@@ -150,8 +164,8 @@ function SettlementPage() {
                 <p className="mt-3 rounded-2xl bg-secondary p-3 text-[16px] font-semibold text-muted-foreground">
                   {currentMember?.id === s.from
                     ? t(
-                        `Pošlete ${fmtKc(s.amount)} osobě ${name(s.to)}. Jakmile platbu potvrdí, dluh zmizí.`,
-                        `Send ${fmtKc(s.amount)} to ${name(s.to)}. Once they confirm it, the debt disappears.`,
+                        `Pošlete ${fmtKcExact(s.amount)} osobě ${name(s.to)}. Jakmile platbu potvrdí, dluh zmizí.`,
+                        `Send ${fmtKcExact(s.amount)} to ${name(s.to)}. Once they confirm it, the debt disappears.`,
                       )
                     : t(
                         `Přijetí platby potvrzuje ${name(s.to)}.`,

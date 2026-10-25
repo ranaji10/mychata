@@ -45,7 +45,7 @@ export const Route = createFileRoute("/ukoly/$id")({
 
 function TaskDetail() {
   const { id } = Route.useParams();
-  const { property, members, currentMember } = useAccount();
+  const { property, members, activeMembers, currentMember } = useAccount();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { t, lang } = useLang();
@@ -218,7 +218,7 @@ function TaskDetail() {
                 aria-label={t("Přiřadit osobu", "Assign person")}
               >
                 <option value="">{t("Nikdo", "Nobody")}</option>
-                {members.map((m) => (
+                {activeMembers.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
                   </option>
@@ -315,7 +315,8 @@ function TaskDetail() {
                     e.preventDefault();
                     remove.mutate();
                   }}
-                  className="btn-danger-soft min-h-11 text-[16px]"
+                  variant="destructive"
+                  className="min-h-11 text-[16px]"
                 >
                   {t("Smazat", "Delete")}
                 </AlertDialogAction>

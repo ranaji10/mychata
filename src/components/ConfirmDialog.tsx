@@ -12,6 +12,7 @@ import { useLang } from "@/lib/i18n";
 
 /**
  * "Are you sure?" before an action that can't be undone (delete, decline, cancel an invitation).
+ * Red by default (D-05: the destructive variant, not CSS order); tone="primary" for the rest.
  * Same look as the task delete confirmation (T-025): rounded, 16px from the edges on phones,
  * 44px buttons. The dialog stays open while `busy`, so a failure can be reported by the caller.
  */
@@ -23,6 +24,7 @@ export function ConfirmDialog({
   confirmLabel,
   onConfirm,
   busy = false,
+  tone = "danger",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,6 +33,8 @@ export function ConfirmDialog({
   confirmLabel: string;
   onConfirm: () => void;
   busy?: boolean;
+  /** "danger" (default): delete, decline, cancel. "primary": a confirmation that removes nothing. */
+  tone?: "danger" | "primary";
 }) {
   const { t } = useLang();
   return (
@@ -50,7 +54,8 @@ export function ConfirmDialog({
               e.preventDefault();
               onConfirm();
             }}
-            className="btn-danger-soft min-h-11 text-[16px]"
+            variant={tone === "danger" ? "destructive" : "default"}
+            className="min-h-11 text-[16px]"
           >
             {confirmLabel}
           </AlertDialogAction>

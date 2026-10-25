@@ -75,6 +75,18 @@ function PrivacyPage() {
               "Only with consent: visit statistics without your name or email (Google Analytics). What we see from them is shown below.",
             )}
           </li>
+          <li>
+            {t(
+              "Abychom jednoho člověka na telefonu i počítači počítali jen jednou, posíláme Google Analytics po přihlášení náhodné interní číslo vašeho přihlášení (nikdy jméno ani e-mail), a to jen se souhlasem se statistikami.",
+              "So that one person on a phone and a computer counts once, after you sign in we send Google Analytics the random internal number of your sign-in (never your name or email), and only with consent to statistics.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Google signals (odhad věku, pohlaví a zájmů z účtů Google) jsou zapnuté, ale fungují jen se souhlasem s reklamními cookies. O ten nežádáme, takže je od nás Google nedostává.",
+              "Google signals (estimated age, gender and interests from Google accounts) are switched on but only work with consent to advertising cookies. We don't ask for it, so Google gets none of this from us.",
+            )}
+          </li>
         </ul>
       </section>
 

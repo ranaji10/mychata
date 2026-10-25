@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Avatar, PageHeader } from "@/components/bits";
+import { AccountTypeCard } from "@/components/AccountTypeCard";
 import { InstitutionSetup } from "@/components/InstitutionSetup";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -436,6 +437,7 @@ function ProfilePage() {
           <ChevronRight className="size-5" />
         </Link>
       </section>
+      <AccountTypeCard />
       <InstitutionSetup />
       <Button variant="fresh" size="fresh" className="btn-secondary mt-4 w-full" onClick={signOut}>
         {t("Odhlásit se", "Sign out")}

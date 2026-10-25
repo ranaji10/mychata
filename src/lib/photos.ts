@@ -35,6 +35,25 @@ export function isHeic(file: { name: string; type: string }): boolean {
   return /image\/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
 }
 
+/**
+ * D-29 (T-045): Chrome and Firefox can't decode iPhone HEIC photos. Convert them to JPEG with
+ * heic-to (libheif in WebAssembly, about 0.8 MB gzipped), loaded only when such a photo is
+ * picked. Safari decodes HEIC itself and never loads it.
+ */
+export async function heicToJpeg(file: File): Promise<File> {
+  try {
+    // Browser only: the SSR build drops this import, so the 3 MB library never enters the
+    // server bundle (Worker size limits).
+    if (import.meta.env.SSR) throw new Error("browser only");
+    const { heicTo } = await import("heic-to");
+    const blob = await heicTo({ blob: file, type: "image/jpeg", quality: 0.92 });
+    const base = file.name.replace(/\.[^.]+$/, "") || "photo";
+    return new File([blob], `${base}.jpg`, { type: "image/jpeg" });
+  } catch (error) {
+    throw new PhotoError("wrong_type", `HEIC conversion failed: ${(error as Error).message}`);
+  }
+}
+
 /** Size that fits inside max × max without changing the aspect ratio or enlarging. */
 export function fitWithin(
   width: number,
@@ -135,7 +154,7 @@ function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null
 
 /**
  * Returns a JPEG of at most MAX_PHOTO_SIDE px on the long side and about TARGET_PHOTO_BYTES.
- * HEIC works where the browser can decode it (Safari); elsewhere it is a clear "wrong_type".
+ * HEIC: Safari decodes it; elsewhere it is converted with heic-to first (D-29).
  */
 export async function preparePhoto(
   file: File,
@@ -148,7 +167,15 @@ export async function preparePhoto(
   try {
     image = await decode(file);
   } catch {
-    throw new PhotoError("wrong_type", `cannot decode ${file.type || file.name}`);
+    if (!isHeic(file))
+      throw new PhotoError("wrong_type", `cannot decode ${file.type || file.name}`);
+    // Not Safari: convert the iPhone photo first (D-29), then decode the JPEG.
+    try {
+      image = await decode(await heicToJpeg(file));
+    } catch (error) {
+      if (error instanceof PhotoError) throw error;
+      throw new PhotoError("wrong_type", `cannot decode converted ${file.name}`);
+    }
   }
   let { width, height } = fitWithin(image.width, image.height, maxSide);
   const canvas = document.createElement("canvas");

@@ -388,10 +388,10 @@ function AuthPage() {
             <Button
               variant="fresh"
               size="fresh"
-              className="btn-secondary min-h-[56px] w-full text-[17px]"
+              className="btn-secondary btn-secondary-institution min-h-[56px] w-full text-[17px]"
               onClick={() => open("institute", true)}
             >
-              <Building2 className="size-5 text-[var(--cat-tasks)]" />
+              <Building2 className="size-5" />
               {t("Registrovat instituci", "Sign up as an institution")}
             </Button>
             <p className="pt-1 text-center text-[16px] text-muted-foreground">

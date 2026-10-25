@@ -253,6 +253,13 @@
       "when": 1792885658810,
       "tag": "0035_0035_apply_journaled_0034",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792900000000,
+      "tag": "0036_owner_role_account_type_requests",
+      "breakpoints": true
     }
   ]
 }

@@ -246,6 +246,13 @@
       "when": 1792882051754,
       "tag": "0034_public_calendar_booking_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792885658810,
+      "tag": "0035_0035_apply_journaled_0034",
+      "breakpoints": true
     }
   ]
 }

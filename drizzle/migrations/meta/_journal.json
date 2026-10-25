@@ -260,6 +260,13 @@
       "when": 1792900000000,
       "tag": "0036_owner_role_account_type_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792926307549,
+      "tag": "0037_0037_apply_journaled_0036",
+      "breakpoints": true
     }
   ]
 }

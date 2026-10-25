@@ -10,9 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
   checklistProgress,
+  debtSummary,
   fmtDate,
   fmtDateTime,
   fmtKc,
+  settlementSuggestions,
   taskTitle,
   todayISO,
   type Booking,
@@ -111,15 +113,16 @@ function HomePage() {
   });
 
   const isFamily = account?.type === "FAMILY";
+  const isRequestAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
 
   const { data: expenseData } = useExpenseData(property?.id, isFamily);
-  const splits = expenseData?.splits;
 
   const { data: requests } = useQuery({
     queryKey: ["requests", property?.id],
     // New requests come from the public form: never treat a restored offline copy as fresh.
     staleTime: 0,
-    enabled: !!property && !isFamily,
+    // Admins only (0036, D-16): members can't read the requests.
+    enabled: !!property && !isFamily && isRequestAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutional_requests")
@@ -199,8 +202,12 @@ function HomePage() {
   const overdueTasks =
     tasks?.filter((t) => t.status !== "DONE" && t.due_date && t.due_date < today) ?? [];
   const openTasks = tasks?.filter((t) => t.status !== "DONE") ?? [];
-  const unsettled =
-    splits?.filter((s) => !s.paid_back).reduce((sum, s) => sum + Number(s.amount_owed), 0) ?? 0;
+  // D-25: what you owe first, then what you are owed and the cottage's open total. Netted per
+  // pair like Settle debts (it used to add up every open share, so it disagreed with that page).
+  const debts = debtSummary(
+    expenseData ? settlementSuggestions(expenseData.expenses, expenseData.splits) : [],
+    currentMember?.id,
+  );
   const pendingRequests = requests?.filter((r) => r.status === "PENDING") ?? [];
   const conflictRequests = pendingRequests.filter((r) => r.has_conflict);
 
@@ -365,14 +372,24 @@ function HomePage() {
           <>
             <Link to="/vydaje/vyrovnani">
               <StatCard
-                label={t("Nevyrovnané", "Unsettled")}
-                value={fmtKc(unsettled)}
-                hint={t("ve výdajích", "in expenses")}
-                tone={unsettled > 0 ? "danger" : undefined}
+                label={t("Vy dlužíte", "You owe")}
+                value={fmtKc(debts.youOwe)}
+                hint={[
+                  debts.owedToYou > 0
+                    ? t(`Vám dluží ${fmtKc(debts.owedToYou)}`, `Owed to you ${fmtKc(debts.owedToYou)}`)
+                    : null,
+                  t(
+                    `Nevyrovnané v chatě celkem ${fmtKc(debts.cottageTotal)}`,
+                    `Unsettled in the cottage ${fmtKc(debts.cottageTotal)}`,
+                  ),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+                tone={debts.youOwe > 0 ? "danger" : undefined}
               />
             </Link>
           </>
-        ) : (
+        ) : isRequestAdmin ? (
           <>
             <Link to="/zadosti">
               <StatCard
@@ -391,7 +408,7 @@ function HomePage() {
               />
             </Link>
           </>
-        )}
+        ) : null}
         {!isFamily && (
           <Link to="/ukoly">
             <StatCard

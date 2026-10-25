@@ -202,6 +202,39 @@ function MembersPage() {
     },
   });
 
+  // The owner hands the account to another admin with a sign-in (0036, D-22).
+  const [transferTo, setTransferTo] = useState<{ id: string; name: string } | null>(null);
+  const transferOwner = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase.rpc("transfer_account_ownership", {
+        _account_id: account!.id,
+        _to_member_id: memberId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setTransferTo(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["members"] }),
+        queryClient.invalidateQueries({ queryKey: ["identity-members"] }),
+      ]);
+      toast.success(t("Vlastnictví účtu předáno.", "Ownership handed over."));
+    },
+    onError: (error) => {
+      console.error("[clenove] transfer ownership", error);
+      setTransferTo(null);
+      toast.error(
+        error.message.includes("new_owner_must_be_admin")
+          ? t("Vlastníkem může být jen správce.", "Only an admin can become the owner.")
+          : error.message.includes("member_has_no_sign_in")
+            ? t("Tento člen se ještě nepřihlásil.", "This member has not signed in yet.")
+            : error.message.includes("owner_required")
+              ? t("Vlastnictví předává jen vlastník.", "Only the owner can hand over ownership.")
+              : t(`Předání se nepodařilo: ${error.message}`, `Could not hand over: ${error.message}`),
+      );
+    },
+  });
+
   const toggleRole = useMutation({
     // One server-side function decides (migration 0011): checks the caller is an admin of
     // this account and refuses to remove the last admin.
@@ -636,7 +669,8 @@ function MembersPage() {
                 <div className="mt-1 flex flex-wrap gap-1">
                   {mIsAdmin && (
                     <span className="pill bg-primary-soft text-primary">
-                      <ShieldCheck className="size-3.5" /> {t("Správce", "Admin")}
+                      <ShieldCheck className="size-3.5" />{" "}
+                      {m.role === "OWNER" ? t("Vlastník", "Owner") : t("Správce", "Admin")}
                     </span>
                   )}
                   {isPropAdmin && (
@@ -652,7 +686,7 @@ function MembersPage() {
                   )}
                 </div>
               </div>
-              {isAdmin && m.id !== currentMember?.id && m.user_id && (
+              {isAdmin && m.id !== currentMember?.id && m.user_id && m.role !== "OWNER" && (
                 <Button
                   variant="fresh"
                   size="fresh"
@@ -673,10 +707,37 @@ function MembersPage() {
                     : t("Udělat správcem", "Make admin")}
                 </Button>
               )}
+              {currentMember?.role === "OWNER" && m.role === "ADMIN" && m.user_id && (
+                <Button
+                  variant="fresh"
+                  size="fresh"
+                  className="flex min-h-11 max-w-[8.5rem] shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-left text-[16px] font-bold leading-tight disabled:opacity-50"
+                  disabled={transferOwner.isPending}
+                  onClick={() => setTransferTo({ id: m.id, name: m.name })}
+                >
+                  <Crown className="size-5 shrink-0" />
+                  {t("Předat vlastnictví", "Hand over ownership")}
+                </Button>
+              )}
             </div>
           );
         })}
       </div>
+      <ConfirmDialog
+        open={!!transferTo}
+        onOpenChange={(open) => !open && setTransferTo(null)}
+        title={t(
+          `Předat vlastnictví účtu osobě ${transferTo?.name ?? ""}?`,
+          `Hand over the account to ${transferTo?.name ?? ""}?`,
+        )}
+        description={t(
+          "Nový vlastník bude jediný, kdo může měnit typ účtu (rodina / organizace) a předat účet dál; později i spravovat předplatné. Vy zůstanete správcem.",
+          "The new owner will be the only one who can change the account type (family / organisation) and hand the account on; later also manage the subscription. You stay an admin.",
+        )}
+        confirmLabel={t("Předat vlastnictví", "Hand over ownership")}
+        busy={transferOwner.isPending}
+        onConfirm={() => transferTo && transferOwner.mutate(transferTo.id)}
+      />
       <ConfirmDialog
         open={!!cancelling}
         onOpenChange={(open) => !open && setCancelling(null)}

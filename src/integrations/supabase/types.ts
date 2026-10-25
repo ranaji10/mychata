@@ -21,6 +21,7 @@ export type Database = {
           id: string
           name: string
           type: string
+          type_changed_at: string | null
         }
         Insert: {
           booking_auto_approve?: boolean | null
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           name: string
           type: string
+          type_changed_at?: string | null
         }
         Update: {
           booking_auto_approve?: boolean | null
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           name?: string
           type?: string
+          type_changed_at?: string | null
         }
         Relationships: []
       }
@@ -1526,8 +1529,20 @@ export type Database = {
         Returns: boolean
       }
       claim_initial_membership: { Args: never; Returns: string }
+      account_type_change_after: {
+        Args: { _account_id: string }
+        Returns: string | null
+      }
+      change_account_type: {
+        Args: { _account_id: string; _name?: string; _to: string }
+        Returns: string
+      }
       convert_account_to_institution: {
         Args: { _account_id: string; _name: string }
+        Returns: undefined
+      }
+      transfer_account_ownership: {
+        Args: { _account_id: string; _to_member_id: string }
         Returns: undefined
       }
       cover_expense: { Args: { _expense_id: string }; Returns: number }

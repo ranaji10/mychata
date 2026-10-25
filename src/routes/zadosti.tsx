@@ -36,7 +36,8 @@ export const Route = createFileRoute("/zadosti")({
 
 function RequestsPage() {
   const { t, lang } = useLang();
-  const { property } = useAccount();
+  const { property, currentMember } = useAccount();
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string[]>([]);
   const [declining, setDeclining] = useState<InstitutionalRequest[]>([]);
@@ -51,7 +52,7 @@ function RequestsPage() {
     refetch,
   } = useQuery({
     queryKey: ["requests", property?.id, "newest"],
-    enabled: !!property && !hidden,
+    enabled: !!property && !hidden && isAdmin,
     // Requests arrive from the public form, outside this app: always ask again when the page
     // opens. "always" covers moving between pages; staleTime 0 covers a reload, where the
     // offline copy is restored first and a minute-old copy counted as fresh (re-check of 18 Oct).
@@ -158,6 +159,23 @@ function RequestsPage() {
   const processed = requests?.filter((r) => r.status !== "PENDING") ?? [];
 
   if (hidden) return null;
+
+  // Only admins read and decide stay requests (0036, D-16); members book in the calendar.
+  if (currentMember && !isAdmin) {
+    return (
+      <AppShell>
+        <PageHeader title={t("Žádosti o pobyt", "Stay requests")} />
+        <EmptyState
+          icon={Inbox}
+          title={t("Žádosti vyřizuje správce.", "An admin handles the requests.")}
+          hint={t(
+            "Svůj pobyt si zapíšete v Kalendáři.",
+            "You can book your own stay in the Calendar.",
+          )}
+        />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

@@ -6,6 +6,8 @@ export interface Account {
   name: string;
   /** Organisations: members' bookings confirmed without an admin. null = not decided yet (0032). */
   booking_auto_approve?: boolean | null;
+  /** Last family <-> organisation change; the owner may change again six months later (0036). */
+  type_changed_at?: string | null;
 }
 
 export interface Property {
@@ -223,6 +225,26 @@ export function settlementSuggestions(
     else if (net < 0) result.push({ from: to, to: from, amount: -net });
   }
   return result.filter((r) => r.amount >= 1);
+}
+
+/**
+ * Home's expenses tile (T-045, D-25): what the viewer owes and is owed, and the cottage's open
+ * total, all from the same netted suggestions Settle debts shows, so the numbers agree.
+ */
+export function debtSummary(
+  suggestions: SettlementSuggestion[],
+  memberId: string | null | undefined,
+): { youOwe: number; owedToYou: number; cottageTotal: number } {
+  const round = (n: number) => Math.round(n * 100) / 100;
+  let youOwe = 0;
+  let owedToYou = 0;
+  let cottageTotal = 0;
+  for (const s of suggestions) {
+    cottageTotal += s.amount;
+    if (memberId && s.from === memberId) youOwe += s.amount;
+    if (memberId && s.to === memberId) owedToYou += s.amount;
+  }
+  return { youOwe: round(youOwe), owedToYou: round(owedToYou), cottageTotal: round(cottageTotal) };
 }
 
 /** Czech-style amounts: "1 250,50", "1250.5", "1 000" → number; anything else → NaN. */

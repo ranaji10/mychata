@@ -263,13 +263,14 @@ describe("roles", () => {
       ).rejects.toThrow(/Admin/);
     });
   });
-  it("an admin promotes and demotes, but never removes the last admin", async () => {
+  it("an admin promotes and demotes, but never removes the owner (and so the last admin)", async () => {
     await as(db, aAdmin, async (q) => {
       await q("select public.set_member_role($1,'ADMIN')", [ids.memberAMember]);
       await q("select public.set_member_role($1,'MEMBER')", [ids.memberAMember]);
+      // The founding admin is the account's OWNER since 0036 (D-22): the role is fixed.
       await expect(
         q("select public.set_member_role($1,'MEMBER')", [ids.memberAAdmin]),
-      ).rejects.toThrow(/last_admin/);
+      ).rejects.toThrow(/owner_role_is_fixed/);
       const log = await q("select action from public.audit_log where target_id = $1", [
         ids.memberAMember,
       ]);
@@ -540,8 +541,9 @@ describe("invitations (T-019: B-011, B-012, B-013)", () => {
     });
     await as(db, aAdmin, async (q) => {
       await q("select public.accept_invitation('t019-keep')");
+      // A MEMBER invitation never demotes; the founder stays OWNER (0036).
       expect(await q("select role from public.members where id = $1", [ids.memberAAdmin])).toEqual([
-        { role: "ADMIN" },
+        { role: "OWNER" },
       ]);
     });
   });
@@ -1118,10 +1120,10 @@ describe("release check of 17 Oct (T-036, migration 0028)", () => {
       await q("reset role");
       expect(
         await q(
-          "select action from public.audit_log where account_id = $1 and action = 'account_converted'",
+          "select action from public.audit_log where account_id = $1 and action = 'account_type_changed'",
           [ids.acctA],
         ),
-      ).toEqual([{ action: "account_converted" }]);
+      ).toEqual([{ action: "account_type_changed" }]);
     });
   });
 
@@ -1899,6 +1901,173 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
         "update public.feature_flags set enabled = true where key = 'guest_requests'",
       );
       await admin(db, "delete from public.guest_requests where id = $1", [reqId]);
+    }
+  });
+});
+
+describe("owner, account type changes, institution requests (T-045, migration 0036)", () => {
+  const dana = {
+    role: "authenticated" as const,
+    userId: "10000000-0000-4000-8000-0000000000f1",
+    email: "dana@example.org",
+  };
+  let danaMember = "";
+  beforeAll(async () => {
+    const [m] = await admin(
+      db,
+      "insert into public.members (account_id, name, email, role, user_id) values ($1,'Dana',$2,'MEMBER',$3) returning id",
+      [ids.acctB, dana.email, dana.userId],
+    );
+    danaMember = (m as { id: string }).id;
+  });
+
+  it("every account has exactly one owner: the founding admin (D-22)", async () => {
+    expect(
+      await admin(db, "select role from public.members where id = $1", [ids.memberAAdmin]),
+    ).toEqual([{ role: "OWNER" }]);
+    expect(
+      await admin(db, "select role from public.members where id = $1", [ids.memberBAdmin]),
+    ).toEqual([{ role: "OWNER" }]);
+    // A second OWNER row is stored as ADMIN, and the index refuses a second OWNER by UPDATE.
+    const [x] = await admin(
+      db,
+      "insert into public.members (account_id, name, email, role, user_id) values ($1,'Druhý','druhy@example.org','OWNER', null) returning id, role",
+      [ids.acctA],
+    );
+    try {
+      expect((x as { role: string }).role).toBe("ADMIN");
+      await expect(
+        admin(db, "update public.members set role = 'OWNER' where id = $1", [
+          (x as { id: string }).id,
+        ]),
+      ).rejects.toThrow(/members_one_owner_per_account/);
+    } finally {
+      await admin(db, "delete from public.members where id = $1", [(x as { id: string }).id]);
+    }
+  });
+
+  it("only the owner hands the account to another admin with a sign-in", async () => {
+    await as(db, aAdmin, async (q) => {
+      await expect(
+        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAMember]),
+      ).rejects.toThrow(/new_owner_must_be_admin/);
+      await q("select public.set_member_role($1,'ADMIN')", [ids.memberAMember]);
+      await q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAMember]);
+      expect(
+        await q("select id, role from public.members where account_id = $1 order by role", [
+          ids.acctA,
+        ]),
+      ).toEqual(
+        expect.arrayContaining([
+          { id: ids.memberAAdmin, role: "ADMIN" },
+          { id: ids.memberAMember, role: "OWNER" },
+        ]),
+      );
+      // The former owner is now an ordinary admin: no more transfers or type changes.
+      await expect(
+        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAAdmin]),
+      ).rejects.toThrow(/owner_required/);
+    });
+    await as(db, bAdmin, async (q) => {
+      await expect(
+        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberBAdmin]),
+      ).rejects.toThrow(/owner_required/);
+    });
+    await as(db, anon, async (q) => {
+      await expect(
+        q("select public.transfer_account_ownership($1, $2)", [ids.acctA, ids.memberAMember]),
+      ).rejects.toThrow(/permission denied/);
+    });
+  });
+
+  it("the owner changes the account type at most once in six months, both ways (D-03)", async () => {
+    await admin(db, "update public.members set role = 'ADMIN' where id = $1", [ids.memberAMember]);
+    try {
+      await as(db, aMember, async (q) => {
+        await expect(
+          q("select public.change_account_type($1, 'INSTITUTIONAL', 'Spolek A')", [ids.acctA]),
+        ).rejects.toThrow(/owner_required/);
+      });
+    } finally {
+      await admin(db, "update public.members set role = 'MEMBER' where id = $1", [
+        ids.memberAMember,
+      ]);
+    }
+    await as(db, aAdmin, async (q) => {
+      await q("select public.change_account_type($1, 'INSTITUTIONAL', 'Spolek A')", [ids.acctA]);
+      const [after] = await q<{ d: string | null }>(
+        "select public.account_type_change_after($1)::date::text as d",
+        [ids.acctA],
+      );
+      expect(after?.d).toBeTruthy();
+      await expect(
+        q("select public.change_account_type($1, 'FAMILY', 'Rodina A')", [ids.acctA]),
+      ).rejects.toThrow(/type_change_cooldown/);
+      // Seven months later the owner may switch back, but not to the cottage's own name.
+      await q("reset role");
+      await q(
+        "update public.accounts set type_changed_at = now() - interval '7 months' where id = $1",
+        [ids.acctA],
+      );
+      await q("set local role authenticated");
+      await expect(
+        q("select public.change_account_type($1, 'FAMILY', 'Chata A')", [ids.acctA]),
+      ).rejects.toThrow(/account_name_same_as_cottage/);
+      await q("select public.change_account_type($1, 'FAMILY', 'Rodina A')", [ids.acctA]);
+      expect(await q("select type from public.accounts where id = $1", [ids.acctA])).toEqual([
+        { type: "FAMILY" },
+      ]);
+      await expect(
+        q("select public.change_account_type($1, 'FAMILY')", [ids.acctA]),
+      ).rejects.toThrow(/same_type/);
+    });
+  });
+
+  it("a running paid plan is changed through billing, not here", async () => {
+    await as(db, aAdmin, async (q) => {
+      await q("reset role");
+      await q("update public.plans set price_czk_month = 99 where id = 'family_plus'");
+      await q(
+        "insert into public.subscriptions (account_id, plan_id, status) values ($1, 'family_plus', 'active')",
+        [ids.acctA],
+      );
+      await q("set local role authenticated");
+      await expect(
+        q("select public.change_account_type($1, 'INSTITUTIONAL', 'Spolek A')", [ids.acctA]),
+      ).rejects.toThrow(/billing_change_required/);
+    });
+  });
+
+  it("only admins read and decide institution stay requests (D-16)", async () => {
+    const r = await admin(
+      db,
+      "insert into public.institutional_requests (property_id, requester_name, requester_email, start_date, end_date, guests, status) values ($1,'Žadatel','zadatel@example.org', current_date + 60, current_date + 61, 1, 'PENDING') returning id",
+      [ids.propB],
+    );
+    const reqId = (r[0] as { id: string }).id;
+    try {
+      await as(db, dana, async (q) => {
+        expect(
+          await q("select * from public.institutional_requests where id = $1", [reqId]),
+        ).toHaveLength(0);
+        expect(
+          await q(
+            "update public.institutional_requests set status = 'APPROVED' where id = $1 returning id",
+            [reqId],
+          ),
+        ).toHaveLength(0);
+      });
+      await as(db, bAdmin, async (q) => {
+        expect(
+          await q(
+            "update public.institutional_requests set status = 'APPROVED' where id = $1 returning id",
+            [reqId],
+          ),
+        ).toHaveLength(1);
+      });
+      expect(danaMember).toBeTruthy();
+    } finally {
+      await admin(db, "delete from public.institutional_requests where id = $1", [reqId]);
     }
   });
 });

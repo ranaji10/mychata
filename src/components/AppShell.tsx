@@ -147,7 +147,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/vice", label: t("Nastavení", "Settings"), icon: Menu },
   ] as const;
 
-  const tabs = account?.type === "INSTITUTIONAL" ? INST_TABS : FAMILY_TABS;
+  // Stay requests from the public institution form are for admins only (0036, D-16).
+  const tabs =
+    account?.type === "INSTITUTIONAL"
+      ? memberRole === "admin"
+        ? INST_TABS
+        : INST_TABS.filter((tab) => tab.to !== "/zadosti")
+      : FAMILY_TABS;
 
   const roleLabel = (role: string) =>
     role === "OWNER"

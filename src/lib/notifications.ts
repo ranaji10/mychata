@@ -95,7 +95,8 @@ export function useNotifications() {
   const requests = useQuery({
     queryKey: ["requests", pid],
     staleTime: 0,
-    enabled: !!pid && !isFamily,
+    // Admins only since 0036 (D-16); members would get an empty list.
+    enabled: !!pid && !isFamily && isAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutional_requests")

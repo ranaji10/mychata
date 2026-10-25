@@ -216,7 +216,28 @@ function HomePage() {
       if (error) throw error;
     },
     onSuccess: async (_d, { approve, visitor }) => {
-      if (approve && visitor?.email) setInviteOffer(visitor);
+      if (approve && visitor?.email && account) {
+        // Only offer when they are neither a member nor already invited (25 Oct review).
+        const email = visitor.email.toLowerCase();
+        const [{ data: invited, error: invErr }, { data: member, error: memErr }] =
+          await Promise.all([
+            supabase
+              .from("invitations")
+              .select("id")
+              .eq("account_id", account.id)
+              .ilike("email", email)
+              .eq("status", "PENDING")
+              .limit(1),
+            supabase
+              .from("members")
+              .select("id")
+              .eq("account_id", account.id)
+              .ilike("email", email)
+              .limit(1),
+          ]);
+        if (invErr || memErr) console.error("[domu] invite check", invErr ?? memErr);
+        else if (!invited?.length && !member?.length) setInviteOffer(visitor);
+      }
       track("booking_decided", {
         result: approve ? "approved" : "declined",
         source: "guest_request",

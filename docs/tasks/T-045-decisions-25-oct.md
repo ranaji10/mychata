@@ -37,3 +37,19 @@ Invariants touched: 1 (two new definer functions, caller-checked; institution re
 - Migration 0036 against the real database (in-memory tests only); Lovable applies it.
 - D-28 against Google: no key exists yet.
 - HEIC from a real iPhone in Firefox; avatar path only by code.
+
+## Fresh review (25 Oct) and what changed
+
+Reviewer found nothing serious. Fixed: an account whose owner row has no sign-in now gets the next admin with a sign-in as owner (trigger on insert and update, plus the backfill demotes sign-in-less OWNER rows); an organisation with pending stay requests must decide them before becoming a family (`pending_requests`); Export and Notifications no longer query requests for members; the D-30 offer is skipped when the visitor is already a member or has a pending invitation. Accepted as is: the live-analytics server function is public (aggregate output, 6 h cache).
+
+## After Lovable applies 0036
+
+Every account should have an owner with a sign-in. In Lovable's SQL runner (read-only query):
+
+```sql
+select a.id, a.name from public.accounts a
+where not exists (select 1 from public.members m
+                  where m.account_id = a.id and m.role = 'OWNER' and m.user_id is not null);
+```
+
+Expected: none, or only accounts whose admins never signed in. Then check My profile → Typ účtu as each test account's founder.

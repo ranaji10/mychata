@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Download, FileSpreadsheet } from "lucide-react";
+import { Download, FileSpreadsheet, Inbox } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, Skeleton } from "@/components/bits";
+import { EmptyState, PageHeader, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, monthNames, type InstitutionalRequest } from "@/lib/data";
@@ -30,7 +30,9 @@ export const Route = createFileRoute("/export")({
 
 function ExportPage() {
   const { t, lang } = useLang();
-  const { property } = useAccount();
+  const { property, currentMember } = useAccount();
+  // Stay requests are for admins only (0036, D-16): members would export an empty list.
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const now = new Date();
   const [month, setMonth] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
@@ -45,7 +47,7 @@ function ExportPage() {
     refetch,
   } = useQuery({
     queryKey: ["requests", property?.id],
-    enabled: !!property && !hidden,
+    enabled: !!property && !hidden && isAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutional_requests")
@@ -102,6 +104,21 @@ function ExportPage() {
   };
 
   if (hidden) return null;
+
+  if (currentMember && !isAdmin) {
+    return (
+      <AppShell>
+        <EmptyState
+          icon={Inbox}
+          title={t("Export dělá správce.", "An admin makes the export.")}
+          hint={t(
+            "Obsahuje žádosti o pobyt s kontakty žadatelů, proto je jen pro správce.",
+            "It holds stay requests with the applicants' contacts, so it is for admins only.",
+          )}
+        />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

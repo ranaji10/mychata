@@ -12,6 +12,11 @@
 
 -- 1. Owner ---------------------------------------------------------------------------------
 
+-- An OWNER row nobody signed in to (none expected; seed data was removed in 0019) can't act as
+-- owner: make it an admin so a member with a sign-in can take the role.
+update public.members set role = 'ADMIN' where role = 'OWNER' and user_id is null;
+--> statement-breakpoint
+
 -- Backfill: the oldest admin with a sign-in becomes the owner, where no owner exists yet.
 update public.members m set role = 'OWNER'
 from (
@@ -42,18 +47,20 @@ $$;
 revoke execute on function public.account_founder(uuid) from public, anon, authenticated;
 --> statement-breakpoint
 
--- New accounts: the first member with a sign-in is the owner. Invitations never create one
--- (accept_invitation maps OWNER to ADMIN), and a second OWNER row is refused by the index.
+-- An account without an owner gets one: the first admin row with a sign-in that is inserted or
+-- updated (a new account's founder; an admin promoted or claiming their row in an account whose
+-- owner is gone). Invitations never create an OWNER (accept_invitation maps it to ADMIN); a
+-- second OWNER row becomes ADMIN, and the index refuses one by any other route.
 create or replace function public.members_first_is_owner()
 returns trigger language plpgsql set search_path = public as $$
 begin
-  if new.user_id is not null
-     and new.role in ('ADMIN', 'OWNER')
-     and not exists (select 1 from public.members where account_id = new.account_id) then
-    new.role := 'OWNER';
-  elsif new.role = 'OWNER'
-     and exists (select 1 from public.members where account_id = new.account_id and role = 'OWNER') then
+  if new.role = 'OWNER' and (new.user_id is null or exists (
+       select 1 from public.members
+       where account_id = new.account_id and role = 'OWNER' and id is distinct from new.id)) then
     new.role := 'ADMIN';
+  elsif new.role = 'ADMIN' and new.user_id is not null and not exists (
+       select 1 from public.members where account_id = new.account_id and role = 'OWNER') then
+    new.role := 'OWNER';
   end if;
   return new;
 end;
@@ -61,7 +68,7 @@ $$;
 --> statement-breakpoint
 drop trigger if exists members_first_is_owner on public.members;
 --> statement-breakpoint
-create trigger members_first_is_owner before insert on public.members
+create trigger members_first_is_owner before insert or update of role, user_id on public.members
   for each row execute function public.members_first_is_owner();
 --> statement-breakpoint
 
@@ -149,6 +156,11 @@ begin
       raise exception 'institution_email_required' using errcode = '42501';
     end if;
   else
+    -- A family account has no Requests screen: decide the organisation's open requests first.
+    if exists (select 1 from public.institutional_requests r join public.properties p on p.id = r.property_id
+               where p.account_id = _account_id and r.status = 'PENDING') then
+      raise exception 'pending_requests';
+    end if;
     new_name := coalesce(new_name, acc.name);
     if exists (select 1 from public.properties p where p.account_id = _account_id
                and lower(trim(p.name)) = lower(new_name)) then

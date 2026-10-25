@@ -53,6 +53,11 @@ export function accountTypeChangeError(message: string, t: T): string {
     );
   if (message.includes("bad_name"))
     return t("Zadejte název (2 až 120 znaků).", "Enter a name (2 to 120 characters).");
+  if (message.includes("pending_requests"))
+    return t(
+      "Nejdřív vyřiďte čekající žádosti o pobyt (Žádosti). Rodinný účet je nezobrazuje.",
+      "First decide the pending stay requests (Requests). A family account doesn't show them.",
+    );
   if (message.includes("same_type"))
     return t("Účet už tento typ má.", "The account already has this type.");
   return t(`Změna se nepodařila: ${message}`, `Could not change it: ${message}`);

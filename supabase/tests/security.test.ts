@@ -1928,7 +1928,7 @@ describe("owner, account type changes, institution requests (T-045, migration 00
     expect(
       await admin(db, "select role from public.members where id = $1", [ids.memberBAdmin]),
     ).toEqual([{ role: "OWNER" }]);
-    // A second OWNER row is stored as ADMIN, and the index refuses a second OWNER by UPDATE.
+    // A second OWNER row, by INSERT or UPDATE, is stored as ADMIN.
     const [x] = await admin(
       db,
       "insert into public.members (account_id, name, email, role, user_id) values ($1,'Druhý','druhy@example.org','OWNER', null) returning id, role",
@@ -1936,14 +1936,29 @@ describe("owner, account type changes, institution requests (T-045, migration 00
     );
     try {
       expect((x as { role: string }).role).toBe("ADMIN");
-      await expect(
-        admin(db, "update public.members set role = 'OWNER' where id = $1", [
+      expect(
+        await admin(db, "update public.members set role = 'OWNER' where id = $1 returning role", [
           (x as { id: string }).id,
         ]),
-      ).rejects.toThrow(/members_one_owner_per_account/);
+      ).toEqual([{ role: "ADMIN" }]);
     } finally {
       await admin(db, "delete from public.members where id = $1", [(x as { id: string }).id]);
     }
+  });
+
+  it("an account whose owner row is gone gets the next admin with a sign-in as owner", async () => {
+    await as(db, aAdmin, async (q) => {
+      await q("reset role");
+      // The owner's sign-in is deleted (members.user_id is set null): the row stops being owner.
+      await q("update public.members set user_id = null where id = $1", [ids.memberAAdmin]);
+      expect(await q("select role from public.members where id = $1", [ids.memberAAdmin])).toEqual([
+        { role: "ADMIN" },
+      ]);
+      await q("update public.members set role = 'ADMIN' where id = $1", [ids.memberAMember]);
+      expect(await q("select role from public.members where id = $1", [ids.memberAMember])).toEqual(
+        [{ role: "OWNER" }],
+      );
+    });
   });
 
   it("only the owner hands the account to another admin with a sign-in", async () => {
@@ -2020,6 +2035,20 @@ describe("owner, account type changes, institution requests (T-045, migration 00
       await expect(
         q("select public.change_account_type($1, 'FAMILY')", [ids.acctA]),
       ).rejects.toThrow(/same_type/);
+    });
+  });
+
+  it("an organisation with open stay requests decides them before becoming a family", async () => {
+    await as(db, bAdmin, async (q) => {
+      await q("reset role");
+      await q(
+        "insert into public.institutional_requests (property_id, requester_name, requester_email, start_date, end_date, guests, status) values ($1,'Čeká','ceka@example.org', current_date + 70, current_date + 71, 1, 'PENDING')",
+        [ids.propB],
+      );
+      await q("set local role authenticated");
+      await expect(
+        q("select public.change_account_type($1, 'FAMILY', 'Rodina B')", [ids.acctB]),
+      ).rejects.toThrow(/pending_requests/);
     });
   });
 

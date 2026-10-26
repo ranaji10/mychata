@@ -1,6 +1,6 @@
 # T-015 Tests for rules only the app enforces
 
-Owner: planner writes, implementer builds · Status: todo
+Owner: planner writes, implementer builds · Status: done (tests in T-044 `src/lib/t015.test.ts`; the limits file in T-048)
 
 Goal: every product rule enforced only in TypeScript lives in one named constant and has a unit test.
 Non-goals: no behaviour change; no database changes; no moving database-enforced rules into TypeScript.

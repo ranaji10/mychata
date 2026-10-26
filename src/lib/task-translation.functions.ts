@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AI_DAILY_LIMITS } from "@/lib/limits";
 
 const inputSchema = z.object({
   text: z.string().trim().min(1).max(500),
@@ -23,7 +24,7 @@ export const translateTaskText = createServerFn({ method: "POST" })
     if (!enabled) return { translation: data.text };
     const { data: allowed } = await context.supabase.rpc("bump_usage", {
       _kind: "ai_translate",
-      _daily_limit: 200,
+      _daily_limit: AI_DAILY_LIMITS.taskTranslations,
     });
     if (!allowed) return { translation: data.text };
 

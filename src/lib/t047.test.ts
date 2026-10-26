@@ -13,6 +13,7 @@ describe("T-047: onboarding when the account already exists", () => {
       "(setUpElsewhere || memberships.length > 0) && !search.fresh && !search.kind",
     );
     expect(s).toContain('t("Nastavení je hotové", "You\'re all set up")');
+    expect(s).toContain("if (alreadySetUp && !done && !busy && !finished)");
   });
 
   it("checks again for an account just before creating one", () => {
@@ -47,6 +48,7 @@ describe("T-047: Notifications show dates the Czech way", () => {
   it("no raw ISO dates in notification texts", () => {
     const s = src("src/lib/notification-list.ts");
     expect(s).not.toMatch(/\$\{\w+\.(start_date|end_date|due_date)\}/);
+    expect(s).toContain("${fmtDate(day)} · ${names}");
     expect(s).toContain("${fmtDate(b.start_date)} – ${fmtDate(b.end_date)}");
   });
 });

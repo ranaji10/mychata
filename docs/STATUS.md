@@ -20,7 +20,7 @@ As of 2026-10-26. Update this file in every PR that changes behaviour.
 Brief: `docs/tasks/T-047-onboarding-guard-and-live-requests.md`. No migration.
 
 - `/onboarding` tells people who already have an account that they are set up and sends them Home; it checks again before creating anything, so a forgotten tab can't add a second cottage. Step 1 has Sign out (no account yet) or Cancel.
-- Pending booking requests (admin) and "Vaše žádosti" (requester) refresh every 30 s while visible and are never shown from the stale cache (F-25).
+- Pending booking requests (admin) and "Vaše žádosti" (requester) refresh every 30 s while visible and are never shown from the stale cache (F-25). For admins this runs on every page, because the Notifications badge reads them.
 - Notifications show dates as 23.10.2026.
 - Not verified: the onboarding guard in a real browser.
 

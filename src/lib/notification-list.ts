@@ -240,7 +240,7 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
               `${fmtDate(one.start_date)} – ${fmtDate(one.end_date)}`,
               `${fmtDate(one.start_date)} – ${fmtDate(one.end_date)}`,
             ]
-          : [`${day} · ${names}`, `${day} · ${names}`],
+          : [`${fmtDate(day)} · ${names}`, `${fmtDate(day)} · ${names}`],
         to: one ? "/rezervace/$id" : "/kalendar",
         params: one ? { id: one.id } : undefined,
       });

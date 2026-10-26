@@ -141,6 +141,9 @@ function OnboardingPage() {
   // new one ("fresh" or an organisation) has nothing to do here. A second tab left on step 1
   // after finishing in another tab would otherwise add the cottage a second time.
   const [setUpElsewhere, setSetUpElsewhere] = useState(false);
+  // Set when this tab created the account, so the guard never shows on the way to Home
+  // (PR #77 review: it could flash while Home loaded, offering a second account).
+  const [finished, setFinished] = useState(false);
   const alreadySetUp = (setUpElsewhere || memberships.length > 0) && !search.fresh && !search.kind;
 
   const signOut = async () => {
@@ -307,6 +310,7 @@ function OnboardingPage() {
       }
       queryClient.clear();
       toast.success(t("Vítejte! Vaše chata je připravena.", "Welcome! Your cottage is ready."));
+      setFinished(true);
       if (linkEmail || !hasPassword(user)) setDone({ linkEmail, linkUrl });
       else navigate({ to: "/domu", replace: true });
     } catch (e) {
@@ -343,7 +347,7 @@ function OnboardingPage() {
             (type !== "INSTITUTIONAL" || addToCurrentAccount || autoApprove !== null)
           : true;
 
-  if (alreadySetUp && !done && !busy) {
+  if (alreadySetUp && !done && !busy && !finished) {
     return (
       <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh px-5 py-5 md:max-w-[560px] md:py-10">
         <div className="flex items-center justify-between">

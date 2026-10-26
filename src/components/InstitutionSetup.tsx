@@ -165,14 +165,15 @@ export function InstitutionSetup() {
                   )}
                 </p>
               )}
-              <input
-                className="field w-full"
-                placeholder={t("Název organizace", "Organisation name")}
-                aria-label={t("Název organizace", "Organisation name")}
-                value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
-                autoComplete="organization"
-              />
+              <label className="block">
+                <span className="label-text">{t("Název organizace", "Organisation name")}</span>
+                <input
+                  className="field w-full"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  autoComplete="organization"
+                />
+              </label>
               <Button
                 variant="fresh"
                 size="fresh"
@@ -205,16 +206,19 @@ export function InstitutionSetup() {
               `You're signed in with a personal email (${email}). An institution needs a work email, e.g. jana@your-school.cz.`,
             )}
           </p>
-          <input
-            className="field w-full"
-            type="email"
-            placeholder={t("Pracovní e-mail instituce", "Institution work email")}
-            aria-label={t("Pracovní e-mail instituce", "Institution work email")}
-            value={instEmail}
-            onChange={(e) => setInstEmail(e.target.value)}
-            autoComplete="email"
-            aria-invalid={instEmailPublic}
-          />
+          <label className="block">
+            <span className="label-text">
+              {t("Pracovní e-mail instituce", "Institution work email")}
+            </span>
+            <input
+              className="field w-full"
+              type="email"
+              value={instEmail}
+              onChange={(e) => setInstEmail(e.target.value)}
+              autoComplete="email"
+              aria-invalid={instEmailPublic}
+            />
+          </label>
           {instEmailPublic && (
             <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
               {t(
@@ -223,14 +227,15 @@ export function InstitutionSetup() {
               )}
             </p>
           )}
-          <input
-            className="field w-full"
-            placeholder={t("Název organizace", "Organisation name")}
-            aria-label={t("Název organizace", "Organisation name")}
-            value={orgName}
-            onChange={(e) => setOrgName(e.target.value)}
-            autoComplete="organization"
-          />
+          <label className="block">
+            <span className="label-text">{t("Název organizace", "Organisation name")}</span>
+            <input
+              className="field w-full"
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              autoComplete="organization"
+            />
+          </label>
           <p className="text-[16px] text-muted-foreground">
             {t(
               `Odhlásíme vás a otevřeme registraci instituce s tímto e-mailem. Po jejím dokončení instituce pozve ${email} jako správce, takže budete obě chaty přepínat v jednom přihlášení.`,

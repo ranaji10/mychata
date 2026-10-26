@@ -87,37 +87,37 @@ function AddPropertyPage() {
         </div>
       )}
       <div className={`card mt-4 space-y-3 p-4 ${isAdmin ? "" : "hidden"}`}>
-        <input
-          className="field w-full"
-          placeholder={t("Název chaty", "Cottage name")}
-          aria-label={t("Název chaty", "Cottage name")}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="field w-full"
-          placeholder={t("Adresa", "Address")}
-          aria-label={t("Adresa", "Address")}
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        />
+        <label className="block">
+          <span className="label-text">{t("Název chaty", "Cottage name")}</span>
+          <input className="field w-full" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="label-text">{t("Adresa", "Address")}</span>
+          <input
+            className="field w-full"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </label>
         <div className="grid grid-cols-2 gap-2">
-          <input
-            className="field"
-            placeholder={t("Město", "City")}
-            aria-label={t("Město", "City")}
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
-          <input
-            className="field"
-            type="number"
-            min={1}
-            placeholder={t("Pokoje", "Rooms")}
-            aria-label={t("Pokoje", "Rooms")}
-            value={rooms}
-            onChange={(e) => setRooms(e.target.value)}
-          />
+          <label className="block">
+            <span className="label-text">{t("Město", "City")}</span>
+            <input
+              className="field w-full"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+          </label>
+          <label className="block">
+            <span className="label-text">{t("Pokoje", "Rooms")}</span>
+            <input
+              className="field w-full"
+              type="number"
+              min={1}
+              value={rooms}
+              onChange={(e) => setRooms(e.target.value)}
+            />
+          </label>
         </div>
         <Button
           variant="fresh"

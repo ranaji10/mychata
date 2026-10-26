@@ -292,6 +292,16 @@ function AuthPage() {
   };
 
   const signingUp = mode === "institute" || isSignUp;
+  // What still stops the button, said in words once someone has started typing (D-32).
+  const missing = [
+    mode === "institute" && organisation.trim().length <= 1
+      ? t("název organizace", "organisation name")
+      : null,
+    signingUp && name.trim().length <= 1 ? t("jméno", "name") : null,
+    !cleanEmail ? t("e-mail", "email") : null,
+    !password ? t("heslo", "password") : null,
+  ].filter((x): x is string => !!x);
+  const startedTyping = !!(organisation || name || email || password);
   const canSubmit =
     !busy &&
     !!cleanEmail &&
@@ -435,39 +445,45 @@ function AuthPage() {
               }}
             >
               {mode === "institute" && (
-                <input
-                  className="field w-full"
-                  placeholder={t("Název organizace", "Organisation name")}
-                  aria-label={t("Název organizace", "Organisation name")}
-                  value={organisation}
-                  onChange={(e) => setOrganisation(e.target.value)}
-                  autoComplete="organization"
-                />
+                <label className="block">
+                  <span className="label-text">{t("Název organizace", "Organisation name")}</span>
+                  <input
+                    className="field w-full"
+                    value={organisation}
+                    onChange={(e) => setOrganisation(e.target.value)}
+                    autoComplete="organization"
+                  />
+                </label>
               )}
               {signingUp && (
+                <label className="block">
+                  <span className="label-text">{t("Vaše jméno a příjmení", "Your full name")}</span>
+                  <input
+                    className="field w-full"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="name"
+                  />
+                </label>
+              )}
+              <label className="block">
+                <span className="label-text">
+                  {mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")}
+                </span>
                 <input
                   className="field w-full"
-                  placeholder={t("Vaše jméno a příjmení", "Your full name")}
-                  aria-label={t("Vaše jméno a příjmení", "Your full name")}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="name"
+                  type="email"
+                  placeholder={
+                    mode === "institute"
+                      ? t("např. jana@vase-skola.cz", "e.g. jana@your-school.cz")
+                      : t("např. jana@seznam.cz", "e.g. jana@gmail.com")
+                  }
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  aria-invalid={institutePublicEmail}
                 />
-              )}
-              <input
-                className="field w-full"
-                type="email"
-                placeholder={
-                  mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
-                }
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                aria-invalid={institutePublicEmail}
-                aria-label={
-                  mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
-                }
-              />
+              </label>
               {institutePublicEmail && (
                 <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                   {t(
@@ -476,17 +492,17 @@ function AuthPage() {
                   )}
                 </p>
               )}
-              <PasswordInput
-                placeholder={
-                  signingUp
-                    ? t("Heslo (alespoň 8 znaků)", "Password (at least 8 characters)")
-                    : t("Heslo", "Password")
-                }
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={signingUp ? "new-password" : "current-password"}
-                aria-label={t("Heslo", "Password")}
-              />
+              <label className="block">
+                <span className="label-text">{t("Heslo", "Password")}</span>
+                <PasswordInput
+                  placeholder={
+                    signingUp ? t("alespoň 8 znaků", "at least 8 characters") : undefined
+                  }
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={signingUp ? "new-password" : "current-password"}
+                />
+              </label>
               <Button
                 variant="fresh"
                 size="fresh"
@@ -500,6 +516,12 @@ function AuthPage() {
                     ? t("Vytvořit účet", "Create account")
                     : t("Přihlásit se", "Sign in")}
               </Button>
+              {!busy && startedTyping && missing.length > 0 && (
+                <p className="text-[15px] text-muted-foreground" role="status">
+                  {t("Ještě doplňte: ", "Still to fill in: ")}
+                  {missing.join(", ")}
+                </p>
+              )}
             </form>
             {canResend && (
               <Button

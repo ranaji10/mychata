@@ -128,15 +128,16 @@ function ResetPasswordPage() {
               if (!busy && email) void send();
             }}
           >
-            <input
-              className="field w-full"
-              type="email"
-              placeholder={t("E-mail", "Email")}
-              aria-label={t("E-mail", "Email")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-            />
+            <label className="block">
+              <span className="label-text">{t("E-mail", "Email")}</span>
+              <input
+                className="field w-full"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </label>
             <Button
               variant="fresh"
               size="fresh"

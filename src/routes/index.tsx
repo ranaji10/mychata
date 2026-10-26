@@ -62,6 +62,8 @@ function Index() {
       for (const key of Object.keys(localStorage)) {
         if (key.startsWith("sb-") && key.includes("auth-token")) localStorage.removeItem(key);
       }
+      // The offline copy of the last person's cottage data: signOut's own clean-up may not run.
+      localStorage.removeItem("mychata.offline-cache");
     } catch {
       /* storage blocked: the sign-out below is all we can do */
     }
@@ -117,10 +119,20 @@ function Index() {
             {t("Načítání trvá déle než obvykle.", "This is taking longer than usual.")}
           </p>
           <div className="mt-3 flex flex-col gap-3">
-            <Button variant="fresh" size="fresh" onClick={() => window.location.reload()}>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-primary min-h-[56px] w-full text-[17px]"
+              onClick={() => window.location.reload()}
+            >
               {t("Zkusit znovu", "Try again")}
             </Button>
-            <Button variant="outline" size="fresh" onClick={() => void signInAgain()}>
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-secondary min-h-[56px] w-full text-[17px]"
+              onClick={() => void signInAgain()}
+            >
               {t("Přihlásit se znovu", "Sign in again")}
             </Button>
           </div>

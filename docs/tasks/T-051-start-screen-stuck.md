@@ -16,3 +16,5 @@ Acceptance (runnable):
 - After publish, in the stuck Brave window: the page moves on, or after 10 s "Přihlásit se znovu" clears the saved session and opens sign-in.
 
 Handoff note: not verified in a browser before publish (no local test sign-in); the Brave state itself was not inspected, so which of the two causes it hit is open.
+
+Review (fresh, 26 Oct): button styling and offline-cache clean-up fixed. Open, outside this brief: if memberships load but the accounts read fails, Home shows empty with no "Try again"; once an account is loaded, a hanging properties/members read leaves AppShell blank with no fallback. Review: `docs/external/claude/2026-10-26-pr81-review.md`.

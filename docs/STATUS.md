@@ -17,7 +17,7 @@ As of 2026-10-26. Update this file in every PR that changes behaviour.
 
 ## Start screen never waits forever (T-051, 26 Oct 2026, not yet live)
 
-Brief: `docs/tasks/T-051-start-screen-stuck.md`. No migration. `/` now sends a signed-in person without a readable account to onboarding or Home (which shows "Zkusit znovu") instead of waiting; after 10 s it offers "Zkusit znovu" and "Přihlásit se znovu" (clears this browser's saved session). F-33.
+Brief: `docs/tasks/T-051-start-screen-stuck.md`. No migration. `/` now sends a signed-in person without a readable account to onboarding or Home (which shows "Zkusit znovu") instead of waiting (an accounts-only read failure still shows an empty Home); after 10 s it offers "Zkusit znovu" and "Přihlásit se znovu" (clears this browser's saved session and offline copy). F-33.
 
 ## What Google sees, one page view per page (T-049, 26 Oct 2026, not yet live)
 

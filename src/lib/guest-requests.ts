@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+/** How often lists that wait on another person's decision refresh while visible (F-25). */
+export const LIVE_REFRESH_MS = 30_000;
+
 /**
  * Guest requests waiting for an admin's decision (from the guest link, T-021).
  * Home lists them with Approve/Decline; the Calendar draws them as "Awaiting approval"
@@ -10,6 +13,10 @@ export function usePendingGuestRequests(propertyId: string | undefined, isAdmin:
   return useQuery({
     queryKey: ["guest-requests", propertyId],
     enabled: !!propertyId && isAdmin,
+    // A new request should reach the admin without a reload (F-25, 26 Oct): fresh on every
+    // visit and every 30 s while the tab is in front.
+    staleTime: 0,
+    refetchInterval: LIVE_REFRESH_MS,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("guest_requests")

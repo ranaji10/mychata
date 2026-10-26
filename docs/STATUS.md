@@ -23,6 +23,7 @@ Brief: `docs/tasks/T-046-requests-26-oct.md`. No migration.
 - **Enter submits** sign-in, sign-up, Forgot password and the password forms.
 - **Privacy & cookies** has Back for everyone (the cookie banner's "Co z nich vidíme" left signed-out visitors stuck); a reopened cookie banner can be closed and keeps the earlier choice.
 - ADR-0012 accepted: saving the manual no longer computes embeddings; `askManual` logs each cottage's context size.
+- Home's booking-request card shows the requester's note.
 - Approved content for L-3 in `docs/content/`.
 - Not verified: `/pomoc` signed in on the live site; mail to `podpora@mychata.cz`.
 

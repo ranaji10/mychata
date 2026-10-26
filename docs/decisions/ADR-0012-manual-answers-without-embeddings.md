@@ -16,7 +16,7 @@ ADR-0004 designed hybrid vector search. T-021 (29 Sep) changed `askManual` to se
 ## Done on acceptance (T-046)
 
 - `manual.tsx` and `chaty.tsx` no longer call `rebuildManualChunks` after a save.
-- `askManual` logs each question's context size (`[askManual] context size`: total characters, sources, how many were sent, over budget or not), with no text, in the hosting logs.
+- `askManual` logs each question's context size (`[askManual] context size`: total characters, sources, how many were sent, over budget or not, any source cut to its own 60,000-character limit), with no text, in the hosting logs.
 
 ## Consequences
 

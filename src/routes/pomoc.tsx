@@ -40,16 +40,16 @@ const FAQS: Faq[] = [
   {
     q: ["Jak pozvu rodinu nebo kolegy?", "How do I invite family or colleagues?"],
     a: [
-      "V Nastavení otevřete Členové a oprávnění a zvolte Pozvat nového člena. Odkaz pošlete e-mailem, sdílením nebo zkopírováním.",
-      "In Settings open Members & permissions and choose Invite a new member. Send the link by e-mail, share it or copy it.",
+      "Správce v Nastavení otevře Členové a oprávnění a zvolí Pozvat nového člena. Odkaz pošle e-mailem, sdílením nebo zkopírováním.",
+      "An admin opens Members & permissions in Settings and chooses Invite a new member, then sends the link by e-mail, shares it or copies it.",
     ],
     link: { to: "/clenove", label: ["Členové a oprávnění", "Members & permissions"] },
   },
   {
     q: ["Jak si zarezervuji pobyt?", "How do I book a stay?"],
     a: [
-      "V Kalendáři zvolte Nová rezervace a vyberte dny. Pokud chata vyžaduje schválení, rezervaci potvrdí správce.",
-      "In the Calendar choose New booking and pick the days. If the cottage needs approval, an admin confirms the booking.",
+      "Na Domů zvolte Přidat pobyt (nebo v Kalendáři Pobyt), klepněte na den příjezdu a pak na den odjezdu. Pokud chata vyžaduje schválení, pobyt potvrdí správce.",
+      "On Home choose Add booking (or Stay in the Calendar), tap your arrival day and then your departure day. If the cottage needs approval, an admin confirms the stay.",
     ],
     link: { to: "/kalendar", label: ["Kalendář", "Calendar"] },
   },

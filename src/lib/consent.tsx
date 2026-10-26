@@ -155,6 +155,11 @@ export function ConsentBanner() {
     };
   }, [choice]);
 
+  // A reopened banner starts on the short view again.
+  useEffect(() => {
+    if (choice) setCustomising(false);
+  }, [choice]);
+
   if (choice) return null;
 
   return (

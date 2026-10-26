@@ -32,6 +32,7 @@ const TITLES: Array<[path: string, cs: string, en: string, prefix?: true]> = [
   ["/export", "Export využití", "Usage export"],
   ["/rezervace/nova", "Nová rezervace", "New booking"],
   ["/soukromi", "Soukromí a cookies", "Privacy & cookies"],
+  ["/pomoc", "Nápověda a podpora", "Help & support"],
   ["/rezervace/", "Detail pobytu", "Stay details", true],
   ["/ukoly/", "Detail úkolu", "Task details", true],
   ["/pozvanka/", "Pozvánka do chaty", "Cottage invitation", true],

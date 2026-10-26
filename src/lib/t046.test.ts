@@ -2,6 +2,7 @@
 // no embeddings on save).
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { pageTitle } from "@/lib/page-title";
 import { isSettingsPath, SETTINGS_LINKS } from "@/lib/settings-nav";
 
 const src = (p: string) => readFileSync(p, "utf8");
@@ -32,6 +33,8 @@ describe("T-046: Help & support", () => {
     expect(SETTINGS_LINKS.some((l) => l.to === "/pomoc")).toBe(true);
     expect(isSettingsPath("/pomoc")).toBe(true);
     expect(src("src/routes/vice.tsx")).toContain('to="/pomoc"');
+    expect(pageTitle("/pomoc", "cs")).toBe("Nápověda a podpora — My Chata");
+    expect(pageTitle("/pomoc", "en")).toBe("Help & support — My Chata");
   });
 
   it("offers the support address and a problem report without personal data", () => {
@@ -68,5 +71,11 @@ describe("T-046: ADR-0012, no embeddings on save", () => {
   it("askManual logs the context size without text", () => {
     const s = src("src/lib/manual-qa.functions.ts");
     expect(s).toContain('"[askManual] context size"');
+  });
+});
+
+describe("T-046: admins see the requester's note before deciding", () => {
+  it("Home's request card shows the note", () => {
+    expect(src("src/routes/domu.tsx")).toContain("{g.note && ");
   });
 });

@@ -500,6 +500,10 @@ export const askManual = createServerFn({ method: "POST" })
       sources: sources.length,
       sent: context_.length,
       overBudget: context_.length < sources.length,
+      // A source longer than its own limit is cut even when everything else fits.
+      truncated: context_.some(
+        (s) => s.text.length < (sources.find((o) => o.key === s.key)?.text.length ?? 0),
+      ),
     });
     const numbered = context_
       .map(

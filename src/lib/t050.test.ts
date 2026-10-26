@@ -29,7 +29,10 @@ function unlabelled(source: string): string[] {
     const attrs = m[2] ?? "";
     if (/type="(hidden|file|checkbox|radio|date)"/.test(attrs)) continue;
     if (/className="hidden"/.test(attrs)) continue;
-    if (/aria-label=|aria-labelledby=|\bid=/.test(attrs)) continue;
+    if (/aria-label=|aria-labelledby=/.test(attrs)) continue;
+    // An id counts only when a label points at it (htmlFor with the same expression).
+    const id = /\bid=(\{[^}]+\}|"[^"]+")/.exec(attrs)?.[1];
+    if (id && source.includes(`htmlFor=${id}`)) continue;
     const before = source.slice(0, m.index);
     if (before.lastIndexOf("<label") > before.lastIndexOf("</label>")) continue;
     found.push(attrs.replace(/\s+/g, " ").slice(0, 80));

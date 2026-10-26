@@ -3,7 +3,7 @@ import { track } from "@/lib/analytics";
 import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Home, LogIn, Mail } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +63,9 @@ function AuthPage() {
   const [organisation, setOrganisation] = useState(search.org ?? "");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
+  const passwordId = useId();
+  // Set by typing only: the URL can pre-fill e-mail and organisation, and that isn't "started".
+  const [touched, setTouched] = useState(false);
   // Offer "send the confirmation email again" when it can help.
   const [canResend, setCanResend] = useState(false);
 
@@ -301,7 +304,7 @@ function AuthPage() {
     !cleanEmail ? t("e-mail", "email") : null,
     !password ? t("heslo", "password") : null,
   ].filter((x): x is string => !!x);
-  const startedTyping = !!(organisation || name || email || password);
+  const startedTyping = touched;
   const canSubmit =
     !busy &&
     !!cleanEmail &&
@@ -315,6 +318,7 @@ function AuthPage() {
     setError("");
     setInfo("");
     setCanResend(false);
+    setTouched(false);
   };
 
   return (
@@ -450,7 +454,10 @@ function AuthPage() {
                   <input
                     className="field w-full"
                     value={organisation}
-                    onChange={(e) => setOrganisation(e.target.value)}
+                    onChange={(e) => {
+                      setTouched(true);
+                      setOrganisation(e.target.value);
+                    }}
                     autoComplete="organization"
                   />
                 </label>
@@ -461,7 +468,10 @@ function AuthPage() {
                   <input
                     className="field w-full"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setTouched(true);
+                      setName(e.target.value);
+                    }}
                     autoComplete="name"
                   />
                 </label>
@@ -479,7 +489,10 @@ function AuthPage() {
                       : t("např. jana@seznam.cz", "e.g. jana@gmail.com")
                   }
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setTouched(true);
+                    setEmail(e.target.value);
+                  }}
                   autoComplete="email"
                   aria-invalid={institutePublicEmail}
                 />
@@ -492,17 +505,25 @@ function AuthPage() {
                   )}
                 </p>
               )}
-              <label className="block">
-                <span className="label-text">{t("Heslo", "Password")}</span>
+              {/* Not a wrapping label: the eye button inside PasswordInput would join the
+                  field's name ("Heslo Zobrazit heslo"). */}
+              <div>
+                <label htmlFor={passwordId} className="label-text">
+                  {t("Heslo", "Password")}
+                </label>
                 <PasswordInput
+                  id={passwordId}
                   placeholder={
                     signingUp ? t("alespoň 8 znaků", "at least 8 characters") : undefined
                   }
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setTouched(true);
+                    setPassword(e.target.value);
+                  }}
                   autoComplete={signingUp ? "new-password" : "current-password"}
                 />
-              </label>
+              </div>
               <Button
                 variant="fresh"
                 size="fresh"

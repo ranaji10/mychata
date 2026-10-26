@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/bits";
 import { useAccount } from "@/lib/account";
 import { BUILD_SHA, BUILD_TIME } from "@/lib/build-info";
+import { fmtDateTime } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 // Help & support (T-046, 26 Oct 2026): short answers to the questions people ask first, and
@@ -167,7 +168,8 @@ function HelpPage() {
       </section>
 
       <p className="mt-4 text-center text-[14px] text-muted-foreground">
-        {t("Verze", "Version")} {BUILD_SHA.slice(0, 7)} · {BUILD_TIME}
+        {t("Verze", "Version")} {BUILD_SHA.slice(0, 7)}
+        {BUILD_TIME === "unknown" ? "" : ` · ${fmtDateTime(BUILD_TIME)}`}
       </p>
     </AppShell>
   );

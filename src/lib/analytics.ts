@@ -69,11 +69,38 @@ export function track(event: string, params: Record<string, unknown> = {}) {
   }
 }
 
-/** Page view on every client-side navigation. */
+/**
+ * The page address Google may see (F-30, 26 Oct): link tokens and record ids replaced, no query
+ * and no "#" part. Before this, page views carried the whole address, so the sign-in tokens an
+ * e-mail link brings back in "#access_token=…" and the public-link tokens went to Google.
+ * The head bootstrap in __root.tsx applies the same rules to the first hit (ANALYTICS_PATH_JS).
+ */
+export function analyticsPath(pathname: string): string {
+  const s = pathname.split("/");
+  if ((s[1] === "host" || s[1] === "pozvanka") && s[2]) s[2] = ":token";
+  if (s[1] === "verejne" && s[3]) s[3] = ":token";
+  if ((s[1] === "rezervace" || s[1] === "ukoly") && s[2] && s[2] !== "nova") s[2] = ":id";
+  return s.slice(0, 4).join("/");
+}
+
+/** The same rules as an inline script for the head bootstrap (reads `location.pathname`). */
+export const ANALYTICS_PATH_JS =
+  "(function(){var s=location.pathname.split('/');" +
+  "if((s[1]==='host'||s[1]==='pozvanka')&&s[2])s[2]=':token';" +
+  "if(s[1]==='verejne'&&s[3])s[3]=':token';" +
+  "if((s[1]==='rezervace'||s[1]==='ukoly')&&s[2]&&s[2]!=='nova')s[2]=':id';" +
+  "return s.slice(0,4).join('/');})()";
+
+/** Page view on every client-side navigation (one per page: F-31). */
 export function trackPageView(path: string, title?: string) {
-  track("page_view", {
-    page_path: path,
-    ...(title ? { page_title: title } : {}),
-    page_location: typeof window !== "undefined" ? window.location.href : path,
-  });
+  if (typeof window === "undefined") return;
+  const page_path = analyticsPath(path);
+  const page_location = window.location.origin + page_path;
+  try {
+    // Every later hit, enhanced measurement's own events included, uses the cleaned address.
+    window.gtag?.("set", { page_location, page_path });
+  } catch {
+    /* never break the app for analytics */
+  }
+  track("page_view", { page_path, ...(title ? { page_title: title } : {}), page_location });
 }

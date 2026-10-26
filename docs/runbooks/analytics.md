@@ -29,13 +29,17 @@ After sign-in and only with analytics consent the app sets `user_id` to the sign
 
 `src/lib/analytics-live.functions.ts` reads the GA4 Data API when two hosting secrets exist; without them the page shows `analytics-snapshot.ts`.
 
-State (26 Oct 2026): steps 1 and 3 done and `GA_PROPERTY_ID` saved (Claude in Chrome, the maintainer's Google account that owns the GA property: project `mychata-analytics` with no organisation, Data API enabled, service account `ga-reader@mychata-analytics.iam.gserviceaccount.com`, Viewer on the property). Left for a maintainer: the JSON key (step 2, Keys → Add key) and `GA_SERVICE_ACCOUNT_JSON` (step 4), then publish (step 5).
+State (26 Oct 2026): done; live numbers on `/soukromi` since the `27f9992` publish. Steps 1 and 3 and `GA_PROPERTY_ID` (Claude in Chrome, the maintainer's Google account that owns the GA property: project `mychata-analytics` with no organisation, Data API enabled, service account `ga-reader@mychata-analytics.iam.gserviceaccount.com`, Viewer on the property). The key (step 2) and `GA_SERVICE_ACCOUNT_JSON` (step 4) by a maintainer.
 
 1. Google Cloud console (same Google account): create a project "mychata-analytics", enable "Google Analytics Data API".
 2. IAM → Service accounts → create `ga-reader`; Keys → Add key → JSON. Keep the file out of the repo.
 3. GA4 Admin → Property access management → add the service account's e-mail as **Viewer**.
 4. Hosting secrets (Lovable → Project settings → Secrets, later own hosting): `GA_PROPERTY_ID` = `555902424` (account 409479780; Admin → Property details), `GA_SERVICE_ACCOUNT_JSON` = the whole JSON file.
 5. Publish; `/soukromi` then says "(aktualizují se samy)". Rotate the key yearly; delete the old one.
+
+## Page addresses (F-30, T-049)
+
+Page views and every other hit carry `analyticsPath()` (`src/lib/analytics.ts`): `/verejne/kalendar/:token`, `/host/:token`, `/pozvanka/:token`, `/rezervace/:id`, `/ukoly/:id`, never a query or `#` part. Before 26 Oct evening the full address went to GA, including sign-in tokens from e-mail links; see D-33 for deleting that data.
 
 ## Events the app sends
 

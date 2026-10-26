@@ -184,6 +184,7 @@ function GuestBookingPage() {
             <input
               className="field w-full"
               placeholder={t("Vaše jméno", "Your name")}
+              aria-label={t("Vaše jméno", "Your name")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -191,6 +192,7 @@ function GuestBookingPage() {
               className="field w-full"
               type="email"
               placeholder={t("E-mail", "Email")}
+              aria-label={t("E-mail", "Email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -253,6 +255,7 @@ function GuestBookingPage() {
             <textarea
               className="field min-h-20 w-full"
               placeholder={t("Poznámka (nepovinné)", "Note (optional)")}
+              aria-label={t("Poznámka (nepovinné)", "Note (optional)")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />

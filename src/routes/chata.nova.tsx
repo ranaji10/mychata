@@ -90,12 +90,14 @@ function AddPropertyPage() {
         <input
           className="field w-full"
           placeholder={t("Název chaty", "Cottage name")}
+          aria-label={t("Název chaty", "Cottage name")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <input
           className="field w-full"
           placeholder={t("Adresa", "Address")}
+          aria-label={t("Adresa", "Address")}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
         />
@@ -103,6 +105,7 @@ function AddPropertyPage() {
           <input
             className="field"
             placeholder={t("Město", "City")}
+            aria-label={t("Město", "City")}
             value={city}
             onChange={(e) => setCity(e.target.value)}
           />
@@ -111,6 +114,7 @@ function AddPropertyPage() {
             type="number"
             min={1}
             placeholder={t("Pokoje", "Rooms")}
+            aria-label={t("Pokoje", "Rooms")}
             value={rooms}
             onChange={(e) => setRooms(e.target.value)}
           />

@@ -48,7 +48,8 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
 gtag('consent','default',{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
 gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500,region:${JSON.stringify(CONSENT_REGIONS)}});
 try{var c=JSON.parse(localStorage.getItem('mychata.consent')||'null');if(c&&c.version==='v1'&&Date.now()-c.at<31536000000){gtag('consent','update',{analytics_storage:c.analytics?'granted':'denied'});}}catch(e){}
-gtag('js',new Date());gtag('config',${JSON.stringify(id)},{send_page_view:false});}`;
+var lp=${ANALYTICS_PATH_JS};gtag('set',{page_location:location.origin+lp,page_path:lp});
+gtag('js',new Date());gtag('config',${JSON.stringify(id)},{send_page_view:false,page_location:location.origin+lp,page_path:lp});}`;
 }
 
 function NotFoundComponent() {
@@ -294,7 +295,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 import { AccountProvider } from "../lib/account";
 import { ConsentBanner, ConsentProvider } from "../lib/consent";
-import { trackPageView } from "../lib/analytics";
+import { ANALYTICS_PATH_JS, trackPageView } from "../lib/analytics";
 import { pageTitle } from "../lib/page-title";
 import { Toaster } from "../components/ui/sonner";
 
@@ -382,10 +383,23 @@ function PageTitleSync() {
   }, [pathname, lang]);
 
   useEffect(() => {
-    const send = (path: string) =>
+    // One page view per page (F-31): the first load sent two, one from here and one from the
+    // router's first "onResolved". The first waits a tick so the title is in the language the
+    // visitor chose (hydration starts in Czech, F-29).
+    let last: string | null = null;
+    const send = (path: string) => {
+      if (path === last) return;
+      last = path;
       trackPageView(path, pageTitle(path, langRef.current) ?? document.title);
-    send(router.state.location.pathname);
-    return router.subscribe("onResolved", ({ toLocation }) => send(toLocation.pathname));
+    };
+    const first = window.setTimeout(() => send(router.state.location.pathname), 0);
+    const unsubscribe = router.subscribe("onResolved", ({ toLocation }) =>
+      send(toLocation.pathname),
+    );
+    return () => {
+      window.clearTimeout(first);
+      unsubscribe();
+    };
   }, [router]);
 
   return null;

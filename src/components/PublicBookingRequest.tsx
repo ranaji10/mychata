@@ -232,6 +232,7 @@ export function PublicBookingRequest({
           <textarea
             className="field min-h-20 w-full"
             placeholder={t("Poznámka pro správce (nepovinné)", "Note for the admins (optional)")}
+            aria-label={t("Poznámka pro správce (nepovinné)", "Note for the admins (optional)")}
             value={note}
             maxLength={1000}
             onChange={(e) => setNote(e.target.value)}

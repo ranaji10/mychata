@@ -14,19 +14,17 @@ tab: Now
 
 26 Oct 2026 · Tuik
 
-**Live:** `f1b1bd6` (T-046 with PR #75), published 26 Oct 00:28 UTC, site check passed, tagged `release-2026-10-26`. **Waiting on you:** merge PR #77 (T-047: onboarding in a second tab, requests refresh, Czech dates) and publish (N-25); one booking as Test 2 (N-10); the DNS records and `podpora@` inbox at Hostinger (N-5); D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `a4f45ea` (PR #77, T-047), checked signed in 26 Oct evening. **Waiting on you:** merge PR #78 (T-048: no React error for English users, AI limits in one file) and publish, plus the two tags (N-26); the GA key file for live privacy numbers (N-20); the DNS records and `podpora@` inbox at Hostinger (N-5); D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-25 | **Merge PR #77 and publish**, then Claude checks it live: two tabs of a finished test account on `/onboarding` show "Nastavení je hotové"; Sign out on onboarding step 1; a new request reaches the admin's Home within 30 s; Notifications dates read 23.10.2026. Then tag | You, then Claude | To do | F-25, F-28 |
-| N-10 | **One booking as Test 2** in `Institutní chata (test)` (Test 2's password or Google sign-in isn't in Claude's browsers): it should be confirmed at once and show in Test 3's Notifications. Test 3 answered the auto-approval prompt "Yes" on 26 Oct (Claude, built-in browser). Test 2's older stay 23 Oct–1 Nov is still waiting for Test 3's decision (it predates the answer). Also left: password change via the reset link (Test 2) | You | To do |  |
+| N-26 | **Merge PR #78 and publish** (T-048, no migration, no Lovable step), then Claude re-runs the English-page check. Create two GitHub releases (the cloud session's permission check refused): release-2026-10-26b on a4f45ea (PR #77) and one for the PR #78 publish. Test 2's stay 23 Oct–1 Nov in Institutní chata (test) still waits for Test 3's decision | You, then Claude | To do | F-29 |
 | N-5 | **E-mail DNS at Hostinger** (checked 26 Oct: `notify.mychata.cz` doesn't exist, `mychata.cz` has no MX): add TXT `_lovable-email` = the `lovable_email_verify=…` value and NS `notify` → `ns3.lovable.cloud`, `ns4.lovable.cloud` (exact rows in prompt `05`); add a forwarder for `podpora@mychata.cz`; then Lovable → More → Emails → Retry setup. Then `05` → `06` → `07` (all updated 26 Oct) | You | To do | F-07, F-23, F-24, F-27 |
-| N-4 | **Public calendars of the test cottages:** Alfa switched off 26 Oct after the request test; Beta and Gama are off. `Testovací chata (Lovable)` is still on: only Lovable's test user can switch it off (one line in the next Lovable prompt) | You, Lovable | Waiting |  |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
-| N-20 | **Live privacy numbers** (D-28 yes): create a read-only Google Cloud service account, add it as Viewer in GA4, put `GA_PROPERTY_ID` and `GA_SERVICE_ACCOUNT_JSON` in Lovable's secrets. Steps in `docs/runbooks/analytics.md`. Until then the page shows the snapshot | You | To do |  |
-| N-23 | **GA key events still to star:** `sign_up`, `booking_request_sent`, `invitation_accepted` (`booking_created` starred 26 Oct). The scheduled GA task stars them once GA lists them (a day after the first one arrives with analytics consent) | Claude (scheduled) | Waiting |  |
+| N-20 | **Live privacy numbers** (D-28 yes). Done 26 Oct by Claude in Chrome: project mychata-analytics, Data API on, service account ga-reader as Viewer in GA4, `GA_PROPERTY_ID` saved in Lovable → More → Secrets. Left for you: ga-reader → Keys → Add key → JSON, paste the whole file as `GA_SERVICE_ACCOUNT_JSON`, delete the download, publish. Steps in `docs/runbooks/analytics.md`. Until then the page shows the snapshot | You | Doing |  |
+| N-23 | **GA key events still to star:** `sign_up`, `booking_request_sent`, `invitation_accepted` (`booking_created` starred 26 Oct). Checked 26 Oct evening: none has arrived yet, and GA can't star an event before it does. The scheduled task (27 Oct 09:47 UTC) stars them if they have; its text still says N-14 | Claude (scheduled) | Waiting |  |
 
 ## Decisions waiting on you
 
@@ -54,9 +52,8 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | F-21 | Google Analytics tag diagnostics: "0 % consent rate" | Ad consent is always denied by design. 26 Oct: stream "receiving traffic", no warning in the stream details | Recheck tag diagnostics on 1 Nov | Waiting |
 | F-23 | Public-calendar requests: the 20-a-day cottage limit can be used up by throwaway accounts while "Confirm email" is off (PR #66 review) | Low; depends on F-07 | N-5 | Waiting |
 | F-24 | After sign-up, returning to the calendar when the confirmation link is opened in another browser is untested | The rest of the request flow passed 26 Oct (N-14); with "Confirm email" off there is no link to open yet | Prompt `05`, "After" step 2 | Waiting |
-| F-25 | A new booking request reached the admin's Home, and the decision the requester's calendar, only after a reload or about a minute | Fixed in PR #77 (fresh on every visit, every 30 s while visible); closes when live | N-25 | Doing |
 | F-27 | `podpora@mychata.cz` can't receive mail (no MX on `mychata.cz`), but the Help & support page and future e-mails use it | Found 26 Oct while checking N-5 | N-5 (forwarder) | Waiting |
-| F-28 | Onboarding: a tab left on step 1 after finishing in another tab would add the cottage again; someone who only requested a stay had no way out of onboarding | Found from your 26 Oct report (that account had not finished onboarding, so its tab was right). Fixed in PR #77; closes when live | N-25 | Doing |
+| F-29 | With English chosen, every page logs React error #418 and is rendered twice (the language was read from browser storage in the first render; the server sends Czech) | Found in the 26 Oct evening site check; fixed in PR #78 (checked on a local production build); closes when live | N-26 | Doing |
 
 ## How to use this doc
 

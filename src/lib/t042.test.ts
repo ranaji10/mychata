@@ -58,7 +58,7 @@ describe("auto-approved bookings in Notifications", () => {
       "Booking confirmed automatically: Petr (Chata Alfa)",
     ]);
     expect(items[0]!.title[0]).toBe("4 pobyty byly automaticky potvrzeny pro Chata Alfa");
-    expect(items[0]!.detail![1]).toBe("2026-10-18 · Petr, Jana, Eva");
+    expect(items[0]!.detail![1]).toBe("18.10.2026 · Petr, Jana, Eva");
     expect(items[0]!.to).toBe("/kalendar");
   });
 

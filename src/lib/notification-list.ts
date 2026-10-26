@@ -3,6 +3,7 @@
 // Built from data the app already reads, so nothing new has to be stored yet. Each source adds
 // items through `buildNotifications`; a new feature (bills, messages, emails) adds a field to
 // NotificationInput and a block below, and the page, the badge and the tests pick it up.
+import { fmtDate } from "@/lib/data";
 import type { Booking, ExpenseSplit, InstitutionalRequest, Member, Task } from "@/lib/data";
 
 export type NotificationKind =
@@ -197,7 +198,10 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
         tone: "action",
         at: b.created_at,
         title: [`Pobyt ke schválení: ${b.requester_name}`, `Stay to approve: ${b.requester_name}`],
-        detail: [`${b.start_date} – ${b.end_date}`, `${b.start_date} – ${b.end_date}`],
+        detail: [
+          `${fmtDate(b.start_date)} – ${fmtDate(b.end_date)}`,
+          `${fmtDate(b.start_date)} – ${fmtDate(b.end_date)}`,
+        ],
         to: "/rezervace/$id",
         params: { id: b.id },
       });
@@ -232,8 +236,11 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
               `${list.length} bookings were confirmed automatically${where ? ` for ${where}` : ""}`,
             ],
         detail: one
-          ? [`${one.start_date} – ${one.end_date}`, `${one.start_date} – ${one.end_date}`]
-          : [`${day} · ${names}`, `${day} · ${names}`],
+          ? [
+              `${fmtDate(one.start_date)} – ${fmtDate(one.end_date)}`,
+              `${fmtDate(one.start_date)} – ${fmtDate(one.end_date)}`,
+            ]
+          : [`${fmtDate(day)} · ${names}`, `${fmtDate(day)} · ${names}`],
         to: one ? "/rezervace/$id" : "/kalendar",
         params: one ? { id: one.id } : undefined,
       });
@@ -252,8 +259,8 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
               ]
             : [`Žádost hosta: ${g.guest_name}`, `Guest request: ${g.guest_name}`],
         detail: [
-          `Od ${g.start_date}. Rozhodněte na Domů.`,
-          `From ${g.start_date}. Decide on Home.`,
+          `Od ${fmtDate(g.start_date)}. Rozhodněte na Domů.`,
+          `From ${fmtDate(g.start_date)}. Decide on Home.`,
         ],
         to: "/domu",
       });
@@ -277,7 +284,7 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
               `${who} zamítl(a) žádost: ${g.guest_name}`,
               `${whoEn} declined ${g.guest_name}'s request`,
             ],
-        detail: [`Od ${g.start_date}`, `From ${g.start_date}`],
+        detail: [`Od ${fmtDate(g.start_date)}`, `From ${fmtDate(g.start_date)}`],
         to: approved ? "/kalendar" : "/domu",
       });
     }
@@ -294,7 +301,7 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
         title: [`Nová žádost: ${r.requester_name}`, `New request: ${r.requester_name}`],
         detail: r.has_conflict
           ? ["V kolizi s jiným pobytem.", "Clashes with another stay."]
-          : [`Od ${r.start_date}.`, `From ${r.start_date}.`],
+          : [`Od ${fmtDate(r.start_date)}.`, `From ${fmtDate(r.start_date)}.`],
         to: "/zadosti",
       });
     }
@@ -322,7 +329,9 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
         tone: "info",
         at: task.created_at,
         title: [`Váš úkol: ${title}`, `Your task: ${titleEn}`],
-        detail: task.due_date ? [`Termín ${task.due_date}`, `Due ${task.due_date}`] : undefined,
+        detail: task.due_date
+          ? [`Termín ${fmtDate(task.due_date)}`, `Due ${fmtDate(task.due_date)}`]
+          : undefined,
         to: "/ukoly/$id",
         params: { id: task.id },
       });

@@ -14,15 +14,15 @@ tab: Now
 
 26 Oct 2026 · Tuik
 
-**Live:** build of 25 Oct 11:06 UTC = `lovable-sync` `2ffa813` (T-045 with 0036), tagged `release-2026-10-25` on 26 Oct. **Waiting on you:** merge PR #75 (GA runbook) and PR #76 (T-046: Help & support, Enter submits, Back from Privacy, ADR-0012, content), then publish (N-24); the DNS records and `podpora@` inbox at Hostinger (N-5); D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `f1b1bd6` (T-046 with PR #75), published 26 Oct 00:28 UTC, site check passed, tagged `release-2026-10-26`. **Waiting on you:** merge PR #77 (T-047: onboarding in a second tab, requests refresh, Czech dates) and publish (N-25); one booking as Test 2 (N-10); the DNS records and `podpora@` inbox at Hostinger (N-5); D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-24 | **Merge PR #75 and PR #76, publish, check:** after `lovable-sync` catches up, publish in Lovable; Claude runs the site check (prompt `10`), checks `/pomoc` and Enter on sign-in signed in, and tags `release-2026-10-26` as a GitHub release. Lovable labels recent GitHub pushes "Build unsuccessful" (F-26): if the publish fails, tell Claude | You, then Claude | To do | F-25, F-27 |
+| N-25 | **Merge PR #77 and publish**, then Claude checks it live: two tabs of a finished test account on `/onboarding` show "Nastavení je hotové"; Sign out on onboarding step 1; a new request reaches the admin's Home within 30 s; Notifications dates read 23.10.2026. Then tag | You, then Claude | To do | F-25, F-28 |
+| N-10 | **One booking as Test 2** in `Institutní chata (test)` (Test 2's password or Google sign-in isn't in Claude's browsers): it should be confirmed at once and show in Test 3's Notifications. Test 3 answered the auto-approval prompt "Yes" on 26 Oct (Claude, built-in browser). Test 2's older stay 23 Oct–1 Nov is still waiting for Test 3's decision (it predates the answer). Also left: password change via the reset link (Test 2) | You | To do |  |
 | N-5 | **E-mail DNS at Hostinger** (checked 26 Oct: `notify.mychata.cz` doesn't exist, `mychata.cz` has no MX): add TXT `_lovable-email` = the `lovable_email_verify=…` value and NS `notify` → `ns3.lovable.cloud`, `ns4.lovable.cloud` (exact rows in prompt `05`); add a forwarder for `podpora@mychata.cz`; then Lovable → More → Emails → Retry setup. Then `05` → `06` → `07` (all updated 26 Oct) | You | To do | F-07, F-23, F-24, F-27 |
-| N-10 | **Remaining T-042 checks** (passwords are yours): as Test 3, answer the auto-approval prompt in Members & permissions; then as Test 2 in `Institutní chata (test)` a booking is confirmed at once and shows in Test 3's Notifications (Test 2 still has a pending stay 23 Oct–1 Nov there); password change via the reset link (Test 2). Test 1's rename done 26 Oct (`Rodina Alfa (test)`) | You | To do |  |
 | N-4 | **Public calendars of the test cottages:** Alfa switched off 26 Oct after the request test; Beta and Gama are off. `Testovací chata (Lovable)` is still on: only Lovable's test user can switch it off (one line in the next Lovable prompt) | You, Lovable | Waiting |  |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
 | N-20 | **Live privacy numbers** (D-28 yes): create a read-only Google Cloud service account, add it as Viewer in GA4, put `GA_PROPERTY_ID` and `GA_SERVICE_ACCOUNT_JSON` in Lovable's secrets. Steps in `docs/runbooks/analytics.md`. Until then the page shows the snapshot | You | To do |  |
@@ -54,9 +54,9 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | F-21 | Google Analytics tag diagnostics: "0 % consent rate" | Ad consent is always denied by design. 26 Oct: stream "receiving traffic", no warning in the stream details | Recheck tag diagnostics on 1 Nov | Waiting |
 | F-23 | Public-calendar requests: the 20-a-day cottage limit can be used up by throwaway accounts while "Confirm email" is off (PR #66 review) | Low; depends on F-07 | N-5 | Waiting |
 | F-24 | After sign-up, returning to the calendar when the confirmation link is opened in another browser is untested | The rest of the request flow passed 26 Oct (N-14); with "Confirm email" off there is no link to open yet | Prompt `05`, "After" step 2 | Waiting |
-| F-25 | A new booking request shows on the admin's Home, and the decision on the requester's calendar, only after a reload or about a minute (offline-first cache, 60 s stale time) | Found in the 26 Oct two-person check; nothing is lost | A small code task: refetch those two lists on focus and every 30 s | To do |
-| F-26 | Lovable shows "Build unsuccessful / Preview is out of date" on recent GitHub pushes, even docs-only ones | The 25 Oct publish of the same code worked, so it may be Lovable's preview only | Watch at the N-24 publish | Waiting |
-| F-27 | `podpora@mychata.cz` can't receive mail (no MX on `mychata.cz`), but the new Help & support page and future e-mails use it | Found 26 Oct while checking N-5 | N-5 (forwarder) | Waiting |
+| F-25 | A new booking request reached the admin's Home, and the decision the requester's calendar, only after a reload or about a minute | Fixed in PR #77 (fresh on every visit, every 30 s while visible); closes when live | N-25 | Doing |
+| F-27 | `podpora@mychata.cz` can't receive mail (no MX on `mychata.cz`), but the Help & support page and future e-mails use it | Found 26 Oct while checking N-5 | N-5 (forwarder) | Waiting |
+| F-28 | Onboarding: a tab left on step 1 after finishing in another tab would add the cottage again; someone who only requested a stay had no way out of onboarding | Found from your 26 Oct report (that account had not finished onboarding, so its tab was right). Fixed in PR #77; closes when live | N-25 | Doing |
 
 ## How to use this doc
 

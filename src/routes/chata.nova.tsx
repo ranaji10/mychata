@@ -81,7 +81,7 @@ function AddPropertyPage() {
               `Only an admin can add cottages to "${account?.name ?? ""}". Ask an admin, or create your own account for your cottage.`,
             )}
           </p>
-          <Link to="/onboarding" className="btn-primary w-full">
+          <Link to="/onboarding" search={{ fresh: true }} className="btn-primary w-full">
             {t("Založit vlastní účet", "Create my own account")}
           </Link>
         </div>

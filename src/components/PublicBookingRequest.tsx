@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtDate, fmtDateTime, pickRange, type Booking, type DateRange } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
+import { LIVE_REFRESH_MS } from "@/lib/guest-requests";
 import {
   RETURN_CALENDAR_META,
   clearPendingCalendar,
@@ -82,6 +83,10 @@ export function PublicBookingRequest({
   const mine = useQuery({
     queryKey: ["my-public-requests", token, user?.id],
     enabled: !!user,
+    // The admin's decision shows without a reload (F-25): fresh on every visit and every 30 s
+    // while the tab is in front.
+    staleTime: 0,
+    refetchInterval: LIVE_REFRESH_MS,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("my_public_booking_requests", { _token: token });
       if (error) throw error;

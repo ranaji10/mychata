@@ -59,7 +59,7 @@ interface ChataDraft {
 
 function OnboardingPage() {
   const { t, lang } = useLang();
-  const { user, currentMember, profile } = useAccount();
+  const { user, currentMember, profile, memberships } = useAccount();
   const navigate = useNavigate();
   const search = Route.useSearch();
   // After the cottage is made: offer a password to Google sign-ups (bug 4a) and show the
@@ -137,10 +137,47 @@ function OnboardingPage() {
     t("Pravidla domu", "House rules"),
   ];
 
+  // Set up already (26 Oct edge case): someone who belongs to an account and didn't ask for a
+  // new one ("fresh" or an organisation) has nothing to do here. A second tab left on step 1
+  // after finishing in another tab would otherwise add the cottage a second time.
+  const [setUpElsewhere, setSetUpElsewhere] = useState(false);
+  // Set when this tab created the account, so the guard never shows on the way to Home
+  // (PR #77 review: it could flash while Home loaded, offering a second account).
+  const [finished, setFinished] = useState(false);
+  const alreadySetUp = (setUpElsewhere || memberships.length > 0) && !search.fresh && !search.kind;
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("[onboarding] sign out", error);
+      toast.error(t("Odhlášení se nepodařilo.", "Could not sign out."));
+      return;
+    }
+    queryClient.clear();
+    try {
+      localStorage.removeItem("mychata.offline-cache");
+    } catch {
+      /* storage blocked: nothing was saved either */
+    }
+    navigate({ to: "/auth", replace: true });
+  };
+
   const finish = async () => {
     if (!user) return;
     setBusy(true);
     try {
+      if (!search.fresh && !search.kind) {
+        const { data: existing, error: existingError } = await supabase
+          .from("members")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1);
+        if (existingError) throw existingError;
+        if (existing?.length) {
+          setSetUpElsewhere(true);
+          return;
+        }
+      }
       // The name goes on the profile first: the database uses it for the new member row.
       const { error: nameError } = await supabase
         .from("profiles")
@@ -273,6 +310,7 @@ function OnboardingPage() {
       }
       queryClient.clear();
       toast.success(t("Vítejte! Vaše chata je připravena.", "Welcome! Your cottage is ready."));
+      setFinished(true);
       if (linkEmail || !hasPassword(user)) setDone({ linkEmail, linkUrl });
       else navigate({ to: "/domu", replace: true });
     } catch (e) {
@@ -308,6 +346,52 @@ function OnboardingPage() {
           ? (chatas.every((c) => !c.rooms || Number(c.rooms) <= 3) || overlapAllowed !== null) &&
             (type !== "INSTITUTIONAL" || addToCurrentAccount || autoApprove !== null)
           : true;
+
+  if (alreadySetUp && !done && !busy && !finished) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-[420px] flex-col page-fresh px-5 py-5 md:max-w-[560px] md:py-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
+              <Home className="size-6" />
+            </span>
+            <span className="text-lg font-extrabold">My Chata</span>
+          </div>
+          <LanguageToggle />
+        </div>
+        <section className="card mt-10 space-y-3 p-5">
+          <h1 className="text-[28px] font-extrabold leading-[1.15]">
+            {t("Nastavení je hotové", "You're all set up")}
+          </h1>
+          <p className="text-[16px] text-muted-foreground">
+            {t(
+              "Váš účet už existuje, třeba jste nastavení dokončili v jiném okně. Pokračujte domů.",
+              "Your account already exists; maybe you finished setting up in another window. Continue to Home.",
+            )}
+          </p>
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-primary min-h-[56px] w-full text-[17px]"
+            onClick={() => navigate({ to: "/domu", replace: true })}
+          >
+            {t("Přejít domů", "Go to Home")}
+          </Button>
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary w-full"
+            onClick={() => {
+              setSetUpElsewhere(false);
+              navigate({ to: "/onboarding", search: { fresh: true }, replace: true });
+            }}
+          >
+            {t("Založit další, samostatný účet", "Create another, separate account")}
+          </Button>
+        </section>
+      </main>
+    );
+  }
 
   if (done) {
     return (
@@ -681,8 +765,27 @@ function OnboardingPage() {
           >
             {t("Zpět", "Back")}
           </Button>
+        ) : memberships.length > 0 ? (
+          // Came from My profile or Add a cottage for a new account: a way back (26 Oct).
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary"
+            onClick={() => navigate({ to: "/profil" })}
+          >
+            {t("Zrušit", "Cancel")}
+          </Button>
         ) : (
-          <span />
+          // Someone who only came to ask for a stay on a public calendar had no way out of
+          // onboarding (26 Oct): they can sign out instead.
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary"
+            onClick={() => void signOut()}
+          >
+            {t("Odhlásit se", "Sign out")}
+          </Button>
         )}
         {step < steps.length - 1 ? (
           <Button

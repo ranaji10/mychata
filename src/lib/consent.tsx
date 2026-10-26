@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Cookie } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Cookie, X } from "lucide-react";
 import {
   createContext,
   useContext,
@@ -29,6 +30,12 @@ interface ConsentState {
   choice: ConsentChoice | null;
   decide: (analytics: boolean) => void;
   reopen: () => void;
+  /** Close a reopened banner and keep the earlier choice. Only possible when one exists. */
+  dismiss: () => void;
+  /** The banner was reopened over an earlier choice, so it can be closed without choosing. */
+  canDismiss: boolean;
+  /** The choice in force: the earlier one while a reopened banner waits for a new one. */
+  current: ConsentChoice | null;
 }
 
 const ConsentContext = createContext<ConsentState | null>(null);
@@ -48,6 +55,9 @@ function readChoice(): ConsentChoice | null {
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
   const [choice, setChoice] = useState<ConsentChoice | null>(null);
+  // The choice in force while the banner is reopened from Privacy & cookies (26 Oct request:
+  // the reopened banner had no way to close it).
+  const [previous, setPrevious] = useState<ConsentChoice | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -72,6 +82,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
       choice,
       decide: (analytics) => {
         const next = { analytics, version: CONSENT_VERSION, at: Date.now() };
+        setPrevious(null);
         setChoice(next);
         try {
           localStorage.setItem(LS_KEY, JSON.stringify(next));
@@ -87,9 +98,19 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
             if (error) console.error("consent_log insert failed", error);
           });
       },
-      reopen: () => setChoice(null),
+      reopen: () => {
+        if (choice) setPrevious(choice);
+        setChoice(null);
+      },
+      dismiss: () => {
+        if (!previous) return;
+        setChoice(previous);
+        setPrevious(null);
+      },
+      canDismiss: !choice && !!previous,
+      current: choice ?? previous,
     }),
-    [choice],
+    [choice, previous],
   );
 
   if (!ready) return <>{children}</>;
@@ -103,12 +124,15 @@ export function useConsent(): ConsentState {
       choice: { analytics: false, version: CONSENT_VERSION, at: 0 },
       decide: () => {},
       reopen: () => {},
+      dismiss: () => {},
+      canDismiss: false,
+      current: { analytics: false, version: CONSENT_VERSION, at: 0 },
     };
   return ctx;
 }
 
 export function ConsentBanner() {
-  const { choice, decide } = useConsent();
+  const { choice, decide, canDismiss, dismiss } = useConsent();
   const { t } = useLang();
   const [customising, setCustomising] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -131,6 +155,11 @@ export function ConsentBanner() {
     };
   }, [choice]);
 
+  // A reopened banner starts on the short view again.
+  useEffect(() => {
+    if (choice) setCustomising(false);
+  }, [choice]);
+
   if (choice) return null;
 
   return (
@@ -148,9 +177,19 @@ export function ConsentBanner() {
           <div className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary md:size-11">
             <Cookie className="size-5 md:size-6" />
           </div>
-          <h2 className="text-[16px] font-bold md:text-lg">
+          <h2 className="flex-1 text-[16px] font-bold md:text-lg">
             {t("Sušenky? Jen ty nejlepší.", "Cookies? Only the good kind.")}
           </h2>
+          {canDismiss && (
+            <button
+              type="button"
+              onClick={dismiss}
+              aria-label={t("Zavřít a ponechat volbu", "Close and keep my choice")}
+              className="-mr-1 grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary"
+            >
+              <X className="size-5" />
+            </button>
+          )}
         </div>
         <p className="mt-2 text-[14px] leading-snug text-muted-foreground md:mt-3 md:text-[16px] md:leading-relaxed">
           <span className="md:hidden">
@@ -165,9 +204,10 @@ export function ConsentBanner() {
               "We use essential cookies to keep the cottage running. Allow analytics too and you help us improve it. No ads, no selling data.",
             )}
           </span>{" "}
-          <a href="/soukromi" className="font-semibold text-primary underline underline-offset-2">
+          {/* A router link, so Back on the privacy page returns here (26 Oct request). */}
+          <Link to="/soukromi" className="font-semibold text-primary underline underline-offset-2">
             {t("Co z nich vidíme", "What we see")}
-          </a>
+          </Link>
         </p>
         {customising ? (
           <div className="mt-3 space-y-2">

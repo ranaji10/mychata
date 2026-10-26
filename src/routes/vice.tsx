@@ -8,6 +8,7 @@ import {
   Home,
   LayoutGrid,
   Link2,
+  LifeBuoy,
   Link2Off,
   LogOut,
   Shield,
@@ -344,6 +345,11 @@ function MorePage() {
       </section>
 
       <section className="card mt-4 divide-y divide-divider overflow-hidden px-4 py-1">
+        <SettingsRow
+          to="/pomoc"
+          icon={LifeBuoy}
+          label={t("Nápověda a podpora", "Help & support")}
+        />
         <SettingsRow
           to="/soukromi"
           icon={Shield}

@@ -1,6 +1,6 @@
 # House manual search (RAG)
 
-Stage 1, rebuilt on 2026-09-25 (ADR-0004); answers without embeddings since T-021 (ADR-0012, proposed 25 Oct 2026). Stages 2–4 are planned.
+Stage 1, rebuilt on 2026-09-25 (ADR-0004); answers without embeddings since T-021 (ADR-0012, accepted 26 Oct 2026). Stages 2–4 are planned.
 
 ## Answers now (T-021, 29 Sep 2026)
 
@@ -8,7 +8,7 @@ Stage 1, rebuilt on 2026-09-25 (ADR-0004); answers without embeddings since T-02
 
 ## How it works (vector index, kept for T-020)
 
-1. An admin saves a manual section → `rebuildManualChunks` (server function) embeds each language version whose text hash changed (`gemini-embedding-001`, 768 dims, validated) and upserts one row per (section, language) into `manual_chunks`. Deleted sections' chunks are removed. Failures are counted and logged, never silent.
+1. Until 26 Oct 2026 (ADR-0012), saving a manual section called `rebuildManualChunks`; it no longer does, and `manual_chunks` keeps whatever was stored. The function (kept for T-020) embeds each language version whose text hash changed (`gemini-embedding-001`, 768 dims, validated) and upserts one row per (section, language) into `manual_chunks`. Deleted sections' chunks are removed. Failures are counted and logged, never silent.
 2. A member asks → `askManual` checks the `ai_manual` switch and a 30/day cap, embeds the question, calls `search_manual()`.
 3. `search_manual()` merges vector similarity and full-text (`simple` config + `unaccent`) by reciprocal rank fusion. It runs as SECURITY INVOKER, so RLS limits it to the active account.
 4. Nothing found → "no answer" instead of guessing. No AI key → the best excerpt is shown.

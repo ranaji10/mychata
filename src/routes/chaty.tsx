@@ -20,7 +20,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import type { Property } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
-import { rebuildManualChunks } from "@/lib/manual-qa.functions";
 import { useMyCottages } from "@/lib/my-cottages";
 
 export const Route = createFileRoute("/chaty")({
@@ -287,9 +286,7 @@ function CottageCard({
         queryClient.invalidateQueries({ queryKey: ["house-rules"] }),
         queryClient.invalidateQueries({ queryKey: ["manual-sections", property.id] }),
       ]);
-      void rebuildManualChunks({ data: { propertyId: property.id } }).catch((e: unknown) =>
-        console.error("[chaty] manual chunks", e),
-      );
+      // No embeddings on save any more: answers read the whole manual (ADR-0012).
       toast.success(t("Pravidla domu uložena.", "House rules saved."));
     },
     onError: (error) => {

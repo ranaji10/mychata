@@ -25,7 +25,8 @@ import {
 //   the caller may see, because every read uses the caller's own session.
 // - readDocumentText: reads an uploaded file once (Word, text; PDFs and photos through the
 //   AI gateway) and stores the text on the document row.
-// - rebuildManualChunks: keeps manual_chunks current for the vector search planned in T-020.
+// - rebuildManualChunks: fills manual_chunks for the vector search planned in T-020. Not called
+//   on save since ADR-0012 (26 Oct 2026); kept until T-020 decides its future.
 // - Every database error is checked; nothing fails silently.
 
 const EMBED_MODEL = "google/gemini-embedding-001";
@@ -491,6 +492,19 @@ export const askManual = createServerFn({ method: "POST" })
     if (!apiKey) return excerpt();
 
     const context_ = buildContext(sources, retrievalQuery(data.question, data.earlier));
+    // ADR-0012's measure: how close real cottages get to the budget. Sizes only, no text.
+    const totalChars = sources.reduce((n, s) => n + s.title.length + s.text.length, 0);
+    console.info("[askManual] context size", {
+      propertyId: data.propertyId,
+      totalChars,
+      sources: sources.length,
+      sent: context_.length,
+      overBudget: context_.length < sources.length,
+      // A source longer than its own limit is cut even when everything else fits.
+      truncated: context_.some(
+        (s) => s.text.length < (sources.find((o) => o.key === s.key)?.text.length ?? 0),
+      ),
+    });
     const numbered = context_
       .map(
         (s, i) =>

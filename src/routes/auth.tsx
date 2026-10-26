@@ -423,66 +423,77 @@ function AuthPage() {
                 )}
               </p>
             )}
-            {mode === "institute" && (
-              <input
-                className="field w-full"
-                placeholder={t("Název organizace", "Organisation name")}
-                value={organisation}
-                onChange={(e) => setOrganisation(e.target.value)}
-                autoComplete="organization"
-              />
-            )}
-            {signingUp && (
-              <input
-                className="field w-full"
-                placeholder={t("Vaše jméno a příjmení", "Your full name")}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-              />
-            )}
-            <input
-              className="field w-full"
-              type="email"
-              placeholder={
-                mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
-              }
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              aria-invalid={institutePublicEmail}
-            />
-            {institutePublicEmail && (
-              <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
-                {t(
-                  "Pro instituci použijte pracovní e-mail, ne veřejnou schránku (Gmail, Seznam…). Pro rodinu zvolte „Registrovat se e-mailem“.",
-                  "For an institution, use a work email, not a public mailbox (Gmail, Outlook…). For a family, choose “Sign up with email”.",
-                )}
-              </p>
-            )}
-            <PasswordInput
-              placeholder={
-                signingUp
-                  ? t("Heslo (alespoň 8 znaků)", "Password (at least 8 characters)")
-                  : t("Heslo", "Password")
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={signingUp ? "new-password" : "current-password"}
-            />
-            <Button
-              variant="fresh"
-              size="fresh"
-              className="btn-primary min-h-[56px] w-full text-[17px]"
-              disabled={!canSubmit}
-              onClick={submit}
+            {/* A form, so Enter in any field submits (26 Oct request). Only the submit button
+                sits inside it; the other buttons stay outside so Enter never presses them. */}
+            <form
+              className="space-y-3"
+              noValidate
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (canSubmit) void submit();
+              }}
             >
-              {busy
-                ? t("Pracuji…", "Working…")
-                : signingUp
-                  ? t("Vytvořit účet", "Create account")
-                  : t("Přihlásit se", "Sign in")}
-            </Button>
+              {mode === "institute" && (
+                <input
+                  className="field w-full"
+                  placeholder={t("Název organizace", "Organisation name")}
+                  value={organisation}
+                  onChange={(e) => setOrganisation(e.target.value)}
+                  autoComplete="organization"
+                />
+              )}
+              {signingUp && (
+                <input
+                  className="field w-full"
+                  placeholder={t("Vaše jméno a příjmení", "Your full name")}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                />
+              )}
+              <input
+                className="field w-full"
+                type="email"
+                placeholder={
+                  mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
+                }
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                aria-invalid={institutePublicEmail}
+              />
+              {institutePublicEmail && (
+                <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
+                  {t(
+                    "Pro instituci použijte pracovní e-mail, ne veřejnou schránku (Gmail, Seznam…). Pro rodinu zvolte „Registrovat se e-mailem“.",
+                    "For an institution, use a work email, not a public mailbox (Gmail, Outlook…). For a family, choose “Sign up with email”.",
+                  )}
+                </p>
+              )}
+              <PasswordInput
+                placeholder={
+                  signingUp
+                    ? t("Heslo (alespoň 8 znaků)", "Password (at least 8 characters)")
+                    : t("Heslo", "Password")
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete={signingUp ? "new-password" : "current-password"}
+              />
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-primary min-h-[56px] w-full text-[17px]"
+                type="submit"
+                disabled={!canSubmit}
+              >
+                {busy
+                  ? t("Pracuji…", "Working…")
+                  : signingUp
+                    ? t("Vytvořit účet", "Create account")
+                    : t("Přihlásit se", "Sign in")}
+              </Button>
+            </form>
             {canResend && (
               <Button
                 variant="fresh"

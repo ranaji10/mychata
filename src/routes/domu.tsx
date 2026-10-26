@@ -585,6 +585,8 @@ function HomePage() {
                   {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests}{" "}
                   {guestsLabel(g.guests)} · {g.guest_email}
                 </p>
+                {/* The requester's note (26 Oct check: admins saw it only after approving). */}
+                {g.note && <p className="mt-1 text-[16px] italic text-foreground">„{g.note}“</p>}
                 {/* When and where it came from (T-043): the public calendar needs an account. */}
                 <p className="text-[14px] text-muted-foreground">
                   {(g as { source?: string }).source === "public_calendar"

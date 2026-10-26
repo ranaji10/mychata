@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   FileText,
   Home,
+  LifeBuoy,
   Shield,
   User,
   Users,
@@ -40,6 +41,7 @@ export const SETTINGS_LINKS: SettingsLink[] = [
     children: COTTAGE_PAGES,
   },
   { to: "/predani", label: ["Odjezdové úkoly", "Checkout Tasks"], icon: ClipboardCheck },
+  { to: "/pomoc", label: ["Nápověda a podpora", "Help & support"], icon: LifeBuoy },
   { to: "/soukromi", label: ["Soukromí a cookies", "Privacy & cookies"], icon: Shield },
 ];
 

@@ -120,22 +120,32 @@ function ResetPasswordPage() {
               "We'll email you a link. After clicking it you choose a new password. This also works for accounts made with Google that have no password yet.",
             )}
           </p>
-          <input
-            className="field w-full"
-            type="email"
-            placeholder={t("E-mail", "Email")}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Button
-            variant="fresh"
-            size="fresh"
-            className="btn-primary w-full"
-            disabled={busy || !email}
-            onClick={send}
+          <form
+            className="space-y-3"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!busy && email) void send();
+            }}
           >
-            {t("Poslat odkaz", "Send link")}
-          </Button>
+            <input
+              className="field w-full"
+              type="email"
+              placeholder={t("E-mail", "Email")}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
+            <Button
+              variant="fresh"
+              size="fresh"
+              className="btn-primary w-full"
+              type="submit"
+              disabled={busy || !email}
+            >
+              {t("Poslat odkaz", "Send link")}
+            </Button>
+          </form>
         </div>
       )}
       {!choosing && (

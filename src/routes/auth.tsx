@@ -408,13 +408,14 @@ function AuthPage() {
           </div>
         ) : (
           <div className="mt-6 space-y-3">
-            <h2 className="text-lg font-bold">
-              {mode === "institute"
-                ? t("Registrace instituce", "Sign up as an institution")
-                : isSignUp
+            {/* The page heading already says "Registrace instituce" for institutions. */}
+            {mode !== "institute" && (
+              <h2 className="text-lg font-bold">
+                {isSignUp
                   ? t("Registrace e-mailem", "Sign up with email")
                   : t("Přihlášení e-mailem", "Sign in with email")}
-            </h2>
+              </h2>
+            )}
             {mode === "institute" && (
               <p className="text-[16px] text-muted-foreground">
                 {t(
@@ -437,6 +438,7 @@ function AuthPage() {
                 <input
                   className="field w-full"
                   placeholder={t("Název organizace", "Organisation name")}
+                  aria-label={t("Název organizace", "Organisation name")}
                   value={organisation}
                   onChange={(e) => setOrganisation(e.target.value)}
                   autoComplete="organization"
@@ -446,6 +448,7 @@ function AuthPage() {
                 <input
                   className="field w-full"
                   placeholder={t("Vaše jméno a příjmení", "Your full name")}
+                  aria-label={t("Vaše jméno a příjmení", "Your full name")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoComplete="name"
@@ -461,6 +464,9 @@ function AuthPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 aria-invalid={institutePublicEmail}
+                aria-label={
+                  mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
+                }
               />
               {institutePublicEmail && (
                 <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
@@ -479,6 +485,7 @@ function AuthPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete={signingUp ? "new-password" : "current-password"}
+                aria-label={t("Heslo", "Password")}
               />
               <Button
                 variant="fresh"

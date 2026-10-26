@@ -168,6 +168,7 @@ export function InstitutionSetup() {
               <input
                 className="field w-full"
                 placeholder={t("Název organizace", "Organisation name")}
+                aria-label={t("Název organizace", "Organisation name")}
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 autoComplete="organization"
@@ -208,6 +209,7 @@ export function InstitutionSetup() {
             className="field w-full"
             type="email"
             placeholder={t("Pracovní e-mail instituce", "Institution work email")}
+            aria-label={t("Pracovní e-mail instituce", "Institution work email")}
             value={instEmail}
             onChange={(e) => setInstEmail(e.target.value)}
             autoComplete="email"
@@ -224,6 +226,7 @@ export function InstitutionSetup() {
           <input
             className="field w-full"
             placeholder={t("Název organizace", "Organisation name")}
+            aria-label={t("Název organizace", "Organisation name")}
             value={orgName}
             onChange={(e) => setOrgName(e.target.value)}
             autoComplete="organization"

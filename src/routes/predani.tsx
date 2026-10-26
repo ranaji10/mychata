@@ -193,7 +193,7 @@ function HandoverPage() {
 
       <section className="card p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold">{t("Checklist", "Checklist")}</h3>
+          <h3 className="text-lg font-bold">{t("Kontrolní seznam", "Checklist")}</h3>
           <span className="text-[16px] font-bold text-muted-foreground">
             {doneCount}/{items.length}
           </span>

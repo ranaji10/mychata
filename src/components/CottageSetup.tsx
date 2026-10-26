@@ -157,6 +157,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
             <input
               className="field w-full"
               placeholder={t("Adresa", "Address")}
+              aria-label={t("Adresa", "Address")}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
@@ -165,6 +166,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
             <input
               className="field w-full"
               placeholder={t("Město", "City")}
+              aria-label={t("Město", "City")}
               value={city}
               onChange={(e) => setCity(e.target.value)}
             />
@@ -175,6 +177,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               type="number"
               min={1}
               placeholder={t("Počet pokojů", "Number of rooms")}
+              aria-label={t("Počet pokojů", "Number of rooms")}
               value={rooms}
               onChange={(e) => setRooms(e.target.value)}
             />

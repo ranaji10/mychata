@@ -18,14 +18,16 @@ export const translateTaskText = createServerFn({ method: "POST" })
 
     // Kill switch and per-user daily cap (migration 0015). On refusal the task keeps its
     // original wording, which the UI already handles as "translation unavailable".
-    const { data: enabled } = await context.supabase.rpc("feature_enabled", {
+    const { data: enabled, error: flagError } = await context.supabase.rpc("feature_enabled", {
       _key: "ai_translate",
     });
+    if (flagError) console.error("[translate] feature_enabled", flagError.message);
     if (!enabled) return { translation: data.text };
-    const { data: allowed } = await context.supabase.rpc("bump_usage", {
+    const { data: allowed, error: usageError } = await context.supabase.rpc("bump_usage", {
       _kind: "ai_translate",
       _daily_limit: AI_DAILY_LIMITS.taskTranslations,
     });
+    if (usageError) console.error("[translate] bump_usage", usageError.message);
     if (!allowed) return { translation: data.text };
 
     let response: Response;

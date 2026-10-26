@@ -132,6 +132,7 @@ function ResetPasswordPage() {
               className="field w-full"
               type="email"
               placeholder={t("E-mail", "Email")}
+              aria-label={t("E-mail", "Email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"

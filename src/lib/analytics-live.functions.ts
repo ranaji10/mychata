@@ -134,10 +134,48 @@ const PAGE: Record<string, [string, string]> = {
   "/auth": ["Přihlášení", "Sign-in"],
   "/domu": ["Domů", "Home"],
   "/kalendar": ["Kalendář", "Calendar"],
+  "/rezervace": ["Pobyty", "Stays"],
   "/vydaje": ["Výdaje", "Expenses"],
+  "/upozorneni": ["Upozornění", "Notifications"],
+  "/vice": ["Nastavení", "Settings"],
+  "/profil": ["Můj profil", "My profile"],
+  "/clenove": ["Členové", "Members"],
+  "/chaty": ["Spravovat chaty", "Manage cottages"],
+  "/chata": ["Přidat chatu", "Add a cottage"],
+  "/fotky": ["Fotky", "Photos"],
+  "/manual": ["Manuál", "Manual"],
+  "/dokumenty": ["Dokumenty", "Documents"],
+  "/ukoly": ["Údržba", "Maintenance"],
+  "/predani": ["Odjezdové úkoly", "Checkout tasks"],
+  "/zadosti": ["Žádosti", "Requests"],
+  "/schvalovani": ["Ke schválení", "Approvals"],
+  "/export": ["Export", "Export"],
+  "/pomoc": ["Nápověda", "Help"],
   "/soukromi": ["Soukromí", "Privacy"],
   "/onboarding": ["Založení účtu", "Account set-up"],
+  "/reset-password": ["Obnovení hesla", "Reset password"],
+  "/verejne": ["Veřejné odkazy", "Public links"],
+  "/host": ["Odkaz pro hosty", "Guest link"],
+  "/pozvanka": ["Pozvánka", "Invitation"],
 };
+
+/** A page's name on the privacy page; anything unnamed is "Other", never its raw path. */
+export function pageLabel(path: string): [string, string] {
+  return PAGE[path] ?? ["Ostatní", "Other"];
+}
+
+/** Rows that end up with the same label (several "Other") become one. Exported for tests. */
+export function mergeShares(rows: ShareRow[]): ShareRow[] {
+  const merged: ShareRow[] = [];
+  for (const row of rows) {
+    const same = merged.find((m) => m.label[1] === row.label[1]);
+    if (same) same.pct += row.pct;
+    else merged.push({ ...row, label: [...row.label] as [string, string] });
+  }
+  const other = merged.findIndex((m) => m.label[1] === "Other");
+  if (other >= 0) merged.push(...merged.splice(other, 1));
+  return merged;
+}
 
 async function load(): Promise<AnalyticsSnapshot | null> {
   const property = process.env["GA_PROPERTY_ID"];
@@ -198,7 +236,7 @@ async function load(): Promise<AnalyticsSnapshot | null> {
     devices: toShares(devices, (v) => DEVICE[v] ?? [v, v], 3),
     countries: toShares(countries, (v) => COUNTRY[v] ?? [v, v]),
     browsers: toShares(browsers, (v) => [v, v]),
-    pages: toShares(pageRows, (v) => PAGE[v] ?? [v, v], 6),
+    pages: mergeShares(toShares(pageRows, pageLabel, 6)),
   };
 }
 

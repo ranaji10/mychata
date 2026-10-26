@@ -503,6 +503,7 @@ function OnboardingPage() {
               <input
                 className="field mt-1 w-full"
                 placeholder={t("Jméno a příjmení", "First and last name")}
+                aria-label={t("Jméno a příjmení", "First and last name")}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 autoComplete="name"
@@ -581,6 +582,7 @@ function OnboardingPage() {
                 <input
                   className="field w-full"
                   placeholder={t("Název chaty", "Cottage name")}
+                  aria-label={t("Název chaty", "Cottage name")}
                   value={c.name}
                   onChange={(e) =>
                     setChatas(chatas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
@@ -589,6 +591,7 @@ function OnboardingPage() {
                 <input
                   className="field w-full"
                   placeholder={t("Adresa", "Address")}
+                  aria-label={t("Adresa", "Address")}
                   value={c.address}
                   onChange={(e) =>
                     setChatas(
@@ -600,6 +603,7 @@ function OnboardingPage() {
                   <input
                     className="field"
                     placeholder={t("Město", "City")}
+                    aria-label={t("Město", "City")}
                     value={c.city}
                     onChange={(e) =>
                       setChatas(
@@ -612,6 +616,7 @@ function OnboardingPage() {
                     type="number"
                     min={1}
                     placeholder={t("Pokoje", "Rooms")}
+                    aria-label={t("Pokoje", "Rooms")}
                     value={c.rooms}
                     onChange={(e) =>
                       setChatas(

@@ -113,8 +113,8 @@ function ApprovalsPage() {
       <PageHeader
         title={t("Ke schválení", "Approvals")}
         subtitle={t(
-          "Rodinné rezervace čekající na vaše rozhodnutí.",
-          "Family bookings awaiting your decision.",
+          "Rezervace členů, které čekají na vaše rozhodnutí.",
+          "Members' bookings awaiting your decision.",
         )}
       />
 

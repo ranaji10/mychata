@@ -263,55 +263,69 @@ function ManualPage() {
             className="w-full max-w-[400px] max-h-[90vh] space-y-3 overflow-auto rounded-[28px] bg-card p-5 shadow-2xl"
           >
             <h2 className="text-xl font-bold">{t("Nová sekce", "New section")}</h2>
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="field"
-            >
-              {MANUAL_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {manualCategoryLabel(category, lang)}
+            <label className="block">
+              <span className="label-text">{t("Kategorie", "Category")}</span>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="field w-full"
+              >
+                {MANUAL_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {manualCategoryLabel(category, lang)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="label-text">{t("Název česky", "Title in Czech")}</span>
+              <input
+                required
+                value={form.titleCs}
+                onChange={(e) => setForm({ ...form, titleCs: e.target.value })}
+                className="field w-full"
+              />
+            </label>
+            <label className="block">
+              <span className="label-text">{t("Obsah česky", "Content in Czech")}</span>
+              <textarea
+                required
+                value={form.contentCs}
+                onChange={(e) => setForm({ ...form, contentCs: e.target.value })}
+                className="field w-full min-h-24"
+              />
+            </label>
+            <label className="block">
+              <span className="label-text">{t("Název anglicky", "Title in English")}</span>
+              <input
+                required
+                value={form.titleEn}
+                onChange={(e) => setForm({ ...form, titleEn: e.target.value })}
+                className="field w-full"
+              />
+            </label>
+            <label className="block">
+              <span className="label-text">{t("Obsah anglicky", "Content in English")}</span>
+              <textarea
+                required
+                value={form.contentEn}
+                onChange={(e) => setForm({ ...form, contentEn: e.target.value })}
+                className="field w-full min-h-24"
+              />
+            </label>
+            <label className="block">
+              <span className="label-text">{t("Kdo sekci uvidí", "Who can see it")}</span>
+              <select
+                value={form.visibility}
+                onChange={(e) => setForm({ ...form, visibility: e.target.value })}
+                className="field w-full"
+              >
+                <option value="MEMBERS_ONLY">{t("Jen členové", "Members only")}</option>
+                <option value="PUBLIC">
+                  {t("Veřejné (kdokoli s odkazem)", "Public (anyone with the link)")}
                 </option>
-              ))}
-            </select>
-            <input
-              required
-              value={form.titleCs}
-              onChange={(e) => setForm({ ...form, titleCs: e.target.value })}
-              className="field"
-              placeholder="Název česky"
-            />
-            <textarea
-              required
-              value={form.contentCs}
-              onChange={(e) => setForm({ ...form, contentCs: e.target.value })}
-              className="field min-h-24"
-              placeholder="Obsah česky"
-            />
-            <input
-              required
-              value={form.titleEn}
-              onChange={(e) => setForm({ ...form, titleEn: e.target.value })}
-              className="field"
-              placeholder="English title"
-            />
-            <textarea
-              required
-              value={form.contentEn}
-              onChange={(e) => setForm({ ...form, contentEn: e.target.value })}
-              className="field min-h-24"
-              placeholder="English content"
-            />
-            <select
-              value={form.visibility}
-              onChange={(e) => setForm({ ...form, visibility: e.target.value })}
-              className="field"
-            >
-              <option value="MEMBERS_ONLY">{t("Jen členové", "Members only")}</option>
-              <option value="PUBLIC">
-                {t("Veřejné (kdokoli s odkazem)", "Public (anyone with the link)")}
-              </option>
-            </select>
+              </select>
+            </label>
             <div className="flex gap-2">
               <Button variant="fresh" size="fresh" className="btn-primary flex-1">
                 {t("Uložit", "Save")}

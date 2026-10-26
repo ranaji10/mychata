@@ -92,12 +92,18 @@ describe("Privacy page: page names", () => {
 });
 
 describe("Test round fixes", () => {
-  it("sign-in and sign-up fields have a name, not only a placeholder", () => {
+  it("sign-in and sign-up fields have a name, not only a placeholder (visible since T-050)", () => {
     const auth = src("src/routes/auth.tsx");
-    for (const name of ['t("Název organizace", "Organisation name")', 't("Heslo", "Password")']) {
-      expect(auth).toContain(`aria-label={${name}}`);
-    }
-    expect(src("src/routes/reset-password.tsx")).toContain('aria-label={t("E-mail", "Email")}');
+    expect(auth).toContain(
+      '<span className="label-text">{t("Název organizace", "Organisation name")}</span>',
+    );
+    // The password label points at the field (htmlFor) so the eye button stays out of its name.
+    expect(auth).toMatch(
+      /<label htmlFor=\{passwordId\} className="label-text">\s*\{t\("Heslo", "Password"\)\}/,
+    );
+    expect(src("src/routes/reset-password.tsx")).toContain(
+      '<span className="label-text">{t("E-mail", "Email")}</span>',
+    );
   });
   it("Approvals no longer says 'family' bookings to organisations", () => {
     expect(src("src/routes/schvalovani.tsx")).not.toContain("Rodinné rezervace");

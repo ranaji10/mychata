@@ -503,7 +503,6 @@ function OnboardingPage() {
               <input
                 className="field mt-1 w-full"
                 placeholder={t("Jméno a příjmení", "First and last name")}
-                aria-label={t("Jméno a příjmení", "First and last name")}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 autoComplete="name"
@@ -579,51 +578,57 @@ function OnboardingPage() {
                     </Button>
                   </div>
                 )}
-                <input
-                  className="field w-full"
-                  placeholder={t("Název chaty", "Cottage name")}
-                  aria-label={t("Název chaty", "Cottage name")}
-                  value={c.name}
-                  onChange={(e) =>
-                    setChatas(chatas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
-                  }
-                />
-                <input
-                  className="field w-full"
-                  placeholder={t("Adresa", "Address")}
-                  aria-label={t("Adresa", "Address")}
-                  value={c.address}
-                  onChange={(e) =>
-                    setChatas(
-                      chatas.map((x, j) => (j === i ? { ...x, address: e.target.value } : x)),
-                    )
-                  }
-                />
+                <label className="block">
+                  <span className="label-text">{t("Název chaty", "Cottage name")}</span>
+                  <input
+                    className="field w-full"
+                    value={c.name}
+                    onChange={(e) =>
+                      setChatas(
+                        chatas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)),
+                      )
+                    }
+                  />
+                </label>
+                <label className="block">
+                  <span className="label-text">{t("Adresa", "Address")}</span>
+                  <input
+                    className="field w-full"
+                    value={c.address}
+                    onChange={(e) =>
+                      setChatas(
+                        chatas.map((x, j) => (j === i ? { ...x, address: e.target.value } : x)),
+                      )
+                    }
+                  />
+                </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    className="field"
-                    placeholder={t("Město", "City")}
-                    aria-label={t("Město", "City")}
-                    value={c.city}
-                    onChange={(e) =>
-                      setChatas(
-                        chatas.map((x, j) => (j === i ? { ...x, city: e.target.value } : x)),
-                      )
-                    }
-                  />
-                  <input
-                    className="field"
-                    type="number"
-                    min={1}
-                    placeholder={t("Pokoje", "Rooms")}
-                    aria-label={t("Pokoje", "Rooms")}
-                    value={c.rooms}
-                    onChange={(e) =>
-                      setChatas(
-                        chatas.map((x, j) => (j === i ? { ...x, rooms: e.target.value } : x)),
-                      )
-                    }
-                  />
+                  <label className="block">
+                    <span className="label-text">{t("Město", "City")}</span>
+                    <input
+                      className="field w-full"
+                      value={c.city}
+                      onChange={(e) =>
+                        setChatas(
+                          chatas.map((x, j) => (j === i ? { ...x, city: e.target.value } : x)),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="label-text">{t("Pokoje", "Rooms")}</span>
+                    <input
+                      className="field w-full"
+                      type="number"
+                      min={1}
+                      value={c.rooms}
+                      onChange={(e) =>
+                        setChatas(
+                          chatas.map((x, j) => (j === i ? { ...x, rooms: e.target.value } : x)),
+                        )
+                      }
+                    />
+                  </label>
                 </div>
               </div>
             ))}
@@ -651,14 +656,17 @@ function OnboardingPage() {
             <h1 className="text-[28px] font-extrabold leading-[1.15]">
               {t("Kolik lidí chatu používá?", "About how many people use it?")}
             </h1>
-            <input
-              className="field w-full"
-              type="number"
-              min={1}
-              placeholder={t("Např. 8", "E.g. 8")}
-              value={peopleCount}
-              onChange={(e) => setPeopleCount(e.target.value)}
-            />
+            <label className="block">
+              <span className="label-text">{t("Počet lidí", "Number of people")}</span>
+              <input
+                className="field w-full"
+                type="number"
+                min={1}
+                placeholder={t("Např. 8", "E.g. 8")}
+                value={peopleCount}
+                onChange={(e) => setPeopleCount(e.target.value)}
+              />
+            </label>
             <p className="font-bold">{t("Máte rušná období?", "Any busy seasons?")}</p>
             <div className="flex flex-wrap gap-2">
               {SEASONS.map((s) => (
@@ -708,17 +716,21 @@ function OnboardingPage() {
                   </Button>
                 </div>
                 {overlapAllowed && (
-                  <input
-                    className="field w-full"
-                    type="number"
-                    min={1}
-                    placeholder={t(
-                      "Max. hostů, nad které už rozhoduje správce",
-                      "Max guests before admin approval",
-                    )}
-                    value={overlapMaxGuests}
-                    onChange={(e) => setOverlapMaxGuests(e.target.value)}
-                  />
+                  <label className="block">
+                    <span className="label-text">
+                      {t(
+                        "Nejvíc hostů naráz, než rozhoduje správce",
+                        "Most guests at once before an admin decides",
+                      )}
+                    </span>
+                    <input
+                      className="field w-full"
+                      type="number"
+                      min={1}
+                      value={overlapMaxGuests}
+                      onChange={(e) => setOverlapMaxGuests(e.target.value)}
+                    />
+                  </label>
                 )}
               </>
             ) : (
@@ -742,6 +754,7 @@ function OnboardingPage() {
             </h1>
             <textarea
               className="field min-h-40 w-full"
+              aria-label={t("Pravidla domu", "House rules")}
               placeholder={t(
                 "Např. tichá noc od 22:00, boty u dveří…",
                 "E.g. quiet hours after 10 pm, shoes at the door…",

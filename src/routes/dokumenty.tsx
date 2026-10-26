@@ -541,30 +541,37 @@ function DocumentsPage() {
                   ? t("Záruka k dokončenému úkolu", "Warranty for completed task")
                   : t("Nový dokument", "New document")}
             </h2>
-            <input
-              required
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="field"
-              placeholder={t("Název", "Title")}
-            />
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="field"
-            >
-              {categories.map((value) => (
-                <option key={value} value={value}>
-                  {categoryLabel(value)}
-                </option>
-              ))}
-            </select>
-            <textarea
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="field"
-              placeholder={t("Poznámky", "Notes")}
-            />
+            <label className="block">
+              <span className="label-text">{t("Název", "Title")}</span>
+              <input
+                required
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="field w-full"
+              />
+            </label>
+            <label className="block">
+              <span className="label-text">{t("Kategorie", "Category")}</span>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="field w-full"
+              >
+                {categories.map((value) => (
+                  <option key={value} value={value}>
+                    {categoryLabel(value)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="label-text">{t("Poznámky", "Notes")}</span>
+              <textarea
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                className="field w-full"
+              />
+            </label>
             <label className="label-text text-[16px]">
               {t("Datum vystavení", "Issue date")}
               <input
@@ -583,14 +590,17 @@ function DocumentsPage() {
                 className="field mt-1"
               />
             </label>
-            <select
-              value={form.visibility}
-              onChange={(e) => setForm({ ...form, visibility: e.target.value })}
-              className="field"
-            >
-              <option value="ALL_MEMBERS">{t("Všichni členové", "All members")}</option>
-              <option value="ADMINS_ONLY">{t("Jen správci", "Admins only")}</option>
-            </select>
+            <label className="block">
+              <span className="label-text">{t("Kdo dokument uvidí", "Who can see it")}</span>
+              <select
+                value={form.visibility}
+                onChange={(e) => setForm({ ...form, visibility: e.target.value })}
+                className="field w-full"
+              >
+                <option value="ALL_MEMBERS">{t("Všichni členové", "All members")}</option>
+                <option value="ADMINS_ONLY">{t("Jen správci", "Admins only")}</option>
+              </select>
+            </label>
             {editing?.fileUrl && (
               <p className="text-[16px] text-muted-foreground">
                 {t(

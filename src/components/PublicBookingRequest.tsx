@@ -229,14 +229,17 @@ export function PublicBookingRequest({
               onChange={(e) => setGuests(e.target.value)}
             />
           </label>
-          <textarea
-            className="field min-h-20 w-full"
-            placeholder={t("Poznámka pro správce (nepovinné)", "Note for the admins (optional)")}
-            aria-label={t("Poznámka pro správce (nepovinné)", "Note for the admins (optional)")}
-            value={note}
-            maxLength={1000}
-            onChange={(e) => setNote(e.target.value)}
-          />
+          <label className="block">
+            <span className="label-text">
+              {t("Poznámka pro správce (nepovinné)", "Note for the admins (optional)")}
+            </span>
+            <textarea
+              className="field min-h-20 w-full"
+              value={note}
+              maxLength={1000}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </label>
           <div className="flex gap-2">
             <Button
               variant="fresh"

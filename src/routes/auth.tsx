@@ -3,7 +3,7 @@ import { track } from "@/lib/analytics";
 import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Home, LogIn, Mail } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +63,9 @@ function AuthPage() {
   const [organisation, setOrganisation] = useState(search.org ?? "");
   const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
+  const passwordId = useId();
+  // Set by typing only: the URL can pre-fill e-mail and organisation, and that isn't "started".
+  const [touched, setTouched] = useState(false);
   // Offer "send the confirmation email again" when it can help.
   const [canResend, setCanResend] = useState(false);
 
@@ -292,6 +295,16 @@ function AuthPage() {
   };
 
   const signingUp = mode === "institute" || isSignUp;
+  // What still stops the button, said in words once someone has started typing (D-32).
+  const missing = [
+    mode === "institute" && organisation.trim().length <= 1
+      ? t("název organizace", "organisation name")
+      : null,
+    signingUp && name.trim().length <= 1 ? t("jméno", "name") : null,
+    !cleanEmail ? t("e-mail", "email") : null,
+    !password ? t("heslo", "password") : null,
+  ].filter((x): x is string => !!x);
+  const startedTyping = touched;
   const canSubmit =
     !busy &&
     !!cleanEmail &&
@@ -305,6 +318,7 @@ function AuthPage() {
     setError("");
     setInfo("");
     setCanResend(false);
+    setTouched(false);
   };
 
   return (
@@ -435,39 +449,54 @@ function AuthPage() {
               }}
             >
               {mode === "institute" && (
-                <input
-                  className="field w-full"
-                  placeholder={t("Název organizace", "Organisation name")}
-                  aria-label={t("Název organizace", "Organisation name")}
-                  value={organisation}
-                  onChange={(e) => setOrganisation(e.target.value)}
-                  autoComplete="organization"
-                />
+                <label className="block">
+                  <span className="label-text">{t("Název organizace", "Organisation name")}</span>
+                  <input
+                    className="field w-full"
+                    value={organisation}
+                    onChange={(e) => {
+                      setTouched(true);
+                      setOrganisation(e.target.value);
+                    }}
+                    autoComplete="organization"
+                  />
+                </label>
               )}
               {signingUp && (
+                <label className="block">
+                  <span className="label-text">{t("Vaše jméno a příjmení", "Your full name")}</span>
+                  <input
+                    className="field w-full"
+                    value={name}
+                    onChange={(e) => {
+                      setTouched(true);
+                      setName(e.target.value);
+                    }}
+                    autoComplete="name"
+                  />
+                </label>
+              )}
+              <label className="block">
+                <span className="label-text">
+                  {mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")}
+                </span>
                 <input
                   className="field w-full"
-                  placeholder={t("Vaše jméno a příjmení", "Your full name")}
-                  aria-label={t("Vaše jméno a příjmení", "Your full name")}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="name"
+                  type="email"
+                  placeholder={
+                    mode === "institute"
+                      ? t("např. jana@vase-skola.cz", "e.g. jana@your-school.cz")
+                      : t("např. jana@seznam.cz", "e.g. jana@gmail.com")
+                  }
+                  value={email}
+                  onChange={(e) => {
+                    setTouched(true);
+                    setEmail(e.target.value);
+                  }}
+                  autoComplete="email"
+                  aria-invalid={institutePublicEmail}
                 />
-              )}
-              <input
-                className="field w-full"
-                type="email"
-                placeholder={
-                  mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
-                }
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                aria-invalid={institutePublicEmail}
-                aria-label={
-                  mode === "institute" ? t("Pracovní e-mail", "Work email") : t("E-mail", "Email")
-                }
-              />
+              </label>
               {institutePublicEmail && (
                 <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                   {t(
@@ -476,17 +505,25 @@ function AuthPage() {
                   )}
                 </p>
               )}
-              <PasswordInput
-                placeholder={
-                  signingUp
-                    ? t("Heslo (alespoň 8 znaků)", "Password (at least 8 characters)")
-                    : t("Heslo", "Password")
-                }
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={signingUp ? "new-password" : "current-password"}
-                aria-label={t("Heslo", "Password")}
-              />
+              {/* Not a wrapping label: the eye button inside PasswordInput would join the
+                  field's name ("Heslo Zobrazit heslo"). */}
+              <div>
+                <label htmlFor={passwordId} className="label-text">
+                  {t("Heslo", "Password")}
+                </label>
+                <PasswordInput
+                  id={passwordId}
+                  placeholder={
+                    signingUp ? t("alespoň 8 znaků", "at least 8 characters") : undefined
+                  }
+                  value={password}
+                  onChange={(e) => {
+                    setTouched(true);
+                    setPassword(e.target.value);
+                  }}
+                  autoComplete={signingUp ? "new-password" : "current-password"}
+                />
+              </div>
               <Button
                 variant="fresh"
                 size="fresh"
@@ -500,6 +537,12 @@ function AuthPage() {
                     ? t("Vytvořit účet", "Create account")
                     : t("Přihlásit se", "Sign in")}
               </Button>
+              {!busy && startedTyping && missing.length > 0 && (
+                <p className="text-[15px] text-muted-foreground" role="status">
+                  {t("Ještě doplňte: ", "Still to fill in: ")}
+                  {missing.join(", ")}
+                </p>
+              )}
             </form>
             {canResend && (
               <Button

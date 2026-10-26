@@ -154,33 +154,36 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
       {open && (
         <div className="mt-3 space-y-2">
           {missing.includes("address") && (
-            <input
-              className="field w-full"
-              placeholder={t("Adresa", "Address")}
-              aria-label={t("Adresa", "Address")}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+            <label className="block">
+              <span className="label-text">{t("Adresa", "Address")}</span>
+              <input
+                className="field w-full"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </label>
           )}
           {missing.includes("city") && (
-            <input
-              className="field w-full"
-              placeholder={t("Město", "City")}
-              aria-label={t("Město", "City")}
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
+            <label className="block">
+              <span className="label-text">{t("Město", "City")}</span>
+              <input
+                className="field w-full"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              />
+            </label>
           )}
           {missing.includes("rooms") && (
-            <input
-              className="field w-full"
-              type="number"
-              min={1}
-              placeholder={t("Počet pokojů", "Number of rooms")}
-              aria-label={t("Počet pokojů", "Number of rooms")}
-              value={rooms}
-              onChange={(e) => setRooms(e.target.value)}
-            />
+            <label className="block">
+              <span className="label-text">{t("Počet pokojů", "Number of rooms")}</span>
+              <input
+                className="field w-full"
+                type="number"
+                min={1}
+                value={rooms}
+                onChange={(e) => setRooms(e.target.value)}
+              />
+            </label>
           )}
           {missing.includes("seasons") && (
             <div>
@@ -237,17 +240,21 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                 </Button>
               </div>
               {overlapAllowed && (
-                <input
-                  className="field w-full"
-                  type="number"
-                  min={1}
-                  placeholder={t(
-                    "Max. hostů naráz, než rozhoduje správce",
-                    "Max guests at once before admin approval",
-                  )}
-                  value={overlap}
-                  onChange={(e) => setOverlap(e.target.value)}
-                />
+                <label className="block">
+                  <span className="label-text">
+                    {t(
+                      "Nejvíc hostů naráz, než rozhoduje správce",
+                      "Most guests at once before an admin decides",
+                    )}
+                  </span>
+                  <input
+                    className="field w-full"
+                    type="number"
+                    min={1}
+                    value={overlap}
+                    onChange={(e) => setOverlap(e.target.value)}
+                  />
+                </label>
               )}
             </div>
           )}

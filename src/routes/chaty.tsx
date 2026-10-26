@@ -360,15 +360,15 @@ function CottageCard({
       </div>
       {rulesOpen && (
         <div className="mt-2 space-y-2">
-          <textarea
-            className="field min-h-24 w-full"
-            placeholder={t(
-              "Pravidla domu, např. tichá noc od 22:00…",
-              "House rules, e.g. quiet hours after 10 pm…",
-            )}
-            value={rules}
-            onChange={(e) => setRules(e.target.value)}
-          />
+          <label className="block">
+            <span className="label-text">{t("Pravidla domu", "House rules")}</span>
+            <textarea
+              className="field min-h-24 w-full"
+              placeholder={t("Např. tichá noc od 22:00…", "E.g. quiet hours after 10 pm…")}
+              value={rules}
+              onChange={(e) => setRules(e.target.value)}
+            />
+          </label>
           <div className="flex gap-2">
             <Button
               variant="fresh"

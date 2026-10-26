@@ -19,7 +19,15 @@ As of 2026-10-26. Update this file in every PR that changes behaviour.
 
 Brief: `docs/tasks/T-051-start-screen-stuck.md`. No migration. `/` now sends a signed-in person without a readable account to onboarding or Home (which shows "Zkusit znovu") instead of waiting (an accounts-only read failure still shows an empty Home); after 10 s it offers "Zkusit znovu" and "Přihlásit se znovu" (clears this browser's saved session and offline copy). F-33.
 
-## What Google sees, one page view per page (T-049, 26 Oct 2026, not yet live)
+## Visible labels on form fields (T-050, D-32, 26 Oct 2026, not yet live)
+
+Brief: `docs/tasks/T-050-visible-labels.md`. No migration.
+
+- Sign-in, sign-up, reset password, guest booking, public request, add cottage, onboarding, setup, manual and document forms: a bold label above every field; placeholders only for examples.
+- A grey "Vytvořit účet" / "Přihlásit se" says what is still missing once someone has typed.
+- Not verified: the signed-in forms in a browser.
+
+## What Google sees, one page view per page (T-049, 26 Oct 2026, live since `33a6119`)
 
 Brief: `docs/tasks/T-049-analytics-privacy-and-test-round.md`. No migration.
 
@@ -27,7 +35,7 @@ Brief: `docs/tasks/T-049-analytics-privacy-and-test-round.md`. No migration.
 - F-31: one page view per page (each load sent two).
 - Privacy page names every app page; anything else is "Other".
 - 22 sign-in, sign-up, guest and setup fields have an accessible name; small copy fixes (Approvals for organisations, "Kontrolní seznam", Help's version date, one institution heading); task translation logs failed checks.
-- Not verified: on mychata.cz. Tokens sent before the fix stay in GA (D-33).
+- Checked live 26 Oct: the request to Google carries `dl=…/verejne/kalendar/:token`, one `page_view`, GA's scroll event cleaned too. Tokens sent before the fix stay in GA until a maintainer deletes them (D-33 → N-27).
 
 ## English without a hydration error, limits in one file (T-048, 26 Oct 2026, live since `27f9992`)
 

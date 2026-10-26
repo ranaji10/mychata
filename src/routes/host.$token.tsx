@@ -181,21 +181,23 @@ function GuestBookingPage() {
           </div>
 
           <div className="card mt-4 space-y-3 p-4">
-            <input
-              className="field w-full"
-              placeholder={t("Vaše jméno", "Your name")}
-              aria-label={t("Vaše jméno", "Your name")}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              className="field w-full"
-              type="email"
-              placeholder={t("E-mail", "Email")}
-              aria-label={t("E-mail", "Email")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <label className="block">
+              <span className="label-text">{t("Vaše jméno", "Your name")}</span>
+              <input
+                className="field w-full"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </label>
+            <label className="block">
+              <span className="label-text">{t("E-mail", "Email")}</span>
+              <input
+                className="field w-full"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
             <div className="space-y-3">
               <p className="text-[16px]">
                 {t(
@@ -252,13 +254,14 @@ function GuestBookingPage() {
                 onChange={(e) => setGuests(e.target.value)}
               />
             </label>
-            <textarea
-              className="field min-h-20 w-full"
-              placeholder={t("Poznámka (nepovinné)", "Note (optional)")}
-              aria-label={t("Poznámka (nepovinné)", "Note (optional)")}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
+            <label className="block">
+              <span className="label-text">{t("Poznámka (nepovinné)", "Note (optional)")}</span>
+              <textarea
+                className="field min-h-20 w-full"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </label>
             <input
               className="hidden"
               tabIndex={-1}

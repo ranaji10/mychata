@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AI_DAILY_LIMITS } from "@/lib/limits";
 import {
   bestExcerpt,
   buildContext,
@@ -35,8 +36,6 @@ const MODEL_VERSION = `${EMBED_MODEL}@${EMBED_DIMS}`;
 // Tried in this order after any Gemini Flash models the gateway lists (newest first), and
 // after AI_CHAT_MODEL if that is set. Lovable retires model versions over time.
 const CHAT_MODEL_FALLBACKS = ["google/gemini-3-flash-preview", "google/gemini-2.5-flash"];
-const DAILY_QUESTIONS_PER_USER = 30;
-const DAILY_DOCUMENT_READS_PER_USER = 40;
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 // Time limits for AI gateway calls (B-005, T-014). A document read sends whole files, so the
@@ -353,7 +352,7 @@ export const readDocumentText = createServerFn({ method: "POST" })
     if (needsAi) {
       const { data: allowed, error: usageError } = await context.supabase.rpc("bump_usage", {
         _kind: "ai_document",
-        _daily_limit: DAILY_DOCUMENT_READS_PER_USER,
+        _daily_limit: AI_DAILY_LIMITS.documentReads,
       });
       if (usageError) throw usageError;
       if (!allowed) return { status: "limit" as const };
@@ -401,7 +400,7 @@ export const askManual = createServerFn({ method: "POST" })
 
     const { data: allowed, error: usageError } = await context.supabase.rpc("bump_usage", {
       _kind: "ai_manual",
-      _daily_limit: DAILY_QUESTIONS_PER_USER,
+      _daily_limit: AI_DAILY_LIMITS.manualQuestions,
     });
     if (usageError) throw usageError;
     if (!allowed) return { answer: null, sources: [], reason: "limit" };

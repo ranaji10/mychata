@@ -1,9 +1,10 @@
 // T-015 (prompt CP-1, run 25 Oct 2026 as T-044): rules only the app enforces. CP-1 allows test
-// files only, so rules that live inline are pinned by reading the source; moving them into one
-// limits file (the brief's refactor) is left for a code task.
+// files only, so rules that live inline are pinned by reading the source. The AI limits moved
+// into src/lib/limits.ts in T-048.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { AI_DAILY_LIMITS } from "@/lib/limits";
 import { isPublicEmailDomain, PUBLIC_EMAIL_DOMAINS } from "@/lib/signup";
 
 const src = (path: string) => readFileSync(join(__dirname, "..", "..", path), "utf8");
@@ -35,15 +36,22 @@ describe("T-015 rule 2: institutions sign up with their own domain", () => {
 });
 
 describe("T-015 rule 3: AI daily limits", () => {
-  it("task translation is capped at 200 a day per user", () => {
-    expect(src("src/lib/task-translation.functions.ts")).toMatch(/_daily_limit: 200,/);
+  it("live in one file: 200 translations, 30 questions, 40 document reads a day per user", () => {
+    expect(AI_DAILY_LIMITS).toEqual({
+      taskTranslations: 200,
+      manualQuestions: 30,
+      documentReads: 40,
+    });
   });
-  it("manual questions and document reads use named limits", () => {
+  it("are the numbers the server functions pass to bump_usage", () => {
+    expect(src("src/lib/task-translation.functions.ts")).toMatch(
+      /_daily_limit: AI_DAILY_LIMITS\.taskTranslations,/,
+    );
     const qa = src("src/lib/manual-qa.functions.ts");
-    expect(qa).toMatch(/const DAILY_QUESTIONS_PER_USER = 30;/);
-    expect(qa).toMatch(/const DAILY_DOCUMENT_READS_PER_USER = 40;/);
-    expect(qa).toMatch(/_daily_limit: DAILY_QUESTIONS_PER_USER/);
-    expect(qa).toMatch(/_daily_limit: DAILY_DOCUMENT_READS_PER_USER/);
+    expect(qa).toMatch(/_daily_limit: AI_DAILY_LIMITS\.manualQuestions/);
+    expect(qa).toMatch(/_daily_limit: AI_DAILY_LIMITS\.documentReads/);
+    // No second, inline copy of a limit.
+    expect(qa).not.toMatch(/_daily_limit: \d/);
   });
 });
 

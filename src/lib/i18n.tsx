@@ -1,6 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 export type Lang = "cs" | "en";
 
@@ -15,15 +23,42 @@ interface LangState {
 
 const LangContext = createContext<LangState | null>(null);
 
+// The chosen language lives in localStorage, which the server can't see: it always renders
+// Czech. Reading localStorage in the first client render made every page of an English user
+// differ from the server's HTML (React error #418), so React threw the server render away on
+// each load (F-29, 26 Oct). useSyncExternalStore hydrates with the server's "cs" and switches
+// to the stored language straight after, without the error.
+const langListeners = new Set<() => void>();
+
+function readStoredLang(): Lang {
+  try {
+    return localStorage.getItem(LS_LANG) === "en" ? "en" : "cs";
+  } catch {
+    return "cs";
+  }
+}
+
+function subscribeLang(onChange: () => void) {
+  langListeners.add(onChange);
+  // Another tab switched the language: follow it.
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === LS_LANG) onChange();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    langListeners.delete(onChange);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+/** What the server renders, and so what hydration starts from. */
+export const SERVER_LANG: Lang = "cs";
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    try {
-      const v = localStorage.getItem(LS_LANG);
-      return v === "en" ? "en" : "cs";
-    } catch {
-      return "cs";
-    }
-  });
+  // Only used where localStorage throws (private mode), so the choice still holds on this page.
+  const [memoryLang, setMemoryLang] = useState<Lang | null>(null);
+  const storedLang = useSyncExternalStore(subscribeLang, readStoredLang, () => SERVER_LANG);
+  const lang = memoryLang ?? storedLang;
 
   // The page says which language it is in, also after a reload in English; with "cs" on an
   // English page, browsers offered to translate it from Czech (bug 3 of 18 Oct).
@@ -35,14 +70,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     () => ({
       lang,
       setLang: (l) => {
-        setLangState(l);
         track("language_change", { app_language: l });
         try {
           localStorage.setItem(LS_LANG, l);
-          document.documentElement.lang = l;
+          setMemoryLang(null);
         } catch {
-          /* ignore */
+          setMemoryLang(l);
         }
+        document.documentElement.lang = l;
+        langListeners.forEach((notify) => notify());
       },
       t: (cs, en) => (lang === "en" ? en : cs),
     }),

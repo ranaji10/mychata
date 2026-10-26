@@ -1,6 +1,6 @@
 # T-016 Tests for database rules that have none
 
-Owner: planner writes, implementer builds · Status: todo
+Owner: planner writes, implementer builds · Status: done (T-044, `supabase/tests/t016.test.ts`)
 
 Goal: every rule the database enforces has a test in `supabase/tests/security.test.ts`.
 Non-goals: no migration changes unless a test exposes a defect (then a separate task).

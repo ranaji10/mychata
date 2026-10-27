@@ -147,6 +147,20 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(id);
   }, [loading]);
 
+  // "Zkusit znovu" on the error card: a query that never had data goes back to loading while it
+  // retries (several seconds), which would show a blank screen. Keep the card up with a busy
+  // button until the reads finish, then show the app or the card again (PR #82 review).
+  const [retrying, setRetrying] = useState(false);
+  useEffect(() => {
+    if (!loading) setRetrying(false);
+  }, [loading]);
+  useEffect(() => {
+    // Offline, a read pauses instead of loading: never leave the button disabled for good.
+    if (!retrying) return;
+    const id = window.setTimeout(() => setRetrying(false), 20000);
+    return () => window.clearTimeout(id);
+  }, [retrying]);
+
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
@@ -154,11 +168,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!loading && user && needsOnboarding) navigate({ to: "/onboarding", replace: true });
   }, [loading, user, needsOnboarding, navigate]);
 
-  if (loading || !user || needsOnboarding) {
+  if ((loading && !retrying) || !user || needsOnboarding) {
     return <LoadingScreen slow={slow && loading} />;
   }
 
-  if (identityError) {
+  if (identityError || retrying) {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4">
         <div role="alert" className="card w-full max-w-[420px] p-5 text-center">
@@ -178,8 +192,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                   "Once you are online, tap Try again.",
                 )}
           </p>
-          <Button variant="fresh" size="fresh" onClick={retry} className="btn-primary mt-4 w-full">
-            {t("Zkusit znovu", "Try again")}
+          <Button
+            variant="fresh"
+            size="fresh"
+            onClick={() => {
+              setRetrying(true);
+              retry();
+            }}
+            disabled={retrying}
+            aria-busy={retrying}
+            className="btn-primary mt-4 w-full"
+          >
+            {retrying ? t("Zkouším znovu…", "Trying again…") : t("Zkusit znovu", "Try again")}
           </Button>
         </div>
       </div>

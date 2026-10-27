@@ -373,6 +373,7 @@ function DocumentsPage() {
             onChange={(e) => setQuery(e.target.value)}
             className="min-w-0 flex-1 bg-transparent outline-none"
             placeholder={t("Filtrovat podle názvu", "Filter by title")}
+            aria-label={t("Filtrovat podle názvu", "Filter by title")}
           />
         </label>
         <select

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -25,6 +25,10 @@ export function SetPasswordForm({
   askCurrent?: boolean;
 }) {
   const { t } = useLang();
+  // The label points at the field, so the eye button's "Zobrazit heslo" isn't part of its name.
+  const currentId = useId();
+  const newId = useId();
+  const againId = useId();
   const [current, setCurrent] = useState("");
   // Shown from the start when we know there is a password, or once the server asks for it.
   const [needCurrent, setNeedCurrent] = useState(askCurrent);
@@ -81,21 +85,27 @@ export function SetPasswordForm({
         </p>
       )}
       {needCurrent && (
-        <label className="block">
-          <span className="text-[16px] font-bold">{t("Současné heslo", "Current password")}</span>
+        <div className="block">
+          <label htmlFor={currentId} className="block text-[16px] font-bold">
+            {t("Současné heslo", "Current password")}
+          </label>
           <div className="mt-1">
             <PasswordInput
+              id={currentId}
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               autoComplete="current-password"
             />
           </div>
-        </label>
+        </div>
       )}
-      <label className="block">
-        <span className="text-[16px] font-bold">{t("Nové heslo", "New password")}</span>
+      <div className="block">
+        <label htmlFor={newId} className="block text-[16px] font-bold">
+          {t("Nové heslo", "New password")}
+        </label>
         <div className="mt-1">
           <PasswordInput
+            id={newId}
             placeholder={t("Alespoň 8 znaků", "At least 8 characters")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -103,18 +113,21 @@ export function SetPasswordForm({
             aria-invalid={tooShort}
           />
         </div>
-      </label>
-      <label className="block">
-        <span className="text-[16px] font-bold">{t("Heslo znovu", "Password again")}</span>
+      </div>
+      <div className="block">
+        <label htmlFor={againId} className="block text-[16px] font-bold">
+          {t("Heslo znovu", "Password again")}
+        </label>
         <div className="mt-1">
           <PasswordInput
+            id={againId}
             value={again}
             onChange={(e) => setAgain(e.target.value)}
             autoComplete="new-password"
             aria-invalid={mismatch}
           />
         </div>
-      </label>
+      </div>
       {(tooShort || mismatch) && (
         <p className="text-[16px] font-semibold text-warn-foreground">
           {tooShort

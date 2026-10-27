@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-26
+updated: 2026-10-27
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Now
@@ -12,15 +12,16 @@ tab: Now
 
 # MyChata tracker
 
-26 Oct 2026 · Tuik
+27 Oct 2026 · Tuik
 
-**Live:** `33a6119` (PR #79, T-049): Google Analytics gets page addresses without tokens and one page view per page, checked in the browser 26 Oct 21:50. **Waiting on you:** delete the old page addresses in GA (N-27, per your D-33 answer); merge PR #81 (start screen that hung on Brave, F-33; #80 merged 26 Oct 22:09) and publish both, plus the tags (N-26); the DNS records and `podpora@` inbox at Hostinger (N-5); D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `dc50299` (PR #80 visible labels, PR #81 start screen), checked 27 Oct 08:35: public pages, labels on sign-in, both sign-ups, add cottage and the new-document form, Test 3 lands on Home, your Brave window moved on to onboarding. **Waiting on you:** create one release `release-2026-10-27` (N-26); review and merge PR #82 (O-19, N-28); delete the old page addresses in GA (N-27); the DNS records and `podpora@` inbox at Hostinger (N-5); D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-26 | **Merge PR #81 and publish (with #80)** (both green, fresh reviews done and their findings fixed; no migration, no Lovable step). #80 = T-050 visible labels (D-32); #81 = T-051 start screen never waits forever (F-33). #80 merged 22:09 and main merged into #81 (green). After publish Claude checks the signed-in forms; you open mychata.cz in the stuck Brave window. Create the GitHub releases the cloud session may not: release-2026-10-26b on a4f45ea (PR #77), one on 27f9992 (PR #78) and one on 33a6119 (PR #79), all live and checked, and one for this publish. Test 2's stay 23 Oct–1 Nov in Institutní chata (test) still waits for Test 3's decision | You, then Claude | To do | F-32, F-33 |
+| N-26 | **Create one GitHub release for the live publish** (decided 27 Oct: one release per checked publish; the three pending ones for #77–#79 are dropped). Releases → Draft a new release → tag `release-2026-10-27`, target `dc50299`, title "Analytics privacy, visible labels, start screen never stuck (PRs #77–#81)", notes from `docs/external/claude/2026-10-27-site-check.md`. Cloud sessions are refused release creation. Test 2's stay 23 Oct–1 Nov in Institutní chata (test) still waits for Test 3's decision | You | To do |  |
+| N-28 | **Merge PR #82 and publish** (T-052, O-19; green; fresh review running): a failed accounts, cottages or members read shows "Zkusit znovu" instead of an empty Home; any signed-in page still loading after 10 s offers Zkusit znovu / Přihlásit se znovu; password-change fields and the documents filter get names. No migration, no Lovable step. In the Brave window: tap "Odhlásit se" on onboarding step 1 and say where it lands (T-047's last unchecked item) | You, then Claude | To do | O-19 |
 | N-27 | **Delete the old page addresses in GA** (D-33: they persist 14 months and Rajat has Administrator access too): GA4 Admin → Data collection and modification → Data deletion requests → Schedule request → "Delete selected parameters across all events" → page_location and page_referrer, 27 Sep to 26 Oct → Submit. Runs after a 7-day grace period; can't be undone. Page reports before 26 Oct lose their addresses (titles stay) | You | To do | F-30 |
 | N-5 | **E-mail DNS at Hostinger** (checked 26 Oct: `notify.mychata.cz` doesn't exist, `mychata.cz` has no MX): add TXT `_lovable-email` = the `lovable_email_verify=…` value and NS `notify` → `ns3.lovable.cloud`, `ns4.lovable.cloud` (exact rows in prompt `05`); add a forwarder for `podpora@mychata.cz`; then Lovable → More → Emails → Retry setup. Then `05` → `06` → `07` (all updated 26 Oct) | You | To do | F-07, F-23, F-24, F-27 |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
@@ -53,8 +54,6 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | F-23 | Public-calendar requests: the 20-a-day cottage limit can be used up by throwaway accounts while "Confirm email" is off (PR #66 review) | Low; depends on F-07 | N-5 | Waiting |
 | F-24 | After sign-up, returning to the calendar when the confirmation link is opened in another browser is untested | The rest of the request flow passed 26 Oct (N-14); with "Confirm email" off there is no link to open yet | Prompt `05`, "After" step 2 | Waiting |
 | F-27 | `podpora@mychata.cz` can't receive mail (no MX on `mychata.cz`), but the Help & support page and future e-mails use it | Found 26 Oct while checking N-5 | N-5 (forwarder) | Waiting |
-| F-32 | About 35 fields have only a placeholder: the hint disappears once people type and screen readers have no name. "Vytvořit účet" stays grey without saying what is missing | D-32 approved: visible labels and a "what is missing" line in PR #80; closes when live | N-26 | Doing |
-| F-33 | The start screen "Otevírám vaši chatu" can wait forever (Brave on the MacBook, 26 Oct; refresh doesn't help, Chrome on Android signs in) | Cause in code: a signed-in person without a readable account had nowhere to go from "/"; a hanging saved session kept it loading. Fixed in PR #81; the Brave state itself wasn't inspected | N-26, then you reopen it in Brave (after 10 s: Přihlásit se znovu) | Doing |
 
 ## How to use this doc
 

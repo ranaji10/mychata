@@ -1,6 +1,6 @@
 # T-052 No blank or empty app after a failed or hanging read
 
-Owner: Claude (cloud session) · Status: review
+Owner: Claude (cloud session) · Status: done
 
 Goal: O-19 (left from the PR #80/#81 reviews): every signed-in screen either shows the app, "Zkusit znovu", or after 10 s a way out.
 Non-goals: the queries themselves, Google sign-in on Brave (F-05), the start screen (T-051, done).

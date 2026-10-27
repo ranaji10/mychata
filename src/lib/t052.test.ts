@@ -38,6 +38,7 @@ describe("T-052 no blank or empty screen after a failed or hanging read", () => 
     expect(shell).toContain("loadError");
     expect(shell).toContain("SLOW_AFTER_MS = 10000");
     expect(shell).toContain('signInAgain("app")');
+    expect(shell).toContain("disabled={retrying}");
   });
   it("password fields are named by their own label, not the eye button", () => {
     const form = src("src/components/SetPasswordForm.tsx");

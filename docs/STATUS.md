@@ -20,7 +20,7 @@ As of 2026-10-27. Update this file in every PR that changes behaviour.
 Brief: `docs/tasks/T-052-loading-fallbacks.md`. No migration. O-19.
 
 - A failed accounts, cottages or members read with nothing cached shows "Vaši chatu se nepodařilo načíst. / Zkusit znovu" (before: an empty Home or a half-empty app).
-- Any signed-in page still loading after 10 s offers "Zkusit znovu" and "Přihlásit se znovu" (before: blank for good).
+- While the account, cottages or members are still loading after 10 s, the app offers "Zkusit znovu" and "Přihlásit se znovu" (before: blank for good). A page's own reads (e.g. Home's bookings) are not covered.
 - Password change form: each field is named by its own label; documents title filter has a name.
 
 ## Start screen never waits forever (T-051, 26 Oct 2026, live since `dc50299`)

@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-26
+updated: 2026-10-27
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Done & history
@@ -127,6 +127,7 @@ Everything finished, oldest first. Details are in the repo: `docs/STATUS.md`, `d
 | 26 Oct, 20:35–22:10 | PR #78 merged by you and published (live 27f9992). F-29 closed: no React #418 in English or Czech on the live site. N-20 done: you added GA_SERVICE_ACCOUNT_JSON; /soukromi shows live GA numbers (28 Sep–25 Oct, "updated automatically"). Test round (public pages × 2 devices × 2 languages, 21 signed-in routes as Test 3, code): new F-30 (sign-in and public-link tokens reached Google Analytics in page addresses), F-31 (two page views per load), F-32 (placeholder-only fields) and six small issues; all but visible labels fixed in PR #79 (T-049). New decisions D-32 (visible labels) and D-33 (delete page addresses already in GA). | docs/external/claude/2026-10-26-test-round.md, PR #79 |
 | 26 Oct, 21:25–22:10 | PR #79 merged and published (live 33a6119). F-30 and F-31 closed: in the browser the request to Google carries dl=…/verejne/kalendar/:token (no token), one page_view, GA's scroll event cleaned too. Your decisions: D-32 "Approved, do it in code" → PR #80 (T-050, visible labels on 11 forms, "Ještě doplňte: …" under a grey button). D-33 "If this persists and can be read by anyone later, delete it": GA keeps the addresses 14 months and Rajat has Administrator access, so the deletion is N-27 (yours: it can't be undone). | PR #80, docs/tasks/T-050-visible-labels.md |
 | 26 Oct, 22:00–22:20 | Fresh reviews of PR #80 and a new PR #81. #80: the "Ještě doplňte" line showed for URL-prefilled fields and the password label read the eye button too; both fixed, test tightened. F-33 (Brave stuck on the start screen) → PR #81 (T-051): every state of "/" leads somewhere, and after 10 s it offers Zkusit znovu / Přihlásit se znovu; review fixes in. Leftovers → O-19. N-23 test-round steps sent in chat. | PR #80, PR #81, docs/external/claude/2026-10-26-pr80-review.md, -pr81-review.md |
+| 27 Oct, 08:30–09:10 | PR #81 merged and published with #80 (live dc50299). Site check passed (public pages, invalid links rechecked from Czechia, Supabase URL in the bundle, Back on Privacy). F-32 closed: labels on sign-in, both sign-ups ("Ještě doplňte: e-mail, heslo" only after typing), add cottage and the new-document form as Test 3; the documents title filter had no name. F-33 closed: the stuck Brave window moved on to onboarding, so its sign-in has no MyChata account (the "signed in, no account" case). Your call on releases: one per checked publish, so release-2026-10-27 replaces the three pending ones (cloud sessions are still refused release creation, N-26). O-19 + the filter fixed in PR #82 (T-052). GA checks waiting: Chrome opens GA on the account without the MyChata property. | docs/external/claude/2026-10-27-site-check.md, PR #82, docs/tasks/T-052-loading-fallbacks.md |
 
 ## GitHub settings check (found 4 Oct, done 12 Oct)
 

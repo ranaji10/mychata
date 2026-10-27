@@ -12,7 +12,7 @@ export function startTarget(s: {
   if (s.loading) return null;
   if (!s.signedIn) return "/auth";
   if (s.needsOnboarding) return "/onboarding";
-  // Signed in, but the account could not be read. The app pages show "Try again" when the
-  // membership read failed; an accounts-only failure shows an empty Home (backlog, T-051 review).
+  // Signed in, but the account could not be read. The app pages show "Try again" for a failed
+  // membership, accounts, cottages or members read (T-052).
   return "/domu";
 }

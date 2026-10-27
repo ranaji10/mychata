@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { isAuthRetryableFetchError, type User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { firstLoadError } from "@/lib/load-error";
 import type { Account, Member, Profile, Property } from "@/lib/data";
 import { signupMetadata } from "@/lib/signup";
 
@@ -32,6 +33,8 @@ interface AccountState {
   /** The person's memberships could not be read (offline, server error). Never means "no account". */
   identityError: Error | null;
   retryIdentity: () => void;
+  loadError: Error | null;
+  retryLoad: () => void;
   user: User | null;
 }
 
@@ -147,7 +150,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     return memberships.find((m) => m.account_id === profile?.active_account_id) ?? memberships[0]!;
   }, [memberships, profile?.active_account_id]);
 
-  const { data: accounts, isLoading: loadingAccounts } = useQuery({
+  const {
+    data: accounts,
+    isLoading: loadingAccounts,
+    error: accountsError,
+    refetch: refetchAccounts,
+  } = useQuery({
     queryKey: ["accounts", user?.id],
     enabled: !!identityMember,
     queryFn: async () => {
@@ -174,7 +182,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     await queryClient.invalidateQueries();
   };
 
-  const { data: properties, isLoading: loadingProperties } = useQuery({
+  const {
+    data: properties,
+    isLoading: loadingProperties,
+    error: propertiesError,
+    refetch: refetchProperties,
+  } = useQuery({
     queryKey: ["properties", account?.id],
     enabled: !!account,
     queryFn: async () => {
@@ -196,7 +209,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   // Assignee and split lists. Row-level security lets a person read the members of EVERY
   // account they belong to, so the list must be filtered to the active one, and the
   // database's current_account_id() decides which that is (B-010).
-  const { data: members, isLoading: loadingMembers } = useQuery({
+  const {
+    data: members,
+    isLoading: loadingMembers,
+    error: membersError,
+    refetch: refetchMembers,
+  } = useQuery({
     queryKey: ["members", account?.id],
     enabled: !!account,
     queryFn: async () => {
@@ -258,6 +276,19 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     needsOnboarding,
     identityError: !memberships?.length && identityError ? identityError : null,
     retryIdentity: () => void refetchIdentity(),
+    // A read after the memberships that failed with nothing cached to show (T-052, O-19).
+    // Before, a failed accounts read left an empty Home, and failed cottages or members reads a
+    // half-empty app, all with no "Try again".
+    loadError: firstLoadError([
+      [accountsError, !!identityMember && !accounts],
+      [propertiesError, !!account && !properties],
+      [membersError, !!account && !members],
+    ]),
+    retryLoad: () => {
+      if (accountsError) void refetchAccounts();
+      if (propertiesError) void refetchProperties();
+      if (membersError) void refetchMembers();
+    },
     user,
   };
 

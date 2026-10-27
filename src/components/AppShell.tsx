@@ -26,6 +26,42 @@ import { isCottagePath, isSettingsPath, SETTINGS_LINKS } from "@/lib/settings-na
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { useIsMutating } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { signInAgain } from "@/lib/sign-in-again";
+
+const SLOW_AFTER_MS = 10000;
+
+/** Blank while loading; after 10 s, "Zkusit znovu" and "Přihlásit se znovu" (T-052). */
+function LoadingScreen({ slow }: { slow: boolean }) {
+  const { t } = useLang();
+  if (!slow) return <div className="min-h-screen bg-background" />;
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4">
+      <div role="status" className="card w-full max-w-[420px] p-5 text-center">
+        <p className="text-lg font-bold">
+          {t("Načítání trvá déle než obvykle.", "This is taking longer than usual.")}
+        </p>
+        <div className="mt-4 flex flex-col gap-3">
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-primary min-h-[56px] w-full text-[17px]"
+            onClick={() => window.location.reload()}
+          >
+            {t("Zkusit znovu", "Try again")}
+          </Button>
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary min-h-[56px] w-full text-[17px]"
+            onClick={() => void signInAgain("app")}
+          >
+            {t("Přihlásit se znovu", "Sign in again")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const {
@@ -41,9 +77,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     profile,
     loading,
     needsOnboarding,
-    identityError,
+    identityError: membershipError,
     retryIdentity,
+    loadError,
+    retryLoad,
   } = useAccount();
+  const identityError = membershipError ?? loadError;
+  const retry = membershipError ? retryIdentity : retryLoad;
   useBrand(account?.type === "INSTITUTIONAL" ? "institution" : "family");
   const navigate = useNavigate();
   const { t, lang } = useLang();
@@ -95,6 +135,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     setAnalyticsContext({ account_type: accountType, language: lang });
   }, [accountType, memberRole, lang]);
 
+  // A read that never answers used to leave a blank screen for good (T-052, O-19): after 10 s,
+  // offer a way out, as the start screen does (T-051).
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!loading) {
+      setSlow(false);
+      return;
+    }
+    const id = window.setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    return () => window.clearTimeout(id);
+  }, [loading]);
+
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
@@ -102,7 +154,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!loading && user && needsOnboarding) navigate({ to: "/onboarding", replace: true });
   }, [loading, user, needsOnboarding, navigate]);
 
-  if (loading || !user || needsOnboarding) return <div className="min-h-screen bg-background" />;
+  if (loading || !user || needsOnboarding) {
+    return <LoadingScreen slow={slow && loading} />;
+  }
 
   if (identityError) {
     return (
@@ -124,12 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   "Once you are online, tap Try again.",
                 )}
           </p>
-          <Button
-            variant="fresh"
-            size="fresh"
-            onClick={retryIdentity}
-            className="btn-primary mt-4 w-full"
-          >
+          <Button variant="fresh" size="fresh" onClick={retry} className="btn-primary mt-4 w-full">
             {t("Zkusit znovu", "Try again")}
           </Button>
         </div>

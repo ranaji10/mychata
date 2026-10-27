@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Home, LogIn } from "lucide-react";
 import { useAccount } from "@/lib/account";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { useDefaultChataPhoto } from "@/lib/season";
 import { startTarget } from "@/lib/start-target";
+import { signInAgain } from "@/lib/sign-in-again";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -56,26 +56,6 @@ function Index() {
     const id = window.setTimeout(() => setSlow(true), 10000);
     return () => window.clearTimeout(id);
   }, []);
-  const signInAgain = async () => {
-    // Clear the saved session first: if it is what hangs, signOut() can hang on it too.
-    try {
-      for (const key of Object.keys(localStorage)) {
-        if (key.startsWith("sb-") && key.includes("auth-token")) localStorage.removeItem(key);
-      }
-      // The offline copy of the last person's cottage data: signOut's own clean-up may not run.
-      localStorage.removeItem("mychata.offline-cache");
-    } catch {
-      /* storage blocked: the sign-out below is all we can do */
-    }
-    const result = await Promise.race([
-      supabase.auth.signOut({ scope: "local" }),
-      new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 3000)),
-    ]);
-    if (result === null) console.error("[start] sign out did not answer in 3 s");
-    else if (result.error) console.error("[start] sign out", result.error.message);
-    window.location.assign("/auth");
-  };
-
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[420px] md:max-w-[720px] flex-col page-fresh px-5 pb-8">
       <div className="mt-5 flex items-center justify-between">
@@ -131,7 +111,7 @@ function Index() {
               variant="fresh"
               size="fresh"
               className="btn-secondary min-h-[56px] w-full text-[17px]"
-              onClick={() => void signInAgain()}
+              onClick={() => void signInAgain("start")}
             >
               {t("Přihlásit se znovu", "Sign in again")}
             </Button>

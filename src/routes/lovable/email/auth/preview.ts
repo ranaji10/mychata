@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- template data is free-form at the email boundary */
 import * as React from "react";
 import { render } from "@react-email/render";
 import { createFileRoute } from "@tanstack/react-router";

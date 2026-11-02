@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- template data is free-form at the email boundary */
 import type { ComponentType } from "react";
 import { template as notificationTemplate } from "./notification";
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- template data is free-form at the email boundary */
 import * as React from "react";
 import { EmailLayout, SITE_URL } from "./layout";
 import type { TemplateEntry } from "./registry";

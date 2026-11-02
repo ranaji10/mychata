@@ -42,6 +42,8 @@ import { Route as VydajeVyrovnaniRouteImport } from './routes/vydaje.vyrovnani'
 import { Route as VerejneKalendarTokenRouteImport } from './routes/verejne.kalendar.$token'
 import { Route as VerejneManualTokenRouteImport } from './routes/verejne.manual.$token'
 import { Route as VerejneZadostTokenRouteImport } from './routes/verejne.zadost.$token'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -208,6 +210,16 @@ const VerejneZadostTokenRoute = VerejneZadostTokenRouteImport.update({
   path: '/verejne/zadost/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -243,6 +255,8 @@ export interface FileRoutesByFullPath {
   '/verejne/kalendar/$token': typeof VerejneKalendarTokenRoute
   '/verejne/manual/$token': typeof VerejneManualTokenRoute
   '/verejne/zadost/$token': typeof VerejneZadostTokenRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -278,6 +292,8 @@ export interface FileRoutesByTo {
   '/verejne/kalendar/$token': typeof VerejneKalendarTokenRoute
   '/verejne/manual/$token': typeof VerejneManualTokenRoute
   '/verejne/zadost/$token': typeof VerejneZadostTokenRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -314,6 +330,8 @@ export interface FileRoutesById {
   '/verejne/kalendar/$token': typeof VerejneKalendarTokenRoute
   '/verejne/manual/$token': typeof VerejneManualTokenRoute
   '/verejne/zadost/$token': typeof VerejneZadostTokenRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -351,6 +369,8 @@ export interface FileRouteTypes {
     | '/verejne/kalendar/$token'
     | '/verejne/manual/$token'
     | '/verejne/zadost/$token'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -386,6 +406,8 @@ export interface FileRouteTypes {
     | '/verejne/kalendar/$token'
     | '/verejne/manual/$token'
     | '/verejne/zadost/$token'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   id:
     | '__root__'
     | '/'
@@ -421,6 +443,8 @@ export interface FileRouteTypes {
     | '/verejne/kalendar/$token'
     | '/verejne/manual/$token'
     | '/verejne/zadost/$token'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -455,6 +479,8 @@ export interface RootRouteChildren {
   VerejneKalendarTokenRoute: typeof VerejneKalendarTokenRoute
   VerejneManualTokenRoute: typeof VerejneManualTokenRoute
   VerejneZadostTokenRoute: typeof VerejneZadostTokenRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -690,6 +716,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerejneZadostTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -746,6 +786,8 @@ const rootRouteChildren: RootRouteChildren = {
   VerejneKalendarTokenRoute: VerejneKalendarTokenRoute,
   VerejneManualTokenRoute: VerejneManualTokenRoute,
   VerejneZadostTokenRoute: VerejneZadostTokenRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

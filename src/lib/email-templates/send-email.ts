@@ -6,13 +6,15 @@ import { TEMPLATES } from './registry'
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
 
 // Configuration baked in at scaffold time
-const SITE_NAME = "My Chata Hub"
+const SITE_NAME = "MyChata"
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
 const SENDER_DOMAIN = "notify.mychata.cz"
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
 // Can be the root domain when display_from_root is enabled — this is cosmetic only.
-const FROM_DOMAIN = "mychata.cz"
+const FROM_DOMAIN = "notify.mychata.cz"
+const FROM_LOCAL = "no-reply"
+const REPLY_TO = "podpora@mychata.cz"
 
 export type SendTemplateEmailResult =
   | { sent: true }
@@ -69,7 +71,7 @@ export async function sendTemplateEmail(
     await sendLovableEmail(
       {
         to: recipient,
-        from: { name: SITE_NAME, address: `noreply@${FROM_DOMAIN}` },
+        from: { name: SITE_NAME, address: `${FROM_LOCAL}@${FROM_DOMAIN}` },
         sender_domain: SENDER_DOMAIN,
         subject,
         html,
@@ -77,7 +79,7 @@ export async function sendTemplateEmail(
         purpose: 'transactional',
         label: templateName,
         idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
+        reply_to: options.replyTo || REPLY_TO,
       },
       { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
     )
@@ -89,4 +91,26 @@ export async function sendTemplateEmail(
   }
 
   return { sent: true }
+}
+
+export interface NotificationEmailInput {
+  /** Recipient address. */
+  to: string
+  subject: string
+  heading: string
+  paragraph: string
+  buttonLabel: string
+  /** Absolute https://mychata.cz/... link. */
+  buttonUrl: string
+  /** Stable id of the triggering event (e.g. the queue row id) so retries don't send twice. */
+  idempotencyKey: string
+}
+
+/** Sends the generic "notification" app email. Server-only; not called anywhere yet (CC-3). */
+export function sendNotificationEmail(input: NotificationEmailInput): Promise<SendTemplateEmailResult> {
+  const { to, idempotencyKey, ...templateData } = input
+  return sendTemplateEmail('notification', to, {
+    templateData,
+    idempotencyKey: `notification-${idempotencyKey}`,
+  })
 }

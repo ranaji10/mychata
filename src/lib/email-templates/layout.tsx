@@ -59,18 +59,18 @@ export const EmailLayout = ({
           </Link>
         </Text>
         <Heading style={h1}>{heading.cs}</Heading>
-        <Text style={enHeading}>{heading.en}</Text>
+        {heading.en ? <Text style={enHeading}>{heading.en}</Text> : <Text style={{ margin: '0 0 20px' }} />}
         {paragraphs.map((p, i) => (
           <Section key={i} style={{ margin: '0 0 20px' }}>
             <Text style={text}>{p.cs}</Text>
-            <Text style={en}>{p.en}</Text>
+            {p.en ? <Text style={en}>{p.en}</Text> : null}
           </Section>
         ))}
         {code ? <Text style={codeStyle}>{code}</Text> : null}
         {button ? (
           <Section style={{ margin: '8px 0 28px' }}>
             <Button style={buttonStyle} href={button.href}>
-              {button.label.cs} · {button.label.en}
+              {button.label.en ? `${button.label.cs} · ${button.label.en}` : button.label.cs}
             </Button>
           </Section>
         ) : null}

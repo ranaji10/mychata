@@ -1,13 +1,13 @@
-import type { ComponentType } from 'react'
-import { template as notificationTemplate } from './notification'
+import type { ComponentType } from "react";
+import { template as notificationTemplate } from "./notification";
 
 export interface TemplateEntry {
-  component: ComponentType<any>
-  subject: string | ((data: Record<string, any>) => string)
-  displayName?: string
-  previewData?: Record<string, any>
+  component: ComponentType<any>;
+  subject: string | ((data: Record<string, any>) => string);
+  displayName?: string;
+  previewData?: Record<string, any>;
   /** Fixed recipient — overrides caller-provided recipientEmail when set. */
-  to?: string
+  to?: string;
 }
 
 /**
@@ -22,4 +22,4 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   notification: notificationTemplate,
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
-}
+};

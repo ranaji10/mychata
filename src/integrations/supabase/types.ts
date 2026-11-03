@@ -1090,78 +1090,6 @@ export type Database = {
           },
         ]
       }
-      notifications: {
-        Row: {
-          account_id: string
-          created_at: string
-          dedupe_key: string | null
-          email_attempts: number
-          email_error: string | null
-          email_next_at: string
-          email_wanted: boolean
-          emailed_at: string | null
-          id: string
-          kind: string
-          payload: Json
-          read_at: string | null
-          recipient_email: string | null
-          recipient_member_id: string | null
-          recipient_user_id: string | null
-          sender_user_id: string | null
-        }
-        Insert: {
-          account_id: string
-          created_at?: string
-          dedupe_key?: string | null
-          email_attempts?: number
-          email_error?: string | null
-          email_next_at?: string
-          email_wanted?: boolean
-          emailed_at?: string | null
-          id?: string
-          kind: string
-          payload?: Json
-          read_at?: string | null
-          recipient_email?: string | null
-          recipient_member_id?: string | null
-          recipient_user_id?: string | null
-          sender_user_id?: string | null
-        }
-        Update: {
-          account_id?: string
-          created_at?: string
-          dedupe_key?: string | null
-          email_attempts?: number
-          email_error?: string | null
-          email_next_at?: string
-          email_wanted?: boolean
-          emailed_at?: string | null
-          id?: string
-          kind?: string
-          payload?: Json
-          read_at?: string | null
-          recipient_email?: string | null
-          recipient_member_id?: string | null
-          recipient_user_id?: string | null
-          sender_user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_member_id_fkey"
-            columns: ["recipient_member_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ownership_offers: {
         Row: {
           account_id: string
@@ -1496,70 +1424,6 @@ export type Database = {
           },
         ]
       }
-      task_note_mentions: {
-        Row: {
-          account_id: string
-          member_id: string
-          note_id: string
-        }
-        Insert: {
-          account_id: string
-          member_id: string
-          note_id: string
-        }
-        Update: {
-          account_id?: string
-          member_id?: string
-          note_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_note_mentions_note_id_fkey"
-            columns: ["note_id"]
-            isOneToOne: false
-            referencedRelation: "task_notes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      task_notes: {
-        Row: {
-          account_id: string
-          author_member_id: string | null
-          body: string
-          created_at: string
-          id: string
-          task_id: string
-          updated_at: string
-        }
-        Insert: {
-          account_id: string
-          author_member_id?: string | null
-          body: string
-          created_at?: string
-          id?: string
-          task_id: string
-          updated_at?: string
-        }
-        Update: {
-          account_id?: string
-          author_member_id?: string | null
-          body?: string
-          created_at?: string
-          id?: string
-          task_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_notes_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tasks: {
         Row: {
           assignee_member_id: string | null
@@ -1692,10 +1556,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_task_note: {
-        Args: { _mention_member_ids?: string[]; _body: string; _task_id: string }
-        Returns: string
-      }
       accept_invitation: { Args: { _token: string }; Returns: string }
       account_founder: { Args: { _account_id: string }; Returns: string }
       account_plan: { Args: { _account_id: string }; Returns: string }
@@ -1793,18 +1653,7 @@ export type Database = {
       is_admin_only_file: { Args: { _name: string }; Returns: boolean }
       is_member: { Args: { _account_id: string }; Returns: boolean }
       is_property_admin: { Args: { _property_id: string }; Returns: boolean }
-      handover_next_recipient: {
-        Args: { _handover_id: string }
-        Returns: {
-          end_date: string
-          member_name: string
-          sent: boolean
-          start_date: string
-        }[]
-      }
       leave_account: { Args: { _account_id: string }; Returns: string }
-      mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
-      message_admins: { Args: { _account_id: string; _body: string }; Returns: number }
       my_cottages: {
         Args: never
         Returns: {
@@ -1920,7 +1769,6 @@ export type Database = {
           property_name: string
         }[]
       }
-      remind_debt: { Args: { _member_id: string; _property_id: string }; Returns: number }
       rename_account: {
         Args: { _account_id: string; _name: string }
         Returns: undefined

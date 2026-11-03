@@ -288,6 +288,13 @@
       "when": 1793715444030,
       "tag": "0040_language_payments_cottage_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793717519025,
+      "tag": "0041_0041_apply_journaled_0040",
+      "breakpoints": true
     }
   ]
 }

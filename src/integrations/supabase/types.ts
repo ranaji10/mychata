@@ -1214,33 +1214,6 @@ export type Database = {
           },
         ]
       }
-      plans: {
-        Row: {
-          active: boolean
-          audience: string
-          id: string
-          limits: Json
-          name: string
-          price_czk_month: number | null
-        }
-        Insert: {
-          active?: boolean
-          audience: string
-          id: string
-          limits?: Json
-          name: string
-          price_czk_month?: number | null
-        }
-        Update: {
-          active?: boolean
-          audience?: string
-          id?: string
-          limits?: Json
-          name?: string
-          price_czk_month?: number | null
-        }
-        Relationships: []
-      }
       payment_claims: {
         Row: {
           account_id: string
@@ -1283,6 +1256,76 @@ export type Database = {
           split_ids?: string[]
           status?: string
           to_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_claims_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_decided_by_member_id_fkey"
+            columns: ["decided_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_from_member_id_fkey"
+            columns: ["from_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_to_member_id_fkey"
+            columns: ["to_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          active: boolean
+          audience: string
+          id: string
+          limits: Json
+          name: string
+          price_czk_month: number | null
+        }
+        Insert: {
+          active?: boolean
+          audience: string
+          id: string
+          limits?: Json
+          name: string
+          price_czk_month?: number | null
+        }
+        Update: {
+          active?: boolean
+          audience?: string
+          id?: string
+          limits?: Json
+          name?: string
+          price_czk_month?: number | null
         }
         Relationships: []
       }
@@ -1831,6 +1874,14 @@ export type Database = {
         Returns: string
       }
       claim_initial_membership: { Args: never; Returns: string }
+      claim_payment: {
+        Args: {
+          _expense_id?: string
+          _property_id: string
+          _to_member_id: string
+        }
+        Returns: string
+      }
       convert_account_to_institution: {
         Args: { _account_id: string; _name: string }
         Returns: undefined
@@ -1853,21 +1904,17 @@ export type Database = {
         }
         Returns: string
       }
-      claim_payment: {
-        Args: { _expense_id?: string; _property_id: string; _to_member_id: string }
-        Returns: string
-      }
       current_account_id: { Args: never; Returns: string }
       current_member_id: { Args: never; Returns: string }
-      email_lang: { Args: { _email: string }; Returns: string }
-      decide_payment_claim: {
-        Args: { _claim_id: string; _received: boolean }
-        Returns: string
-      }
       decide_guest_request: {
         Args: { _approve: boolean; _request_id: string }
         Returns: string
       }
+      decide_payment_claim: {
+        Args: { _claim_id: string; _received: boolean }
+        Returns: string
+      }
+      email_lang: { Args: { _email: string }; Returns: string }
       f_unaccent: { Args: { "": string }; Returns: string }
       feature_enabled: { Args: { _key: string }; Returns: boolean }
       forward_leaving_checklist_to: {

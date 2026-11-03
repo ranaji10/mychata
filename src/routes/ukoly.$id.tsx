@@ -30,8 +30,8 @@ import {
 } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    note: search["note"] === true || search["note"] === "true",
+  validateSearch: (search: Record<string, unknown>): { note?: boolean } => ({
+    ...(search["note"] === true || search["note"] === "true" ? { note: true } : {}),
   }),
   staticData: { sitemap: false },
   head: () => ({
@@ -330,7 +330,7 @@ function TaskDetail() {
           </AlertDialog>
         </>
       )}
-      <TaskNotes taskId={task.id} focus={focusNote} />
+      <TaskNotes taskId={task.id} focus={!!focusNote} />
     </AppShell>
   );
 }

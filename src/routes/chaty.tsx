@@ -23,6 +23,7 @@ import { useLang } from "@/lib/i18n";
 import { useMyCottages } from "@/lib/my-cottages";
 import { HouseRulesEditor } from "@/components/HouseRulesEditor";
 import { missingCottageDetails } from "@/lib/cottage-details";
+import { STARTER_RULES } from "@/lib/cottage-content";
 
 export const Route = createFileRoute("/chaty")({
   staticData: { sitemap: false },
@@ -269,13 +270,17 @@ function CottageCard({
   const saveRules = useMutation({
     mutationFn: async () => {
       const text = rules.trim();
+      const translatedRules = (language: 0 | 1) => text.split("\n").map(line => {
+        const pair = STARTER_RULES.find(rule => rule[0] === line || rule[1] === line);
+        return pair?.[language] ?? line;
+      }).join("\n");
       const { error } = await supabase.from("manual_sections").insert({
         property_id: property.id,
         category: "rules",
         title_cs: "Pravidla domu",
         title_en: "House rules",
-        content_cs: text,
-        content_en: text,
+        content_cs: translatedRules(0),
+        content_en: translatedRules(1),
         visibility: "PUBLIC",
         display_order: 0,
       });

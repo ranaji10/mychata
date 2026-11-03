@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -126,7 +126,7 @@ export function ExpenseDetail({
       <Sheet open onOpenChange={(open) => !open && onClose()}>
         <SheetContent
           side="bottom"
-          className="mx-auto max-h-[90dvh] max-w-[720px] overflow-y-auto rounded-t-[28px] bg-card p-5 [&>button]:grid [&>button]:size-11 [&>button]:place-items-center [&>button]:rounded-full [&>button]:bg-secondary"
+          className="mx-auto max-h-[90dvh] max-w-[720px] overflow-y-auto rounded-t-[28px] bg-card p-5 [&>button:first-child]:hidden"
         >
           <SheetHeader className="pr-12">
             <SheetTitle className="text-xl">
@@ -144,7 +144,7 @@ export function ExpenseDetail({
             aria-label={t("Zavřít", "Close")}
             onClick={onClose}
           >
-            ×
+            <X className="size-5" />
           </Button>
           <ul className="my-4 divide-y divide-divider">
             <li className="flex flex-wrap justify-between gap-2 py-3 text-[16px]">

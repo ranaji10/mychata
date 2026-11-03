@@ -303,6 +303,70 @@ describe("I paid claims", () => {
   });
 });
 
+describe("I paid claims: review fixes", () => {
+  it("an admin can't confirm their own claim", async () => {
+    const e = await val<string>(
+      "insert into public.expenses (property_id, amount, category, description, paid_by_member_id) values ($1,100,'supplies','Sul',$2) returning id",
+      [ids.prop, ids.petr],
+    );
+    await admin(
+      db,
+      "insert into public.expense_splits (expense_id, member_id, amount_owed) values ($1,$2,100)",
+      [e, ids.owner],
+    );
+    await asCommitted(db, who("owner"), "select public.claim_payment($1, $2, $3)", [
+      ids.prop,
+      ids.petr,
+      e,
+    ]);
+    const claim = await val<string>("select id from public.payment_claims where expense_id = $1", [
+      e,
+    ]);
+    await as(db, who("owner"), async (q) => {
+      await expect(q("select public.decide_payment_claim($1, true)", [claim])).rejects.toThrow(
+        /only_receiver_confirms/,
+      );
+    });
+  });
+  it("confirming settles only what was owed when the payment was reported", async () => {
+    const before = await val<string>(
+      "insert into public.expenses (property_id, amount, category, description, paid_by_member_id, created_at) values ($1,50,'supplies','Pred',$2, now() - interval '1 hour') returning id",
+      [ids.prop, ids.jana],
+    );
+    await admin(
+      db,
+      "insert into public.expense_splits (expense_id, member_id, amount_owed) values ($1,$2,50)",
+      [before, ids.petr],
+    );
+    await asCommitted(db, who("petr"), "select public.claim_payment($1, $2)", [ids.prop, ids.jana]);
+    const claim = await val<string>(
+      "select id from public.payment_claims where from_member_id = $1 and to_member_id = $2 and expense_id is null and status = 'PENDING'",
+      [ids.petr, ids.jana],
+    );
+    await admin(
+      db,
+      "update public.payment_claims set created_at = now() - interval '30 minutes' where id = $1",
+      [claim],
+    );
+    const after = await val<string>(
+      "insert into public.expenses (property_id, amount, category, description, paid_by_member_id) values ($1,70,'supplies','Po',$2) returning id",
+      [ids.prop, ids.jana],
+    );
+    await admin(
+      db,
+      "insert into public.expense_splits (expense_id, member_id, amount_owed) values ($1,$2,70)",
+      [after, ids.petr],
+    );
+    await asCommitted(db, who("jana"), "select public.decide_payment_claim($1, true)", [claim]);
+    expect(
+      await val("select paid_back from public.expense_splits where expense_id = $1", [before]),
+    ).toBe(true);
+    expect(
+      await val("select paid_back from public.expense_splits where expense_id = $1", [after]),
+    ).toBe(false);
+  });
+});
+
 describe("debt reminder", () => {
   it("names the member who sent it", async () => {
     await admin(db, "update public.expense_splits set paid_back = false where id = $1", [

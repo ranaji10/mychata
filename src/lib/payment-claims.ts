@@ -54,6 +54,10 @@ export function openClaim(
       c.status === "PENDING" &&
       c.from_member_id === from &&
       c.to_member_id === to &&
-      (expenseId === null ? true : c.expense_id === expenseId || c.expense_id === null),
+      // Settle debts asks about the whole debt; the expense sheet about one share (or a whole-debt
+      // claim, which covers it too).
+      (expenseId === null
+        ? c.expense_id === null
+        : c.expense_id === expenseId || c.expense_id === null),
   );
 }

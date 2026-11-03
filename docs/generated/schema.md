@@ -233,7 +233,7 @@ Policies: Admins and the person offered read offers (SELECT)
 
 ### payment_claims
 
-`id` uuid · `account_id` uuid · `property_id` uuid · `from_member_id` uuid · `to_member_id` uuid · `expense_id` uuid? · `amount` numeric · `status` text · `created_at` timestamp with time zone · `decided_at` timestamp with time zone? · `decided_by_member_id` uuid?
+`id` uuid · `account_id` uuid · `property_id` uuid · `from_member_id` uuid · `to_member_id` uuid · `expense_id` uuid? · `split_ids` ARRAY · `amount` numeric · `status` text · `created_at` timestamp with time zone · `decided_at` timestamp with time zone? · `decided_by_member_id` uuid?
 
 Policies: Members read payment claims (SELECT)
 

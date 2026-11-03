@@ -1252,6 +1252,7 @@ export type Database = {
           from_member_id: string
           id: string
           property_id: string
+          split_ids: string[]
           status: string
           to_member_id: string
         }
@@ -1265,6 +1266,7 @@ export type Database = {
           from_member_id: string
           id?: string
           property_id: string
+          split_ids?: string[]
           status?: string
           to_member_id: string
         }
@@ -1278,6 +1280,7 @@ export type Database = {
           from_member_id?: string
           id?: string
           property_id?: string
+          split_ids?: string[]
           status?: string
           to_member_id?: string
         }

@@ -11,7 +11,11 @@ import type { Property } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { friendlyError } from "@/lib/rpc-errors";
 
-const num = (v: string) => (v.trim() ? Number(v) : undefined);
+// Whole numbers only; anything else is left out (the field keeps its value).
+const num = (v: string) => {
+  const n = Number(v.trim());
+  return v.trim() && Number.isInteger(n) && n >= 1 ? n : undefined;
+};
 const TIME = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
 
 export function CottageDetailsEditor({
@@ -154,6 +158,9 @@ export function CottageDetailsEditor({
           ))}
         </div>
       </div>
+      <p className="text-[16px] text-muted-foreground">
+        {t("Prázdné pole ponechá dosavadní údaj.", "An empty field keeps what was there before.")}
+      </p>
       {badTime && (
         <p role="alert" className="text-[16px] font-semibold text-destructive">
           {t("Čas napište jako 15:00.", "Write the time like 15:00.")}

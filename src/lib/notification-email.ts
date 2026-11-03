@@ -207,7 +207,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
         paragraphs.push([`Hotovo: ${done.join(", ")}.`, `Done: ${done.join(", ")}.`]);
       if (skipped.length)
         paragraphs.push([`Nehotovo: ${skipped.join(", ")}.`, `Not done: ${skipped.join(", ")}.`]);
-      if (s(p.note)) paragraphs.push([`Vzkaz: „${s(p.note)}“`, ""]);
+      if (s(p.note)) paragraphs.push([`Vzkaz: „${s(p.note)}“`, `Note: “${s(p.note)}”`]);
       return {
         subject: ["Předání chaty před vaším pobytem", "Handover before your stay"],
         heading: ["Jak chatu zanechal předchozí host", "How the cottage was left for you"],

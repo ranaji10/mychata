@@ -80,7 +80,14 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const { lang } = useLang();
   useEffect(() => {
     if (!user) return;
-    const chosen = readStoredLang();
+    // localStorage throws in private mode: then the language on screen is the choice.
+    let chosen: "cs" | "en" = lang;
+    try {
+      localStorage.getItem("mychata.lang");
+      chosen = readStoredLang();
+    } catch {
+      chosen = lang;
+    }
     const key = `mychata.lang.saved.${user.id}`;
     try {
       if (localStorage.getItem(key) === chosen) return;

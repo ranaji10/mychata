@@ -205,13 +205,21 @@ function ApprovalsPage() {
             ))}
         </div>
       )}
+      {/* A request whose dates have passed is "removed", not declined (T-057 review). */}
       <ConfirmDialog
         open={!!declining}
         onOpenChange={(open) => !open && setDeclining(null)}
-        title={t(
-          `Zamítnout rezervaci ${declining?.requester_name ?? ""}?`,
-          `Decline ${declining?.requester_name ?? ""}'s booking?`,
-        )}
+        title={
+          declining && declining.end_date < todayISO()
+            ? t(
+                `Odebrat prošlou žádost ${declining.requester_name}?`,
+                `Remove ${declining.requester_name}'s past request?`,
+              )
+            : t(
+                `Zamítnout rezervaci ${declining?.requester_name ?? ""}?`,
+                `Decline ${declining?.requester_name ?? ""}'s booking?`,
+              )
+        }
         description={
           declining
             ? t(
@@ -220,7 +228,11 @@ function ApprovalsPage() {
               )
             : ""
         }
-        confirmLabel={t("Zamítnout", "Decline")}
+        confirmLabel={
+          declining && declining.end_date < todayISO()
+            ? t("Odebrat", "Remove")
+            : t("Zamítnout", "Decline")
+        }
         busy={decide.isPending}
         onConfirm={() => declining && decide.mutate({ id: declining.id, approve: false })}
       />

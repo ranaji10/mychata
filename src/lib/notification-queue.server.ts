@@ -192,10 +192,9 @@ export async function supabaseQueueStore(): Promise<QueueStore> {
             : "";
           const i = await one("invitations", "id", invId, "status, expires_at");
           if (!invId) return true;
+          const expires = i?.["expires_at"] ? Date.parse(String(i["expires_at"])) : NaN;
           return (
-            !!i &&
-            i["status"] === "PENDING" &&
-            (!i["expires_at"] || String(i["expires_at"]) > new Date().toISOString())
+            !!i && i["status"] === "PENDING" && (Number.isNaN(expires) || expires > Date.now())
           );
         }
         case "payment_claimed": {
@@ -207,6 +206,11 @@ export async function supabaseQueueStore(): Promise<QueueStore> {
       }
     },
     async languageOf(n) {
+      // Before migration 0040 the column and email_lang() don't exist: language unknown (Czech),
+      // never a failed e-mail (T-057 review).
+      const missing = (e: { code?: string; message?: string } | null) =>
+        !!e &&
+        /42703|42883|PGRST202|PGRST204|preferred_lang|email_lang/.test(`${e.code} ${e.message}`);
       const prefOf = async (userId: string | null | undefined) => {
         if (!userId) return null;
         const { data, error } = await supabaseAdmin
@@ -214,6 +218,7 @@ export async function supabaseQueueStore(): Promise<QueueStore> {
           .select("preferred_lang")
           .eq("user_id", userId)
           .maybeSingle();
+        if (missing(error)) return null;
         check(error, "language");
         const l = data?.preferred_lang;
         return l === "en" || l === "cs" ? l : null;
@@ -233,6 +238,7 @@ export async function supabaseQueueStore(): Promise<QueueStore> {
         const { data, error } = await supabaseAdmin.rpc("email_lang", {
           _email: n.recipient_email,
         });
+        if (missing(error)) return prefOf(n.sender_user_id);
         check(error, "email language");
         if (data === "en" || data === "cs") return data;
         return prefOf(n.sender_user_id);

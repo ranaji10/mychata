@@ -42,6 +42,7 @@ function SettlementPage() {
   const queryClient = useQueryClient();
   const [settling, setSettling] = useState<string | null>(null);
 
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const { data, isLoading } = useExpenseData(property?.id);
   const { data: claims } = usePaymentClaims(property?.id);
   // Payments people say they made to me (or, for an admin, to anyone) wait for a yes or no (T-057).
@@ -49,7 +50,6 @@ function SettlementPage() {
     (c) =>
       c.to_member_id === currentMember?.id || (isAdmin && c.from_member_id !== currentMember?.id),
   );
-  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
 
   const suggestions = useMemo(
     () => (data ? settlementSuggestions(data.expenses, data.splits) : []),

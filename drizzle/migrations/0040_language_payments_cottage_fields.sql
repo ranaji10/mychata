@@ -212,6 +212,9 @@ create table if not exists public.payment_claims (
   to_member_id uuid not null references public.members (id) on delete cascade,
   -- Null: everything the payer owed this person at this cottage; set: one expense's share.
   expense_id uuid references public.expenses (id) on delete cascade,
+  -- The unpaid shares between the two when the payment was reported; confirming marks exactly
+  -- these paid, so a share added later stays open (T-057 review).
+  split_ids uuid[] not null default '{}',
   amount numeric not null check (amount > 0),
   status text not null default 'PENDING' check (status in ('PENDING', 'CONFIRMED', 'REJECTED')),
   created_at timestamptz not null default now(),
@@ -247,6 +250,7 @@ create or replace function public.claim_payment(
   _property_id uuid, _to_member_id uuid, _expense_id uuid default null
 ) returns uuid language plpgsql security definer set search_path = public as $$
 declare prop public.properties; me public.members; owed numeric; claim_id uuid; exp_title text;
+  splits uuid[];
 begin
   select * into prop from public.properties where id = _property_id;
   if not found then raise exception 'not_a_member' using errcode = '42501'; end if;
@@ -254,19 +258,21 @@ begin
   where account_id = prop.account_id and user_id = auth.uid() and left_at is null;
   if not found then raise exception 'not_a_member' using errcode = '42501'; end if;
   if _to_member_id = me.id or not exists (select 1 from public.members
-                 where id = _to_member_id and account_id = prop.account_id) then
+                 where id = _to_member_id and account_id = prop.account_id and left_at is null) then
     raise exception 'member_not_in_account' using errcode = '22023';
   end if;
   if _expense_id is not null then
-    select s.amount_owed, coalesce(nullif(e.description, ''), e.category) into owed, exp_title
+    select s.amount_owed, coalesce(nullif(e.description, ''), e.category), array[s.id]
+      into owed, exp_title, splits
     from public.expense_splits s join public.expenses e on e.id = s.expense_id
     where e.id = _expense_id and e.property_id = _property_id
       and e.paid_by_member_id = _to_member_id and s.member_id = me.id and not s.paid_back;
     owed := coalesce(owed, 0);
   else
     -- Net between the two at this cottage, as the settlement screen shows it.
-    select coalesce(sum(case when s.member_id = me.id then s.amount_owed else -s.amount_owed end), 0)
-      into owed
+    select coalesce(sum(case when s.member_id = me.id then s.amount_owed else -s.amount_owed end), 0),
+           coalesce(array_agg(s.id), '{}')
+      into owed, splits
     from public.expense_splits s join public.expenses e on e.id = s.expense_id
     where e.property_id = _property_id and not s.paid_back
       and ((s.member_id = me.id and e.paid_by_member_id = _to_member_id)
@@ -282,8 +288,8 @@ begin
     raise exception 'rate_limited' using errcode = '54000';
   end if;
 
-  insert into public.payment_claims (account_id, property_id, from_member_id, to_member_id, expense_id, amount)
-  values (prop.account_id, _property_id, me.id, _to_member_id, _expense_id, owed)
+  insert into public.payment_claims (account_id, property_id, from_member_id, to_member_id, expense_id, amount, split_ids)
+  values (prop.account_id, _property_id, me.id, _to_member_id, _expense_id, owed, splits)
   returning id into claim_id;
   perform public.notify_enqueue(prop.account_id, 'payment_claimed', _to_member_id, null, null,
     jsonb_build_object('claim_id', claim_id, 'from_name', me.name, 'from_member_id', me.id,
@@ -308,6 +314,9 @@ begin
   select * into me from public.members
   where account_id = c.account_id and user_id = auth.uid() and left_at is null;
   if not found then raise exception 'not_a_member' using errcode = '42501'; end if;
+  if me.id = c.from_member_id then
+    raise exception 'only_receiver_confirms' using errcode = '42501';
+  end if;
   if me.id <> c.to_member_id and not public.has_account_role(c.account_id, 'admin') then
     raise exception 'only_receiver_confirms' using errcode = '42501';
   end if;
@@ -321,16 +330,10 @@ begin
   where id = c.id;
 
   if _received then
+    -- Exactly the shares owed when the payment was reported; a share added later stays open.
     update public.expense_splits s
     set paid_back = true, paid_back_confirmed_by = me.id
-    from public.expenses e
-    where e.id = s.expense_id and e.property_id = c.property_id and not s.paid_back
-      and (case when c.expense_id is not null
-             then e.id = c.expense_id and s.member_id = c.from_member_id
-                  and e.paid_by_member_id = c.to_member_id
-             else (s.member_id = c.from_member_id and e.paid_by_member_id = c.to_member_id)
-               or (s.member_id = c.to_member_id and e.paid_by_member_id = c.from_member_id)
-           end);
+    where s.id = any(c.split_ids) and not s.paid_back;
     insert into public.audit_log (account_id, actor_user_id, action, target_type, target_id, detail)
     values (c.account_id, auth.uid(), 'payment_confirmed', 'property', c.property_id,
             jsonb_build_object('claim', c.id, 'from', c.from_member_id, 'to', c.to_member_id));
@@ -355,18 +358,14 @@ grant execute on function public.decide_payment_claim(uuid, boolean) to authenti
 -- received, Cover it all, an admin): no more "waiting to confirm" for money already settled.
 create or replace function public.close_settled_claims()
 returns trigger language plpgsql security definer set search_path = public as $$
-declare payer uuid;
 begin
   if not (new.paid_back and not old.paid_back) then return null; end if;
-  select paid_by_member_id into payer from public.expenses where id = new.expense_id;
+  -- An open claim closes once every share it covered is paid.
   update public.payment_claims c
   set status = 'CONFIRMED', decided_at = now()
-  where c.status = 'PENDING' and c.from_member_id = new.member_id and c.to_member_id = payer
-    and (c.expense_id = new.expense_id
-      or (c.expense_id is null and not exists (
-            select 1 from public.expense_splits s join public.expenses e on e.id = s.expense_id
-            where e.property_id = c.property_id and not s.paid_back
-              and s.member_id = c.from_member_id and e.paid_by_member_id = c.to_member_id)));
+  where c.status = 'PENDING' and new.id = any(c.split_ids)
+    and not exists (select 1 from public.expense_splits s
+                    where s.id = any(c.split_ids) and not s.paid_back);
   return null;
 end;
 $$;

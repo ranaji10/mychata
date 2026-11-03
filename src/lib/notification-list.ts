@@ -114,6 +114,8 @@ export interface NotificationInput {
   documents?: DocumentLite[] | null | undefined;
   /** Stored notifications (T-053); one for the same booking or offer replaces the computed item. */
   stored?: StoredNotification[] | null | undefined;
+  /** The open cottage; debts and claims are known only for it (T-057). */
+  propertyId?: string | undefined;
   /** Open "I paid" claims at this cottage (T-057). */
   claims?:
     | {
@@ -454,7 +456,12 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
       replaced.add(item.replaces);
     }
     // A reminder to settle up only while something is still owed to that person (T-057).
-    if (item.whileOwing !== undefined) {
+    // Debts are only known for the open cottage: a reminder about another one stays.
+    const elsewhere =
+      !!input.propertyId &&
+      !!str((n.payload as Record<string, unknown> | undefined)?.["property_id"]) &&
+      str((n.payload as Record<string, unknown> | undefined)?.["property_id"]) !== input.propertyId;
+    if (item.whileOwing !== undefined && !elsewhere) {
       const prefix = item.whileOwing ? `owe:${item.whileOwing}:` : "owe:";
       if (!keys.some((k) => k.startsWith(prefix))) continue;
     }

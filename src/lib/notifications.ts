@@ -161,6 +161,7 @@ export function useNotifications() {
     hasName: !!(profile?.display_name ?? "").trim(),
     members,
     propertyName: property?.name,
+    propertyId: property?.id,
     accountsToRename: familyAccountsNamedLikeCottage(
       accounts,
       memberships.filter((m) => m.role === "ADMIN" || m.role === "OWNER").map((m) => m.account_id),

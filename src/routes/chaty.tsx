@@ -270,10 +270,14 @@ function CottageCard({
   const saveRules = useMutation({
     mutationFn: async () => {
       const text = rules.trim();
-      const translatedRules = (language: 0 | 1) => text.split("\n").map(line => {
-        const pair = STARTER_RULES.find(rule => rule[0] === line || rule[1] === line);
-        return pair?.[language] ?? line;
-      }).join("\n");
+      const translatedRules = (language: 0 | 1) =>
+        text
+          .split("\n")
+          .map((line) => {
+            const pair = STARTER_RULES.find((rule) => rule[0] === line || rule[1] === line);
+            return pair?.[language] ?? line;
+          })
+          .join("\n");
       const { error } = await supabase.from("manual_sections").insert({
         property_id: property.id,
         category: "rules",

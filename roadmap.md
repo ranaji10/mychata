@@ -1,3 +1,12 @@
+## Requested UI actions (3 Nov 2026)
+
+- [x] Expense detail, receipts, payer reminders and cover-all; omit mark-own-share.
+- [x] Handover recipient, task notes/mentions, overdue prompt and pending-stay admin message.
+- [x] Name-only cottage setup, shared field hints (capacity omitted), starter rules and manual question suggestions.
+- [x] Phone-width checks and changed-file/click checklist: docs/external/lovable/2026-11-03-ui-actions.md; no publishing.
+- [ ] Maintainer checks: second-member notifications/read persistence, reminders/cover-all, admin-message and next-recipient delivery; no second member/admin in own test account.
+- [ ] Maintainer cleanup: empty temporary Lovable dočasná chata (test); delete refused with zero rows under existing permissions, its temporary manual content removed.
+
 ## T-028 Fresh air public pages (14 Oct 2026)
 
 - [x] Restyle only allowed public routes and fallback pages; Czech link previews and priority seasonal heroes.

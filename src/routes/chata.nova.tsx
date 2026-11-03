@@ -32,18 +32,12 @@ function AddPropertyPage() {
   const { setActivePropertyId, currentMember, account } = useAccount();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [rooms, setRooms] = useState("");
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
     setBusy(true);
     const { data, error } = await supabase.rpc("add_property", {
       _name: name.trim(),
-      _address: address.trim(),
-      ...(city.trim() ? { _city: city.trim() } : {}),
-      ...(rooms ? { _rooms: Number(rooms) } : {}),
     });
     setBusy(false);
     if (error) {
@@ -60,7 +54,7 @@ function AddPropertyPage() {
     queryClient.invalidateQueries({ queryKey: ["properties"] });
     if (data) setActivePropertyId(data as string);
     toast.success(t("Chata přidána — jste jejím správcem.", "Cottage added — you are its admin."));
-    navigate({ to: "/domu" });
+    navigate({ to: "/chaty" });
   };
 
   return (
@@ -86,44 +80,18 @@ function AddPropertyPage() {
           </Link>
         </div>
       )}
-      <div className={`card mt-4 space-y-3 p-4 ${isAdmin ? "" : "hidden"}`}>
+      <div className={`mt-4 space-y-3 ${isAdmin ? "" : "hidden"}`}>
         <label className="block">
-          <span className="label-text">{t("Název chaty", "Cottage name")}</span>
+          <span className="label-text text-[16px]">
+            {t("Jak se vaše chata jmenuje?", "What's your chata called?")}
+          </span>
           <input className="field w-full" value={name} onChange={(e) => setName(e.target.value)} />
         </label>
-        <label className="block">
-          <span className="label-text">{t("Adresa", "Address")}</span>
-          <input
-            className="field w-full"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="label-text">{t("Město", "City")}</span>
-            <input
-              className="field w-full"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
-          </label>
-          <label className="block">
-            <span className="label-text">{t("Pokoje", "Rooms")}</span>
-            <input
-              className="field w-full"
-              type="number"
-              min={1}
-              value={rooms}
-              onChange={(e) => setRooms(e.target.value)}
-            />
-          </label>
-        </div>
         <Button
           variant="fresh"
           size="fresh"
           className="btn-primary w-full"
-          disabled={busy || name.trim().length < 2 || address.trim().length < 2}
+          disabled={busy || !name.trim()}
           onClick={save}
         >
           {busy ? t("Ukládám…", "Saving…") : t("Přidat chatu", "Add cottage")}

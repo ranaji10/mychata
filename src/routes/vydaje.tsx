@@ -28,6 +28,7 @@ import {
 } from "@/lib/data";
 import { expenseDataKey, useExpenseData } from "@/lib/expenses";
 import { useLang } from "@/lib/i18n";
+import { ExpenseDetail } from "@/components/ExpenseDetail";
 
 export const Route = createFileRoute("/vydaje")({
   staticData: { sitemap: false },
@@ -68,6 +69,7 @@ function ExpensesPage() {
   const [splitMethod, setSplitMethod] = useState<"EQUAL" | "CUSTOM" | "BY_BRANCH">("EQUAL");
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const { data, isLoading } = useExpenseData(property?.id);
   const expenses = data?.expenses;
@@ -243,9 +245,11 @@ function ExpensesPage() {
       ) : (
         <div className="card px-4 py-1">
           {expenses.map((e) => (
-            <div
+            <Button
+              variant="ghost"
               key={e.id}
-              className="flex min-h-[60px] flex-wrap items-center gap-3 border-b border-divider py-3 last:border-0"
+              onClick={() => setDetailId(e.id)}
+              className="flex h-auto min-h-[60px] w-full flex-wrap items-center gap-3 whitespace-normal rounded-none border-b border-divider px-0 py-3 text-left last:border-0"
             >
               <div className="min-w-[160px] flex-1">
                 <p className="break-words text-[16px] font-semibold">
@@ -274,11 +278,22 @@ function ExpensesPage() {
                     );
                   })()}
               </div>
-            </div>
+            </Button>
           ))}
         </div>
       )}
 
+      {detailId && expenses?.find((expense) => expense.id === detailId) && (
+        <ExpenseDetail
+          expense={
+            expenses.find((expense) => expense.id === detailId) as NonNullable<
+              typeof expenses
+            >[number]
+          }
+          splits={splitsOf(detailId)}
+          onClose={() => setDetailId(null)}
+        />
+      )}
       {showForm ? (
         <section className="card mt-4 space-y-3 p-4">
           <h3 className="text-lg font-bold">{t("Nový výdaj", "New expense")}</h3>

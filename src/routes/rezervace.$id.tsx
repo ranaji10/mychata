@@ -37,6 +37,33 @@ function BookingDetail() {
 
   const bookingKey = ["booking", account?.id, id];
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const sendMessage = async () => {
+    if (!account || !message.trim()) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.rpc("message_admins", {
+        _account_id: account.id,
+        _body: message.trim(),
+      });
+      if (error) throw error;
+      toast.success(t("Zpráva správci poslána.", "Message sent to the admin."));
+      setMessage("");
+      setMessageOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ["stored-notifications"] });
+    } catch (error) {
+      toast.error(
+        t(
+          `Zprávu se nepodařilo poslat: ${(error as Error).message}`,
+          `Could not send the message: ${(error as Error).message}`,
+        ),
+      );
+    } finally {
+      setSending(false);
+    }
+  };
   const {
     data: booking,
     isLoading,
@@ -245,6 +272,50 @@ function BookingDetail() {
                 "The administrator decides and you'll see it here.",
               )}
             </p>
+          )}
+        </section>
+      )}
+
+      {pending && (
+        <section className="mt-4 space-y-3">
+          <Button
+            variant="fresh"
+            size="fresh"
+            className="btn-secondary w-full"
+            onClick={() => {
+              setMessageOpen(!messageOpen);
+              if (!message)
+                setMessage(
+                  t(
+                    `Prosím o schválení pobytu ${fmtDate(booking.start_date)}–${fmtDate(booking.end_date)} (${booking.requester_name}).`,
+                    `Please approve the stay ${fmtDate(booking.start_date)}–${fmtDate(booking.end_date)} (${booking.requester_name}).`,
+                  ),
+                );
+            }}
+          >
+            {t("Napsat správci", "Message the admin")}
+          </Button>
+          {messageOpen && (
+            <div className="space-y-2">
+              <label className="block">
+                <span className="label-text text-[16px]">{t("Zpráva", "Message")}</span>
+                <textarea
+                  className="field min-h-28 w-full"
+                  maxLength={1000}
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                />
+              </label>
+              <Button
+                variant="fresh"
+                size="fresh"
+                className="btn-primary w-full"
+                disabled={sending || !message.trim()}
+                onClick={() => void sendMessage()}
+              >
+                {sending ? t("Posílám…", "Sending…") : t("Poslat", "Send")}
+              </Button>
+            </div>
           )}
         </section>
       )}

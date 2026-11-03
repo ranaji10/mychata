@@ -93,12 +93,8 @@ function NotificationsPage() {
         return;
       }
       void client.invalidateQueries({ queryKey: ["stored-notifications"] });
-    } else {
-      markSeen(
-        userId,
-        [...readSeen(userId), item.key].filter((key) => !key.startsWith("stored:")),
-      );
     }
+    markSeen(userId, [...readSeen(userId), item.key]);
   };
 
   const needsYou = items.filter((i) => i.tone !== "info");

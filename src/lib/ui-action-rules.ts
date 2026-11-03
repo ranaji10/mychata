@@ -2,7 +2,7 @@ export function canCoverExpense(payerId: string | null, memberId: string | undef
   return !!memberId && payerId === memberId;
 }
 
-export function canEditTaskNote(authorId: string, memberId: string | undefined) {
+export function canEditTaskNote(authorId: string | null, memberId: string | undefined) {
   return !!memberId && authorId === memberId;
 }
 

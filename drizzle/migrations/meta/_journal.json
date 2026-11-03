@@ -274,6 +274,13 @@
       "when": 1793670924443,
       "tag": "0038_notifications_task_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793672554971,
+      "tag": "0039_0039_apply_journaled_0038",
+      "breakpoints": true
     }
   ]
 }

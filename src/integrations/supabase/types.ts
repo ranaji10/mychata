@@ -1037,59 +1037,6 @@ export type Database = {
           },
         ]
       }
-      onboarding_answers: {
-        Row: {
-          answers: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          answers?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          answers?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      org_join_requests: {
-        Row: {
-          account_id: string
-          created_at: string
-          email: string
-          id: string
-          status: string
-          user_id: string
-        }
-        Insert: {
-          account_id: string
-          created_at?: string
-          email: string
-          id?: string
-          status?: string
-          user_id: string
-        }
-        Update: {
-          account_id?: string
-          created_at?: string
-          email?: string
-          id?: string
-          status?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "org_join_requests_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       notifications: {
         Row: {
           account_id: string
@@ -1158,6 +1105,59 @@ export type Database = {
             columns: ["recipient_member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_answers: {
+        Row: {
+          answers: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      org_join_requests: {
+        Row: {
+          account_id: string
+          created_at: string
+          email: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          email: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_join_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1514,6 +1514,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "task_note_mentions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_note_mentions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "task_note_mentions_note_id_fkey"
             columns: ["note_id"]
             isOneToOne: false
@@ -1551,6 +1565,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "task_notes_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_notes_author_member_id_fkey"
+            columns: ["author_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "task_notes_task_id_fkey"
             columns: ["task_id"]
@@ -1692,10 +1720,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_task_note: {
-        Args: { _mention_member_ids?: string[]; _body: string; _task_id: string }
-        Returns: string
-      }
       accept_invitation: { Args: { _token: string }; Returns: string }
       account_founder: { Args: { _account_id: string }; Returns: string }
       account_plan: { Args: { _account_id: string }; Returns: string }
@@ -1720,6 +1744,14 @@ export type Database = {
           _city?: string
           _name: string
           _rooms?: number
+        }
+        Returns: string
+      }
+      add_task_note: {
+        Args: {
+          _body: string
+          _mention_member_ids?: string[]
+          _task_id: string
         }
         Returns: string
       }
@@ -1764,6 +1796,19 @@ export type Database = {
       }
       f_unaccent: { Args: { "": string }; Returns: string }
       feature_enabled: { Args: { _key: string }; Returns: boolean }
+      forward_leaving_checklist_to: {
+        Args: { _booking_id: string }
+        Returns: undefined
+      }
+      handover_next_recipient: {
+        Args: { _handover_id: string }
+        Returns: {
+          end_date: string
+          member_name: string
+          sent: boolean
+          start_date: string
+        }[]
+      }
       has_account_role: {
         Args: { _account_id: string; _role: string }
         Returns: boolean
@@ -1793,18 +1838,12 @@ export type Database = {
       is_admin_only_file: { Args: { _name: string }; Returns: boolean }
       is_member: { Args: { _account_id: string }; Returns: boolean }
       is_property_admin: { Args: { _property_id: string }; Returns: boolean }
-      handover_next_recipient: {
-        Args: { _handover_id: string }
-        Returns: {
-          end_date: string
-          member_name: string
-          sent: boolean
-          start_date: string
-        }[]
-      }
       leave_account: { Args: { _account_id: string }; Returns: string }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
-      message_admins: { Args: { _account_id: string; _body: string }; Returns: number }
+      message_admins: {
+        Args: { _account_id: string; _body: string }
+        Returns: number
+      }
       my_cottages: {
         Args: never
         Returns: {
@@ -1851,6 +1890,27 @@ export type Database = {
           start_date: string
           status: string
         }[]
+      }
+      next_stay_after_handover: {
+        Args: { _handover_id: string }
+        Returns: string
+      }
+      notify_enqueue: {
+        Args: {
+          _account_id: string
+          _dedupe: string
+          _email: string
+          _email_ok?: boolean
+          _kind: string
+          _member_id: string
+          _payload: Json
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      notify_leaving_checklist: {
+        Args: { _booking_id: string; _handover_id: string }
+        Returns: undefined
       }
       offer_account_ownership: {
         Args: { _account_id: string; _to_member_id: string }
@@ -1920,7 +1980,10 @@ export type Database = {
           property_name: string
         }[]
       }
-      remind_debt: { Args: { _member_id: string; _property_id: string }; Returns: number }
+      remind_debt: {
+        Args: { _member_id: string; _property_id: string }
+        Returns: number
+      }
       rename_account: {
         Args: { _account_id: string; _name: string }
         Returns: undefined

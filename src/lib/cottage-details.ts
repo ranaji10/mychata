@@ -29,11 +29,19 @@ export function missingCottageDetails(
 }
 
 /** One line for the card: "6 people · 3 rooms · 5 beds · arrival from 15:00 · …". */
+/** Czech noun form for a count: 1 pokoj, 2–4 pokoje, 5+ pokojů. */
+const cz = (n: number, one: string, few: string, many: string) =>
+  `${n} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`;
+/** English: 1 room, 2 rooms. */
+const en = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
 export function cottageFactsLine(p: Property, t: (cs: string, en: string) => string): string {
   const parts: string[] = [];
-  if (p.capacity) parts.push(t(`${p.capacity} osob`, `${p.capacity} people`));
-  if (p.rooms) parts.push(t(`${p.rooms} pokoje`, `${p.rooms} rooms`));
-  if (p.beds) parts.push(t(`${p.beds} lůžek`, `${p.beds} beds`));
+  if (p.capacity)
+    parts.push(t(cz(p.capacity, "osoba", "osoby", "osob"), en(p.capacity, "person", "people")));
+  if (p.rooms)
+    parts.push(t(cz(p.rooms, "pokoj", "pokoje", "pokojů"), en(p.rooms, "room", "rooms")));
+  if (p.beds) parts.push(t(cz(p.beds, "lůžko", "lůžka", "lůžek"), en(p.beds, "bed", "beds")));
   if (p.check_in_time)
     parts.push(t(`příjezd od ${p.check_in_time}`, `arrival from ${p.check_in_time}`));
   if (p.check_out_time)

@@ -48,6 +48,14 @@ describe("house rules", () => {
 });
 
 describe("cottage facts", () => {
+  it("Czech plurals: 1 pokoj, 3 pokoje, 6 pokojů", () => {
+    const cs = (c: string) => c;
+    const base = { rooms: 1, capacity: 3, beds: 6 } as unknown as Property;
+    expect(cottageFactsLine(base, cs)).toBe("3 osoby · 1 pokoj · 6 lůžek");
+    expect(cottageFactsLine({ ...base, rooms: 6, capacity: 5, beds: 2 }, cs)).toBe(
+      "5 osob · 6 pokojů · 2 lůžka",
+    );
+  });
   const p = {
     address: "Lesní 1",
     city: "Testov",

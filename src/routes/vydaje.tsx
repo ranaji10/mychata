@@ -283,8 +283,16 @@ function ExpensesPage() {
         </div>
       )}
 
-      {detailId && expenses?.find(expense => expense.id === detailId) && (
-        <ExpenseDetail expense={expenses.find(expense => expense.id === detailId) as NonNullable<typeof expenses>[number]} splits={splitsOf(detailId)} onClose={() => setDetailId(null)} />
+      {detailId && expenses?.find((expense) => expense.id === detailId) && (
+        <ExpenseDetail
+          expense={
+            expenses.find((expense) => expense.id === detailId) as NonNullable<
+              typeof expenses
+            >[number]
+          }
+          splits={splitsOf(detailId)}
+          onClose={() => setDetailId(null)}
+        />
       )}
       {showForm ? (
         <section className="card mt-4 space-y-3 p-4">

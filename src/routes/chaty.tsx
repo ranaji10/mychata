@@ -309,7 +309,11 @@ function CottageCard({
           </span>
         )}
       </div>
-      {counts && missingCottageDetails(property, counts.photos > 0).length > 0 && <span className="pill mt-2 bg-warn-soft text-warn-foreground">{t("Chybí údaje", "Details missing")}</span>}
+      {counts && missingCottageDetails(property, counts.photos > 0).length > 0 && (
+        <span className="pill mt-2 bg-warn-soft text-warn-foreground">
+          {t("Chybí údaje", "Details missing")}
+        </span>
+      )}
       {(property.address || property.city) && (
         <p className="truncate text-[16px] text-muted-foreground">
           {[property.address, property.city].filter(Boolean).join(", ")}

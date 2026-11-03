@@ -30,7 +30,9 @@ import {
 } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
-  validateSearch: (search: Record<string, unknown>) => ({ note: search["note"] === true || search["note"] === "true" }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    note: search["note"] === true || search["note"] === "true",
+  }),
   staticData: { sitemap: false },
   head: () => ({
     meta: [

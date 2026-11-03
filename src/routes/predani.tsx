@@ -165,15 +165,34 @@ function HandoverPage() {
     },
     onSuccess: async (handoverId) => {
       if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
-      const { data: recipients, error } = await supabase.rpc("handover_next_recipient", { _handover_id: handoverId });
+      const { data: recipients, error } = await supabase.rpc("handover_next_recipient", {
+        _handover_id: handoverId,
+      });
       if (error) {
-        toast.error(t(`Uloženo, ale příjemce se nepodařilo zjistit: ${error.message}`, `Saved, but could not check the recipient: ${error.message}`));
+        toast.error(
+          t(
+            `Uloženo, ale příjemce se nepodařilo zjistit: ${error.message}`,
+            `Saved, but could not check the recipient: ${error.message}`,
+          ),
+        );
       } else if (!recipients?.length) {
         toast.success(t("Uloženo. Zatím žádný další pobyt.", "Saved. No upcoming stay yet."));
       } else {
         const next = recipients[0];
-        if (next?.sent) toast.success(t(`Předání posláno: ${next.member_name}, pobyt ${fmtDate(next.start_date)}–${fmtDate(next.end_date)}.`, `Handover sent to ${next.member_name}, staying ${fmtDate(next.start_date)}–${fmtDate(next.end_date)}.`));
-        else toast.warning(t("Uloženo. Předání zatím nebylo posláno.", "Saved. The handover has not been sent yet."));
+        if (next?.sent)
+          toast.success(
+            t(
+              `Předání posláno: ${next.member_name}, pobyt ${fmtDate(next.start_date)}–${fmtDate(next.end_date)}.`,
+              `Handover sent to ${next.member_name}, staying ${fmtDate(next.start_date)}–${fmtDate(next.end_date)}.`,
+            ),
+          );
+        else
+          toast.warning(
+            t(
+              "Uloženo. Předání zatím nebylo posláno.",
+              "Saved. The handover has not been sent yet.",
+            ),
+          );
       }
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });

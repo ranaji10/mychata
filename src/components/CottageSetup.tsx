@@ -135,14 +135,14 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
       </p>
       {missing.includes("photo") && (
         <div>
-        <CottageFieldHint field="photo" />
-        <Link
-          to="/fotky"
-          onClick={() => active?.id !== property.id && setActivePropertyId(property.id)}
-          className="mt-2 inline-flex min-h-11 items-center text-[16px] font-bold text-primary"
-        >
-          {t("Přidat fotky chaty", "Add cottage photos")}
-        </Link>
+          <CottageFieldHint field="photo" />
+          <Link
+            to="/fotky"
+            onClick={() => active?.id !== property.id && setActivePropertyId(property.id)}
+            className="mt-2 inline-flex min-h-11 items-center text-[16px] font-bold text-primary"
+          >
+            {t("Přidat fotky chaty", "Add cottage photos")}
+          </Link>
         </div>
       )}
       {formFields.length > 0 && !open && (

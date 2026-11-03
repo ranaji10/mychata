@@ -9,6 +9,7 @@ import { useAccount } from "@/lib/account";
 import type { Property } from "@/lib/data";
 import { missingCottageDetails, type Missing } from "@/lib/cottage-details";
 import { useLang } from "@/lib/i18n";
+import { CottageFieldHint } from "@/components/CottageFieldHint";
 
 const SEASONS = [
   { id: "summer", cs: "Léto", en: "Summer" },
@@ -133,6 +134,8 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
         {missing.map((m) => label[m]).join(", ")}
       </p>
       {missing.includes("photo") && (
+        <div>
+        <CottageFieldHint field="photo" />
         <Link
           to="/fotky"
           onClick={() => active?.id !== property.id && setActivePropertyId(property.id)}
@@ -140,6 +143,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
         >
           {t("Přidat fotky chaty", "Add cottage photos")}
         </Link>
+        </div>
       )}
       {formFields.length > 0 && !open && (
         <Button
@@ -161,6 +165,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
+              <CottageFieldHint field="address" />
             </label>
           )}
           {missing.includes("city") && (
@@ -183,11 +188,13 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                 value={rooms}
                 onChange={(e) => setRooms(e.target.value)}
               />
+              <CottageFieldHint field="rooms" />
             </label>
           )}
           {missing.includes("seasons") && (
             <div>
               <p className="text-[16px] font-bold">{t("Rušná období", "Busy seasons")}</p>
+              <CottageFieldHint field="seasons" />
               <div className="mt-1 flex flex-wrap gap-2">
                 {SEASONS.map((s) => (
                   <Button

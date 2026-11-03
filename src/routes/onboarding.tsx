@@ -18,6 +18,8 @@ import { inviteLink } from "@/lib/invites";
 import { accountNameFromEmail, sameName } from "@/lib/account-label";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { AutoApproveChoice } from "@/components/AutoApproveChoice";
+import { CottageFieldHint } from "@/components/CottageFieldHint";
+import { HouseRulesEditor } from "@/components/HouseRulesEditor";
 
 export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
@@ -592,6 +594,7 @@ function OnboardingPage() {
                 </label>
                 <label className="block">
                   <span className="label-text">{t("Adresa", "Address")}</span>
+                  <CottageFieldHint field="address" />
                   <input
                     className="field w-full"
                     value={c.address}
@@ -617,6 +620,7 @@ function OnboardingPage() {
                   </label>
                   <label className="block">
                     <span className="label-text">{t("Pokoje", "Rooms")}</span>
+                    <CottageFieldHint field="rooms" />
                     <input
                       className="field w-full"
                       type="number"
@@ -668,6 +672,7 @@ function OnboardingPage() {
               />
             </label>
             <p className="font-bold">{t("Máte rušná období?", "Any busy seasons?")}</p>
+            <CottageFieldHint field="seasons" />
             <div className="flex flex-wrap gap-2">
               {SEASONS.map((s) => (
                 <Button
@@ -752,16 +757,7 @@ function OnboardingPage() {
             <h1 className="text-[28px] font-extrabold leading-[1.15]">
               {t("Pravidla domu", "House rules")}
             </h1>
-            <textarea
-              className="field min-h-40 w-full"
-              aria-label={t("Pravidla domu", "House rules")}
-              placeholder={t(
-                "Např. tichá noc od 22:00, boty u dveří…",
-                "E.g. quiet hours after 10 pm, shoes at the door…",
-              )}
-              value={houseRules}
-              onChange={(e) => setHouseRules(e.target.value)}
-            />
+            <HouseRulesEditor value={houseRules} onChange={setHouseRules} />
             <p className="text-[16px] text-muted-foreground">
               {t(
                 "Můžete doplnit i později v Manuálu chaty.",

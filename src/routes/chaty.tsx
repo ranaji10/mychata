@@ -21,6 +21,8 @@ import { useAccount } from "@/lib/account";
 import type { Property } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { useMyCottages } from "@/lib/my-cottages";
+import { HouseRulesEditor } from "@/components/HouseRulesEditor";
+import { missingCottageDetails } from "@/lib/cottage-details";
 
 export const Route = createFileRoute("/chaty")({
   staticData: { sitemap: false },
@@ -307,6 +309,7 @@ function CottageCard({
           </span>
         )}
       </div>
+      {counts && missingCottageDetails(property, counts.photos > 0).length > 0 && <span className="pill mt-2 bg-warn-soft text-warn-foreground">{t("Chybí údaje", "Details missing")}</span>}
       {(property.address || property.city) && (
         <p className="truncate text-[16px] text-muted-foreground">
           {[property.address, property.city].filter(Boolean).join(", ")}
@@ -360,15 +363,7 @@ function CottageCard({
       </div>
       {rulesOpen && (
         <div className="mt-2 space-y-2">
-          <label className="block">
-            <span className="label-text">{t("Pravidla domu", "House rules")}</span>
-            <textarea
-              className="field min-h-24 w-full"
-              placeholder={t("Např. tichá noc od 22:00…", "E.g. quiet hours after 10 pm…")}
-              value={rules}
-              onChange={(e) => setRules(e.target.value)}
-            />
-          </label>
+          <HouseRulesEditor value={rules} onChange={setRules} />
           <div className="flex gap-2">
             <Button
               variant="fresh"

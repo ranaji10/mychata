@@ -137,7 +137,15 @@ export function ExpenseDetail({
               {fmtKc(Number(expense.amount))}
             </SheetDescription>
           </SheetHeader>
-          <Button variant="ghost" size="icon" className="absolute right-4 top-4 size-11 rounded-full bg-secondary" aria-label={t("Zavřít", "Close")} onClick={onClose}>×</Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 size-11 rounded-full bg-secondary"
+            aria-label={t("Zavřít", "Close")}
+            onClick={onClose}
+          >
+            ×
+          </Button>
           <ul className="my-4 divide-y divide-divider">
             <li className="flex flex-wrap justify-between gap-2 py-3 text-[16px]">
               <span>{name(expense.paid_by_member_id)}</span>

@@ -80,11 +80,24 @@ function NotificationsPage() {
   const seenBefore = useMemo(() => readSeen(userId), [userId]);
   const onRead = async (item: AppNotification) => {
     if (item.key.startsWith("stored:")) {
-      const { error } = await supabase.rpc("mark_notifications_read", { _ids: [item.key.slice(7)] });
-      if (error) { toast.error(t(`Upozornění se nepodařilo označit jako přečtené: ${error.message}`, `Could not mark the notification read: ${error.message}`)); return; }
+      const { error } = await supabase.rpc("mark_notifications_read", {
+        _ids: [item.key.slice(7)],
+      });
+      if (error) {
+        toast.error(
+          t(
+            `Upozornění se nepodařilo označit jako přečtené: ${error.message}`,
+            `Could not mark the notification read: ${error.message}`,
+          ),
+        );
+        return;
+      }
       void client.invalidateQueries({ queryKey: ["stored-notifications"] });
     } else {
-      markSeen(userId, [...readSeen(userId), item.key].filter(key => !key.startsWith("stored:")));
+      markSeen(
+        userId,
+        [...readSeen(userId), item.key].filter((key) => !key.startsWith("stored:")),
+      );
     }
   };
 
@@ -116,7 +129,12 @@ function NotificationsPage() {
       ) : (
         <div className="space-y-4">
           {needsYou.length > 0 && (
-            <Group title={t("Čeká na vás", "Needs you")} items={needsYou} seen={seenBefore} onRead={onRead} />
+            <Group
+              title={t("Čeká na vás", "Needs you")}
+              items={needsYou}
+              seen={seenBefore}
+              onRead={onRead}
+            />
           )}
           {fyi.length > 0 && (
             <Group

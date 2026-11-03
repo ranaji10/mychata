@@ -98,13 +98,17 @@ export interface NotificationEmailInput {
   heading: string;
   paragraph: string;
   buttonLabel: string;
+  /** English line under each Czech one (T-053); optional. */
+  headingEn?: string | undefined;
+  paragraphEn?: string | undefined;
+  buttonLabelEn?: string | undefined;
   /** Absolute https://mychata.cz/... link. */
   buttonUrl: string;
   /** Stable id of the triggering event (e.g. the queue row id) so retries don't send twice. */
   idempotencyKey: string;
 }
 
-/** Sends the generic "notification" app email. Server-only; not called anywhere yet (CC-3). */
+/** Sends the generic "notification" app email. Server-only; called only by src/lib/email.server.ts. */
 export function sendNotificationEmail(
   input: NotificationEmailInput,
 ): Promise<SendTemplateEmailResult> {

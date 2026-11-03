@@ -5,8 +5,10 @@ import {
   CalendarCheck,
   Crown,
   FileText,
+  ClipboardCheck,
   Inbox,
   Mail,
+  MessageSquare,
   User,
   Wallet,
   Wrench,
@@ -59,6 +61,11 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
   owe: Wallet,
   document_expiry: FileText,
   profile: User,
+  booking_decided: CalendarCheck,
+  task_mentioned: MessageSquare,
+  leaving_checklist: ClipboardCheck,
+  message_to_admin: MessageSquare,
+  debt_reminder: Wallet,
 };
 
 /** Notifications (bug 5): what happened and what needs you, newest first. */

@@ -1,0 +1,164 @@
+// The e-mail queue behind stored notifications (T-053). The cron route calls runEmailQueue with
+// the service-role store; tests call processEmailQueue with fakes. Rules:
+// - at most `limit` e-mails per run, oldest due first;
+// - three attempts, then it stops (5, 20 and 80 minutes apart), each failure kept in email_error;
+// - a member who left, or has no e-mail, is never mailed (email_wanted becomes false);
+// - the notification id is the idempotency key, so a run that crashes after sending can't send twice.
+import { renderNotificationEmail, type NotificationRow } from "@/lib/notification-email";
+import type { SendEmailInput, SendEmailResult } from "@/lib/email.server";
+
+export const MAX_ATTEMPTS = 3;
+const BACKOFF_MINUTES = [5, 20, 80];
+
+export interface QueuedNotification extends NotificationRow {
+  recipient_member_id: string | null;
+  recipient_user_id: string | null;
+  recipient_email: string | null;
+  email_attempts: number;
+}
+
+export interface QueueStore {
+  due(limit: number, now: Date): Promise<QueuedNotification[]>;
+  /** The member's e-mail, or null when they left, have no sign-in or no e-mail. */
+  memberEmail(memberId: string): Promise<string | null>;
+  userEmail(userId: string): Promise<string | null>;
+  sent(id: string, at: Date): Promise<void>;
+  failed(id: string, attempts: number, nextAt: Date, error: string): Promise<void>;
+  skipped(id: string, reason: string): Promise<void>;
+}
+
+export type Sender = (input: SendEmailInput) => Promise<SendEmailResult>;
+
+export interface QueueReport {
+  sent: number;
+  failed: number;
+  skipped: number;
+}
+
+export function nextAttemptAt(now: Date, attemptsSoFar: number): Date {
+  const minutes = BACKOFF_MINUTES[Math.min(attemptsSoFar - 1, BACKOFF_MINUTES.length - 1)] ?? 80;
+  return new Date(now.getTime() + minutes * 60_000);
+}
+
+async function addressOf(store: QueueStore, n: QueuedNotification): Promise<string | null> {
+  if (n.recipient_member_id) return store.memberEmail(n.recipient_member_id);
+  if (n.recipient_user_id) return store.userEmail(n.recipient_user_id);
+  return n.recipient_email;
+}
+
+export async function processEmailQueue(
+  store: QueueStore,
+  send: Sender,
+  opts: { now?: Date; limit?: number } = {},
+): Promise<QueueReport> {
+  const now = opts.now ?? new Date();
+  const report: QueueReport = { sent: 0, failed: 0, skipped: 0 };
+  for (const n of await store.due(opts.limit ?? 50, now)) {
+    const data = renderNotificationEmail(n);
+    if (!data) {
+      await store.skipped(n.id, `unknown_kind:${n.kind}`);
+      report.skipped++;
+      continue;
+    }
+    let to: string | null;
+    try {
+      to = await addressOf(store, n);
+    } catch (e) {
+      const attempts = n.email_attempts + 1;
+      await store.failed(n.id, attempts, nextAttemptAt(now, attempts), `address: ${message(e)}`);
+      report.failed++;
+      continue;
+    }
+    if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+      await store.skipped(n.id, "no_recipient");
+      report.skipped++;
+      continue;
+    }
+    try {
+      const r = await send({ to, template: "notification", data, idempotencyKey: n.id });
+      if (r.sent) {
+        await store.sent(n.id, now);
+        report.sent++;
+      } else {
+        await store.skipped(n.id, r.reason);
+        report.skipped++;
+      }
+    } catch (e) {
+      const attempts = n.email_attempts + 1;
+      await store.failed(n.id, attempts, nextAttemptAt(now, attempts), message(e));
+      report.failed++;
+    }
+  }
+  return report;
+}
+
+function message(e: unknown): string {
+  const m = e instanceof Error ? e.message : String(e);
+  return m.slice(0, 500);
+}
+
+/** The real store: the service-role client, which bypasses RLS. Server-only. */
+export async function supabaseQueueStore(): Promise<QueueStore> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const check = (error: { message: string } | null, what: string) => {
+    if (error) throw new Error(`${what}: ${error.message}`);
+  };
+  return {
+    async due(limit, now) {
+      const { data, error } = await supabaseAdmin
+        .from("notifications")
+        .select(
+          "id, kind, payload, recipient_member_id, recipient_user_id, recipient_email, email_attempts",
+        )
+        .is("emailed_at", null)
+        .eq("email_wanted", true)
+        .lt("email_attempts", MAX_ATTEMPTS)
+        .lte("email_next_at", now.toISOString())
+        .order("email_next_at")
+        .limit(limit);
+      check(error, "due");
+      return (data ?? []) as QueuedNotification[];
+    },
+    async memberEmail(memberId) {
+      const { data, error } = await supabaseAdmin
+        .from("members")
+        .select("email, user_id, left_at")
+        .eq("id", memberId)
+        .maybeSingle();
+      check(error, "member");
+      if (!data || data.left_at || !data.user_id) return null;
+      return data.email?.trim() || null;
+    },
+    async userEmail(userId) {
+      const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (error) throw new Error(`user: ${error.message}`);
+      return data.user?.email ?? null;
+    },
+    async sent(id, at) {
+      const { error } = await supabaseAdmin
+        .from("notifications")
+        .update({ emailed_at: at.toISOString(), email_error: null })
+        .eq("id", id);
+      check(error, "sent");
+    },
+    async failed(id, attempts, nextAt, err) {
+      const { error } = await supabaseAdmin
+        .from("notifications")
+        .update({ email_attempts: attempts, email_next_at: nextAt.toISOString(), email_error: err })
+        .eq("id", id);
+      check(error, "failed");
+    },
+    async skipped(id, reason) {
+      const { error } = await supabaseAdmin
+        .from("notifications")
+        .update({ email_wanted: false, email_error: reason })
+        .eq("id", id);
+      check(error, "skipped");
+    },
+  };
+}
+
+export async function runEmailQueue(): Promise<QueueReport> {
+  const { sendEmail } = await import("@/lib/email.server");
+  return processEmailQueue(await supabaseQueueStore(), sendEmail);
+}

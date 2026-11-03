@@ -7,7 +7,11 @@ import { useExpenseData } from "@/lib/expenses";
 import { usePendingGuestRequests, useRecentlyDecidedGuestRequests } from "@/lib/guest-requests";
 import { familyAccountsNamedLikeCottage } from "@/lib/account-label";
 import { isMissingFunction, useMyCottages } from "@/lib/my-cottages";
-import { buildNotifications, type PendingInvitation } from "@/lib/notification-list";
+import {
+  buildNotifications,
+  type PendingInvitation,
+  type StoredNotification,
+} from "@/lib/notification-list";
 import { useMyOwnershipOffers } from "@/lib/ownership";
 
 export type { AppNotification, NotificationKind } from "@/lib/notification-list";
@@ -34,6 +38,7 @@ export function markSeen(userId: string | undefined, keys: string[]) {
   } catch {
     /* private mode: the badge just stays until the items go away */
   }
+  void markStoredRead(keys);
 }
 
 /** Everything the Notifications page and the tab badge need, from shared query caches. */
@@ -121,6 +126,27 @@ export function useNotifications() {
       return data;
     },
   });
+  // Stored notifications (T-053): the last 30 days, this account's plus requests decided for the
+  // person outside any account. Before migration 0038 is applied the table is missing: no items.
+  const stored = useQuery({
+    queryKey: ["stored-notifications", user?.id],
+    enabled: !!user,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const since = new Date(Date.now() - 30 * 86400000).toISOString();
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, account_id, kind, payload, created_at, read_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) {
+        if (isMissingTable(error)) return [] as (StoredNotification & { account_id: string })[];
+        throw error;
+      }
+      return (data ?? []) as (StoredNotification & { account_id: string })[];
+    },
+  });
   const expenseData = useExpenseData(pid, isFamily);
   const ownershipOffers = useMyOwnershipOffers(user?.id);
   const guestRequests = usePendingGuestRequests(pid, isAdmin);
@@ -149,10 +175,32 @@ export function useNotifications() {
     splits: expenseData.data?.splits,
     expenses: expenseData.data?.expenses,
     documents: documents.data,
+    stored: stored.data?.filter(
+      (n) => n.account_id === account?.id || n.kind === "guest_request_decided",
+    ),
   });
   const failed = [invitations, bookings, tasks, documents].some((q) => q.isError && !q.data);
   const loading = invitations.isLoading || bookings.isLoading || tasks.isLoading;
   return { items, loading, failed, userId: user?.id };
+}
+
+/** The table isn't there yet (migration 0038 not applied): PostgREST PGRST205, Postgres 42P01. */
+function isMissingTable(error: { code?: string; message?: string }) {
+  return (
+    error.code === "PGRST205" ||
+    error.code === "42P01" ||
+    /could not find the table/i.test(error.message ?? "")
+  );
+}
+
+/** Marks stored notifications read once they have been shown on the Notifications page. */
+export async function markStoredRead(keys: string[]) {
+  const ids = keys.filter((k) => k.startsWith("stored:")).map((k) => k.slice("stored:".length));
+  if (!ids.length) return;
+  const { error } = await supabase.rpc("mark_notifications_read", { _ids: ids });
+  if (error && !isMissingFunction(error)) {
+    console.warn("[notifications] marking as read failed", error.message);
+  }
 }
 
 function localToday() {

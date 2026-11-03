@@ -40,7 +40,15 @@
     "invitations_token_guard": "Trigger function; reads other accounts' tokens only to refuse a collision",
     "overlap_peak_guests": "Internal helper of booking_defaults; no execute grant to anon or authenticated",
     "account_founder": "Internal helper of convert_account_to_institution and set_member_role; no execute grant to anon or authenticated",
-    "invitation_preview": "Scoped by invitation token"
+    "invitation_preview": "Scoped by invitation token",
+    "notify_on_booking": "Trigger function (0038); notifications for a stay the caller's own write changed",
+    "notify_on_handover": "Trigger function (0038); passes the leaving checklist on",
+    "notify_on_guest_request": "Trigger function (0038); tells the requester about the decision",
+    "notify_on_ownership_offer": "Trigger function (0038); tells the member offered the account",
+    "notify_on_invitation": "Trigger function (0038); e-mails the invitee",
+    "notify_leaving_checklist": "Internal helper of the 0038 triggers; no execute grant to anon or authenticated",
+    "next_stay_after_handover": "Internal helper of the 0038 triggers and handover_next_recipient; no execute grant to anon or authenticated",
+    "forward_leaving_checklist_to": "Internal helper of notify_on_booking; no execute grant to anon or authenticated"
   },
   "anonTablePrivileges": {
     "consent_log:INSERT": "Cookie banner logs the choice before sign-in",

@@ -5,6 +5,7 @@
 // NotificationInput and a block below, and the page, the badge and the tests pick it up.
 import { fmtDate } from "@/lib/data";
 import type { Booking, ExpenseSplit, InstitutionalRequest, Member, Task } from "@/lib/data";
+import type { NotificationPayload } from "@/lib/notification-email";
 
 export type NotificationKind =
   | "invitation"
@@ -18,7 +19,13 @@ export type NotificationKind =
   | "task_new"
   | "owe"
   | "document_expiry"
-  | "profile";
+  | "profile"
+  // Stored notifications (T-053, migration 0038).
+  | "booking_decided"
+  | "task_mentioned"
+  | "leaving_checklist"
+  | "message_to_admin"
+  | "debt_reminder";
 
 export type NotificationTone = "action" | "warn" | "info";
 
@@ -50,6 +57,15 @@ export interface DocumentLite {
   title: string;
   expiry_date: string | null;
   created_at: string;
+}
+
+/** A row of `notifications` the person may read (T-053). */
+export interface StoredNotification {
+  id: string;
+  kind: string;
+  payload: NotificationPayload;
+  created_at: string;
+  read_at: string | null;
 }
 
 export interface NotificationInput {
@@ -93,6 +109,8 @@ export interface NotificationInput {
   splits?: ExpenseSplit[] | null | undefined;
   expenses?: { id: string; paid_by_member_id: string | null }[] | null | undefined;
   documents?: DocumentLite[] | null | undefined;
+  /** Stored notifications (T-053); one for the same booking or offer replaces the computed item. */
+  stored?: StoredNotification[] | null | undefined;
 }
 
 function daysBetween(a: string, b: string) {
@@ -392,5 +410,159 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
     });
   }
 
-  return out.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  // A stored item that stands for a computed one (a stay to approve, an ownership offer) shows only
+  // while that computed item does, i.e. while the stay or offer is still open, and takes its place.
+  const computed = new Set(out.map((n) => n.key));
+  const replaced = new Set<string>();
+  for (const n of input.stored ?? []) {
+    const item = storedItem(n);
+    if (!item) continue;
+    if (item.replaces) {
+      if (!computed.has(item.replaces)) continue;
+      replaced.add(item.replaces);
+    }
+    out.push(item.notification);
+  }
+  return out
+    .filter((n) => !replaced.has(n.key))
+    .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+}
+
+const str = (v: unknown) => (typeof v === "string" ? v : v == null ? "" : String(v));
+
+/** One stored notification as a list item; null for kinds the list leaves to other sources. */
+export function storedItem(
+  n: StoredNotification,
+): { notification: AppNotification; replaces?: string } | null {
+  const p: NotificationPayload = n.payload ?? {};
+  const where = str(p.property_name);
+  const dates = `${fmtDate(str(p.start_date))} – ${fmtDate(str(p.end_date))}`;
+  const base = { key: `stored:${n.id}`, at: n.created_at };
+  switch (n.kind) {
+    case "booking_awaiting_approval":
+      return {
+        replaces: `approval:${str(p.booking_id)}`,
+        notification: {
+          ...base,
+          kind: "approval",
+          tone: "action",
+          title: [
+            `Pobyt ke schválení: ${str(p.requester_name)}`,
+            `Stay to approve: ${str(p.requester_name)}`,
+          ],
+          detail: [`${where}, ${dates}`, `${where}, ${dates}`],
+          to: "/rezervace/$id",
+          params: { id: str(p.booking_id) },
+        },
+      };
+    case "booking_decided": {
+      const ok = p.approved === true;
+      return {
+        notification: {
+          ...base,
+          kind: "booking_decided",
+          tone: ok ? "info" : "warn",
+          title: ok
+            ? [`Pobyt potvrzen: ${where}`, `Stay confirmed: ${where}`]
+            : [`Pobyt nebyl schválen: ${where}`, `Stay not approved: ${where}`],
+          detail: [dates, dates],
+          ...(ok
+            ? { to: "/rezervace/$id", params: { id: str(p.booking_id) } }
+            : { to: "/kalendar" }),
+        },
+      };
+    }
+    case "ownership_offered":
+      return {
+        replaces: `ownership_offer:${str(p.offer_id)}`,
+        notification: {
+          ...base,
+          kind: "ownership_offer",
+          tone: "action",
+          title: [
+            `${str(p.from_name)} vám předává účet „${str(p.account_name)}“`,
+            `${str(p.from_name)} is handing you “${str(p.account_name)}”`,
+          ],
+          detail: [
+            "Přijměte nebo odmítněte v Členech a oprávněních.",
+            "Accept or decline in Members & permissions.",
+          ],
+          to: "/clenove",
+        },
+      };
+    case "guest_request_decided": {
+      const ok = p.approved === true;
+      const token = str(p.calendar_token);
+      return {
+        notification: {
+          ...base,
+          kind: "guest_request",
+          tone: "info",
+          title: ok
+            ? [`Žádost schválena: ${where}`, `Request approved: ${where}`]
+            : [`Žádost nebyla schválena: ${where}`, `Request not approved: ${where}`],
+          detail: [dates, dates],
+          ...(token ? { to: "/verejne/kalendar/$token", params: { token } } : { to: "/kalendar" }),
+        },
+      };
+    }
+    case "task_mentioned":
+      return {
+        notification: {
+          ...base,
+          kind: "task_mentioned",
+          tone: "action",
+          title: [
+            `${str(p.author_name)} vás zmínil(a): ${str(p.task_title)}`,
+            `${str(p.author_name)} mentioned you: ${str(p.task_title_en) || str(p.task_title)}`,
+          ],
+          detail: [`„${str(p.excerpt)}“`, `“${str(p.excerpt)}”`],
+          to: "/ukoly/$id",
+          params: { id: str(p.task_id) },
+        },
+      };
+    case "leaving_checklist":
+      return {
+        notification: {
+          ...base,
+          kind: "leaving_checklist",
+          tone: "info",
+          title: [`Předání před vaším pobytem: ${where}`, `Handover before your stay: ${where}`],
+          detail: [
+            `${str(p.from_name)} odjel(a) ${fmtDate(str(p.submitted_at))}.`,
+            `${str(p.from_name)} left on ${fmtDate(str(p.submitted_at))}.`,
+          ],
+          to: "/predani",
+        },
+      };
+    case "message_to_admin":
+      return {
+        notification: {
+          ...base,
+          kind: "message_to_admin",
+          tone: "action",
+          title: [`Zpráva od: ${str(p.from_name)}`, `Message from ${str(p.from_name)}`],
+          detail: [`„${str(p.body)}“`, `“${str(p.body)}”`],
+          to: "/upozorneni",
+        },
+      };
+    case "debt_reminder": {
+      const amount = kc(Number(p.amount) || 0);
+      return {
+        notification: {
+          ...base,
+          kind: "debt_reminder",
+          tone: "warn",
+          title: [
+            `${str(p.from_name)} připomíná vyrovnání: ${amount}`,
+            `${str(p.from_name)} reminds you to settle up: ${amount}`,
+          ],
+          detail: [where, where],
+          to: "/vydaje/vyrovnani",
+        },
+      };
+    }
+    default:
+      return null;
+  }
 }

@@ -3,30 +3,42 @@ import * as React from "react";
 import { EmailLayout, SITE_URL } from "./layout";
 import type { TemplateEntry } from "./registry";
 
-// Generic app notification: subject, heading, one paragraph, one button.
-// The caller passes the text already in the recipient's language.
+// Generic app notification: subject, heading, a paragraph, one button.
+// Czech first; the optional *En fields add the English line under each (T-053). A blank line
+// ("\n\n") in the paragraph starts a new one; Czech and English paragraphs pair up in order, and an
+// empty English paragraph leaves that Czech one without a translation.
 export interface NotificationEmailProps {
-  subject?: string;
-  heading?: string;
-  paragraph?: string;
-  buttonLabel?: string;
-  buttonUrl?: string;
+  subject?: string | undefined;
+  heading?: string | undefined;
+  headingEn?: string | undefined;
+  paragraph?: string | undefined;
+  paragraphEn?: string | undefined;
+  buttonLabel?: string | undefined;
+  buttonLabelEn?: string | undefined;
+  buttonUrl?: string | undefined;
 }
+
+const split = (s: string | undefined) => (s ? s.split("\n\n").map((p) => p.trim()) : []);
 
 const NotificationEmail = ({
   heading,
+  headingEn,
   paragraph,
+  paragraphEn,
   buttonLabel,
+  buttonLabelEn,
   buttonUrl,
 }: NotificationEmailProps) => {
   const title = heading || "Novinka v MyChata";
+  const cs = split(paragraph);
+  const en = split(paragraphEn);
   return (
     <EmailLayout
       preview={title}
-      heading={{ cs: title, en: "" }}
-      paragraphs={paragraph ? [{ cs: paragraph, en: "" }] : []}
+      heading={{ cs: title, en: headingEn ?? "" }}
+      paragraphs={cs.filter(Boolean).map((p, i) => ({ cs: p, en: en[i] ?? "" }))}
       button={{
-        label: { cs: buttonLabel || "Otevřít MyChata", en: "" },
+        label: { cs: buttonLabel || "Otevřít MyChata", en: buttonLabelEn ?? "" },
         href: buttonUrl || SITE_URL,
       }}
     />

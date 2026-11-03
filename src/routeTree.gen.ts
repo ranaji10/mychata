@@ -39,6 +39,7 @@ import { Route as RezervaceIdRouteImport } from './routes/rezervace.$id'
 import { Route as RezervaceNovaRouteImport } from './routes/rezervace.nova'
 import { Route as UkolyIdRouteImport } from './routes/ukoly.$id'
 import { Route as VydajeVyrovnaniRouteImport } from './routes/vydaje.vyrovnani'
+import { Route as ApiNotificationsSendEmailsRouteImport } from './routes/api/notifications/send-emails'
 import { Route as VerejneKalendarTokenRouteImport } from './routes/verejne.kalendar.$token'
 import { Route as VerejneManualTokenRouteImport } from './routes/verejne.manual.$token'
 import { Route as VerejneZadostTokenRouteImport } from './routes/verejne.zadost.$token'
@@ -196,6 +197,12 @@ const VydajeVyrovnaniRoute = VydajeVyrovnaniRouteImport.update({
   path: '/vyrovnani',
   getParentRoute: () => VydajeRoute,
 } as any)
+const ApiNotificationsSendEmailsRoute =
+  ApiNotificationsSendEmailsRouteImport.update({
+    id: '/api/notifications/send-emails',
+    path: '/api/notifications/send-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const VerejneKalendarTokenRoute = VerejneKalendarTokenRouteImport.update({
   id: '/verejne/kalendar/$token',
   path: '/verejne/kalendar/$token',
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
   '/vydaje/vyrovnani': typeof VydajeVyrovnaniRoute
+  '/api/notifications/send-emails': typeof ApiNotificationsSendEmailsRoute
   '/verejne/kalendar/$token': typeof VerejneKalendarTokenRoute
   '/verejne/manual/$token': typeof VerejneManualTokenRoute
   '/verejne/zadost/$token': typeof VerejneZadostTokenRoute
@@ -297,6 +305,7 @@ export interface FileRoutesByTo {
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
   '/vydaje/vyrovnani': typeof VydajeVyrovnaniRoute
+  '/api/notifications/send-emails': typeof ApiNotificationsSendEmailsRoute
   '/verejne/kalendar/$token': typeof VerejneKalendarTokenRoute
   '/verejne/manual/$token': typeof VerejneManualTokenRoute
   '/verejne/zadost/$token': typeof VerejneZadostTokenRoute
@@ -336,6 +345,7 @@ export interface FileRoutesById {
   '/rezervace/nova': typeof RezervaceNovaRoute
   '/ukoly/$id': typeof UkolyIdRoute
   '/vydaje/vyrovnani': typeof VydajeVyrovnaniRoute
+  '/api/notifications/send-emails': typeof ApiNotificationsSendEmailsRoute
   '/verejne/kalendar/$token': typeof VerejneKalendarTokenRoute
   '/verejne/manual/$token': typeof VerejneManualTokenRoute
   '/verejne/zadost/$token': typeof VerejneZadostTokenRoute
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/rezervace/nova'
     | '/ukoly/$id'
     | '/vydaje/vyrovnani'
+    | '/api/notifications/send-emails'
     | '/verejne/kalendar/$token'
     | '/verejne/manual/$token'
     | '/verejne/zadost/$token'
@@ -414,6 +425,7 @@ export interface FileRouteTypes {
     | '/rezervace/nova'
     | '/ukoly/$id'
     | '/vydaje/vyrovnani'
+    | '/api/notifications/send-emails'
     | '/verejne/kalendar/$token'
     | '/verejne/manual/$token'
     | '/verejne/zadost/$token'
@@ -452,6 +464,7 @@ export interface FileRouteTypes {
     | '/rezervace/nova'
     | '/ukoly/$id'
     | '/vydaje/vyrovnani'
+    | '/api/notifications/send-emails'
     | '/verejne/kalendar/$token'
     | '/verejne/manual/$token'
     | '/verejne/zadost/$token'
@@ -489,6 +502,7 @@ export interface RootRouteChildren {
   PozvankaTokenRoute: typeof PozvankaTokenRoute
   RezervaceIdRoute: typeof RezervaceIdRoute
   RezervaceNovaRoute: typeof RezervaceNovaRoute
+  ApiNotificationsSendEmailsRoute: typeof ApiNotificationsSendEmailsRoute
   VerejneKalendarTokenRoute: typeof VerejneKalendarTokenRoute
   VerejneManualTokenRoute: typeof VerejneManualTokenRoute
   VerejneZadostTokenRoute: typeof VerejneZadostTokenRoute
@@ -709,6 +723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VydajeVyrovnaniRouteImport
       parentRoute: typeof VydajeRoute
     }
+    '/api/notifications/send-emails': {
+      id: '/api/notifications/send-emails'
+      path: '/api/notifications/send-emails'
+      fullPath: '/api/notifications/send-emails'
+      preLoaderRoute: typeof ApiNotificationsSendEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verejne/kalendar/$token': {
       id: '/verejne/kalendar/$token'
       path: '/verejne/kalendar/$token'
@@ -804,6 +825,7 @@ const rootRouteChildren: RootRouteChildren = {
   PozvankaTokenRoute: PozvankaTokenRoute,
   RezervaceIdRoute: RezervaceIdRoute,
   RezervaceNovaRoute: RezervaceNovaRoute,
+  ApiNotificationsSendEmailsRoute: ApiNotificationsSendEmailsRoute,
   VerejneKalendarTokenRoute: VerejneKalendarTokenRoute,
   VerejneManualTokenRoute: VerejneManualTokenRoute,
   VerejneZadostTokenRoute: VerejneZadostTokenRoute,

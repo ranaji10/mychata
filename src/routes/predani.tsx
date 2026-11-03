@@ -19,6 +19,7 @@ import {
   type Booking,
   type Handover,
 } from "@/lib/data";
+import { friendlyError } from "@/lib/rpc-errors";
 
 export const Route = createFileRoute("/predani")({
   staticData: { sitemap: false },
@@ -171,8 +172,8 @@ function HandoverPage() {
       if (error) {
         toast.error(
           t(
-            `Uloženo, ale příjemce se nepodařilo zjistit: ${error.message}`,
-            `Saved, but could not check the recipient: ${error.message}`,
+            `Uloženo, ale příjemce se nepodařilo zjistit: ${friendlyError(error.message, t)}`,
+            `Saved, but could not check the recipient: ${friendlyError(error.message, t)}`,
           ),
         );
       } else if (!recipients?.length) {

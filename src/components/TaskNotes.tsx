@@ -9,6 +9,7 @@ import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
 import { fmtDateTime } from "@/lib/data";
 import { canEditTaskNote, validTaskNote } from "@/lib/ui-action-rules";
+import { friendlyError } from "@/lib/rpc-errors";
 
 export function TaskNotes({ taskId, focus }: { taskId: string; focus: boolean }) {
   const { t } = useLang();
@@ -46,10 +47,12 @@ export function TaskNotes({ taskId, focus }: { taskId: string; focus: boolean })
   useEffect(() => {
     if (focus) input.current?.focus();
   }, [focus]);
-  const failure = (message: string) =>
+  const failure = (raw: string) => {
+    const message = friendlyError(raw, t);
     toast.error(
       t(`Poznámku se nepodařilo uložit: ${message}`, `Could not save the note: ${message}`),
     );
+  };
   const save = async () => {
     if (!validTaskNote(body, mentions.length)) return;
     setBusy(true);

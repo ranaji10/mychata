@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-27
+updated: 2026-11-03
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Backlog
@@ -37,6 +37,7 @@ Open work that is not next yet. When a row becomes next, it moves to Now as an N
 | O-17 | G-1: Gemini's Czech content | You | Needed before L-3 (N-5) | To do |
 | O-18 | Pricing v2 build, steps P-1 to P-13 (Reference, section 10) | Claude, Lovable, you | After D-18. P-1 and P-10 can start now; P-2 to P-8 wait for staging (O-08); P-12 waits for O-11. Ships dark behind billing_enabled. Replaces the pricing part of O-14 | To do |
 | O-20 | Left from the PR #82 review: offline mid-session with nothing cached (queries pause, so no error and no loading) still shows an empty app; a page's own hanging read (e.g. Home's bookings) has no 10 s way out; behavioural tests for the app shell instead of source checks | Claude | Review: docs/external/claude/2026-10-27-pr82-review.md | To do |
+| O-21 | Older expense and split insert policies let any member enter an expense "paid by" someone else (found in the T-057 RLS audit, out of its scope). Tighten to: payer is the caller, or the caller is an admin; needs a migration and RLS tests | Claude | Next free migration number | To do |
 
 ## Standing routines
 

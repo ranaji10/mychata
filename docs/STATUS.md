@@ -4,14 +4,6 @@ As of 2026-11-03. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
-## Requested UI actions (3 Nov 2026, preview only)
-
-- Expense details show payer, per-person shares, receipt upload/view and payer-only reminders/cover-all; no mark-own-share action.
-- Handover confirmation reads the next recipient RPC. Task notes support adding, mentions of active members, author edits/deletes and overdue-note focus. Pending stays offer an admin-message composer.
-- Stored notification read state is updated on tap, not by opening the list. No new bell.
-- Add cottage asks only its name; missing-details badges and exact approved hints are shared with onboarding. Starter rules remain editable drafts until Save; manual question suggestions default to members-only.
-- Capacity is deliberately omitted. Two-person reminder/cover-all, another admin receiving messages, and next-recipient delivery require maintainer checks. Full CI and publishing are not performed here.
-
 | Place                    | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Production (mychata.cz)  | Runs `4915d17` (PR #86, Lovable e-mail), built 3 Nov 01:13 UTC, checked 3 Nov (`docs/external/claude/2026-11-03-site-check.md`). Before it `4bcba4b` (PRs #77–#84). Releases: one per checked publish (27 Oct); a maintainer creates them, cloud sessions may not. To create: `release-2026-10-27` on `4bcba4b` (N-26) and `release-2026-11-03` on `4915d17`. Last release: `release-2026-10-26` on `f1b1bd6`.                                                                                                                                                                                                     |
@@ -22,6 +14,16 @@ As of 2026-11-03. Update this file in every PR that changes behaviour.
 | Open bugs                | See "Open defects" below. B-006–B-010 (T-017) and B-011–B-017 (T-019) are merged and live.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-020 document vault search (re-planned in T-044), T-001–T-013 as listed below. T-055 stale notification e-mails. Done: T-014–T-019, T-021–T-052.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+
+## Requested UI actions (3 Nov 2026, preview only)
+
+- Expense details show payer, per-person shares, receipt upload/view and payer-only reminders/cover-all; no mark-own-share action.
+- Handover confirmation reads the next recipient RPC. Task notes support adding, mentions of active members, author edits/deletes and overdue-note focus. Pending stays offer an admin-message composer.
+- Stored notification read state is updated on tap, not by opening the list. No new bell.
+- Add cottage asks only its name; missing-details badges and exact approved hints are shared with onboarding. Starter rules remain editable drafts until Save; manual question suggestions default to members-only.
+- Capacity is deliberately omitted. Two-person reminder/cover-all, another admin receiving messages, and next-recipient delivery require maintainer checks. Full CI and publishing are not performed here.
+
+Open after review (T-056): onboarding saves starter rules in the language on screen into both Czech and English (the onboarding function takes one text); fix needs a function change.
 
 ## Brand name kept in translated e-mails (T-054, 3 Nov 2026, in review)
 

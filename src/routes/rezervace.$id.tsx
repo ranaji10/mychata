@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, fmtDateTime, todayISO, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
+import { friendlyError } from "@/lib/rpc-errors";
 
 export const Route = createFileRoute("/rezervace/$id")({
   staticData: { sitemap: false },
@@ -56,8 +57,8 @@ function BookingDetail() {
     } catch (error) {
       toast.error(
         t(
-          `Zprávu se nepodařilo poslat: ${(error as Error).message}`,
-          `Could not send the message: ${(error as Error).message}`,
+          `Zprávu se nepodařilo poslat: ${friendlyError((error as Error).message, t)}`,
+          `Could not send the message: ${friendlyError((error as Error).message, t)}`,
         ),
       );
     } finally {
@@ -276,7 +277,7 @@ function BookingDetail() {
         </section>
       )}
 
-      {pending && (
+      {pending && !isAdmin && (
         <section className="mt-4 space-y-3">
           <Button
             variant="fresh"

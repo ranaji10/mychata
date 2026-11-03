@@ -109,11 +109,14 @@ function ManualPage() {
         content_cs: form.contentCs,
         content_en: form.contentEn,
         visibility: form.visibility,
-        display_order: sections?.length ?? 0,
       };
+      // Editing keeps the section where it is; only a new section goes to the end (T-056).
       const { data, error } = editingId
         ? await supabase.from("manual_sections").update(values).eq("id", editingId).select("id")
-        : await supabase.from("manual_sections").insert(values).select("id");
+        : await supabase
+            .from("manual_sections")
+            .insert({ ...values, display_order: sections?.length ?? 0 })
+            .select("id");
       if (error) throw error;
       if (!data?.length) throw new Error("nothing_changed");
     },

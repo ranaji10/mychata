@@ -28,6 +28,7 @@ import {
   type AppNotification,
   type NotificationKind,
 } from "@/lib/notifications";
+import { friendlyError } from "@/lib/rpc-errors";
 
 export const Route = createFileRoute("/upozorneni")({
   staticData: { sitemap: false },
@@ -86,8 +87,8 @@ function NotificationsPage() {
       if (error) {
         toast.error(
           t(
-            `Upozornění se nepodařilo označit jako přečtené: ${error.message}`,
-            `Could not mark the notification read: ${error.message}`,
+            `Upozornění se nepodařilo označit jako přečtené: ${friendlyError(error.message, t)}`,
+            `Could not mark the notification read: ${friendlyError(error.message, t)}`,
           ),
         );
         return;

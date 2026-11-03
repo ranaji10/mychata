@@ -17,6 +17,7 @@ import { useLang } from "@/lib/i18n";
 import { fmtKc, type Expense, type ExpenseSplit } from "@/lib/data";
 import { expenseDataKey } from "@/lib/expenses";
 import { canCoverExpense } from "@/lib/ui-action-rules";
+import { friendlyError } from "@/lib/rpc-errors";
 
 export function ExpenseDetail({
   expense,
@@ -54,8 +55,10 @@ export function ExpenseDetail({
       return url.signedUrl;
     },
   });
-  const failure = (message: string) =>
+  const failure = (raw: string) => {
+    const message = friendlyError(raw, t);
     toast.error(t(`Akce se nepodařila: ${message}`, `The action failed: ${message}`));
+  };
   const remind = async (memberId: string) => {
     setBusy(true);
     try {

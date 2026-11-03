@@ -1,10 +1,6 @@
 ## Requested UI actions (3 Nov 2026)
 
-- [ ] Expense detail, receipt, reminders and payer-only cover-all (no mark-own-share action).
-- [ ] Handover recipient confirmation, task notes/mentions and overdue prompt, pending-stay admin message.
-- [ ] Verify existing notifications without adding a bell.
-- [ ] Name-only cottage setup, onboarding question hints, editable starter rules and manual suggestions.
-- [ ] Phone-width verification and complete changed-file/click checklist; no publishing.
+- [ ] Items 1–8, excluding mark-own-share: blocked by item 6's capacity field. The database has no cottage capacity field; overlap_max_guests is only the overlapping-stay approval threshold. Await a decision to omit capacity or a developer's database change; no application edits or publishing.
 
 ## T-028 Fresh air public pages (14 Oct 2026)
 

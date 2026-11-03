@@ -34,13 +34,13 @@ export const Route = createFileRoute("/upozorneni")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Upozornění — My Chata" },
+      { title: "Upozornění — MyChata" },
       { name: "robots", content: "noindex" },
       {
         name: "description",
         content: "Invitations, approvals, maintenance tasks, bills and documents in one place.",
       },
-      { property: "og:title", content: "Upozornění — My Chata" },
+      { property: "og:title", content: "Upozornění — MyChata" },
       {
         property: "og:description",
         content: "Invitations, approvals, maintenance tasks, bills and documents in one place.",
@@ -70,6 +70,8 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
   leaving_checklist: ClipboardCheck,
   message_to_admin: MessageSquare,
   debt_reminder: Wallet,
+  payment_claim: Wallet,
+  payment_decided: Wallet,
 };
 
 /** Notifications (bug 5): what happened and what needs you, newest first. */
@@ -95,7 +97,9 @@ function NotificationsPage() {
       }
       void client.invalidateQueries({ queryKey: ["stored-notifications"] });
     }
-    markSeen(userId, [...readSeen(userId), item.key]);
+    // Keep only keys still listed, so the saved list doesn't grow forever (L-3 review, Low 5).
+    const listed = new Set(items.map((i) => i.key));
+    markSeen(userId, [...readSeen(userId)].filter((k) => listed.has(k)).concat(item.key));
   };
 
   const needsYou = items.filter((i) => i.tone !== "info");

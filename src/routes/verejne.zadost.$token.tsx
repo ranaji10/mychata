@@ -13,12 +13,12 @@ export const Route = createFileRoute("/verejne/zadost/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Žádost o pobyt — My Chata" },
+      { title: "Žádost o pobyt — MyChata" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Pošlete žádost o pobyt na chatě vaší organizace." },
-      { property: "og:title", content: "Žádost o pobyt — My Chata" },
+      { property: "og:title", content: "Žádost o pobyt — MyChata" },
       {
         property: "og:description",
         content: "Pošlete žádost o pobyt na chatě vaší organizace.",

@@ -3,7 +3,7 @@
 @import "tw-animate-css";
 
 /*
- * My Chata — Fresh air: family green and institution blue.
+ * MyChata — Fresh air: family green and institution blue.
  * Plus Jakarta Sans, fresh backgrounds, white cards and restrained depth.
  * Users 45–68: min 16px body, high contrast, large tap targets.
  */
@@ -166,7 +166,7 @@
   }
 }
 
-/* Shared building blocks in the My Chata visual language */
+/* Shared building blocks in the MyChata visual language */
 @utility card {
   background: var(--color-card);
   border-radius: 22px;

@@ -27,6 +27,18 @@ const KNOWN: Record<string, [string, string]> = {
     "Uhradit vše může jen ten, kdo výdaj zaplatil.",
     "Only the person who paid can cover it all.",
   ],
+  bad_capacity: [
+    "Kapacita musí být číslo od 1 do 500.",
+    "Capacity must be a number from 1 to 500.",
+  ],
+  bad_beds: ["Počet lůžek musí být od 1 do 500.", "Beds must be from 1 to 500."],
+  bad_time: ["Čas napište jako 15:00.", "Write the time like 15:00."],
+  claim_not_found: ["Tato platba už není k vyřízení.", "This payment is no longer waiting."],
+  already_decided: ["Už je rozhodnuto.", "This has already been decided."],
+  only_receiver_confirms: [
+    "Platbu potvrzuje ten, kdo ji dostal, nebo správce.",
+    "The person who received the money, or an admin, confirms it.",
+  ],
   nothing_changed: [
     "Nic se nezměnilo. Obnovte stránku a zkuste to znovu.",
     "Nothing changed. Reload the page and try again.",

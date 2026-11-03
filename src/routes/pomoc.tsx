@@ -19,12 +19,12 @@ export const Route = createFileRoute("/pomoc")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Nápověda a podpora — My Chata" },
-      { name: "description", content: "Answers to common questions and how to contact My Chata." },
-      { property: "og:title", content: "Nápověda a podpora — My Chata" },
+      { title: "Nápověda a podpora — MyChata" },
+      { name: "description", content: "Answers to common questions and how to contact MyChata." },
+      { property: "og:title", content: "Nápověda a podpora — MyChata" },
       {
         property: "og:description",
-        content: "Answers to common questions and how to contact My Chata.",
+        content: "Answers to common questions and how to contact MyChata.",
       },
     ],
   }),
@@ -94,7 +94,7 @@ function HelpPage() {
       `${t("Verze", "Version")}: ${BUILD_SHA} (${BUILD_TIME})`,
       `${t("Prohlížeč", "Browser")}: ${typeof navigator === "undefined" ? "" : navigator.userAgent}`,
     ];
-    const subject = t("Problém v My Chata", "Problem in My Chata");
+    const subject = t("Problém v MyChata", "Problem in MyChata");
     return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
   };
 

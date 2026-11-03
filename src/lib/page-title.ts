@@ -4,11 +4,11 @@
 
 import type { Lang } from "./i18n";
 
-const SUFFIX = " — My Chata";
+const SUFFIX = " — MyChata";
 
 /** Exact paths first, then prefixes for routes with a parameter. */
 const TITLES: Array<[path: string, cs: string, en: string, prefix?: true]> = [
-  ["/", "My Chata — správa sdílené chaty", "My Chata — managing a shared cottage"],
+  ["/", "MyChata — správa sdílené chaty", "MyChata — managing a shared cottage"],
   ["/auth", "Přihlášení", "Sign in"],
   ["/onboarding", "Nastavení chaty", "Cottage setup"],
   ["/reset-password", "Obnovení hesla", "Reset password"],

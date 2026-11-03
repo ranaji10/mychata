@@ -33,8 +33,8 @@ describe("T-046: Help & support", () => {
     expect(SETTINGS_LINKS.some((l) => l.to === "/pomoc")).toBe(true);
     expect(isSettingsPath("/pomoc")).toBe(true);
     expect(src("src/routes/vice.tsx")).toContain('to="/pomoc"');
-    expect(pageTitle("/pomoc", "cs")).toBe("Nápověda a podpora — My Chata");
-    expect(pageTitle("/pomoc", "en")).toBe("Help & support — My Chata");
+    expect(pageTitle("/pomoc", "cs")).toBe("Nápověda a podpora — MyChata");
+    expect(pageTitle("/pomoc", "en")).toBe("Help & support — MyChata");
   });
 
   it("offers the support address and a problem report without personal data", () => {

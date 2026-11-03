@@ -30,11 +30,11 @@ export const Route = createFileRoute("/profil")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Můj profil — My Chata" },
+      { title: "Můj profil — MyChata" },
       { name: "robots", content: "noindex" },
-      { name: "description", content: "Your My Chata profile and contact details." },
-      { property: "og:title", content: "Můj profil — My Chata" },
-      { property: "og:description", content: "Your My Chata profile and contact details." },
+      { name: "description", content: "Your MyChata profile and contact details." },
+      { property: "og:title", content: "Můj profil — MyChata" },
+      { property: "og:description", content: "Your MyChata profile and contact details." },
     ],
   }),
   // ?password=1 opens the password form (from the "set a password" prompt after onboarding).

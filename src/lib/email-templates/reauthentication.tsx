@@ -1,13 +1,15 @@
 import * as React from "react";
-import { EmailLayout } from "./layout";
+import { EmailLayout, type EmailLang } from "./layout";
 
 interface ReauthenticationEmailProps {
+  lang?: EmailLang;
   token: string;
 }
 
-export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
+export const ReauthenticationEmail = ({ token, lang }: ReauthenticationEmailProps) => (
   <EmailLayout
-    preview="Ověřovací kód MyChata"
+    lang={lang}
+    preview={{ cs: "Ověřovací kód MyChata", en: "Your MyChata verification code" }}
     heading={{ cs: "Váš ověřovací kód", en: "Your verification code" }}
     paragraphs={[{ cs: "Zadejte tento kód v aplikaci.", en: "Enter this code in the app." }]}
     code={token}

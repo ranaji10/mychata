@@ -1,7 +1,8 @@
 import * as React from "react";
-import { EmailLayout } from "./layout";
+import { EmailLayout, type EmailLang } from "./layout";
 
 interface RecoveryEmailProps {
+  lang?: EmailLang;
   siteName?: string;
   siteUrl?: string;
   recipient?: string;
@@ -9,9 +10,10 @@ interface RecoveryEmailProps {
   confirmationUrl: string;
 }
 
-export const RecoveryEmail = ({ confirmationUrl }: RecoveryEmailProps) => (
+export const RecoveryEmail = ({ confirmationUrl, lang }: RecoveryEmailProps) => (
   <EmailLayout
-    preview="Obnovení hesla k MyChata"
+    lang={lang}
+    preview={{ cs: "Obnovení hesla k MyChata", en: "Reset your MyChata password" }}
     heading={{ cs: "Nastavte si nové heslo", en: "Set a new password" }}
     paragraphs={[
       {

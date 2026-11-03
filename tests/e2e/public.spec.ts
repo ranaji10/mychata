@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 
 test("home page loads and shows sign-in", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle(/My Chata/);
+  await expect(page).toHaveTitle(/MyChata/);
 });
 
 test("sign-in page offers Google and email", async ({ page }) => {
@@ -34,9 +34,9 @@ test("an invalid guest link says so", async ({ page }) => {
 // head() titles back (Knowledge rule 13).
 test("public pages have Czech titles", async ({ page }) => {
   await page.goto("/auth");
-  await expect(page).toHaveTitle("Přihlášení — My Chata");
+  await expect(page).toHaveTitle("Přihlášení — MyChata");
   await page.goto("/verejne/kalendar/not-a-real-token");
-  await expect(page).toHaveTitle("Kalendář chaty — My Chata");
+  await expect(page).toHaveTitle("Kalendář chaty — MyChata");
 });
 
 // Guard for B-002: the page rendered on the server but crashed in the browser.

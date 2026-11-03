@@ -33,9 +33,9 @@ export const Route = createFileRoute("/rezervace/nova")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Nová rezervace — My Chata" },
+      { title: "Nová rezervace — MyChata" },
       { name: "description", content: "Book a stay at the cottage." },
-      { property: "og:title", content: "Nová rezervace — My Chata" },
+      { property: "og:title", content: "Nová rezervace — MyChata" },
       { property: "og:description", content: "Book a stay at the cottage." },
     ],
   }),
@@ -108,6 +108,9 @@ function NewBooking() {
       ? account.booking_auto_approve !== true
       : property?.auto_confirm === false;
   const needsApproval = !isAdmin && (alwaysHeld || overlapNeedsApproval);
+  // Capacity (T-057): a warning, not a block; the family knows when an extra mattress works.
+  const overCapacity =
+    !!property?.capacity && end >= start && peakGuests + guests > property.capacity;
 
   const save = async () => {
     if (!property || !currentMember || invalid) return;
@@ -298,6 +301,21 @@ function NewBooking() {
                     "Překrývání pobytů je u této chaty povolené.",
                     "This cottage allows overlapping stays.",
                   )}
+            </p>
+          </div>
+        )}
+
+        {overCapacity && (
+          <div
+            role="status"
+            className="flex gap-2 rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground"
+          >
+            <AlertTriangle className="mt-0.5 size-5 shrink-0" />
+            <p>
+              {t(
+                `Některou noc tu bude ${peakGuests + guests} lidí, chata je pro ${property?.capacity}.`,
+                `On some night there would be ${peakGuests + guests} people; the cottage fits ${property?.capacity}.`,
+              )}
             </p>
           </div>
         )}

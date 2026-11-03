@@ -1241,6 +1241,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_claims: {
+        Row: {
+          account_id: string
+          amount: number
+          created_at: string
+          decided_at: string | null
+          decided_by_member_id: string | null
+          expense_id: string | null
+          from_member_id: string
+          id: string
+          property_id: string
+          split_ids: string[]
+          status: string
+          to_member_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by_member_id?: string | null
+          expense_id?: string | null
+          from_member_id: string
+          id?: string
+          property_id: string
+          split_ids?: string[]
+          status?: string
+          to_member_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by_member_id?: string | null
+          expense_id?: string | null
+          from_member_id?: string
+          id?: string
+          property_id?: string
+          split_ids?: string[]
+          status?: string
+          to_member_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active_account_id: string | null
@@ -1250,6 +1295,7 @@ export type Database = {
           member_id: string | null
           onboarding_completed_at: string | null
           phone: string | null
+          preferred_lang: string | null
           user_id: string
         }
         Insert: {
@@ -1260,6 +1306,7 @@ export type Database = {
           member_id?: string | null
           onboarding_completed_at?: string | null
           phone?: string | null
+          preferred_lang?: string | null
           user_id: string
         }
         Update: {
@@ -1270,6 +1317,7 @@ export type Database = {
           member_id?: string | null
           onboarding_completed_at?: string | null
           phone?: string | null
+          preferred_lang?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1294,6 +1342,10 @@ export type Database = {
           account_id: string
           address: string
           auto_confirm: boolean
+          beds: number | null
+          capacity: number | null
+          check_in_time: string | null
+          check_out_time: string | null
           city: string | null
           created_at: string
           created_by_member_id: string | null
@@ -1304,6 +1356,7 @@ export type Database = {
           overlap_allowed: boolean | null
           overlap_max_guests: number | null
           peak_seasons: string[]
+          pets_allowed: boolean | null
           photo_url: string | null
           public_calendar_enabled: boolean
           public_token: string
@@ -1313,6 +1366,10 @@ export type Database = {
           account_id: string
           address?: string
           auto_confirm?: boolean
+          beds?: number | null
+          capacity?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city?: string | null
           created_at?: string
           created_by_member_id?: string | null
@@ -1323,6 +1380,7 @@ export type Database = {
           overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
+          pets_allowed?: boolean | null
           photo_url?: string | null
           public_calendar_enabled?: boolean
           public_token?: string
@@ -1332,6 +1390,10 @@ export type Database = {
           account_id?: string
           address?: string
           auto_confirm?: boolean
+          beds?: number | null
+          capacity?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city?: string | null
           created_at?: string
           created_by_member_id?: string | null
@@ -1342,6 +1404,7 @@ export type Database = {
           overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
+          pets_allowed?: boolean | null
           photo_url?: string | null
           public_calendar_enabled?: boolean
           public_token?: string
@@ -1778,8 +1841,10 @@ export type Database = {
           _account_name: string
           _address?: string
           _booking_auto_approve?: boolean
+          _capacity?: number
           _city?: string
           _house_rules?: string
+          _house_rules_en?: string
           _overlap_max_guests?: number
           _property_name: string
           _rooms?: number
@@ -1788,8 +1853,17 @@ export type Database = {
         }
         Returns: string
       }
+      claim_payment: {
+        Args: { _expense_id?: string; _property_id: string; _to_member_id: string }
+        Returns: string
+      }
       current_account_id: { Args: never; Returns: string }
       current_member_id: { Args: never; Returns: string }
+      email_lang: { Args: { _email: string }; Returns: string }
+      decide_payment_claim: {
+        Args: { _claim_id: string; _received: boolean }
+        Returns: string
+      }
       decide_guest_request: {
         Args: { _approve: boolean; _request_id: string }
         Returns: string
@@ -2067,8 +2141,13 @@ export type Database = {
       update_property_details: {
         Args: {
           _address?: string
+          _beds?: number
+          _capacity?: number
+          _check_in_time?: string
+          _check_out_time?: string
           _city?: string
           _overlap_max_guests?: number
+          _pets_allowed?: boolean
           _property_id: string
           _rooms?: number
           _seasons?: string[]

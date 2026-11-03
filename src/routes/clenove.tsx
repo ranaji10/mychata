@@ -44,10 +44,10 @@ export const Route = createFileRoute("/clenove")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Členové — My Chata" },
+      { title: "Členové — MyChata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Members and invitations for your shared cottage." },
-      { property: "og:title", content: "Členové — My Chata" },
+      { property: "og:title", content: "Členové — MyChata" },
       { property: "og:description", content: "Members and invitations for your shared cottage." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -362,7 +362,7 @@ function MembersPage() {
     inviteMailto({
       to: b.pending.map((r) => r.email).filter((e): e is string => !!e),
       link: linkFor(token),
-      chata: property?.name ?? account?.name ?? "My Chata",
+      chata: property?.name ?? account?.name ?? "MyChata",
       inviter: currentMember?.name,
       admin: b.admin,
     });

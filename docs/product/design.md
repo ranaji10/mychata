@@ -105,7 +105,7 @@ All other inner pages (Calendar, Tasks, Expenses, Settings…): flat `var(--back
 | Page title              | 28px / 1.15                                                                                                                                                       | 800                      | letter-spacing −0.02em (Calendar, Tasks…) |
 | Section heading         | 18px (19px desktop)                                                                                                                                               | 700                      |                                           |
 | Card value / big number | 20px (24px desktop)                                                                                                                                               | 800                      |                                           |
-| Brand wordmark          | 18px (19px desktop)                                                                                                                                               | 800                      | "My Chata"                                |
+| Brand wordmark          | 18px (19px desktop)                                                                                                                                               | 800                      | "MyChata"                                 |
 | Body / list title       | 16px / 1.5                                                                                                                                                        | 600 titles, 400–500 body |                                           |
 | Secondary / caption     | 14–15px                                                                                                                                                           | 500–600                  | `--muted-foreground`                      |
 | Card label              | 14px                                                                                                                                                              | 600                      | `--muted-foreground`                      |
@@ -141,7 +141,7 @@ Keep the existing utility names in `src/styles.css` so pages need few class chan
 
 **Round icon button**: 44px circle, `--secondary` background, 18px icon. Header variant: 48px circle, white, floating shadow.
 
-**Logo mark**: rounded square (40px/12px radius phone, 44px/14px desktop), `--primary` background, white house outline icon (lucide `House`/`Home`, stroke 2). Replaces the "M" letter square everywhere. Wordmark "My Chata" next to it where there is room.
+**Logo mark**: rounded square (40px/12px radius phone, 44px/14px desktop), `--primary` background, white house outline icon (lucide `House`/`Home`, stroke 2). Replaces the "M" letter square everywhere. Wordmark "MyChata" (one word, decided 3 Nov 2026) next to it where there is room.
 
 **Segmented control** (language CZ/EN): white pill container, 4px padding, 2px gap; options min 44 × 36px, 14px 700; selected = `--foreground` background, white text; unselected = `--muted-foreground` text.
 **View toggle** (Měsíc / Seznam and similar filters): separate 40px pills, 14px; selected `--foreground` bg + white 700, unselected white + `--foreground` 600.

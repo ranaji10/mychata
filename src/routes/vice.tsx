@@ -33,15 +33,15 @@ export const Route = createFileRoute("/vice")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Nastavení — My Chata" },
+      { title: "Nastavení — MyChata" },
       {
         name: "description",
-        content: "Account settings, members, language and other My Chata options.",
+        content: "Account settings, members, language and other MyChata options.",
       },
-      { property: "og:title", content: "Nastavení — My Chata" },
+      { property: "og:title", content: "Nastavení — MyChata" },
       {
         property: "og:description",
-        content: "Account settings, members, language and other My Chata options.",
+        content: "Account settings, members, language and other MyChata options.",
       },
     ],
   }),
@@ -98,7 +98,7 @@ function MorePage() {
     setManualLink(null);
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ url, title: "My Chata" });
+        await navigator.share({ url, title: "MyChata" });
         return;
       } catch {
         // Share sheet dismissed or unavailable — fall through to copying.

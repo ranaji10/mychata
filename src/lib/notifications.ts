@@ -13,6 +13,7 @@ import {
   type StoredNotification,
 } from "@/lib/notification-list";
 import { useMyOwnershipOffers } from "@/lib/ownership";
+import { usePaymentClaims } from "@/lib/payment-claims";
 
 export type { AppNotification, NotificationKind } from "@/lib/notification-list";
 
@@ -32,7 +33,7 @@ export function readSeen(userId: string | undefined): Set<string> {
 export function markSeen(userId: string | undefined, keys: string[]) {
   if (!userId) return;
   try {
-    // Only current keys are kept, so the list never grows without bound.
+    // Callers pass only keys still listed, so the list never grows without bound.
     localStorage.setItem(`${SEEN_KEY}.${userId}`, JSON.stringify(keys));
     window.dispatchEvent(new Event("mychata:notifications-seen"));
   } catch {
@@ -147,6 +148,7 @@ export function useNotifications() {
     },
   });
   const expenseData = useExpenseData(pid, isFamily);
+  const claims = usePaymentClaims(pid);
   const ownershipOffers = useMyOwnershipOffers(user?.id);
   const guestRequests = usePendingGuestRequests(pid, isAdmin);
   const decidedGuestRequests = useRecentlyDecidedGuestRequests(pid, isAdmin);
@@ -159,6 +161,7 @@ export function useNotifications() {
     hasName: !!(profile?.display_name ?? "").trim(),
     members,
     propertyName: property?.name,
+    propertyId: property?.id,
     accountsToRename: familyAccountsNamedLikeCottage(
       accounts,
       memberships.filter((m) => m.role === "ADMIN" || m.role === "OWNER").map((m) => m.account_id),
@@ -174,6 +177,7 @@ export function useNotifications() {
     splits: expenseData.data?.splits,
     expenses: expenseData.data?.expenses,
     documents: documents.data,
+    claims: claims.data,
     stored: stored.data?.filter(
       (n) => n.account_id === account?.id || n.kind === "guest_request_decided",
     ),

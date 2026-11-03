@@ -1,6 +1,6 @@
 {
-  "name": "My Chata",
-  "short_name": "My Chata",
+  "name": "MyChata",
+  "short_name": "MyChata",
   "description": "Správa sdílené chaty pro rodiny a organizace.",
   "start_url": "/domu",
   "display": "browser",

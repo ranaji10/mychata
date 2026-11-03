@@ -1,4 +1,4 @@
-// Shared types, formatters and booking-overlap logic for My Chata.
+// Shared types, formatters and booking-overlap logic for MyChata.
 
 export interface Account {
   id: string;
@@ -28,6 +28,12 @@ export interface Property {
   created_by_member_id: string | null;
   public_token: string;
   public_calendar_enabled: boolean;
+  /** Cottage facts (T-057, migration 0040); null = not filled in yet. */
+  capacity?: number | null;
+  beds?: number | null;
+  check_in_time?: string | null;
+  check_out_time?: string | null;
+  pets_allowed?: boolean | null;
 }
 
 export interface Profile {
@@ -38,6 +44,7 @@ export interface Profile {
   phone: string | null;
   onboarding_completed_at: string | null;
   active_account_id: string | null;
+  preferred_lang?: string | null;
 }
 
 export interface Member {
@@ -683,6 +690,9 @@ export function guestCount(n: number, lang: "cs" | "en"): string {
 
 /** House manual section categories, stored as codes ("wifi", "rules"); shown as words (T-038). */
 const MANUAL_CATEGORY: Record<string, [cs: string, en: string]> = {
+  arrival: ["Příjezd a klíče", "Arrival and keys"],
+  departure: ["Odjezd z chaty", "Leaving the cottage"],
+  neighbours: ["Sousedé", "Neighbours"],
   wifi: ["Wi-Fi", "Wi-Fi"],
   heating: ["Topení", "Heating"],
   water: ["Voda", "Water"],

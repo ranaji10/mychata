@@ -12,7 +12,7 @@ import {
 
 export type Lang = "cs" | "en";
 
-const LS_LANG = "mychata.lang";
+import { LS_LANG, readStoredLang } from "@/lib/lang-store";
 
 interface LangState {
   lang: Lang;
@@ -29,14 +29,6 @@ const LangContext = createContext<LangState | null>(null);
 // each load (F-29, 26 Oct). useSyncExternalStore hydrates with the server's "cs" and switches
 // to the stored language straight after, without the error.
 const langListeners = new Set<() => void>();
-
-function readStoredLang(): Lang {
-  try {
-    return localStorage.getItem(LS_LANG) === "en" ? "en" : "cs";
-  } catch {
-    return "cs";
-  }
-}
 
 function subscribeLang(onChange: () => void) {
   langListeners.add(onChange);

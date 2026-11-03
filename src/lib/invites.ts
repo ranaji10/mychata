@@ -37,11 +37,11 @@ export function inviteMailto(opts: {
   const roleEn = opts.admin ? " as an admin" : "";
   const subject = `Pozvánka do chaty ${opts.chata} / Invitation to ${opts.chata}`;
   const body = [
-    `${who}${roleCs} do chaty ${opts.chata} v aplikaci My Chata.`,
+    `${who}${roleCs} do chaty ${opts.chata} v aplikaci MyChata.`,
     `Pozvánku přijmete zde (platí 7 dní):`,
     opts.link,
     "",
-    `${whoEn}${roleEn} to ${opts.chata} on My Chata.`,
+    `${whoEn}${roleEn} to ${opts.chata} on MyChata.`,
     `Accept here (valid for 7 days):`,
     opts.link,
   ].join("\n");

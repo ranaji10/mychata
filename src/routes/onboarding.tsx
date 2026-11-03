@@ -20,13 +20,14 @@ import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { AutoApproveChoice } from "@/components/AutoApproveChoice";
 import { CottageFieldHint } from "@/components/CottageFieldHint";
 import { HouseRulesEditor } from "@/components/HouseRulesEditor";
+import { bilingualRules } from "@/lib/cottage-content";
 
 export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Nastavení chaty — My Chata" },
-      { property: "og:title", content: "Nastavení chaty — My Chata" },
+      { title: "Nastavení chaty — MyChata" },
+      { property: "og:title", content: "Nastavení chaty — MyChata" },
       {
         property: "og:description",
         content: "Nastavte svou chatu v několika jednoduchých krocích.",
@@ -187,6 +188,10 @@ function OnboardingPage() {
       if (nameError) throw nameError;
       const first = chatas[0]!;
       const newPropertyIds: string[] = [];
+      // "How many people use it?" is the cottage's capacity (T-057); rules go in both languages.
+      const capacity =
+        Number(peopleCount) >= 1 && Number(peopleCount) <= 500 ? Number(peopleCount) : null;
+      const rules = bilingualRules(houseRules);
       if (!addToCurrentAccount) {
         const { data: firstId, error } = await supabase.rpc("create_account_onboarding", {
           _type: type,
@@ -200,7 +205,9 @@ function OnboardingPage() {
           ...(overlapAllowed && overlapMaxGuests
             ? { _overlap_max_guests: Number(overlapMaxGuests) }
             : {}),
-          _house_rules: houseRules,
+          _house_rules: rules.cs,
+          ...(rules.en ? { _house_rules_en: rules.en } : {}),
+          ...(capacity ? { _capacity: capacity } : {}),
           ...(type === "INSTITUTIONAL" && autoApprove !== null
             ? { _booking_auto_approve: autoApprove }
             : {}),
@@ -219,6 +226,14 @@ function OnboardingPage() {
         });
         if (addError) throw addError;
         if (extraId) newPropertyIds.push(extraId as string);
+      }
+      // Adding to an existing account: the first new cottage gets the capacity answer too.
+      if (addToCurrentAccount && capacity && newPropertyIds[0]) {
+        const { error: capacityError } = await supabase.rpc("update_property_details", {
+          _property_id: newPropertyIds[0],
+          _capacity: capacity,
+        });
+        if (capacityError) console.error("[onboarding] capacity", capacityError);
       }
       // "May stays overlap?" is an answer even when it's No (bug 8). The cottages exist by
       // now, so a failure here is logged, not shown: My profile can still ask again.
@@ -357,7 +372,7 @@ function OnboardingPage() {
             <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
               <Home className="size-6" />
             </span>
-            <span className="text-lg font-extrabold">My Chata</span>
+            <span className="text-lg font-extrabold">MyChata</span>
           </div>
           <LanguageToggle />
         </div>
@@ -403,7 +418,7 @@ function OnboardingPage() {
             <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
               <Home className="size-6" />
             </span>
-            <span className="text-lg font-extrabold">My Chata</span>
+            <span className="text-lg font-extrabold">MyChata</span>
           </div>
           <LanguageToggle />
         </div>
@@ -471,7 +486,7 @@ function OnboardingPage() {
           <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
             <Home className="size-6" />
           </span>
-          <span className="text-lg font-extrabold">My Chata</span>
+          <span className="text-lg font-extrabold">MyChata</span>
         </div>
         <LanguageToggle />
       </div>
@@ -700,7 +715,15 @@ function OnboardingPage() {
             <h1 className="text-[28px] font-extrabold leading-[1.15]">
               {t("Mohou se pobyty překrývat?", "May stays overlap?")}
             </h1>
-            {chatas.some((c) => c.rooms && Number(c.rooms) > 3) ? (
+            {!chatas.some((c) => c.rooms && Number(c.rooms) > 3) && (
+              <p className="text-[16px] text-muted-foreground">
+                {t(
+                  "U menších chat se překryvy obvykle povolují — rodina se domluví sama. Změníte to později v Nastavení.",
+                  "Smaller cottages usually allow overlaps — the family works it out. You can change this later in Settings.",
+                )}
+              </p>
+            )}
+            {
               <>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
@@ -738,14 +761,7 @@ function OnboardingPage() {
                   </label>
                 )}
               </>
-            ) : (
-              <p className="text-[16px] text-muted-foreground">
-                {t(
-                  "U menších chat se překryvy povolují automaticky — rodina se domluví sama.",
-                  "For smaller cottages overlaps are allowed automatically — the family works it out.",
-                )}
-              </p>
-            )}
+            }
             {type === "INSTITUTIONAL" && !addToCurrentAccount && (
               <AutoApproveChoice value={autoApprove} onChange={setAutoApprove} />
             )}
@@ -809,6 +825,14 @@ function OnboardingPage() {
             disabled={!canNext}
             onClick={() => {
               track("onboarding_step", { step: step + 1 });
+              // Smaller cottages start on "Yes", which the step says; one tap changes it.
+              if (
+                step + 1 === 3 &&
+                overlapAllowed === null &&
+                !chatas.some((c) => c.rooms && Number(c.rooms) > 3)
+              ) {
+                setOverlapAllowed(true);
+              }
               setStep(step + 1);
             }}
           >

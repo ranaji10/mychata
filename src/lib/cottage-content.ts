@@ -70,7 +70,7 @@ export const STARTER_RULES = [
 export const MANUAL_QUESTIONS = [
   {
     title: ["Příjezd a klíče", "Arrival and keys"],
-    category: "other",
+    category: "arrival",
     questions: [
       {
         title: ["Kde jsou klíče?", "Where are the keys?"],
@@ -252,7 +252,7 @@ export const MANUAL_QUESTIONS = [
   },
   {
     title: ["Odjezd z chaty", "Leaving the cottage"],
-    category: "other",
+    category: "departure",
     questions: [
       {
         title: ["Co zavřít a vypnout?", "What to turn off and close?"],
@@ -330,7 +330,7 @@ export const MANUAL_QUESTIONS = [
   },
   {
     title: ["Sousedé", "Neighbours"],
-    category: "other",
+    category: "neighbours",
     questions: [
       {
         title: [
@@ -365,3 +365,23 @@ export const MANUAL_QUESTIONS = [
     ],
   },
 ] as const;
+
+/**
+ * House rules as typed in the editor, cleaned (no blank or space-only lines) and in both
+ * languages: a starter rule left as it was gets its exact translation, anything the family
+ * wrote stays as written in both (T-057; was done only on Manage cottages).
+ */
+export function bilingualRules(text: string): { cs: string; en: string } {
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const pick = (language: 0 | 1) =>
+    lines
+      .map(
+        (line) =>
+          STARTER_RULES.find((rule) => rule[0] === line || rule[1] === line)?.[language] ?? line,
+      )
+      .join("\n");
+  return { cs: pick(0), en: pick(1) };
+}

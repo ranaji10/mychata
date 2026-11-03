@@ -18,6 +18,8 @@ import { fmtKc, type Expense, type ExpenseSplit } from "@/lib/data";
 import { expenseDataKey } from "@/lib/expenses";
 import { canCoverExpense } from "@/lib/ui-action-rules";
 import { friendlyError } from "@/lib/rpc-errors";
+import { openClaim, usePaymentClaims } from "@/lib/payment-claims";
+import { ClaimDecision, ClaimPaidButton, ClaimWaiting } from "@/components/PaymentClaimActions";
 
 export function ExpenseDetail({
   expense,
@@ -37,8 +39,9 @@ export function ExpenseDetail({
   const canUpload = payer || currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const name = (id: string | null) =>
     members.find((member) => member.id === id)?.name ?? t("Člen", "Member");
+  const { data: claims } = usePaymentClaims(expense.property_id);
   const receiptKey = ["expense-receipt", expense.property_id, expense.id];
-  const { data: receipt, isError: receiptError } = useQuery({
+  const { data: receiptData, isError: receiptError } = useQuery({
     queryKey: receiptKey,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -52,9 +55,10 @@ export function ExpenseDetail({
         .from("my-chata-files")
         .createSignedUrl(data.receipt_photo_url, 3600);
       if (urlError) throw urlError;
-      return url.signedUrl;
+      return { path: data.receipt_photo_url, url: url.signedUrl };
     },
   });
+  const receipt = receiptData?.url ?? null;
   const failure = (raw: string) => {
     const message = friendlyError(raw, t);
     toast.error(t(`Akce se nepodařila: ${message}`, `The action failed: ${message}`));
@@ -67,10 +71,12 @@ export function ExpenseDetail({
         _member_id: memberId,
       });
       if (error) throw error;
+      // remind_debt returns everything this person owes the payer at the cottage, not this
+      // expense's share, so say so (L-3 review, Low 8).
       toast.success(
         t(
-          `Připomenutí přijato: ${fmtKc(Number(data))}.`,
-          `Reminder accepted: ${fmtKc(Number(data))}.`,
+          `Připomenutí posláno: ${name(memberId)}. Celkem vám dluží ${fmtKc(Number(data))}.`,
+          `Reminder sent to ${name(memberId)}. In total they owe you ${fmtKc(Number(data))}.`,
         ),
       );
     } catch (error) {
@@ -96,6 +102,7 @@ export function ExpenseDetail({
   };
   const upload = async (file: File) => {
     setBusy(true);
+    const oldPath = receiptData?.path ?? null;
     const path = `${expense.property_id}/receipts/${crypto.randomUUID()}`;
     try {
       const { error } = await supabase.storage.from("my-chata-files").upload(path, file);
@@ -111,6 +118,11 @@ export function ExpenseDetail({
           .remove([path]);
         if (cleanupError) console.error("Receipt cleanup failed", cleanupError);
         throw updateError ?? new Error("nothing_changed");
+      }
+      // The replaced photo would otherwise stay in storage for good (L-3 review, Low 6).
+      if (oldPath && oldPath !== path) {
+        const { error: oldError } = await supabase.storage.from("my-chata-files").remove([oldPath]);
+        if (oldError) console.error("Old receipt cleanup failed", oldError);
       }
       await client.invalidateQueries({ queryKey: receiptKey });
       toast.success(t("Účtenka uložena.", "Receipt saved."));
@@ -165,9 +177,33 @@ export function ExpenseDetail({
                     {split.paid_back ? t("Vyrovnáno", "Settled") : t("Dluží", "Owes")}
                   </span>
                 </div>
-                {payer &&
-                  !split.paid_back &&
-                  members.some((member) => member.id === split.member_id && !member.left_at) && (
+                {(() => {
+                  if (split.paid_back || !expense.paid_by_member_id) return null;
+                  const claim = openClaim(
+                    claims,
+                    split.member_id,
+                    expense.paid_by_member_id,
+                    expense.id,
+                  );
+                  // Mine to pay: "I've paid my share", then "waiting to confirm" (T-057).
+                  if (split.member_id === currentMember?.id) {
+                    return claim ? (
+                      <ClaimWaiting claim={claim} toName={name(expense.paid_by_member_id)} />
+                    ) : (
+                      <ClaimPaidButton
+                        propertyId={expense.property_id}
+                        toMemberId={expense.paid_by_member_id}
+                        toName={name(expense.paid_by_member_id)}
+                        expenseId={expense.id}
+                        label={t("Moje část je zaplacená", "I've paid my share")}
+                      />
+                    );
+                  }
+                  if (payer && claim) {
+                    return <ClaimDecision claim={claim} fromName={name(split.member_id)} />;
+                  }
+                  return payer &&
+                    members.some((member) => member.id === split.member_id && !member.left_at) ? (
                     <Button
                       variant="fresh"
                       size="fresh"
@@ -177,7 +213,8 @@ export function ExpenseDetail({
                     >
                       {t("Připomenout", "Remind")}
                     </Button>
-                  )}
+                  ) : null;
+                })()}
               </li>
             ))}
           </ul>

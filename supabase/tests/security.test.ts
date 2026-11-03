@@ -97,6 +97,11 @@ beforeAll(async () => {
   );
   await admin(
     db,
+    "insert into public.manual_sections (property_id, title_cs, title_en, content_cs, content_en, visibility) values ($1,'Veřejné info','Public info','Parkujte u lesa','Park by the wood','PUBLIC')",
+    [ids.propA],
+  );
+  await admin(
+    db,
     "insert into public.documents (property_id, title, file_url, visibility) values ($1,'Deed',$2,'ADMINS_ONLY')",
     [ids.propA, `${ids.propA}/deed.pdf`],
   );
@@ -170,7 +175,9 @@ describe("anonymous access", () => {
       const rows = await q<{ title_cs: string }>("select * from public.public_manual($1)", [
         ids.tokenA,
       ]);
-      expect(rows.map((r) => r.title_cs)).toEqual(["Pravidla domu"]);
+      // Onboarding's house rules are members-only since 0040 (T-057); only the section an admin
+      // marked PUBLIC in the setup above shows.
+      expect(rows.map((r) => r.title_cs)).toEqual(["Veřejné info"]);
       expect(await q("select * from public.public_manual('wrong')")).toHaveLength(0);
     });
   });

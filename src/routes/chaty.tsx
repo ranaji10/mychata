@@ -22,17 +22,18 @@ import type { Property } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { useMyCottages } from "@/lib/my-cottages";
 import { HouseRulesEditor } from "@/components/HouseRulesEditor";
-import { missingCottageDetails } from "@/lib/cottage-details";
-import { STARTER_RULES } from "@/lib/cottage-content";
+import { CottageDetailsEditor } from "@/components/CottageDetailsEditor";
+import { cottageFactsLine, missingCottageDetails } from "@/lib/cottage-details";
+import { bilingualRules } from "@/lib/cottage-content";
 
 export const Route = createFileRoute("/chaty")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Spravovat chaty — My Chata" },
+      { title: "Spravovat chaty — MyChata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Your cottages, their photos, house manual and documents." },
-      { property: "og:title", content: "Spravovat chaty — My Chata" },
+      { property: "og:title", content: "Spravovat chaty — MyChata" },
       {
         property: "og:description",
         content: "Your cottages, their photos, house manual and documents.",
@@ -265,27 +266,21 @@ function CottageCard({
   const { t } = useLang();
   const queryClient = useQueryClient();
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [rules, setRules] = useState("");
 
   const saveRules = useMutation({
     mutationFn: async () => {
-      const text = rules.trim();
-      const translatedRules = (language: 0 | 1) =>
-        text
-          .split("\n")
-          .map((line) => {
-            const pair = STARTER_RULES.find((rule) => rule[0] === line || rule[1] === line);
-            return pair?.[language] ?? line;
-          })
-          .join("\n");
+      const text = bilingualRules(rules);
+      // Members only, like everything new in the manual; an admin can make it public (T-057).
       const { error } = await supabase.from("manual_sections").insert({
         property_id: property.id,
         category: "rules",
         title_cs: "Pravidla domu",
         title_en: "House rules",
-        content_cs: translatedRules(0),
-        content_en: translatedRules(1),
-        visibility: "PUBLIC",
+        content_cs: text.cs,
+        content_en: text.en,
+        visibility: "MEMBERS_ONLY",
         display_order: 0,
       });
       if (error) throw error;
@@ -327,6 +322,22 @@ function CottageCard({
         <p className="truncate text-[16px] text-muted-foreground">
           {[property.address, property.city].filter(Boolean).join(", ")}
         </p>
+      )}
+      {cottageFactsLine(property, t) && (
+        <p className="text-[16px] text-muted-foreground">{cottageFactsLine(property, t)}</p>
+      )}
+      {isAdmin && !detailsOpen && (
+        <Button
+          variant="fresh"
+          size="fresh"
+          className="btn-secondary mt-2 w-full bg-card"
+          onClick={() => setDetailsOpen(true)}
+        >
+          {t("Upravit údaje o chatě", "Edit cottage details")}
+        </Button>
+      )}
+      {detailsOpen && (
+        <CottageDetailsEditor property={property} onDone={() => setDetailsOpen(false)} />
       )}
       {/* The cottage's own pages; Maintenance holds its tasks (bugs 4, 4a). */}
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -382,7 +393,7 @@ function CottageCard({
               variant="fresh"
               size="fresh"
               className="btn-primary flex-1"
-              disabled={saveRules.isPending || rules.trim().length < 2}
+              disabled={saveRules.isPending || bilingualRules(rules).cs.length < 2}
               onClick={() => saveRules.mutate()}
             >
               {saveRules.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}

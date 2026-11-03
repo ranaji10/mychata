@@ -179,7 +179,9 @@ export function useNotifications() {
       (n) => n.account_id === account?.id || n.kind === "guest_request_decided",
     ),
   });
-  const failed = [invitations, bookings, tasks, documents].some((q) => q.isError && !q.data);
+  const failed = [invitations, bookings, tasks, documents, stored].some(
+    (q) => q.isError && !q.data,
+  );
   const loading = invitations.isLoading || bookings.isLoading || tasks.isLoading;
   return { items, loading, failed, userId: user?.id };
 }

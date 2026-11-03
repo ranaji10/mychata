@@ -13,7 +13,8 @@
 -- 4. message_admins and remind_debt for L-3's "Napsat správci" and "Připomenout"; both create
 --    notifications and never reveal an address.
 -- Every e-mail one person causes counts in usage_counters ('notification_email'); above 60 a day
--- the notification is still stored but not e-mailed.
+-- the notification is still stored but not e-mailed. Invitation e-mails have stricter rules
+-- (confirmed inviter, 20 per account a day, see notify_on_invitation).
 
 -- 1. notifications -------------------------------------------------------------------------
 
@@ -74,9 +75,9 @@ create policy "Recipients read their own notifications" on public.notifications
 -- stay is what passes it on to you). dedupe_key makes a repeated event a no-op.
 create or replace function public.notify_enqueue(
   _account_id uuid, _kind text, _member_id uuid, _user_id uuid, _email text, _payload jsonb,
-  _dedupe text
+  _dedupe text, _email_ok boolean default true
 ) returns void language plpgsql security definer set search_path = public as $$
-declare rcpt public.members; n int; wanted boolean := true; err text;
+declare rcpt public.members; n int; new_id uuid;
 begin
   if _member_id is not null then
     select * into rcpt from public.members where id = _member_id;
@@ -91,24 +92,30 @@ begin
     _email := lower(btrim(coalesce(_email, '')));
     if _email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return; end if;
   end if;
-  if auth.uid() is not null then
-    insert into public.usage_counters (user_id, kind, day, count)
-    values (auth.uid(), 'notification_email', current_date, 1)
-    on conflict (user_id, kind, day) do update set count = public.usage_counters.count + 1
-    returning count into n;
-    if n > 60 then wanted := false; err := 'rate_limited'; end if;
-  end if;
   insert into public.notifications (account_id, recipient_member_id, recipient_user_id,
     recipient_email, kind, payload, sender_user_id, dedupe_key, email_wanted, email_error)
   values (_account_id, _member_id,
           case when _member_id is null then _user_id end,
           case when _member_id is null and _user_id is null then _email end,
-          _kind, coalesce(_payload, '{}'::jsonb), auth.uid(), _dedupe, wanted, err)
-  on conflict (dedupe_key) do nothing;
+          _kind, coalesce(_payload, '{}'::jsonb), auth.uid(), _dedupe, _email_ok,
+          case when not _email_ok then 'not_sent_by_rule' end)
+  on conflict (dedupe_key) do nothing
+  returning id into new_id;
+  -- Only e-mails that will really go out count towards the person's 60 a day.
+  if new_id is not null and _email_ok and auth.uid() is not null then
+    insert into public.usage_counters (user_id, kind, day, count)
+    values (auth.uid(), 'notification_email', current_date, 1)
+    on conflict (user_id, kind, day) do update set count = public.usage_counters.count + 1
+    returning count into n;
+    if n > 60 then
+      update public.notifications set email_wanted = false, email_error = 'rate_limited'
+      where id = new_id;
+    end if;
+  end if;
 end;
 $$;
 --> statement-breakpoint
-revoke execute on function public.notify_enqueue(uuid, text, uuid, uuid, text, jsonb, text)
+revoke execute on function public.notify_enqueue(uuid, text, uuid, uuid, text, jsonb, text, boolean)
   from public, anon, authenticated;
 --> statement-breakpoint
 
@@ -196,7 +203,8 @@ begin
   select * into b from public.bookings where id = _booking_id;
   if h.id is null or b.id is null or b.requester_member_id is null then return; end if;
   select * into prop from public.properties where id = h.property_id;
-  select name into author from public.members where id = h.member_id;
+  select name into author from public.members
+  where id = h.member_id and account_id = prop.account_id;
   select coalesce(jsonb_agg(e.key order by e.key)
            filter (where e.value ->> 'state' = 'checked'), '[]'::jsonb),
          coalesce(jsonb_agg(jsonb_build_object('item', e.key, 'reason', e.value ->> 'reason')
@@ -266,6 +274,28 @@ drop trigger if exists bookings_notify on public.bookings;
 --> statement-breakpoint
 create trigger bookings_notify after insert or update of status or delete on public.bookings
   for each row execute function public.notify_on_booking();
+--> statement-breakpoint
+
+-- The leaving checklist is e-mailed in the author's name, so a handover may only be written as
+-- yourself (an admin may write one for someone else), and not dated in the future (it would
+-- become "the latest" and hold back the real one). RLS audit of 0038, G1 and the future-date note.
+drop policy if exists "Members submit handovers" on public.handovers;
+--> statement-breakpoint
+create policy "Members submit handovers" on public.handovers for insert to authenticated
+  with check (public.in_current_account(property_id)
+              and (member_id is null or member_id = public.current_member_id()
+                   or public.is_admin())
+              and submitted_at <= now() + interval '5 minutes');
+--> statement-breakpoint
+drop policy if exists "Author or admin updates handover" on public.handovers;
+--> statement-breakpoint
+create policy "Author or admin updates handover" on public.handovers for update to authenticated
+  using (public.in_current_account(property_id)
+         and (member_id = public.current_member_id() or public.is_admin()))
+  with check (public.in_current_account(property_id)
+              and (member_id is null or member_id = public.current_member_id()
+                   or public.is_admin())
+              and submitted_at <= now() + interval '5 minutes');
 --> statement-breakpoint
 
 create or replace function public.notify_on_handover()
@@ -340,20 +370,35 @@ create trigger ownership_offers_notify after insert on public.ownership_offers
 --> statement-breakpoint
 
 -- An invitation with an e-mail is e-mailed; "Kopírovat odkaz" and "Poslat z mé pošty" stay.
+-- Against misuse of notify.mychata.cz for spam (PR review): only an inviter whose own sign-in
+-- e-mail is confirmed, at most 20 invitation e-mails per account a day, and never to the
+-- inviter's own address (onboarding of an institution invites the founder's personal e-mail).
+-- Otherwise the invitation is stored but not e-mailed.
 create or replace function public.notify_on_invitation()
 returns trigger language plpgsql security definer set search_path = public as $$
-declare acct text; prop text; inviter text;
+declare acct text; prop text; inviter public.members; ok boolean; to_addr text;
 begin
-  if nullif(btrim(coalesce(new.email, '')), '') is null or new.status <> 'PENDING' then
+  to_addr := lower(btrim(coalesce(new.email, '')));
+  if to_addr = '' or new.status <> 'PENDING' then return null; end if;
+  select name into acct from public.accounts where id = new.account_id;
+  select name into prop from public.properties
+  where id = new.property_id and account_id = new.account_id;
+  select * into inviter from public.members
+  where id = new.created_by_member_id and account_id = new.account_id;
+  if to_addr = lower(btrim(coalesce(inviter.email, '')))
+     or exists (select 1 from auth.users u where u.id = auth.uid()
+                and lower(btrim(coalesce(u.email, ''))) = to_addr) then
     return null;
   end if;
-  select name into acct from public.accounts where id = new.account_id;
-  select name into prop from public.properties where id = new.property_id;
-  select name into inviter from public.members where id = new.created_by_member_id;
-  perform public.notify_enqueue(new.account_id, 'invitation', null, null, new.email,
+  ok := exists (select 1 from auth.users u
+                where u.id = auth.uid() and u.email_confirmed_at is not null)
+        and (select count(*) from public.notifications
+             where account_id = new.account_id and kind = 'invitation' and email_wanted
+               and created_at > now() - interval '1 day') < 20;
+  perform public.notify_enqueue(new.account_id, 'invitation', null, null, to_addr,
     jsonb_build_object('token', new.token, 'account_name', acct, 'property_name', prop,
-      'invited_by', inviter, 'expires_at', new.expires_at),
-    'invitation:' || new.id);
+      'invited_by', inviter.name, 'expires_at', new.expires_at),
+    'invitation:' || new.id, ok);
   return null;
 end;
 $$;

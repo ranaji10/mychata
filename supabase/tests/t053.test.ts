@@ -43,7 +43,11 @@ async function notes(kind: string) {
 beforeAll(async () => {
   db = await freshDb();
   for (const [k, id] of Object.entries(U)) {
-    await admin(db, "insert into auth.users (id, email) values ($1, $2)", [id, `${k}@example.org`]);
+    await admin(
+      db,
+      "insert into auth.users (id, email, email_confirmed_at) values ($1, $2, now())",
+      [id, `${k}@example.org`],
+    );
   }
   await asCommitted(
     db,
@@ -229,6 +233,32 @@ describe("offers, invitations, guest requests", () => {
       );
       expect(seen).toHaveLength(0);
     }
+  });
+
+  it("invitation e-mails: not to yourself, not from an unconfirmed sign-in, 20 per account a day", async () => {
+    const inv = (email: string) =>
+      asCommitted(
+        db,
+        who("aOwner"),
+        "insert into public.invitations (account_id, property_id, email, role, created_by_member_id) values ($1,$2,$3,'MEMBER',$4)",
+        [ids.acctA, ids.propA, email, ids.ownerA],
+      );
+    const count = async (email: string) =>
+      (await notes("invitation")).filter((r) => r.recipient_email === email);
+    await inv("aOwner@example.org");
+    expect(await count("aowner@example.org")).toHaveLength(0);
+
+    await admin(db, "update auth.users set email_confirmed_at = null where id = $1", [U.aOwner]);
+    await inv("unconfirmed@example.org");
+    expect(await count("unconfirmed@example.org")).toMatchObject([
+      { email_wanted: false, email_error: "not_sent_by_rule" },
+    ]);
+    await admin(db, "update auth.users set email_confirmed_at = now() where id = $1", [U.aOwner]);
+
+    const sentToday = (await notes("invitation")).filter((r) => r.email_wanted).length;
+    for (let i = sentToday; i < 20; i++) await inv(`bulk${i}@example.org`);
+    await inv("one-too-many@example.org");
+    expect(await count("one-too-many@example.org")).toMatchObject([{ email_wanted: false }]);
   });
 
   it("a decided public-calendar request goes to the visitor's sign-in, a guest's to their e-mail", async () => {

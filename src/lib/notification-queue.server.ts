@@ -1,13 +1,14 @@
 // The e-mail queue behind stored notifications (T-053). The cron route calls runEmailQueue with
 // the service-role store; tests call processEmailQueue with fakes. Rules:
 // - at most `limit` e-mails per run, oldest due first;
-// - three attempts, then it stops (5, 20 and 80 minutes apart), each failure kept in email_error;
+// - the first try plus three retries (5, 20 and 80 minutes later), each failure kept in email_error;
 // - a member who left, or has no e-mail, is never mailed (email_wanted becomes false);
 // - the notification id is the idempotency key, so a run that crashes after sending can't send twice.
 import { renderNotificationEmail, type NotificationRow } from "@/lib/notification-email";
 import type { SendEmailInput, SendEmailResult } from "@/lib/email.server";
 
-export const MAX_ATTEMPTS = 3;
+/** Tries in all: the first send and three retries. */
+export const MAX_ATTEMPTS = 4;
 const BACKOFF_MINUTES = [5, 20, 80];
 
 export interface QueuedNotification extends NotificationRow {
@@ -74,19 +75,24 @@ export async function processEmailQueue(
       report.skipped++;
       continue;
     }
+    let result: Awaited<ReturnType<Sender>>;
     try {
-      const r = await send({ to, template: "notification", data, idempotencyKey: n.id });
-      if (r.sent) {
-        await store.sent(n.id, now);
-        report.sent++;
-      } else {
-        await store.skipped(n.id, r.reason);
-        report.skipped++;
-      }
+      result = await send({ to, template: "notification", data, idempotencyKey: n.id });
     } catch (e) {
       const attempts = n.email_attempts + 1;
       await store.failed(n.id, attempts, nextAttemptAt(now, attempts), message(e));
       report.failed++;
+      continue;
+    }
+    // Recording the outcome is outside the send's try: a failed update after a successful send
+    // must not count as a send failure (the run stops with an error instead, and the next run's
+    // retry carries the same idempotency key, so Lovable drops the duplicate).
+    if (result.sent) {
+      await store.sent(n.id, now);
+      report.sent++;
+    } else {
+      await store.skipped(n.id, result.reason);
+      report.skipped++;
     }
   }
   return report;

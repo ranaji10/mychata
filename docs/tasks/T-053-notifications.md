@@ -14,7 +14,7 @@ Context: `prompts/2026-10-04/06-CC-3-notifications.md` (outside the repo), `docs
 - **Triggers** create notifications, so today's screens need no change: booking waiting (to admins and cottage admins), booking confirmed or declined (to the requester, not when they did it themselves), public/guest request decided (to the requester's sign-in, else the guest's e-mail), ownership offered, invitation with an e-mail, handover submitted (leaving checklist to the member with the next confirmed stay; if none, it goes when the next stay is confirmed).
 - **Functions** for L-3: `add_task_note`, `message_admins`, `remind_debt`, `mark_notifications_read`, `handover_next_recipient`.
 - **E-mail**: one wrapper `src/lib/email.server.ts` (`sendEmail`), the only caller of Lovable's `sendNotificationEmail`. Texts per kind in `notification-email.ts`, Czech with English underneath (the app keeps the language choice only in the browser). Subjects carry no names.
-- **Queue**: `POST /api/notifications/send-emails` (Lovable cron secret) sends up to 50 due e-mails, retries three times (5 min, 20 min, 80 min), stores `email_error`, never mails a member who left or has no e-mail. More than 60 e-mails a day caused by one person are stored but not e-mailed (`usage_counters`).
+- **Queue**: `POST /api/notifications/send-emails` (Lovable cron secret) sends up to 50 due e-mails, the first try plus three retries (5, 20, 80 min), stores `email_error`, never mails a member who left or has no e-mail. More than 60 e-mails a day caused by one person are stored but not e-mailed (`usage_counters`); invitation e-mails only from a confirmed sign-in, 20 per account a day, never to the inviter's own address.
 - **App list**: stored notifications are one more source in `buildNotifications`; a stored item replaces the computed one for the same booking or offer.
 
 ## Acceptance
@@ -26,4 +26,4 @@ Context: `prompts/2026-10-04/06-CC-3-notifications.md` (outside the repo), `docs
 
 Questions for the maintainers: e-mail on/off per person and per kind (now: always on); how long to keep notifications (now: kept); does the privacy page need a line about e-mail notifications.
 
-Handoff note: filled in at the end.
+Handoff note: built as designed; review and RLS audit fixes are in (invitation e-mail limits, handover author and date checks, names read only within the account, retry count, resend safety, the counter counts real e-mails only, a stored-list read error shows the error card). `bun run check` passes. Not verified: 0038 on the real database, the queue against real Supabase, Lovable's idempotency and real delivery. Left for later (review, Low): a cottage-only admin, or an admin looking at another cottage, gets the stay-to-approve e-mail but no list item; overlapping cron runs rely on the idempotency key.

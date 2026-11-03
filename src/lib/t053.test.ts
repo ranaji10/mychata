@@ -233,7 +233,7 @@ describe("e-mail queue", () => {
       "failed:c:1:2026-11-03T10:05:00.000Z:address: auth down",
       "skipped:d:recipient_suppressed",
     ]);
-    expect(MAX_ATTEMPTS).toBe(3);
+    expect(MAX_ATTEMPTS).toBe(4);
     expect(nextAttemptAt(now, 2).toISOString()).toBe("2026-11-03T10:20:00.000Z");
   });
 

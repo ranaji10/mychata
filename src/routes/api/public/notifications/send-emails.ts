@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// Sends queued notification e-mails (T-053). Called by a Lovable cron job every few minutes with
+// Sends queued notification e-mails (T-053). Called by a Lovable cron job every 5 minutes with
 // "Authorization: Bearer <LOVABLE_CRON_SECRET>"; anything else gets 401. Returns counts only.
-export const Route = createFileRoute("/api/notifications/send-emails")({
+// Under /api/public/ because Lovable's scheduler only calls addresses there; "public" is only the
+// path: the cron secret is still required.
+export const Route = createFileRoute("/api/public/notifications/send-emails")({
   staticData: { sitemap: false },
   server: {
     handlers: {

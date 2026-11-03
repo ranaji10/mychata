@@ -1214,6 +1214,94 @@ export type Database = {
           },
         ]
       }
+      payment_claims: {
+        Row: {
+          account_id: string
+          amount: number
+          created_at: string
+          decided_at: string | null
+          decided_by_member_id: string | null
+          expense_id: string | null
+          from_member_id: string
+          id: string
+          property_id: string
+          split_ids: string[]
+          status: string
+          to_member_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by_member_id?: string | null
+          expense_id?: string | null
+          from_member_id: string
+          id?: string
+          property_id: string
+          split_ids?: string[]
+          status?: string
+          to_member_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by_member_id?: string | null
+          expense_id?: string | null
+          from_member_id?: string
+          id?: string
+          property_id?: string
+          split_ids?: string[]
+          status?: string
+          to_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_claims_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_decided_by_member_id_fkey"
+            columns: ["decided_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_from_member_id_fkey"
+            columns: ["from_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_claims_to_member_id_fkey"
+            columns: ["to_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           active: boolean
@@ -1250,6 +1338,7 @@ export type Database = {
           member_id: string | null
           onboarding_completed_at: string | null
           phone: string | null
+          preferred_lang: string | null
           user_id: string
         }
         Insert: {
@@ -1260,6 +1349,7 @@ export type Database = {
           member_id?: string | null
           onboarding_completed_at?: string | null
           phone?: string | null
+          preferred_lang?: string | null
           user_id: string
         }
         Update: {
@@ -1270,6 +1360,7 @@ export type Database = {
           member_id?: string | null
           onboarding_completed_at?: string | null
           phone?: string | null
+          preferred_lang?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1294,6 +1385,10 @@ export type Database = {
           account_id: string
           address: string
           auto_confirm: boolean
+          beds: number | null
+          capacity: number | null
+          check_in_time: string | null
+          check_out_time: string | null
           city: string | null
           created_at: string
           created_by_member_id: string | null
@@ -1304,6 +1399,7 @@ export type Database = {
           overlap_allowed: boolean | null
           overlap_max_guests: number | null
           peak_seasons: string[]
+          pets_allowed: boolean | null
           photo_url: string | null
           public_calendar_enabled: boolean
           public_token: string
@@ -1313,6 +1409,10 @@ export type Database = {
           account_id: string
           address?: string
           auto_confirm?: boolean
+          beds?: number | null
+          capacity?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city?: string | null
           created_at?: string
           created_by_member_id?: string | null
@@ -1323,6 +1423,7 @@ export type Database = {
           overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
+          pets_allowed?: boolean | null
           photo_url?: string | null
           public_calendar_enabled?: boolean
           public_token?: string
@@ -1332,6 +1433,10 @@ export type Database = {
           account_id?: string
           address?: string
           auto_confirm?: boolean
+          beds?: number | null
+          capacity?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city?: string | null
           created_at?: string
           created_by_member_id?: string | null
@@ -1342,6 +1447,7 @@ export type Database = {
           overlap_allowed?: boolean | null
           overlap_max_guests?: number | null
           peak_seasons?: string[]
+          pets_allowed?: boolean | null
           photo_url?: string | null
           public_calendar_enabled?: boolean
           public_token?: string
@@ -1768,6 +1874,14 @@ export type Database = {
         Returns: string
       }
       claim_initial_membership: { Args: never; Returns: string }
+      claim_payment: {
+        Args: {
+          _expense_id?: string
+          _property_id: string
+          _to_member_id: string
+        }
+        Returns: string
+      }
       convert_account_to_institution: {
         Args: { _account_id: string; _name: string }
         Returns: undefined
@@ -1778,8 +1892,10 @@ export type Database = {
           _account_name: string
           _address?: string
           _booking_auto_approve?: boolean
+          _capacity?: number
           _city?: string
           _house_rules?: string
+          _house_rules_en?: string
           _overlap_max_guests?: number
           _property_name: string
           _rooms?: number
@@ -1794,6 +1910,11 @@ export type Database = {
         Args: { _approve: boolean; _request_id: string }
         Returns: string
       }
+      decide_payment_claim: {
+        Args: { _claim_id: string; _received: boolean }
+        Returns: string
+      }
+      email_lang: { Args: { _email: string }; Returns: string }
       f_unaccent: { Args: { "": string }; Returns: string }
       feature_enabled: { Args: { _key: string }; Returns: boolean }
       forward_leaving_checklist_to: {
@@ -2067,8 +2188,13 @@ export type Database = {
       update_property_details: {
         Args: {
           _address?: string
+          _beds?: number
+          _capacity?: number
+          _check_in_time?: string
+          _check_out_time?: string
           _city?: string
           _overlap_max_guests?: number
+          _pets_allowed?: boolean
           _property_id: string
           _rooms?: number
           _seasons?: string[]

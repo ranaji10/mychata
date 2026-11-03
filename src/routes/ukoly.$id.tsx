@@ -47,6 +47,7 @@ export const Route = createFileRoute("/ukoly/$id")({
 
 function TaskDetail() {
   const { id } = Route.useParams();
+  const { note: focusNote } = Route.useSearch();
   const { property, members, activeMembers, currentMember } = useAccount();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -327,7 +328,7 @@ function TaskDetail() {
           </AlertDialog>
         </>
       )}
-      <TaskNotes taskId={task.id} focus={Route.useSearch().note} />
+      <TaskNotes taskId={task.id} focus={focusNote} />
     </AppShell>
   );
 }

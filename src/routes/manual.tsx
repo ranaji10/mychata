@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Check, Copy, Flag, Plus } from "lucide-react";
+import { BookOpen, Check, Copy, Flag, Plus, Pencil } from "lucide-react";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
 import { MANUAL_CATEGORIES, manualCategoryLabel } from "@/lib/data";
 import { AskBox } from "@/components/AskBox";
+import { ManualSuggestions, type ManualSuggestion } from "@/components/ManualSuggestions";
 
 export const Route = createFileRoute("/manual")({
   staticData: { sitemap: false },
@@ -41,6 +42,7 @@ function ManualPage() {
   const queryClient = useQueryClient();
   const [manualLink, setManualLink] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     titleCs: "",
     titleEn: "",
@@ -99,7 +101,7 @@ function ManualPage() {
   const addSection = useMutation({
     mutationFn: async () => {
       if (!property) return;
-      const { error } = await supabase.from("manual_sections").insert({
+      const values = {
         property_id: property.id,
         category: form.category,
         title_cs: form.titleCs,
@@ -108,12 +110,17 @@ function ManualPage() {
         content_en: form.contentEn,
         visibility: form.visibility,
         display_order: sections?.length ?? 0,
-      });
+      };
+      const { data, error } = editingId
+        ? await supabase.from("manual_sections").update(values).eq("id", editingId).select("id")
+        : await supabase.from("manual_sections").insert(values).select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("nothing_changed");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manual-sections", property?.id] });
       setEditing(false);
+      setEditingId(null);
       setForm({
         titleCs: "",
         titleEn: "",
@@ -122,11 +129,17 @@ function ManualPage() {
         category: "other",
         visibility: "MEMBERS_ONLY",
       });
-      toast.success(t("Sekce přidána.", "Section added."));
+      toast.success(t("Sekce uložena.", "Section saved."));
       // No embeddings on save any more: answers read the whole manual (ADR-0012).
     },
     onError: () => toast.error(t("Sekci se nepodařilo přidat.", "Could not add the section.")),
   });
+  const chooseSuggestion = (draft: ManualSuggestion) => {
+    const existing = sections?.find(section => section.title_cs === draft.titleCs && !section.content_cs.trim() && !section.content_en.trim());
+    setEditingId(existing?.id ?? null);
+    setForm(draft);
+    setEditing(true);
+  };
 
   return (
     <AppShell>
@@ -139,7 +152,7 @@ function ManualPage() {
             <Button
               variant="fresh"
               size="fresh"
-              onClick={() => setEditing(true)}
+              onClick={() => { setEditingId(null); setForm({titleCs:"",titleEn:"",contentCs:"",contentEn:"",category:"other",visibility:"MEMBERS_ONLY"}); setEditing(true); }}
               aria-label={t("Přidat sekci", "Add section")}
               className="grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"
             >
@@ -248,10 +261,13 @@ function ManualPage() {
               <p className="mt-2 whitespace-pre-wrap text-[16px]">
                 {lang === "en" ? section.content_en : section.content_cs}
               </p>
+              {isAdmin && <Button variant="ghost" size="icon" className="mt-2 size-11" aria-label={t("Upravit sekci", "Edit section")} onClick={() => {setEditingId(section.id);setForm({titleCs:section.title_cs,titleEn:section.title_en,contentCs:section.content_cs,contentEn:section.content_en,category:section.category,visibility:section.visibility});setEditing(true);}}><Pencil className="size-5" /></Button>}
             </article>
           ))}
         </div>
       )}
+
+      {!isLoading && <ManualSuggestions sections={sections ?? []} canEdit={isAdmin} onChoose={chooseSuggestion} />}
 
       {editing && (
         <div className="fixed inset-0 z-50 grid place-items-end bg-foreground/35 p-4 sm:place-items-center">
@@ -262,7 +278,7 @@ function ManualPage() {
             }}
             className="w-full max-w-[400px] max-h-[90vh] space-y-3 overflow-auto rounded-[28px] bg-card p-5 shadow-2xl"
           >
-            <h2 className="text-xl font-bold">{t("Nová sekce", "New section")}</h2>
+            <h2 className="text-xl font-bold">{editingId ? t("Upravit sekci", "Edit section") : t("Nová sekce", "New section")}</h2>
             <label className="block">
               <span className="label-text">{t("Kategorie", "Category")}</span>
               <select
@@ -327,7 +343,7 @@ function ManualPage() {
               </select>
             </label>
             <div className="flex gap-2">
-              <Button variant="fresh" size="fresh" className="btn-primary flex-1">
+              <Button variant="fresh" size="fresh" disabled={addSection.isPending} className="btn-primary flex-1">
                 {t("Uložit", "Save")}
               </Button>
               <Button

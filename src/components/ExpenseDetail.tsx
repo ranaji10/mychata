@@ -16,6 +16,7 @@ import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
 import { fmtKc, type Expense, type ExpenseSplit } from "@/lib/data";
 import { expenseDataKey } from "@/lib/expenses";
+import { canCoverExpense } from "@/lib/ui-action-rules";
 
 export function ExpenseDetail({
   expense,
@@ -31,7 +32,7 @@ export function ExpenseDetail({
   const client = useQueryClient();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-  const payer = expense.paid_by_member_id === currentMember?.id;
+  const payer = canCoverExpense(expense.paid_by_member_id, currentMember?.id);
   const canUpload = payer || currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const name = (id: string | null) =>
     members.find((member) => member.id === id)?.name ?? t("Člen", "Member");
@@ -125,9 +126,9 @@ export function ExpenseDetail({
       <Sheet open onOpenChange={(open) => !open && onClose()}>
         <SheetContent
           side="bottom"
-          className="mx-auto max-h-[90dvh] max-w-[720px] overflow-y-auto rounded-t-[28px] p-5"
+          className="mx-auto max-h-[90dvh] max-w-[720px] overflow-y-auto rounded-t-[28px] bg-card p-5 [&>button]:grid [&>button]:size-11 [&>button]:place-items-center [&>button]:rounded-full [&>button]:bg-secondary"
         >
-          <SheetHeader>
+          <SheetHeader className="pr-12">
             <SheetTitle className="text-xl">
               {expense.description ?? t("Výdaj", "Expense")}
             </SheetTitle>
@@ -136,6 +137,7 @@ export function ExpenseDetail({
               {fmtKc(Number(expense.amount))}
             </SheetDescription>
           </SheetHeader>
+          <Button variant="ghost" size="icon" className="absolute right-4 top-4 size-11 rounded-full bg-secondary" aria-label={t("Zavřít", "Close")} onClick={onClose}>×</Button>
           <ul className="my-4 divide-y divide-divider">
             <li className="flex flex-wrap justify-between gap-2 py-3 text-[16px]">
               <span>{name(expense.paid_by_member_id)}</span>

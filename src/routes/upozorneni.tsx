@@ -14,7 +14,10 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingCards, PageHeader } from "@/components/bits";
 import { useLang } from "@/lib/i18n";
@@ -72,12 +75,18 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
 function NotificationsPage() {
   const { t } = useLang();
   const { items, loading, failed, userId } = useNotifications();
-  // Remember what was new when the page opened, then clear the tab badge.
+  const client = useQueryClient();
+  // Reading the list is not reading each notification: persist read state on tap only.
   const seenBefore = useMemo(() => readSeen(userId), [userId]);
-  const keys = items.map((i) => i.key).join("|");
-  useEffect(() => {
-    if (!loading && userId) markSeen(userId, keys ? keys.split("|") : []);
-  }, [keys, loading, userId]);
+  const onRead = async (item: AppNotification) => {
+    if (item.key.startsWith("stored:")) {
+      const { error } = await supabase.rpc("mark_notifications_read", { _ids: [item.key.slice(7)] });
+      if (error) { toast.error(t(`Upozornění se nepodařilo označit jako přečtené: ${error.message}`, `Could not mark the notification read: ${error.message}`)); return; }
+      void client.invalidateQueries({ queryKey: ["stored-notifications"] });
+    } else {
+      markSeen(userId, [...readSeen(userId), item.key].filter(key => !key.startsWith("stored:")));
+    }
+  };
 
   const needsYou = items.filter((i) => i.tone !== "info");
   const fyi = items.filter((i) => i.tone === "info");
@@ -107,13 +116,14 @@ function NotificationsPage() {
       ) : (
         <div className="space-y-4">
           {needsYou.length > 0 && (
-            <Group title={t("Čeká na vás", "Needs you")} items={needsYou} seen={seenBefore} />
+            <Group title={t("Čeká na vás", "Needs you")} items={needsYou} seen={seenBefore} onRead={onRead} />
           )}
           {fyi.length > 0 && (
             <Group
               title={t("Pro informaci", "For your information")}
               items={fyi}
               seen={seenBefore}
+              onRead={onRead}
             />
           )}
         </div>
@@ -126,10 +136,12 @@ function Group({
   title,
   items,
   seen,
+  onRead,
 }: {
   title: string;
   items: AppNotification[];
   seen: Set<string>;
+  onRead: (item: AppNotification) => Promise<void>;
 }) {
   const { t, lang } = useLang();
   const pick = (pair: [string, string]) => (lang === "en" ? pair[1] : pair[0]);
@@ -145,6 +157,7 @@ function Group({
               <Link
                 to={item.to}
                 params={item.params ?? {}}
+                onClick={() => void onRead(item)}
                 className="flex min-h-[64px] items-center gap-3 py-3 active:bg-secondary"
               >
                 <span

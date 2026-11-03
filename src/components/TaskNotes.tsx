@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
 import { fmtDateTime } from "@/lib/data";
+import { canEditTaskNote, validTaskNote } from "@/lib/ui-action-rules";
 
 export function TaskNotes({ taskId, focus }: { taskId: string; focus: boolean }) {
   const { t } = useLang();
@@ -50,7 +51,7 @@ export function TaskNotes({ taskId, focus }: { taskId: string; focus: boolean })
       t(`Poznámku se nepodařilo uložit: ${message}`, `Could not save the note: ${message}`),
     );
   const save = async () => {
-    if (!body.trim() || body.trim().length > 2000 || mentions.length > 20) return;
+    if (!validTaskNote(body, mentions.length)) return;
     setBusy(true);
     try {
       if (editing) {
@@ -144,7 +145,7 @@ export function TaskNotes({ taskId, focus }: { taskId: string; focus: boolean })
                 </span>
               ))}
           </div>
-          {note.author_member_id === currentMember?.id && (
+          {canEditTaskNote(note.author_member_id, currentMember?.id) && (
             <div className="flex gap-2">
               <Button
                 variant="ghost"

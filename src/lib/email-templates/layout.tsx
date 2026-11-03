@@ -26,6 +26,27 @@ const C = {
 };
 const FONT = "'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif";
 
+// Mail apps (Apple Mail, Gmail, Outlook) offer to machine-translate Czech e-mails and
+// turn "MyChata" into "MyChat" (T-054). The e-mail is already bilingual, so the whole
+// body is marked translate="no", and the brand name is also wrapped on its own for
+// clients that strip attributes from <html>/<body>.
+export const BRAND = "MyChata";
+
+export function keepBrand(text: string): React.ReactNode {
+  if (!text.includes(BRAND)) return text;
+  const parts = text.split(BRAND);
+  return parts.map((part, i) => (
+    <React.Fragment key={i}>
+      {part}
+      {i < parts.length - 1 ? (
+        <span translate="no" className="notranslate">
+          {BRAND}
+        </span>
+      ) : null}
+    </React.Fragment>
+  ));
+}
+
 export interface Bilingual {
   cs: string;
   en: string;
@@ -48,41 +69,45 @@ export const EmailLayout = ({
   code,
   footer,
 }: EmailLayoutProps) => (
-  <Html lang="cs" dir="ltr">
-    <Head />
+  <Html lang="cs" dir="ltr" translate="no">
+    <Head>
+      <meta name="google" content="notranslate" />
+    </Head>
     <Preview>{preview}</Preview>
-    <Body style={main}>
+    <Body style={main} translate="no" className="notranslate">
       <Container style={container}>
         <Text style={brand}>
           <Link href={SITE_URL} style={brandLink}>
-            MyChata
+            {keepBrand(BRAND)}
           </Link>
         </Text>
-        <Heading style={h1}>{heading.cs}</Heading>
+        <Heading style={h1}>{keepBrand(heading.cs)}</Heading>
         {heading.en ? (
-          <Text style={enHeading}>{heading.en}</Text>
+          <Text style={enHeading}>{keepBrand(heading.en)}</Text>
         ) : (
           <Text style={{ margin: "0 0 20px" }} />
         )}
         {paragraphs.map((p, i) => (
           <Section key={i} style={{ margin: "0 0 20px" }}>
-            <Text style={text}>{p.cs}</Text>
-            {p.en ? <Text style={en}>{p.en}</Text> : null}
+            <Text style={text}>{keepBrand(p.cs)}</Text>
+            {p.en ? <Text style={en}>{keepBrand(p.en)}</Text> : null}
           </Section>
         ))}
         {code ? <Text style={codeStyle}>{code}</Text> : null}
         {button ? (
           <Section style={{ margin: "8px 0 28px" }}>
             <Button style={buttonStyle} href={button.href}>
-              {button.label.en ? `${button.label.cs} · ${button.label.en}` : button.label.cs}
+              {keepBrand(
+                button.label.en ? `${button.label.cs} · ${button.label.en}` : button.label.cs,
+              )}
             </Button>
           </Section>
         ) : null}
         <Hr style={hr} />
         {footer ? (
           <>
-            <Text style={small}>{footer.cs}</Text>
-            <Text style={smallEn}>{footer.en}</Text>
+            <Text style={small}>{keepBrand(footer.cs)}</Text>
+            <Text style={smallEn}>{keepBrand(footer.en)}</Text>
           </>
         ) : null}
         <Text style={small}>

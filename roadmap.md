@@ -1,3 +1,11 @@
+## Requested UI actions (3 Nov 2026)
+
+- [ ] Expense detail, receipt, reminders and payer-only cover-all (no mark-own-share action).
+- [ ] Handover recipient confirmation, task notes/mentions and overdue prompt, pending-stay admin message.
+- [ ] Verify existing notifications without adding a bell.
+- [ ] Name-only cottage setup, onboarding question hints, editable starter rules and manual suggestions.
+- [ ] Phone-width verification and complete changed-file/click checklist; no publishing.
+
 ## T-028 Fresh air public pages (14 Oct 2026)
 
 - [x] Restyle only allowed public routes and fallback pages; Czech link previews and priority seasonal heroes.

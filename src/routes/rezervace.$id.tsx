@@ -20,9 +20,9 @@ export const Route = createFileRoute("/rezervace/$id")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Detail pobytu — My Chata" },
+      { title: "Detail pobytu — MyChata" },
       { name: "description", content: "Details of a cottage stay booking." },
-      { property: "og:title", content: "Detail pobytu — My Chata" },
+      { property: "og:title", content: "Detail pobytu — MyChata" },
       { property: "og:description", content: "Details of a cottage stay booking." },
     ],
   }),
@@ -259,7 +259,8 @@ function BookingDetail() {
           aria-label={t("Schválení pobytu", "Stay approval")}
         >
           <p className="break-words font-semibold">
-            {t("Schvaluje:", "Approved by:")}{" "}
+            {/* Who will decide, not who decided: the stay is still waiting (3 Nov test round). */}
+            {t("Rozhoduje:", "Who decides:")}{" "}
             {members
               .filter((member) => member.role === "ADMIN" || member.role === "OWNER")
               .map((member) => member.name)

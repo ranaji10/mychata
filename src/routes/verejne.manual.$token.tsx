@@ -13,9 +13,9 @@ export const Route = createFileRoute("/verejne/manual/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Manuál chaty — My Chata" },
+      { title: "Manuál chaty — MyChata" },
       { name: "description", content: "Veřejné pokyny a návody k chatě v češtině a angličtině." },
-      { property: "og:title", content: "Manuál chaty — My Chata" },
+      { property: "og:title", content: "Manuál chaty — MyChata" },
       {
         property: "og:description",
         content: "Veřejné pokyny a návody k chatě v češtině a angličtině.",
@@ -68,7 +68,7 @@ function PublicManual() {
     <main className="mx-auto min-h-screen max-w-[420px] page-fresh px-5 py-6 text-foreground md:max-w-[720px] md:py-10">
       <header className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <p className="text-[16px] font-bold text-primary">My Chata</p>
+          <p className="text-[16px] font-bold text-primary">MyChata</p>
           <h1 className="text-3xl font-bold">
             {data?.property?.property_name ?? t("Manuál chaty", "House Manual")}
           </h1>

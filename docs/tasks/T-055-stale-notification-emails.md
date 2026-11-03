@@ -1,6 +1,6 @@
 # T-055 Don't e-mail what no longer stands
 
-Owner: planner writes, implementer builds · Status: todo
+Owner: Claude · Status: review (built in T-057, PR with migration 0040)
 
 Goal: a notification whose subject was withdrawn or already handled before the queue ran is not e-mailed.
 Non-goals: the in-app list (it already drops cancelled offers); e-mail texts; the cron schedule.

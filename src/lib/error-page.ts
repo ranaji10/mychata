@@ -3,7 +3,7 @@ export function renderErrorPage(): string {
 <html lang="cs">
   <head>
     <meta charset="utf-8" />
-    <title>Stránku se nepodařilo načíst — My Chata</title>
+    <title>Stránku se nepodařilo načíst — MyChata</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       * { box-sizing: border-box; }

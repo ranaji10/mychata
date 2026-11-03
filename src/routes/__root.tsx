@@ -63,7 +63,7 @@ function NotFoundComponent() {
 function NotFoundBody() {
   const { t } = useLang();
   useEffect(() => {
-    document.title = `${t("Stránka nebyla nalezena", "Page not found")} — My Chata`;
+    document.title = `${t("Stránka nebyla nalezena", "Page not found")} — MyChata`;
   }, [t]);
   return (
     <main className="page-fresh flex min-h-screen flex-col items-center justify-center gap-6 px-5 text-center">
@@ -230,13 +230,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // Which commit is live (T-033); release.md tells how to read it.
       { name: "build-sha", content: BUILD_SHA },
       { name: "build-time", content: BUILD_TIME },
-      { title: "My Chata — správa sdílené chaty" },
+      { title: "MyChata — správa sdílené chaty" },
       {
         name: "description",
         content:
-          "My Chata: kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace. Jednoduše a přehledně.",
+          "MyChata: kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace. Jednoduše a přehledně.",
       },
-      { property: "og:title", content: "My Chata — správa sdílené chaty" },
+      { property: "og:title", content: "MyChata — správa sdílené chaty" },
       {
         property: "og:description",
         content: "Kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace.",
@@ -247,7 +247,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image", content: brandAssets.ogImage },
       { property: "og:image:width", content: String(brandAssets.ogImageWidth) },
       { property: "og:image:height", content: String(brandAssets.ogImageHeight) },
-      { property: "og:image:alt", content: "My Chata" },
+      { property: "og:image:alt", content: "MyChata" },
       { name: "twitter:image", content: brandAssets.ogImage },
     ],
     links: [
@@ -304,7 +304,7 @@ function RootComponent() {
   useEffect(() => {
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
-    // Bug 18 of 18 Oct: Chrome on Android briefly offered "Install My Chata". The app is not
+    // Bug 18 of 18 Oct: Chrome on Android briefly offered "Install MyChata". The app is not
     // meant to be installed, so the offer is switched off (the manifest also says "browser").
     const noInstallPrompt = (event: Event) => event.preventDefault();
     window.addEventListener("beforeinstallprompt", noInstallPrompt);

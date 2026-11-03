@@ -10,6 +10,7 @@ import type { Property } from "@/lib/data";
 import { missingCottageDetails, type Missing } from "@/lib/cottage-details";
 import { useLang } from "@/lib/i18n";
 import { CottageFieldHint } from "@/components/CottageFieldHint";
+import { friendlyError } from "@/lib/rpc-errors";
 
 const SEASONS = [
   { id: "summer", cs: "Léto", en: "Summer" },
@@ -78,6 +79,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [rooms, setRooms] = useState("");
+  const [capacity, setCapacity] = useState("");
   const [seasons, setSeasons] = useState<string[]>([]);
   const [overlapAllowed, setOverlapAllowed] = useState<boolean | null>(null);
   const [overlap, setOverlap] = useState("");
@@ -86,6 +88,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
     address: t("adresa", "address"),
     city: t("město", "city"),
     rooms: t("počet pokojů", "number of rooms"),
+    capacity: t("kapacita", "capacity"),
     seasons: t("rušná období", "busy seasons"),
     overlap: t("pravidlo pro překrývání pobytů", "overlapping stays rule"),
     photo: t("hlavní fotka", "main photo"),
@@ -99,6 +102,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
         ...(address.trim() ? { _address: address.trim() } : {}),
         ...(city.trim() ? { _city: city.trim() } : {}),
         ...(rooms ? { _rooms: Number(rooms) } : {}),
+        ...(capacity ? { _capacity: Number(capacity) } : {}),
         ...(seasons.length ? { _seasons: seasons } : {}),
       });
       if (error) throw error;
@@ -121,7 +125,8 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
     },
     onError: (error) => {
       console.error("[profil] cottage details", error);
-      toast.error(t(`Uložení se nepodařilo: ${error.message}`, `Could not save: ${error.message}`));
+      const message = friendlyError(error.message, t);
+      toast.error(t(`Uložení se nepodařilo: ${message}`, `Could not save: ${message}`));
     },
   });
 
@@ -189,6 +194,22 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                 onChange={(e) => setRooms(e.target.value)}
               />
               <CottageFieldHint field="rooms" />
+            </label>
+          )}
+          {missing.includes("capacity") && (
+            <label className="block">
+              <span className="label-text">
+                {t("Kapacita (kolik lidí se vejde)", "Capacity (how many people fit)")}
+              </span>
+              <input
+                className="field w-full"
+                type="number"
+                min={1}
+                max={500}
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+              />
+              <CottageFieldHint field="capacity" />
             </label>
           )}
           {missing.includes("seasons") && (

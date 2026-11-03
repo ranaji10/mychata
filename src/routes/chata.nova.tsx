@@ -15,10 +15,10 @@ export const Route = createFileRoute("/chata/nova")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Přidat chatu — My Chata" },
+      { title: "Přidat chatu — MyChata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Add another shared cottage to your account." },
-      { property: "og:title", content: "Přidat chatu — My Chata" },
+      { property: "og:title", content: "Přidat chatu — MyChata" },
       { property: "og:description", content: "Add another shared cottage to your account." },
     ],
   }),

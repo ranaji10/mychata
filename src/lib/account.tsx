@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { firstLoadError } from "@/lib/load-error";
 import type { Account, Member, Profile, Property } from "@/lib/data";
 import { signupMetadata } from "@/lib/signup";
+import { useLang } from "@/lib/i18n";
+import { readStoredLang } from "@/lib/lang-store";
 
 const LS_PROPERTY = "mychata.property";
 const claimedThisLoad = new Set<string>();
@@ -72,6 +74,34 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     });
     return () => data.subscription.unsubscribe();
   }, []);
+
+  // The language this person chose is saved on their profile, so e-mails reach them in it
+  // (T-057). Written only when it changed since the last save from this browser.
+  const { lang } = useLang();
+  useEffect(() => {
+    if (!user) return;
+    const chosen = readStoredLang();
+    const key = `mychata.lang.saved.${user.id}`;
+    try {
+      if (localStorage.getItem(key) === chosen) return;
+    } catch {
+      // No storage: save every time the language changes; it's one small write.
+    }
+    void supabase
+      .from("profiles")
+      .upsert({ user_id: user.id, preferred_lang: chosen }, { onConflict: "user_id" })
+      .then(({ error }) => {
+        if (error) {
+          console.error("[lang] could not save the language choice", error);
+          return;
+        }
+        try {
+          localStorage.setItem(key, chosen);
+        } catch {
+          // Nothing to remember it in; the next change saves again.
+        }
+      });
+  }, [user, lang]);
 
   // All member rows for this person, one per account (migration 0011).
   const {

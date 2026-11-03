@@ -11,6 +11,8 @@ import { useAccount } from "@/lib/account";
 import { fmtKcExact, settlementSuggestions } from "@/lib/data";
 import { expenseDataKey, useExpenseData } from "@/lib/expenses";
 import { useLang } from "@/lib/i18n";
+import { openClaim, usePaymentClaims } from "@/lib/payment-claims";
+import { ClaimDecision, ClaimPaidButton, ClaimWaiting } from "@/components/PaymentClaimActions";
 
 export const Route = createFileRoute("/vydaje/vyrovnani")({
   staticData: { sitemap: false },
@@ -18,12 +20,12 @@ export const Route = createFileRoute("/vydaje/vyrovnani")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Vyrovnání — My Chata" },
+      { title: "Vyrovnání — MyChata" },
       {
         name: "description",
         content: "Settlement suggestions for shared expenses between members.",
       },
-      { property: "og:title", content: "Vyrovnání — My Chata" },
+      { property: "og:title", content: "Vyrovnání — MyChata" },
       {
         property: "og:description",
         content: "Settlement suggestions for shared expenses between members.",
@@ -41,6 +43,12 @@ function SettlementPage() {
   const [settling, setSettling] = useState<string | null>(null);
 
   const { data, isLoading } = useExpenseData(property?.id);
+  const { data: claims } = usePaymentClaims(property?.id);
+  // Payments people say they made to me (or, for an admin, to anyone) wait for a yes or no (T-057).
+  const toDecide = (claims ?? []).filter(
+    (c) =>
+      c.to_member_id === currentMember?.id || (isAdmin && c.from_member_id !== currentMember?.id),
+  );
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
 
   const suggestions = useMemo(
@@ -121,6 +129,25 @@ function SettlementPage() {
         </h1>
       </div>
 
+      {toDecide.length > 0 && (
+        <section
+          className="mt-4 space-y-3"
+          aria-label={t("Platby k potvrzení", "Payments to confirm")}
+        >
+          <h2 className="text-[18px] font-bold">
+            {t("Platby k potvrzení", "Payments to confirm")}
+          </h2>
+          {toDecide.map((c) => (
+            <ClaimDecision
+              key={c.id}
+              claim={c}
+              fromName={name(c.from_member_id)}
+              {...(c.to_member_id !== currentMember?.id ? { forName: name(c.to_member_id) } : {})}
+            />
+          ))}
+        </section>
+      )}
+
       {isLoading ? (
         <LoadingCards />
       ) : suggestions.length === 0 ? (
@@ -143,7 +170,30 @@ function SettlementPage() {
                 </div>
                 <p className="text-xl font-bold">{fmtKcExact(s.amount)}</p>
               </div>
-              {currentMember?.id === s.to || isAdmin ? (
+              {currentMember?.id === s.from && property ? (
+                <div className="mt-3 space-y-2">
+                  {(() => {
+                    const waiting = openClaim(claims, s.from, s.to);
+                    return waiting ? (
+                      <ClaimWaiting claim={waiting} toName={name(s.to)} />
+                    ) : (
+                      <>
+                        <p className="text-[16px] text-muted-foreground">
+                          {t(
+                            `Pošlete ${fmtKcExact(s.amount)} osobě ${name(s.to)} a dejte vědět. Jakmile platbu potvrdí, dluh zmizí.`,
+                            `Send ${fmtKcExact(s.amount)} to ${name(s.to)} and let them know. Once they confirm it, the debt disappears.`,
+                          )}
+                        </p>
+                        <ClaimPaidButton
+                          propertyId={property.id}
+                          toMemberId={s.to}
+                          toName={name(s.to)}
+                        />
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : currentMember?.id === s.to || isAdmin ? (
                 <Button
                   variant="fresh"
                   size="fresh"

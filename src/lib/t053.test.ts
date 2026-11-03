@@ -66,6 +66,20 @@ const payloads: Record<StoredNotificationKind, Record<string, unknown>> = {
   },
   message_to_admin: { from_name: "Petr", account_name: "Rodina A", body: "Prosím o klíč" },
   debt_reminder: { from_name: "Anna", amount: 1500, property_name: "Chata Alfa" },
+  payment_claimed: {
+    claim_id: "c1",
+    from_name: "Petr",
+    amount: 300,
+    property_name: "Chata Alfa",
+    expense_title: "Dřevo",
+  },
+  payment_confirmed: {
+    claim_id: "c1",
+    from_name: "Anna",
+    amount: 300,
+    property_name: "Chata Alfa",
+  },
+  payment_rejected: { claim_id: "c1", from_name: "Anna", amount: 300, property_name: "Chata Alfa" },
 };
 
 describe("e-mail text", () => {
@@ -75,8 +89,9 @@ describe("e-mail text", () => {
       expect(e).not.toBeNull();
       expect(e.heading[0]).toBeTruthy();
       expect(e.heading[1]).toBeTruthy();
-      expect(e.subject).toMatch(/ · /);
-      for (const name of ["Anna", "Petr"]) expect(e.subject).not.toContain(name);
+      expect(e.subject[0]).toBeTruthy();
+      expect(e.subject[1]).toBeTruthy();
+      for (const name of ["Anna", "Petr"]) expect(e.subject.join(" ")).not.toContain(name);
       expect(e.url.startsWith("https://mychata.cz")).toBe(true);
       for (const [cs] of e.paragraphs) expect(cs).not.toMatch(/\n/);
     });
@@ -107,29 +122,36 @@ describe("e-mail text", () => {
     expect(renderNotificationEmail({ id: "n1", kind: "newsletter", payload: {} })).toBeNull();
   });
 
-  it("the template pairs Czech and English paragraphs, keeping a Czech-only one", async () => {
+  it("the template renders one language, with paragraphs in order (T-057)", async () => {
     const html = await render(
       React.createElement(template.component, {
-        heading: "Ahoj",
-        headingEn: "Hello",
-        paragraph: "První\n\nDruhý\n\nTřetí",
-        paragraphEn: "First\n\n\n\nThird",
-        buttonLabel: "Otevřít",
-        buttonLabelEn: "Open",
+        lang: "en",
+        heading: "Hello",
+        paragraph: "First\n\nSecond",
+        buttonLabel: "Open",
         buttonUrl: "https://mychata.cz/x",
       }),
-      { plainText: true },
     );
-    expect(html.indexOf("První")).toBeLessThan(html.indexOf("First"));
-    expect(html.indexOf("First")).toBeLessThan(html.indexOf("Druhý"));
-    expect(html.indexOf("Třetí")).toBeLessThan(html.indexOf("Third"));
-    expect(html).toContain("Otevřít · Open");
+    expect(html).toMatch(/<html[^>]*lang="en"/);
+    expect(html.indexOf("First")).toBeLessThan(html.indexOf("Second"));
+    expect(html).toContain(">Open<");
+    expect(html).not.toMatch(/Otevřít|Ahoj/);
   });
 });
 
-function fakeStore(rows: QueuedNotification[], emails: Record<string, string | null> = {}) {
+function fakeStore(
+  rows: QueuedNotification[],
+  emails: Record<string, string | null> = {},
+  opts: { withdrawn?: string[]; langs?: Record<string, "cs" | "en"> } = {},
+) {
   const log: string[] = [];
   const store: QueueStore = {
+    async stillStands(n) {
+      return !(opts.withdrawn ?? []).includes(n.id);
+    },
+    async languageOf(n) {
+      return opts.langs?.[n.id] ?? null;
+    },
     async due(limit) {
       return rows.slice(0, limit);
     },
@@ -169,9 +191,14 @@ describe("e-mail queue", () => {
 
   it("sends to the member's address with the notification id as idempotency key", async () => {
     const { store, log } = fakeStore([row("n1")], { m1: "petr@example.org" });
-    const calls: { to: string; key: string; subject: string }[] = [];
+    const calls: { to: string; key: string; subject: string[]; lang?: string }[] = [];
     const send: Sender = async (i) => {
-      calls.push({ to: i.to, key: i.idempotencyKey, subject: i.data.subject });
+      calls.push({
+        to: i.to,
+        key: i.idempotencyKey,
+        subject: i.data.subject,
+        ...(i.lang ? { lang: i.lang } : {}),
+      });
       return { sent: true };
     };
     expect(await processEmailQueue(store, send, { now })).toEqual({
@@ -183,7 +210,8 @@ describe("e-mail queue", () => {
       {
         to: "petr@example.org",
         key: "n1",
-        subject: "Připomínka vyrovnání · A reminder to settle up",
+        subject: ["Připomínka vyrovnání", "A reminder to settle up"],
+        lang: "cs",
       },
     ]);
     expect(log).toEqual(["sent:n1"]);
@@ -235,6 +263,33 @@ describe("e-mail queue", () => {
     ]);
     expect(MAX_ATTEMPTS).toBe(4);
     expect(nextAttemptAt(now, 2).toISOString()).toBe("2026-11-03T10:20:00.000Z");
+  });
+
+  it("T-055: what was withdrawn or decided before the run is not mailed", async () => {
+    const { store, log } = fakeStore(
+      [row("gone"), row("still")],
+      { m1: "petr@example.org" },
+      {
+        withdrawn: ["gone"],
+      },
+    );
+    const to: string[] = [];
+    const r = await processEmailQueue(store, async (i) => (to.push(i.to), { sent: true }), { now });
+    expect(r).toEqual({ sent: 1, failed: 0, skipped: 1 });
+    expect(log).toEqual(["skipped:gone:withdrawn", "sent:still"]);
+  });
+
+  it("T-057: each e-mail goes out in the recipient's language, Czech when unknown", async () => {
+    const { store } = fakeStore(
+      [row("en"), row("unknown")],
+      { m1: "petr@example.org" },
+      {
+        langs: { en: "en" },
+      },
+    );
+    const langs: (string | undefined)[] = [];
+    await processEmailQueue(store, async (i) => (langs.push(i.lang), { sent: true }), { now });
+    expect(langs).toEqual(["en", "cs"]);
   });
 
   it("unknown kinds are skipped, not retried", async () => {
@@ -295,6 +350,11 @@ describe("stored notifications in the list", () => {
     const items = buildNotifications({
       ...input,
       bookings: [],
+      // Something is still owed, so the reminder shows (T-057).
+      expenses: [{ id: "e1", paid_by_member_id: "m3" }],
+      splits: [
+        { id: "sp1", expense_id: "e1", member_id: "m1", amount_owed: 1500, paid_back: false },
+      ] as never,
       stored: [
         stored("s2", "task_mentioned", payloads.task_mentioned),
         {
@@ -304,9 +364,96 @@ describe("stored notifications in the list", () => {
         stored("s4", "newsletter", {}),
       ],
     });
-    expect(items.map((i) => i.key)).toEqual(["stored:s3", "stored:s2"]);
+    expect(items.map((i) => i.key).filter((k) => k.startsWith("stored:"))).toEqual([
+      "stored:s3",
+      "stored:s2",
+    ]);
     expect(items[0]!.title[0]).toMatch(/1\s500 Kč/);
-    expect(items[1]).toMatchObject({ to: "/ukoly/$id", params: { id: "t1" } });
-    expect(items[1]!.title[1]).toContain("Fix the gutter");
+    const mention = items.find((i) => i.key === "stored:s2")!;
+    expect(mention).toMatchObject({ to: "/ukoly/$id", params: { id: "t1" } });
+    expect(mention.title[1]).toContain("Fix the gutter");
+  });
+});
+
+describe("T-057 reminders and payment claims in the list", () => {
+  const base: NotificationInput = {
+    today: "2026-11-03",
+    myMemberId: "m1",
+    isAdmin: false,
+    isFamily: true,
+    hasName: true,
+    members: [
+      { id: "m1", name: "Anna" },
+      { id: "m2", name: "Petr" },
+    ],
+  };
+  const reminder = {
+    id: "r1",
+    kind: "debt_reminder",
+    payload: { from_name: "Petr", from_member_id: "m2", amount: 300, property_name: "Chata" },
+    created_at: "2026-11-03T08:00:00Z",
+    read_at: null,
+  };
+  it("a reminder disappears once nothing is owed to its sender", () => {
+    const owing = buildNotifications({
+      ...base,
+      expenses: [{ id: "e1", paid_by_member_id: "m2" }],
+      splits: [
+        { id: "s1", expense_id: "e1", member_id: "m1", amount_owed: 300, paid_back: false },
+      ] as never,
+      stored: [reminder],
+    });
+    expect(owing.map((i) => i.key)).toContain("stored:r1");
+    const settled = buildNotifications({
+      ...base,
+      expenses: [{ id: "e1", paid_by_member_id: "m2" }],
+      splits: [
+        { id: "s1", expense_id: "e1", member_id: "m1", amount_owed: 300, paid_back: true },
+      ] as never,
+      stored: [reminder],
+    });
+    expect(settled.map((i) => i.key)).not.toContain("stored:r1");
+  });
+  it("an open claim to me asks me to confirm; the stored one replaces it while open", () => {
+    const claims = [
+      {
+        id: "c1",
+        from_member_id: "m2",
+        to_member_id: "m1",
+        amount: 300,
+        created_at: "2026-11-03T09:00:00Z",
+      },
+    ];
+    const open = buildNotifications({ ...base, claims });
+    expect(open.map((i) => i.key)).toEqual(["claim:c1"]);
+    expect(open[0]!.title[1]).toBe("Petr says they paid you 300 Kč");
+    const withStored = buildNotifications({
+      ...base,
+      claims,
+      stored: [
+        {
+          id: "n1",
+          kind: "payment_claimed",
+          payload: { claim_id: "c1", from_name: "Petr", amount: 300, property_name: "Chata" },
+          created_at: "2026-11-03T09:00:01Z",
+          read_at: null,
+        },
+      ],
+    });
+    expect(withStored.map((i) => i.key)).toEqual(["stored:n1"]);
+    const decided = buildNotifications({
+      ...base,
+      claims: [],
+      stored: [
+        {
+          id: "n1",
+          kind: "payment_claimed",
+          payload: { claim_id: "c1" },
+          created_at: "2026-11-03T09:00:01Z",
+          read_at: null,
+        },
+      ],
+    });
+    expect(decided).toEqual([]);
   });
 });

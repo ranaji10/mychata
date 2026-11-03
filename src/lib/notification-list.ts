@@ -25,7 +25,10 @@ export type NotificationKind =
   | "task_mentioned"
   | "leaving_checklist"
   | "message_to_admin"
-  | "debt_reminder";
+  | "debt_reminder"
+  // "I paid" claims (T-057, migration 0040).
+  | "payment_claim"
+  | "payment_decided";
 
 export type NotificationTone = "action" | "warn" | "info";
 
@@ -111,6 +114,17 @@ export interface NotificationInput {
   documents?: DocumentLite[] | null | undefined;
   /** Stored notifications (T-053); one for the same booking or offer replaces the computed item. */
   stored?: StoredNotification[] | null | undefined;
+  /** Open "I paid" claims at this cottage (T-057). */
+  claims?:
+    | {
+        id: string;
+        from_member_id: string;
+        to_member_id: string;
+        amount: number;
+        created_at: string;
+      }[]
+    | null
+    | undefined;
 }
 
 function daysBetween(a: string, b: string) {
@@ -392,6 +406,23 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
     }
   }
 
+  // Someone says they paid me: confirm or say it didn't arrive (T-057).
+  for (const c of input.claims ?? []) {
+    if (!input.myMemberId || c.to_member_id !== input.myMemberId) continue;
+    out.push({
+      key: `claim:${c.id}`,
+      kind: "payment_claim",
+      tone: "action",
+      at: c.created_at,
+      title: [
+        `${nameOf(c.from_member_id)} vám poslal(a) ${kc(c.amount)}`,
+        `${nameOf(c.from_member_id)} says they paid you ${kc(c.amount)}`,
+      ],
+      detail: ["Potvrďte, že platba přišla.", "Confirm that the money arrived."],
+      to: "/vydaje/vyrovnani",
+    });
+  }
+
   for (const d of input.documents ?? []) {
     if (!d.expiry_date) continue;
     const days = daysBetween(input.today, d.expiry_date);
@@ -414,12 +445,18 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
   // while that computed item does, i.e. while the stay or offer is still open, and takes its place.
   const computed = new Set(out.map((n) => n.key));
   const replaced = new Set<string>();
+  const keys = [...computed];
   for (const n of input.stored ?? []) {
     const item = storedItem(n);
     if (!item) continue;
     if (item.replaces) {
       if (!computed.has(item.replaces)) continue;
       replaced.add(item.replaces);
+    }
+    // A reminder to settle up only while something is still owed to that person (T-057).
+    if (item.whileOwing !== undefined) {
+      const prefix = item.whileOwing ? `owe:${item.whileOwing}:` : "owe:";
+      if (!keys.some((k) => k.startsWith(prefix))) continue;
     }
     out.push(item.notification);
   }
@@ -433,7 +470,7 @@ const str = (v: unknown) => (typeof v === "string" ? v : v == null ? "" : String
 /** One stored notification as a list item; null for kinds the list leaves to other sources. */
 export function storedItem(
   n: StoredNotification,
-): { notification: AppNotification; replaces?: string } | null {
+): { notification: AppNotification; replaces?: string; whileOwing?: string } | null {
   const p: NotificationPayload = n.payload ?? {};
   const where = str(p.property_name);
   const dates = `${fmtDate(str(p.start_date))} – ${fmtDate(str(p.end_date))}`;
@@ -549,6 +586,8 @@ export function storedItem(
     case "debt_reminder": {
       const amount = kc(Number(p.amount) || 0);
       return {
+        // Older reminders don't name the sender: they show while anything is owed at all.
+        whileOwing: str(p.from_member_id),
         notification: {
           ...base,
           kind: "debt_reminder",
@@ -559,6 +598,47 @@ export function storedItem(
           ],
           detail: [where, where],
           to: "/vydaje/vyrovnani",
+        },
+      };
+    }
+    case "payment_claimed":
+      return {
+        replaces: `claim:${str(p.claim_id)}`,
+        notification: {
+          ...base,
+          kind: "payment_claim",
+          tone: "action",
+          title: [
+            `${str(p.from_name)} vám poslal(a) ${kc(Number(p.amount) || 0)}`,
+            `${str(p.from_name)} says they paid you ${kc(Number(p.amount) || 0)}`,
+          ],
+          detail: [
+            `${where}. Potvrďte, že platba přišla.`,
+            `${where}. Confirm that the money arrived.`,
+          ],
+          to: "/vydaje/vyrovnani",
+        },
+      };
+    case "payment_confirmed":
+    case "payment_rejected": {
+      const ok = n.kind === "payment_confirmed";
+      const amount = kc(Number(p.amount) || 0);
+      return {
+        notification: {
+          ...base,
+          kind: "payment_decided",
+          tone: ok ? "info" : "warn",
+          title: ok
+            ? [
+                `${str(p.from_name)} potvrdil(a) platbu ${amount}`,
+                `${str(p.from_name)} confirmed your payment of ${amount}`,
+              ]
+            : [
+                `${str(p.from_name)} platbu ${amount} zatím nevidí`,
+                `${str(p.from_name)} hasn't received ${amount} yet`,
+              ],
+          detail: [where, where],
+          to: ok ? "/vydaje" : "/vydaje/vyrovnani",
         },
       };
     }

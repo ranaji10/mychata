@@ -13,10 +13,10 @@ export const Route = createFileRoute("/host/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Pobyt pro hosty — My Chata" },
+      { title: "Pobyt pro hosty — MyChata" },
       { name: "robots", content: "noindex" },
       { name: "description", content: "Požádejte o pobyt na chatě pomocí odkazu pro hosty." },
-      { property: "og:title", content: "Pobyt pro hosty — My Chata" },
+      { property: "og:title", content: "Pobyt pro hosty — MyChata" },
       {
         property: "og:description",
         content: "Požádejte o pobyt na chatě pomocí odkazu pro hosty.",
@@ -64,7 +64,7 @@ function GuestBookingPage() {
         <div className="mb-8 flex w-full justify-end">
           <LanguageToggle />
         </div>
-        <p className="mb-4 font-extrabold text-primary">My Chata</p>
+        <p className="mb-4 font-extrabold text-primary">MyChata</p>
         <p className="text-[18px]" role="status">
           {t("Načítám chatu…", "Loading cottage…")}
         </p>
@@ -76,7 +76,7 @@ function GuestBookingPage() {
         <div className="mb-8 flex w-full justify-end">
           <LanguageToggle />
         </div>
-        <p className="mb-4 font-extrabold text-primary">My Chata</p>
+        <p className="mb-4 font-extrabold text-primary">MyChata</p>
         <h1 className="text-[28px] font-extrabold leading-[1.15]">
           {isError
             ? t("Chatu se nepodařilo načíst.", "The cottage could not be loaded.")
@@ -136,7 +136,7 @@ function GuestBookingPage() {
       <div className="flex justify-end">
         <LanguageToggle />
       </div>
-      <p className="mt-6 font-bold text-primary">My Chata</p>
+      <p className="mt-6 font-bold text-primary">MyChata</p>
       <h1 className="mt-1 text-[28px] font-extrabold leading-[1.15]">{data.propertyName}</h1>
       {data.propertyAddress && (
         <p className="text-[16px] text-muted-foreground">{data.propertyAddress}</p>

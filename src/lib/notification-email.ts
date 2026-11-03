@@ -1,6 +1,6 @@
 // What each stored notification says by e-mail (T-053). Pure: the queue (notification-queue.server.ts)
-// renders a row with this and hands the result to sendEmail. Czech first with English underneath,
-// because the app keeps the language choice only in the browser. Subjects carry no names (T-005).
+// renders a row with this and hands the result to sendEmail, which picks the recipient's language
+// (T-057): every text is a [Czech, English] pair. Subjects carry no names (T-005).
 import { fmtDate } from "@/lib/data";
 
 export const SITE_URL = "https://mychata.cz";
@@ -14,7 +14,10 @@ export type StoredNotificationKind =
   | "task_mentioned"
   | "leaving_checklist"
   | "message_to_admin"
-  | "debt_reminder";
+  | "debt_reminder"
+  | "payment_claimed"
+  | "payment_confirmed"
+  | "payment_rejected";
 
 /** Fields the 0038 triggers and functions put in notifications.payload (all optional). */
 export interface NotificationPayload {
@@ -24,12 +27,16 @@ export interface NotificationPayload {
   author_name?: unknown;
   body?: unknown;
   booking_id?: unknown;
+  claim_id?: unknown;
   calendar_token?: unknown;
   decided_by?: unknown;
   done?: unknown;
   end_date?: unknown;
   excerpt?: unknown;
+  expense_id?: unknown;
+  expense_title?: unknown;
   expires_at?: unknown;
+  from_member_id?: unknown;
   from_name?: unknown;
   invited_by?: unknown;
   note?: unknown;
@@ -52,7 +59,7 @@ export interface NotificationRow {
 }
 
 export interface RenderedEmail {
-  subject: string;
+  subject: [cs: string, en: string];
   heading: [cs: string, en: string];
   /** Paragraphs, each Czech + English. */
   paragraphs: [cs: string, en: string][];
@@ -79,7 +86,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
       const to = s(p.property_name) || s(p.account_name);
       const from = s(p.invited_by);
       return {
-        subject: "Pozvánka do MyChata · Invitation to MyChata",
+        subject: ["Pozvánka do MyChata", "Invitation to MyChata"],
         heading: [`Pozvánka do: ${to}`, `Invitation to ${to}`],
         paragraphs: [
           [
@@ -97,7 +104,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
     }
     case "booking_awaiting_approval":
       return {
-        subject: "Pobyt ke schválení · A stay to approve",
+        subject: ["Pobyt ke schválení", "A stay to approve"],
         heading: ["Pobyt čeká na vaše schválení", "A stay is waiting for your approval"],
         paragraphs: [
           [
@@ -112,7 +119,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
       const ok = p.approved === true;
       const by = s(p.decided_by);
       return {
-        subject: ok ? "Pobyt potvrzen · Stay confirmed" : "Pobyt zamítnut · Stay declined",
+        subject: ok ? ["Pobyt potvrzen", "Stay confirmed"] : ["Pobyt zamítnut", "Stay declined"],
         heading: ok
           ? ["Váš pobyt je potvrzený", "Your stay is confirmed"]
           : ["Váš pobyt nebyl schválen", "Your stay was not approved"],
@@ -141,8 +148,8 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
       const token = s(p.calendar_token);
       return {
         subject: ok
-          ? "Žádost o pobyt schválena · Request approved"
-          : "Žádost o pobyt · Your request",
+          ? ["Žádost o pobyt schválena", "Request approved"]
+          : ["Žádost o pobyt", "Your request"],
         heading: ok
           ? ["Vaše žádost o pobyt byla schválena", "Your stay request was approved"]
           : ["Vaše žádost o pobyt nebyla schválena", "Your stay request was not approved"],
@@ -155,7 +162,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
     }
     case "ownership_offered":
       return {
-        subject: "Nabídka převzetí účtu · An account is offered to you",
+        subject: ["Nabídka převzetí účtu", "An account is offered to you"],
         heading: [
           `${s(p.from_name)} vám předává účet „${s(p.account_name)}“`,
           `${s(p.from_name)} is handing you “${s(p.account_name)}”`,
@@ -171,7 +178,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
       };
     case "task_mentioned":
       return {
-        subject: "Zmínka v úkolu · You were mentioned on a task",
+        subject: ["Zmínka v úkolu", "You were mentioned on a task"],
         heading: [
           `${s(p.author_name)} vás zmínil(a) v úkolu`,
           `${s(p.author_name)} mentioned you on a task`,
@@ -202,7 +209,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
         paragraphs.push([`Nehotovo: ${skipped.join(", ")}.`, `Not done: ${skipped.join(", ")}.`]);
       if (s(p.note)) paragraphs.push([`Vzkaz: „${s(p.note)}“`, ""]);
       return {
-        subject: "Předání chaty před vaším pobytem · Handover before your stay",
+        subject: ["Předání chaty před vaším pobytem", "Handover before your stay"],
         heading: ["Jak chatu zanechal předchozí host", "How the cottage was left for you"],
         paragraphs,
         button: ["Otevřít předání", "Open the handover"],
@@ -211,7 +218,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
     }
     case "message_to_admin":
       return {
-        subject: "Zpráva pro správce · A message for the admins",
+        subject: ["Zpráva pro správce", "A message for the admins"],
         heading: [
           `${s(p.from_name)} píše správcům účtu ${s(p.account_name)}`,
           `${s(p.from_name)} wrote to the admins of ${s(p.account_name)}`,
@@ -228,7 +235,7 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
       };
     case "debt_reminder":
       return {
-        subject: "Připomínka vyrovnání · A reminder to settle up",
+        subject: ["Připomínka vyrovnání", "A reminder to settle up"],
         heading: [
           `${s(p.from_name)} připomíná vyrovnání`,
           `${s(p.from_name)} reminds you to settle up`,
@@ -237,6 +244,51 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
           [`Za ${where} dlužíte ${kc(p.amount)}.`, `You owe ${kc(p.amount)} for ${where}.`],
         ],
         button: ["Vyrovnat", "Settle up"],
+        url: link("/vydaje/vyrovnani"),
+      };
+    case "payment_claimed": {
+      const what = s(p.expense_title);
+      return {
+        subject: ["Potvrďte přijetí platby", "Please confirm a payment"],
+        heading: [
+          `${s(p.from_name)} vám poslal(a) ${kc(p.amount)}`,
+          `${s(p.from_name)} says they paid you ${kc(p.amount)}`,
+        ],
+        paragraphs: [
+          [
+            `${where}${what ? `, výdaj: ${what}` : ""}. Potvrďte, že platba přišla, nebo dejte vědět, že ne.`,
+            `${where}${what ? `, expense: ${what}` : ""}. Confirm that the money arrived, or say that it didn't.`,
+          ],
+        ],
+        button: ["Potvrdit nebo odmítnout", "Confirm or decline"],
+        url: link("/vydaje/vyrovnani"),
+      };
+    }
+    case "payment_confirmed":
+      return {
+        subject: ["Platba potvrzena", "Payment confirmed"],
+        heading: [
+          `${s(p.from_name)} potvrdil(a) vaši platbu`,
+          `${s(p.from_name)} confirmed your payment`,
+        ],
+        paragraphs: [[`${kc(p.amount)}, ${where}.`, `${kc(p.amount)}, ${where}.`]],
+        button: ["Zobrazit výdaje", "View expenses"],
+        url: link("/vydaje"),
+      };
+    case "payment_rejected":
+      return {
+        subject: ["Platba zatím nepřišla", "Payment not received yet"],
+        heading: [
+          `${s(p.from_name)} platbu zatím nevidí`,
+          `${s(p.from_name)} hasn't received the payment yet`,
+        ],
+        paragraphs: [
+          [
+            `${kc(p.amount)}, ${where}. Ověřte platbu a domluvte se spolu; dluh zůstává otevřený.`,
+            `${kc(p.amount)}, ${where}. Check the payment and talk to each other; the debt stays open.`,
+          ],
+        ],
+        button: ["Otevřít vyrovnání", "Open settle up"],
         url: link("/vydaje/vyrovnani"),
       };
     default:

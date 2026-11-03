@@ -19,9 +19,9 @@ export const Route = createFileRoute("/verejne/kalendar/$token")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Kalendář chaty — My Chata" },
+      { title: "Kalendář chaty — MyChata" },
       { name: "description", content: "Veřejný přehled volných a obsazených termínů chaty." },
-      { property: "og:title", content: "Kalendář chaty — My Chata" },
+      { property: "og:title", content: "Kalendář chaty — MyChata" },
       {
         property: "og:description",
         content: "Veřejný přehled volných a obsazených termínů chaty.",
@@ -114,7 +114,7 @@ function PublicCalendar() {
     const url = window.location.href;
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ url, title: property?.property_name ?? "My Chata" });
+        await navigator.share({ url, title: property?.property_name ?? "MyChata" });
         return;
       } catch {
         // Share sheet dismissed — fall through to copying.

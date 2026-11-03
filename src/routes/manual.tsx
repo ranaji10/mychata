@@ -19,12 +19,12 @@ export const Route = createFileRoute("/manual")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Manuál chaty — My Chata" },
+      { title: "Manuál chaty — MyChata" },
       {
         name: "description",
         content: "Bilingual instructions and house information for your cottage.",
       },
-      { property: "og:title", content: "Manuál chaty — My Chata" },
+      { property: "og:title", content: "Manuál chaty — MyChata" },
       {
         property: "og:description",
         content: "Bilingual instructions and house information for your cottage.",

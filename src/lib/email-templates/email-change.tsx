@@ -1,7 +1,8 @@
 import * as React from "react";
-import { EmailLayout } from "./layout";
+import { EmailLayout, type EmailLang } from "./layout";
 
 interface EmailChangeEmailProps {
+  lang?: EmailLang;
   siteName?: string;
   siteUrl?: string;
   recipient?: string;
@@ -15,9 +16,11 @@ export const EmailChangeEmail = ({
   oldEmail,
   newEmail,
   confirmationUrl,
+  lang,
 }: EmailChangeEmailProps) => (
   <EmailLayout
-    preview="Potvrďte změnu e-mailu v MyChata"
+    lang={lang}
+    preview={{ cs: "Potvrďte změnu e-mailu v MyChata", en: "Confirm your MyChata email change" }}
     heading={{ cs: "Potvrďte změnu e-mailu", en: "Confirm your email change" }}
     paragraphs={[
       {

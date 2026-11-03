@@ -19,15 +19,15 @@ export const Route = createFileRoute("/auth")({
   staticData: { sitemap: true },
   head: () => ({
     meta: [
-      { title: "Přihlášení — My Chata" },
+      { title: "Přihlášení — MyChata" },
       {
         name: "description",
-        content: "Bezpečné přihlášení a registrace do My Chata pro rodiny i organizace.",
+        content: "Bezpečné přihlášení a registrace do MyChata pro rodiny i organizace.",
       },
-      { property: "og:title", content: "Přihlášení — My Chata" },
+      { property: "og:title", content: "Přihlášení — MyChata" },
       {
         property: "og:description",
-        content: "Bezpečné přihlášení a registrace do My Chata pro rodiny i organizace.",
+        content: "Bezpečné přihlášení a registrace do MyChata pro rodiny i organizace.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -50,7 +50,7 @@ type Mode = "main" | "email" | "institute";
 
 function AuthPage() {
   const defaultPhoto = useDefaultChataPhoto();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -198,7 +198,7 @@ function AuthPage() {
     const { error: err } = await supabase.auth.resend({
       type: "signup",
       email: cleanEmail,
-      options: { emailRedirectTo: window.location.origin + "/auth" },
+      options: { emailRedirectTo: `${window.location.origin}/auth?lang=${lang}` },
     });
     setBusy(false);
     if (err) {
@@ -228,10 +228,12 @@ function AuthPage() {
           email: cleanEmail,
           password,
           options: {
-            emailRedirectTo: window.location.origin + "/auth",
+            emailRedirectTo: `${window.location.origin}/auth?lang=${lang}`,
             // Onboarding pre-fills the name (and the organisation) from these.
             data: {
               full_name: name.trim(),
+              // The sign-up e-mail and later e-mails use this until the profile has a choice (T-057).
+              lang,
               signup_kind: mode === "institute" ? "institution" : "personal",
               ...(mode === "institute" ? { organisation: organisation.trim() } : {}),
               ...(returnCalendar ? { [RETURN_CALENDAR_META]: returnCalendar } : {}),
@@ -254,7 +256,7 @@ function AuthPage() {
           const { error: resendError } = await supabase.auth.resend({
             type: "signup",
             email: cleanEmail,
-            options: { emailRedirectTo: window.location.origin + "/auth" },
+            options: { emailRedirectTo: `${window.location.origin}/auth?lang=${lang}` },
           });
           if (resendError) console.error("[auth] resend after sign-up", resendError);
           setIsSignUp(false);
@@ -328,7 +330,7 @@ function AuthPage() {
           <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
             <Home className="size-6" strokeWidth={2} />
           </span>
-          <span className="text-lg font-extrabold">My Chata</span>
+          <span className="text-lg font-extrabold">MyChata</span>
         </div>
         <LanguageToggle />
       </div>

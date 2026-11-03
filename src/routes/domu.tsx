@@ -38,12 +38,12 @@ export const Route = createFileRoute("/domu")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Domů — My Chata" },
+      { title: "Domů — MyChata" },
       {
         name: "description",
         content: "Cottage overview: upcoming stay, tasks, expenses and requests.",
       },
-      { property: "og:title", content: "Domů — My Chata" },
+      { property: "og:title", content: "Domů — MyChata" },
       {
         property: "og:description",
         content: "Cottage overview: upcoming stay, tasks, expenses and requests.",

@@ -27,12 +27,12 @@ export const Route = createFileRoute("/kalendar")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Kalendář — My Chata" },
+      { title: "Kalendář — MyChata" },
       {
         name: "description",
         content: "Shared cottage stay calendar with an overview of availability.",
       },
-      { property: "og:title", content: "Kalendář — My Chata" },
+      { property: "og:title", content: "Kalendář — MyChata" },
       {
         property: "og:description",
         content: "Shared cottage stay calendar with an overview of availability.",

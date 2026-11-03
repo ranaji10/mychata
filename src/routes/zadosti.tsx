@@ -25,9 +25,9 @@ export const Route = createFileRoute("/zadosti")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Žádosti — My Chata" },
+      { title: "Žádosti — MyChata" },
       { name: "description", content: "Employee cottage stay requests awaiting approval." },
-      { property: "og:title", content: "Žádosti — My Chata" },
+      { property: "og:title", content: "Žádosti — MyChata" },
       { property: "og:description", content: "Employee cottage stay requests awaiting approval." },
     ],
   }),

@@ -19,21 +19,21 @@ describe("invitation expiry in calendar days (F-17)", () => {
 
 describe("page titles follow the language (F-17)", () => {
   it("gives Czech and English titles for app pages", () => {
-    expect(pageTitle("/domu", "cs")).toBe("Domů — My Chata");
-    expect(pageTitle("/domu", "en")).toBe("Home — My Chata");
-    expect(pageTitle("/vydaje/vyrovnani", "en")).toBe("Settlement — My Chata");
-    expect(pageTitle("/vydaje/", "cs")).toBe("Výdaje — My Chata");
+    expect(pageTitle("/domu", "cs")).toBe("Domů — MyChata");
+    expect(pageTitle("/domu", "en")).toBe("Home — MyChata");
+    expect(pageTitle("/vydaje/vyrovnani", "en")).toBe("Settlement — MyChata");
+    expect(pageTitle("/vydaje/", "cs")).toBe("Výdaje — MyChata");
   });
 
   it("matches routes with a parameter by prefix, but /rezervace/nova exactly", () => {
-    expect(pageTitle("/rezervace/nova", "cs")).toBe("Nová rezervace — My Chata");
-    expect(pageTitle("/rezervace/abc", "en")).toBe("Stay details — My Chata");
-    expect(pageTitle("/verejne/zadost/x", "cs")).toBe("Žádost o pobyt — My Chata");
+    expect(pageTitle("/rezervace/nova", "cs")).toBe("Nová rezervace — MyChata");
+    expect(pageTitle("/rezervace/abc", "en")).toBe("Stay details — MyChata");
+    expect(pageTitle("/verejne/zadost/x", "cs")).toBe("Žádost o pobyt — MyChata");
   });
 
   it("leaves unknown paths alone so the 404 page keeps its own title", () => {
     expect(pageTitle("/nic-takoveho", "cs")).toBeNull();
-    expect(pageTitle("/", "cs")).toBe("My Chata — správa sdílené chaty");
+    expect(pageTitle("/", "cs")).toBe("MyChata — správa sdílené chaty");
   });
 });
 

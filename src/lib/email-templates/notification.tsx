@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- template data is free-form at the email boundary */
 import * as React from "react";
-import { EmailLayout, SITE_URL } from "./layout";
+import { EmailLayout, SITE_URL, type EmailLang } from "./layout";
 import type { TemplateEntry } from "./registry";
 
-// Generic app notification: subject, heading, a paragraph, one button.
-// Czech first; the optional *En fields add the English line under each (T-053). A blank line
-// ("\n\n") in the paragraph starts a new one; Czech and English paragraphs pair up in order, and an
-// empty English paragraph leaves that Czech one without a translation.
+// Generic app notification: subject, heading, a paragraph, one button, all in the recipient's
+// language (T-057; `lang` sets <html lang>). A blank line ("\n\n") in the paragraph starts a new
+// one. The *En fields are no longer sent; they are kept so an old queued call still renders.
 export interface NotificationEmailProps {
+  lang?: EmailLang | undefined;
   subject?: string | undefined;
   heading?: string | undefined;
   headingEn?: string | undefined;
@@ -21,6 +21,7 @@ export interface NotificationEmailProps {
 const split = (s: string | undefined) => (s ? s.split("\n\n").map((p) => p.trim()) : []);
 
 const NotificationEmail = ({
+  lang,
   heading,
   headingEn,
   paragraph,
@@ -29,16 +30,20 @@ const NotificationEmail = ({
   buttonLabelEn,
   buttonUrl,
 }: NotificationEmailProps) => {
-  const title = heading || "Novinka v MyChata";
+  const title = heading || (lang === "en" ? "News from MyChata" : "Novinka v MyChata");
   const cs = split(paragraph);
   const en = split(paragraphEn);
   return (
     <EmailLayout
+      lang={lang}
       preview={title}
       heading={{ cs: title, en: headingEn ?? "" }}
       paragraphs={cs.filter(Boolean).map((p, i) => ({ cs: p, en: en[i] ?? "" }))}
       button={{
-        label: { cs: buttonLabel || "Otevřít MyChata", en: buttonLabelEn ?? "" },
+        label: {
+          cs: buttonLabel || (lang === "en" ? "Open MyChata" : "Otevřít MyChata"),
+          en: buttonLabelEn ?? "",
+        },
         href: buttonUrl || SITE_URL,
       }}
     />

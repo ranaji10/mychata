@@ -9,7 +9,7 @@ import { Avatar, EmptyState, LoadingCards, PageHeader } from "@/components/bits"
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, guestCount, type Booking } from "@/lib/data";
+import { fmtDate, guestCount, todayISO, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/schvalovani")({
@@ -18,9 +18,9 @@ export const Route = createFileRoute("/schvalovani")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Ke schválení — My Chata" },
+      { title: "Ke schválení — MyChata" },
       { name: "description", content: "Overview of bookings awaiting approval." },
-      { property: "og:title", content: "Ke schválení — My Chata" },
+      { property: "og:title", content: "Ke schválení — MyChata" },
       { property: "og:description", content: "Overview of bookings awaiting approval." },
     ],
   }),
@@ -142,47 +142,67 @@ function ApprovalsPage() {
         />
       ) : (
         <div className="space-y-3">
-          {pending.map((b) => (
-            <article key={b.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
-              <div className="flex items-center gap-3">
-                <Avatar name={b.requester_name} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-bold">{b.requester_name}</p>
-                  <p className="text-[16px] text-muted-foreground">
-                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {guestCount(b.guests, lang)}
-                  </p>
+          {/* Requests whose dates have passed go last and can only be removed (3 Nov test round). */}
+          {[...pending]
+            .sort((a, b) => Number(a.end_date < todayISO()) - Number(b.end_date < todayISO()))
+            .map((b) => (
+              <article key={b.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
+                <div className="flex items-center gap-3">
+                  <Avatar name={b.requester_name} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-lg font-bold">{b.requester_name}</p>
+                    <p className="text-[16px] text-muted-foreground">
+                      {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {guestCount(b.guests, lang)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              {b.note && (
-                <p className="mt-2 rounded-2xl bg-background p-3 text-[16px]">„{b.note}“</p>
-              )}
-              {isAdmin ? (
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    variant="fresh"
-                    size="fresh"
-                    onClick={() => decide.mutate({ id: b.id, approve: true })}
-                    disabled={decide.isPending}
-                    className="btn-dark flex-1"
-                  >
-                    {t("Schválit", "Approve")}
-                  </Button>
+                {b.note && (
+                  <p className="mt-2 rounded-2xl bg-background p-3 text-[16px]">„{b.note}“</p>
+                )}
+                {b.end_date < todayISO() && (
+                  <p className="mt-2 text-[16px] font-semibold text-warn-foreground">
+                    {t(
+                      "Termín už proběhl. Žádost můžete jen odebrat.",
+                      "These dates have passed. You can only remove the request.",
+                    )}
+                  </p>
+                )}
+                {isAdmin && b.end_date < todayISO() ? (
                   <Button
                     variant="fresh"
                     size="fresh"
                     onClick={() => setDeclining(b)}
-                    className="btn-secondary flex-1"
+                    className="btn-secondary mt-3 w-full"
                   >
-                    {t("Zamítnout", "Decline")}
+                    {t("Odebrat", "Remove")}
                   </Button>
-                </div>
-              ) : (
-                <p className="mt-3 text-[16px] font-semibold text-muted-foreground">
-                  {t("Schválit může správce rodiny.", "Only the family admin can approve.")}
-                </p>
-              )}
-            </article>
-          ))}
+                ) : isAdmin ? (
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      onClick={() => decide.mutate({ id: b.id, approve: true })}
+                      disabled={decide.isPending}
+                      className="btn-dark flex-1"
+                    >
+                      {t("Schválit", "Approve")}
+                    </Button>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      onClick={() => setDeclining(b)}
+                      className="btn-secondary flex-1"
+                    >
+                      {t("Zamítnout", "Decline")}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-[16px] font-semibold text-muted-foreground">
+                    {t("Schválit může správce rodiny.", "Only the family admin can approve.")}
+                  </p>
+                )}
+              </article>
+            ))}
         </div>
       )}
       <ConfirmDialog

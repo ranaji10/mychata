@@ -14,12 +14,12 @@ export const Route = createFileRoute("/reset-password")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Obnovení hesla — My Chata" },
-      { name: "description", content: "Požádejte o odkaz pro obnovení hesla k účtu My Chata." },
-      { property: "og:title", content: "Obnovení hesla — My Chata" },
+      { title: "Obnovení hesla — MyChata" },
+      { name: "description", content: "Požádejte o odkaz pro obnovení hesla k účtu MyChata." },
+      { property: "og:title", content: "Obnovení hesla — MyChata" },
       {
         property: "og:description",
-        content: "Požádejte o odkaz pro obnovení hesla k účtu My Chata.",
+        content: "Požádejte o odkaz pro obnovení hesla k účtu MyChata.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/reset-password")({
 });
 
 function ResetPasswordPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   useBrand("family");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -55,7 +55,7 @@ function ResetPasswordPage() {
     setFailed(false);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/auth",
+        redirectTo: `${window.location.origin}/auth?lang=${lang}`,
       });
       if (error) throw error;
       setSent(true);
@@ -74,7 +74,7 @@ function ResetPasswordPage() {
           <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
             <Home className="size-6" />
           </span>
-          <span className="text-lg font-extrabold">My Chata</span>
+          <span className="text-lg font-extrabold">MyChata</span>
         </div>
         <LanguageToggle />
       </div>

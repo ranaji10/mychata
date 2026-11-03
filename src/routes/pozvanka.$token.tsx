@@ -18,12 +18,12 @@ export const Route = createFileRoute("/pozvanka/$token")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Pozvánka do chaty — My Chata" },
-      { name: "description", content: "Připojte se ke sdílené chatě pomocí pozvánky My Chata." },
-      { property: "og:title", content: "Pozvánka do chaty — My Chata" },
+      { title: "Pozvánka do chaty — MyChata" },
+      { name: "description", content: "Připojte se ke sdílené chatě pomocí pozvánky MyChata." },
+      { property: "og:title", content: "Pozvánka do chaty — MyChata" },
       {
         property: "og:description",
-        content: "Připojte se ke sdílené chatě pomocí pozvánky My Chata.",
+        content: "Připojte se ke sdílené chatě pomocí pozvánky MyChata.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -248,7 +248,7 @@ function InvitePage() {
           <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
             <Home className="size-6" />
           </span>
-          <span className="text-lg font-extrabold">My Chata</span>
+          <span className="text-lg font-extrabold">MyChata</span>
         </div>
         <LanguageToggle />
       </div>

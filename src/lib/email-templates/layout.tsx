@@ -13,7 +13,8 @@ import {
   Text,
 } from "@react-email/components";
 
-// Shared look for every MyChata email (docs/product/design.md, family brand).
+// Shared look for every MyChata email (docs/product/design.md, family brand). One language per
+// e-mail, the recipient's own (T-057).
 // Emails can't read CSS variables, so the design tokens are copied here as literals.
 export const SITE_URL = "https://mychata.cz";
 
@@ -52,8 +53,15 @@ export interface Bilingual {
   en: string;
 }
 
+export type EmailLang = "cs" | "en";
+
+/** The text in the recipient's language; English falls back to Czech where there is none. */
+const pick = (b: Bilingual, lang: EmailLang) => (lang === "en" ? b.en || b.cs : b.cs);
+
 interface EmailLayoutProps {
-  preview: string;
+  /** The recipient's language (T-057): every e-mail is in one language, not Czech + English. */
+  lang?: EmailLang | undefined;
+  preview: string | Bilingual;
   heading: Bilingual;
   paragraphs: Bilingual[];
   button?: { label: Bilingual; href: string };
@@ -62,6 +70,7 @@ interface EmailLayoutProps {
 }
 
 export const EmailLayout = ({
+  lang = "cs" as EmailLang,
   preview,
   heading,
   paragraphs,
@@ -69,11 +78,11 @@ export const EmailLayout = ({
   code,
   footer,
 }: EmailLayoutProps) => (
-  <Html lang="cs" dir="ltr" translate="no">
+  <Html lang={lang} dir="ltr" translate="no">
     <Head>
       <meta name="google" content="notranslate" />
     </Head>
-    <Preview>{preview}</Preview>
+    <Preview>{typeof preview === "string" ? preview : pick(preview, lang)}</Preview>
     <Body style={main} translate="no" className="notranslate">
       <Container style={container}>
         <Text style={brand}>
@@ -81,33 +90,28 @@ export const EmailLayout = ({
             {keepBrand(BRAND)}
           </Link>
         </Text>
-        <Heading style={h1}>{keepBrand(heading.cs)}</Heading>
-        {heading.en ? (
-          <Text style={enHeading}>{keepBrand(heading.en)}</Text>
-        ) : (
-          <Text style={{ margin: "0 0 20px" }} />
-        )}
-        {paragraphs.map((p, i) => (
-          <Section key={i} style={{ margin: "0 0 20px" }}>
-            <Text style={text}>{keepBrand(p.cs)}</Text>
-            {p.en ? <Text style={en}>{keepBrand(p.en)}</Text> : null}
-          </Section>
-        ))}
+        <Heading style={h1}>{keepBrand(pick(heading, lang))}</Heading>
+        <Text style={{ margin: "0 0 20px" }} />
+        {paragraphs
+          .map((p) => pick(p, lang))
+          .filter(Boolean)
+          .map((p, i) => (
+            <Section key={i} style={{ margin: "0 0 20px" }}>
+              <Text style={text}>{keepBrand(p)}</Text>
+            </Section>
+          ))}
         {code ? <Text style={codeStyle}>{code}</Text> : null}
         {button ? (
           <Section style={{ margin: "8px 0 28px" }}>
             <Button style={buttonStyle} href={button.href}>
-              {keepBrand(
-                button.label.en ? `${button.label.cs} · ${button.label.en}` : button.label.cs,
-              )}
+              {keepBrand(pick(button.label, lang))}
             </Button>
           </Section>
         ) : null}
         <Hr style={hr} />
         {footer ? (
           <>
-            <Text style={small}>{keepBrand(footer.cs)}</Text>
-            <Text style={smallEn}>{keepBrand(footer.en)}</Text>
+            <Text style={smallEn}>{keepBrand(pick(footer, lang))}</Text>
           </>
         ) : null}
         <Text style={small}>
@@ -131,9 +135,7 @@ const h1 = {
   color: C.foreground,
   margin: "0 0 4px",
 };
-const enHeading = { fontSize: "16px", color: C.muted, margin: "0 0 24px" };
 const text = { fontSize: "17px", lineHeight: "1.6", color: C.foreground, margin: "0 0 4px" };
-const en = { fontSize: "16px", lineHeight: "1.5", color: C.muted, margin: 0 };
 const buttonStyle = {
   backgroundColor: C.primary,
   color: "#ffffff",

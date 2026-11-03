@@ -49,7 +49,9 @@
     "notify_leaving_checklist": "Internal helper of the 0038 triggers; no execute grant to anon or authenticated",
     "next_stay_after_handover": "Internal helper of the 0038 triggers and handover_next_recipient; no execute grant to anon or authenticated",
     "forward_leaving_checklist_to": "Internal helper of notify_on_booking; no execute grant to anon or authenticated",
-    "notify_enqueue": "Internal helper of the 0038 triggers and functions; no execute grant to anon or authenticated (revoked in 0038, proven in t053-rls.test.ts)"
+    "notify_enqueue": "Internal helper of the 0038 triggers and functions; no execute grant to anon or authenticated (revoked in 0038, proven in t053-rls.test.ts)",
+    "email_lang": "Executable by service_role only (sign-in e-mail hook); returns 'cs', 'en' or null for an address, nothing else (T-057)",
+    "close_settled_claims": "Trigger function on expense_splits; cannot be called directly (T-057)"
   },
   "anonTablePrivileges": {
     "consent_log:INSERT": "Cookie banner logs the choice before sign-in",

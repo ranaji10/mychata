@@ -94,11 +94,13 @@ export async function sendTemplateEmail(
 export interface NotificationEmailInput {
   /** Recipient address. */
   to: string;
+  /** The recipient's language; the template sets <html lang> from it (T-057). */
+  lang?: "cs" | "en";
   subject: string;
   heading: string;
   paragraph: string;
   buttonLabel: string;
-  /** English line under each Czech one (T-053); optional. */
+  /** Old bilingual fields (T-053); no longer sent, kept for queued calls. */
   headingEn?: string | undefined;
   paragraphEn?: string | undefined;
   buttonLabelEn?: string | undefined;

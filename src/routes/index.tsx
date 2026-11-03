@@ -15,12 +15,12 @@ export const Route = createFileRoute("/")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "My Chata — správa sdílené chaty" },
+      { title: "MyChata — správa sdílené chaty" },
       {
         name: "description",
         content: "Kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace.",
       },
-      { property: "og:title", content: "My Chata — správa sdílené chaty" },
+      { property: "og:title", content: "MyChata — správa sdílené chaty" },
       {
         property: "og:description",
         content: "Kalendář pobytů, úkoly, výdaje a předání chaty pro rodiny i organizace.",
@@ -63,7 +63,7 @@ function Index() {
           <span className="grid size-10 place-items-center rounded-[12px] bg-primary text-primary-foreground">
             <Home className="size-6" />
           </span>
-          <span className="text-lg font-extrabold">My Chata</span>
+          <span className="text-lg font-extrabold">MyChata</span>
         </div>
         <LanguageToggle />
       </div>
@@ -82,7 +82,7 @@ function Index() {
           <p className="text-[16px] font-semibold text-muted-foreground">
             {t("Vítejte v aplikaci", "Welcome to")}
           </p>
-          <p className="text-lg font-bold leading-tight">My Chata</p>
+          <p className="text-lg font-bold leading-tight">MyChata</p>
         </div>
       </div>
 

@@ -19,9 +19,9 @@ export const Route = createFileRoute("/export")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Export využití — My Chata" },
+      { title: "Export využití — MyChata" },
       { name: "description", content: "CSV export of cottage usage by month." },
-      { property: "og:title", content: "Export využití — My Chata" },
+      { property: "og:title", content: "Export využití — MyChata" },
       { property: "og:description", content: "CSV export of cottage usage by month." },
     ],
   }),

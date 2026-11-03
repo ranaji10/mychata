@@ -324,7 +324,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-primary text-primary-foreground">
                 <Home className="size-6" strokeWidth={2} />
               </span>
-              <span className="text-lg font-extrabold">My Chata</span>
+              <span className="text-lg font-extrabold">MyChata</span>
             </Link>
             {tabs.map(({ to, label, icon: Icon }) => {
               const active = isActive(to);
@@ -412,7 +412,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 aria-expanded={switcherOpen}
               >
                 <h1 className="truncate text-[17px] font-bold leading-tight">
-                  {property?.name ?? "My Chata"}
+                  {property?.name ?? "MyChata"}
                 </h1>
                 <ChevronDown className="size-[18px] shrink-0 text-muted-foreground" />
               </Button>

@@ -38,9 +38,9 @@ export const Route = createFileRoute("/ukoly/$id")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Detail úkolu — My Chata" },
+      { title: "Detail úkolu — MyChata" },
       { name: "description", content: "Details of a cottage task." },
-      { property: "og:title", content: "Detail úkolu — My Chata" },
+      { property: "og:title", content: "Detail úkolu — MyChata" },
       { property: "og:description", content: "Details of a cottage task." },
     ],
   }),

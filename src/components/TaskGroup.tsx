@@ -107,7 +107,10 @@ export function TaskGroup({
           {taskCategoryLabel(task.category, lang)}
         </p>
         {task.status !== "DONE" && task.due_date && task.due_date < todayISO() && (
-          <p className="font-semibold text-destructive">{t("Po termínu", "Overdue")}</p>
+          <div>
+            <p className="font-semibold text-destructive">{t("Po termínu", "Overdue")}</p>
+            <Link to="/ukoly/$id" params={{ id: task.id }} search={{ note: true }} className="relative z-10 inline-flex min-h-11 items-center text-[16px] font-semibold text-primary">{t("Přidat poznámku ke zpoždění", "Add a note about the delay")}</Link>
+          </div>
         )}
       </div>
       {/* In-progress tasks are visible in the list, not only on the task page (bug 8a). */}

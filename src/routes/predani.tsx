@@ -14,6 +14,7 @@ import {
   buildChecklistState,
   checklistProgress,
   fmtDateTime,
+  fmtDate,
   todayISO,
   type Booking,
   type Handover,
@@ -115,6 +116,7 @@ function HandoverPage() {
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!property) throw new Error("not_a_member");
       let photoUrl: string | null = null;
       if (photo && property) {
         const path = `${property.id}/handovers/${crypto.randomUUID()}-${photo.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
@@ -125,7 +127,7 @@ function HandoverPage() {
       const { data: handover, error } = await supabase
         .from("handovers")
         .insert({
-          property_id: property!.id,
+          property_id: property.id,
           booking_id: activeBooking?.id ?? null,
           member_id: currentMember?.id ?? null,
           checklist_state: buildChecklistState(items, checked),
@@ -159,10 +161,20 @@ function HandoverPage() {
         });
         if (issueError) throw issueError;
       }
+      return handover.id;
     },
-    onSuccess: () => {
+    onSuccess: async (handoverId) => {
       if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
-      toast.success(t("Odjezdové úkoly uloženy.", "Checkout tasks saved."));
+      const { data: recipients, error } = await supabase.rpc("handover_next_recipient", { _handover_id: handoverId });
+      if (error) {
+        toast.error(t(`Uloženo, ale příjemce se nepodařilo zjistit: ${error.message}`, `Saved, but could not check the recipient: ${error.message}`));
+      } else if (!recipients?.length) {
+        toast.success(t("Uloženo. Zatím žádný další pobyt.", "Saved. No upcoming stay yet."));
+      } else {
+        const next = recipients[0];
+        if (next?.sent) toast.success(t(`Předání posláno: ${next.member_name}, pobyt ${fmtDate(next.start_date)}–${fmtDate(next.end_date)}.`, `Handover sent to ${next.member_name}, staying ${fmtDate(next.start_date)}–${fmtDate(next.end_date)}.`));
+        else toast.warning(t("Uloženo. Předání zatím nebylo posláno.", "Saved. The handover has not been sent yet."));
+      }
       queryClient.invalidateQueries({ queryKey: ["handovers", property?.id] });
       navigate({ to: "/domu" });
     },

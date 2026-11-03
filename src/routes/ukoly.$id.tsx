@@ -19,6 +19,7 @@ import { EmptyState, PillDanger, PillNeutral, PillOk, Skeleton } from "@/compone
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
+import { TaskNotes } from "@/components/TaskNotes";
 import {
   fmtDate,
   taskCategoryLabel,
@@ -29,6 +30,9 @@ import {
 } from "@/lib/data";
 
 export const Route = createFileRoute("/ukoly/$id")({
+  validateSearch: (search: Record<string, unknown>): { note?: boolean } => ({
+    ...(search["note"] === true || search["note"] === "true" ? { note: true } : {}),
+  }),
   staticData: { sitemap: false },
   head: () => ({
     meta: [
@@ -45,6 +49,7 @@ export const Route = createFileRoute("/ukoly/$id")({
 
 function TaskDetail() {
   const { id } = Route.useParams();
+  const { note: focusNote } = Route.useSearch();
   const { property, members, activeMembers, currentMember } = useAccount();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -325,6 +330,7 @@ function TaskDetail() {
           </AlertDialog>
         </>
       )}
+      <TaskNotes taskId={task.id} focus={!!focusNote} />
     </AppShell>
   );
 }

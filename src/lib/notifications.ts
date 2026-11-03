@@ -38,7 +38,6 @@ export function markSeen(userId: string | undefined, keys: string[]) {
   } catch {
     /* private mode: the badge just stays until the items go away */
   }
-  void markStoredRead(keys);
 }
 
 /** Everything the Notifications page and the tab badge need, from shared query caches. */

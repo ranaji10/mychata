@@ -4,6 +4,14 @@ As of 2026-11-03. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
+## Requested UI actions (3 Nov 2026, preview only)
+
+- Expense details show payer, per-person shares, receipt upload/view and payer-only reminders/cover-all; no mark-own-share action.
+- Handover confirmation reads the next recipient RPC. Task notes support adding, mentions of active members, author edits/deletes and overdue-note focus. Pending stays offer an admin-message composer.
+- Stored notification read state is updated on tap, not by opening the list. No new bell.
+- Add cottage asks only its name; missing-details badges and exact approved hints are shared with onboarding. Starter rules remain editable drafts until Save; manual question suggestions default to members-only.
+- Capacity is deliberately omitted. Two-person reminder/cover-all, another admin receiving messages, and next-recipient delivery require maintainer checks. Full CI and publishing are not performed here.
+
 | Place                    | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Production (mychata.cz)  | Runs `4915d17` (PR #86, Lovable e-mail), built 3 Nov 01:13 UTC, checked 3 Nov (`docs/external/claude/2026-11-03-site-check.md`). Before it `4bcba4b` (PRs #77–#84). Releases: one per checked publish (27 Oct); a maintainer creates them, cloud sessions may not. To create: `release-2026-10-27` on `4bcba4b` (N-26) and `release-2026-11-03` on `4915d17`. Last release: `release-2026-10-26` on `f1b1bd6`.                                                                                                                                                                                                     |

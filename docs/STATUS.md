@@ -25,7 +25,7 @@ As of 2026-11-03. Update this file in every PR that changes behaviour.
 
 Open after review (T-056): onboarding saves starter rules in the language on screen into both Czech and English (the onboarding function takes one text); fix needs a function change.
 
-## E-mails in one language, "I paid" claims, cottage facts (T-057, 3 Nov 2026, in review; needs migration 0040)
+## E-mails in one language, "I paid" claims, cottage facts (T-057, 3 Nov 2026, live since `62006a2`; 0040 applied)
 
 Brief: `docs/tasks/T-057-language-payments-cottage-facts.md`. Every e-mail goes out in the recipient's own language (profile, else sign-up choice, else Czech); nothing withdrawn or already decided is mailed (T-055); someone who owes can say "I paid", the payee confirms or says it didn't arrive; house rules are members-only by default; cottages store capacity, beds, check-in/out and pets; brand is "MyChata". Approval for family cottages: later (maintainer, 3 Nov).
 

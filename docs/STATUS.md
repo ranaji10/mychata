@@ -25,7 +25,7 @@ As of 2026-11-03. Update this file in every PR that changes behaviour.
 
 Open after review (T-056): onboarding saves starter rules in the language on screen into both Czech and English (the onboarding function takes one text); fix needs a function change.
 
-## Brand name kept in translated e-mails (T-054, 3 Nov 2026, in review)
+## Brand name kept in translated e-mails (T-054, 3 Nov 2026, live since `8d38751`)
 
 Brief: `docs/tasks/T-054-email-brand-translation.md`. No migration. All e-mails (sign-up, invitation, sign-in, password, e-mail change, code, notifications) are marked `translate="no"` and each "MyChata" is wrapped so a mail app's auto-translation can't turn it into "MyChat".
 

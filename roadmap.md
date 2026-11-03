@@ -1,6 +1,10 @@
 ## Requested UI actions (3 Nov 2026)
 
-- [ ] Items 1–8, excluding mark-own-share: blocked by item 6's capacity field. The database has no cottage capacity field; overlap_max_guests is only the overlapping-stay approval threshold. Await a decision to omit capacity or a developer's database change; no application edits or publishing.
+- [ ] Expense detail, receipts, payer reminders and cover-all; omit mark-own-share.
+- [ ] Handover recipient, task notes/mentions, overdue prompt and pending-stay admin message.
+- [ ] Verify existing stored notifications and read-on-tap behavior.
+- [ ] Name-only cottage setup, shared field hints (capacity omitted), starter rules and manual question suggestions.
+- [ ] Phone-width checks and changed-file/click checklist; collect remaining gaps, do not publish.
 
 ## T-028 Fresh air public pages (14 Oct 2026)
 

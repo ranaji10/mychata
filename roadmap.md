@@ -1,3 +1,7 @@
+## Requested UI actions (3 Nov 2026)
+
+- [ ] Items 1–8, excluding mark-own-share: blocked by item 6's capacity field. The database has no cottage capacity field; overlap_max_guests is only the overlapping-stay approval threshold. Await a decision to omit capacity or a developer's database change; no application edits or publishing.
+
 ## T-028 Fresh air public pages (14 Oct 2026)
 
 - [x] Restyle only allowed public routes and fallback pages; Czech link previews and priority seasonal heroes.

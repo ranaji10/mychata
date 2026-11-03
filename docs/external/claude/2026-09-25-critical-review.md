@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-10-27
+updated: 2026-11-03
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Now
@@ -12,19 +12,20 @@ tab: Now
 
 # MyChata tracker
 
-27 Oct 2026 · Tuik
+3 Nov 2026 · Tuik
 
-**Live:** `4bcba4b` (PR #82 + #84, T-052: no blank or empty app after a failed or hanging read), checked 27 Oct 09:20; before it `dc50299` (visible labels, start screen), checked 08:35. **Waiting on you:** create one release `release-2026-10-27` on `4bcba4b` (N-26); in Brave, "Odhlásit se" on onboarding step 1; delete the old page addresses in GA (N-27); the DNS records and `podpora@` inbox at Hostinger (N-5); D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `4915d17` (PR #86: e-mail from `notify.mychata.cz`, Czech/English auth e-mails, "Confirm email" on), checked 3 Nov 02:40; before it `4bcba4b` (PRs #77–#84). DNS is at Cloudflare since 2 Nov; `podpora@` receives mail. **Waiting on you:** the e-mail tests with a real inbox (N-29); two releases, `release-2026-10-27` and `release-2026-11-03` (N-26); claim migration 0038 with Rajat so Claude can build CC-3 (N-30); delete the old page addresses in GA (N-27); in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-26 | **Create one GitHub release for the live publish** (decided 27 Oct: one release per checked publish; the three pending ones for #77–#79 are dropped). Releases → Draft a new release → tag `release-2026-10-27`, target `4bcba4b`, title "Analytics privacy, visible labels, no stuck or blank screens (PRs #77–#84)", notes from `docs/external/claude/2026-10-27-site-check.md` and `-site-check-2.md`. Cloud sessions are refused release creation. Test 2's stay 23 Oct–1 Nov in Institutní chata (test) still waits for Test 3's decision | You | To do |  |
+| N-26 | **Create one GitHub release for the live publish** (decided 27 Oct: one release per checked publish; the three pending ones for #77–#79 are dropped). Releases → Draft a new release → tag `release-2026-10-27`, target `4bcba4b`, title "Analytics privacy, visible labels, no stuck or blank screens (PRs #77–#84)", notes from `docs/external/claude/2026-10-27-site-check.md` and `-site-check-2.md`. Then a second one: tag `release-2026-11-03`, target `4915d17`, title "E-mail from notify.mychata.cz (PR #86)", notes from `docs/external/claude/2026-11-03-site-check.md`. Cloud sessions are refused release creation. Test 2's stay 23 Oct–1 Nov in Institutní chata (test) still waits for Test 3's decision | You | To do |  |
 | N-27 | **Delete the old page addresses in GA** (D-33: they persist 14 months and Rajat has Administrator access too): GA4 Admin → Data collection and modification → Data deletion requests → Schedule request → "Delete selected parameters across all events" → page_location and page_referrer, 27 Sep to 26 Oct → Submit. Runs after a 7-day grace period; can't be undone. Page reports before 26 Oct lose their addresses (titles stay) | You | To do | F-30 |
-| N-5 | **E-mail DNS at Hostinger** (checked 26 Oct: `notify.mychata.cz` doesn't exist, `mychata.cz` has no MX): add TXT `_lovable-email` = the `lovable_email_verify=…` value and NS `notify` → `ns3.lovable.cloud`, `ns4.lovable.cloud` (exact rows in prompt `05`); add a forwarder for `podpora@mychata.cz`; then Lovable → More → Emails → Retry setup. Then `05` → `06` → `07` (all updated 26 Oct) | You | To do | F-07, F-23, F-24, F-27 |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
-| N-23 | **GA key events still to star:** `sign_up`, `booking_request_sent`, `invitation_accepted` (`booking_created` starred 26 Oct). Checked 27 Oct 09:00 in GA (Recent events, 28 days): still none of the three has arrived; key events are booking_created and onboarding_completed. You run the test round (steps sent in chat 26 Oct: one new address signs up from the test public calendar, sends a request, then accepts an invitation; Chrome, analytics allowed), then star them, or add them by name under Admin → Key events → New key event. The scheduled task (27 Oct 09:47 UTC) also checks; its text still says N-14 (Claude couldn't edit it) | Claude (scheduled) | Waiting |  |
+| N-23 | **GA key events still to star:** `sign_up`, `booking_request_sent`, `invitation_accepted` (`booking_created` starred 26 Oct). Checked again 3 Nov 02:35 in GA (Recent events, 28 days): still none of the three has arrived; key events are booking_created and onboarding_completed. You run the test round (steps sent in chat 26 Oct: one new address signs up from the test public calendar, sends a request, then accepts an invitation; Chrome, analytics allowed), then star them, or add them by name under Admin → Key events → New key event. The scheduled task (27 Oct 09:47 UTC) also checks; its text still says N-14 (Claude couldn't edit it) | Claude (scheduled) | Waiting |  |
+| N-29 | **E-mail tests with a real inbox** (prompt 05, "After"; sending works: Lovable's log shows one auth e-mail delivered 3 Nov): 1) sign up with a fresh non-Gmail address you own: the mail comes from MyChata <no-reply@notify.mychata.cz> in Czech, and the account can't sign in before confirming (F-07); 2) public calendar of a test cottage → "Požádat o termín" → sign up → open the confirmation link in another browser (F-24); 3) "Zapomenuté heslo" for a test account: the reset mail arrives and opens "Nové heslo"; 4) send one mail to podpora@mychata.cz and reply from Gmail as podpora@ (check it isn't in spam). Tell Claude the results | You | To do | F-07, F-23, F-24 |
+| N-30 | **CC-3 notifications by e-mail is unblocked** (prompt 06, waited for L-E, which is live). It needs migration 0038: claim it in your chat with Rajat (rule: one open migration PR at a time), then say "build CC-3". Claude builds it in a cloud session as T-053 with a fresh review; it must build e-mail links itself from https://mychata.cz (PR #86 review). After it: prompt 07 (Lovable) | You, then Claude | To do | Prompt 07 |
 
 ## Decisions waiting on you
 
@@ -47,12 +48,11 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | --- | --- | --- | --- | --- |
 | F-01 | Not yet tested on a real iPhone: clipboard, Document Vault "Open", avatar upload | Needs an iPhone; all pass in Chromium's emulation | N-3 | Waiting |
 | F-05 | B-004: Google sign-in fails on Brave | In Lovable's sign-in broker. Lovable → More → Users → Settings → Google offers "Your own credentials" (a Google Cloud OAuth client) | D-31 | To do |
-| F-07 | "Confirm email" for password sign-ups not verified | Someone could claim a relative's seat by e-mail match; public-calendar requests rely on it too | N-5, then prompt `05` | Waiting |
+| F-07 | "Confirm email" for password sign-ups not verified | Someone could claim a relative's seat by e-mail match; public-calendar requests rely on it too | N-29, prompt `05` | Waiting |
 | F-09 | B-005: slow CORS / HTTP/3 errors on Supabase hosting (Firefox) | Three other B-005 items fixed in PR #21 | Watch; T-002 | Waiting |
-| F-21 | Google Analytics tag diagnostics: "0 % consent rate" | Ad consent is always denied by design. 26 Oct: stream "receiving traffic", no warning in the stream details | Recheck tag diagnostics on 1 Nov | Waiting |
-| F-23 | Public-calendar requests: the 20-a-day cottage limit can be used up by throwaway accounts while "Confirm email" is off (PR #66 review) | Low; depends on F-07 | N-5 | Waiting |
+| F-21 | Google Analytics tag diagnostics: "0 % consent rate" | Ad consent is always denied by design. 3 Nov: Consent settings now say "Urgent: 0% consent rate" and "analytics consent signals inactive"; the code sends analytics_storage from the banner choice, so this is the ad signals plus low traffic. Stream receiving traffic | Watch; recheck when weekly users pass ~50 | Waiting |
+| F-23 | Public-calendar requests: the 20-a-day cottage limit can be used up by throwaway accounts while "Confirm email" is off (PR #66 review) | Low; closes with F-07 (confirmation is on since 3 Nov) | N-29 | Waiting |
 | F-24 | After sign-up, returning to the calendar when the confirmation link is opened in another browser is untested | The rest of the request flow passed 26 Oct (N-14); with "Confirm email" off there is no link to open yet | Prompt `05`, "After" step 2 | Waiting |
-| F-27 | `podpora@mychata.cz` can't receive mail (no MX on `mychata.cz`), but the Help & support page and future e-mails use it | Found 26 Oct while checking N-5 | N-5 (forwarder) | Waiting |
 
 ## How to use this doc
 

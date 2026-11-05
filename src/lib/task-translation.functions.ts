@@ -1,16 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
+import { translateInput } from "@/lib/input-schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { AI_DAILY_LIMITS } from "@/lib/limits";
 
-const inputSchema = z.object({
-  text: z.string().trim().min(1).max(500),
-  sourceLanguage: z.enum(["cs", "en"]),
-});
-
 export const translateTaskText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => inputSchema.parse(input))
+  .inputValidator((input) => translateInput.parse(input))
   .handler(async ({ data, context }) => {
     const targetLanguage = data.sourceLanguage === "cs" ? "English" : "Czech";
     const apiKey = process.env["LOVABLE_API_KEY"];

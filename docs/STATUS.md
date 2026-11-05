@@ -15,6 +15,10 @@ As of 2026-11-05. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-020 document vault search (re-planned in T-044), T-001–T-013 as listed below. T-055 and T-057 in review (PR). Done: T-014–T-019, T-021–T-052.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
+## zod 4 (T-065, 6 Nov 2026, in review)
+
+Brief: `docs/tasks/T-065-zod-4.md`. zod 3 → 4 (O-31, advisory GHSA-mrhx-c7xc-m3w5). The server functions' inputs live in `src/lib/input-schemas.ts` and accept exactly what they did; each is tested in `src/lib/t065.test.ts`. No change for users.
+
 ## UX round, O-23 and O-24 (T-062, 5 Nov 2026, in review; needs 0044)
 
 Brief: `docs/tasks/T-062-ux-round-o23-o24.md`; report `docs/external/claude/2026-11-05-ux-round.md`.

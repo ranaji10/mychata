@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-11-05
+updated: 2026-11-06
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Now
@@ -12,9 +12,9 @@ tab: Now
 
 # MyChata tracker
 
-5 Nov 2026 · Tuik
+6 Nov 2026 · Tuik
 
-**Live:** `4ab7af5` (PR #101, T-060; build-sha checked 5 Nov 20:20). The T-060 recheck passed: all 11 bugs from the 5 Nov evening hunt are fixed live (`docs/external/claude/2026-11-05-site-check-2.md`). Before it `957a75c` (T-059 with migration 0042). **Waiting on you:** O-23, O-24, O-25 (your calls, Backlog); N-29 step 1 (sign-in before confirming) and step 2; one Gmail setting (N-32); whether to delete Lovable's temporary test cottage (N-33); in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Approving each cottage for family is deferred (your call, 3 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `c3d1112` (PR #103, T-061; build-sha checked 5 Nov 23:05). T-061 and O-22 rechecked and passed; the UX round found 10 issues, 6 fixed in PR #104 (`docs/external/claude/2026-11-05-ux-round.md`). **Waiting on you:** merge PR #104 (T-062: O-23, O-24, UX fixes, migration 0044) and PR #105 (T-063: npm security updates, Dependabot), switch on Dependabot security updates, then Lovable prompts 27 and 28 and publish (N-36, N-37); O-27 and O-29 are your calls (Backlog); N-29 step 1 (sign-in before confirming) and step 2; one Gmail setting (N-32); whether to delete Lovable's temporary test cottage (N-33); in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Deferred by you: approving each cottage for family (3 Nov), past stays by admins O-25 (5 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
@@ -25,6 +25,8 @@ tab: Now
 | N-29 | **E-mail tests with a real inbox, steps 1–2 left** (3 and 4 passed 3 Nov: reset mails arrive from MyChata in the account's language and open "Nové heslo"; a mail to podpora@ reached Gmail and the reply as "MyChata podpora" arrived, not in spam). 1) a fresh non-Gmail sign-up got its confirmation in English (your test, 5 Nov). Still to note: the mail comes from MyChata <no-reply@notify.mychata.cz> in the language you chose, and the account can't sign in before confirming (F-07); 2) public calendar of a test cottage → "Požádat o termín" → sign up → open the confirmation link in another browser (F-24). Tell Claude the results | You | To do | F-07, F-23, F-24 |
 | N-32 | **Gmail: reply from podpora@ by default.** Settings → Accounts and Import → "When replying to a message" → "Reply from the same address the message was sent to". Today Gmail starts replies to podpora@ mail from ranaji.deb@gmail.com | You | To do | |
 | N-33 | **Lovable left "Lovable dočasná chata (test)" on production** during its 0040 work. Delete it (Manage cottages) or tell Claude to | You | To do | |
+| N-36 | **Merge PR #104** (T-062: O-23 ask before publishing, O-24 day visits with migration 0044, six UX fixes; CI green, fresh review done). Then send `prompts/2026-11-05/27-L-apply-migration-0044.md` to Lovable, publish, tell Claude "published" for the recheck | You | To do | O-23, O-24 |
+| N-37 | **Merge PR #105** (T-063: npm security updates, 28 advisories to 6; Dependabot opens its own PRs). GitHub → Settings → Code security → Dependabot security updates: Enable. Then `28-L-dependency-update.md` to Lovable, publish. From then on merge Dependabot PRs when `check` is green (`docs/runbooks/dependency-updates.md`) | You | To do | O-31 later |
 
 ## Decisions waiting on you
 

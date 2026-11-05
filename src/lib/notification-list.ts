@@ -587,7 +587,11 @@ export function storedItem(
           tone: "action",
           title: [`Zpráva od: ${str(p.from_name)}`, `Message from ${str(p.from_name)}`],
           detail: [`„${str(p.body)}“`, `“${str(p.body)}”`],
-          to: "/upozorneni",
+          // O-26 (0046): a message sent from a stay opens that stay, where the admin decides.
+          // Older messages carry no stay and stay on Notifications.
+          ...(str(p.booking_id)
+            ? { to: "/rezervace/$id", params: { id: str(p.booking_id) } }
+            : { to: "/upozorneni" }),
         },
       };
     case "debt_reminder": {

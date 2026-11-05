@@ -350,7 +350,7 @@ function HomePage() {
           {nextBooking && nextBooking.start_date > today
             ? t(
                 `Chata je volná do ${fmtDate(nextBooking.start_date)}.`,
-                `The chata is available until ${fmtDate(nextBooking.start_date)}.`,
+                `The cottage is available until ${fmtDate(nextBooking.start_date)}.`,
               )
             : t(
                 `Dobrý den, ${currentMember?.name?.split(" ")[0] ?? ""}`,

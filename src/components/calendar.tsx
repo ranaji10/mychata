@@ -5,6 +5,7 @@ import {
   dayNames,
   findConflicts,
   fmtDate,
+  isUndecided,
   monthGrid,
   monthNames,
   todayISO,
@@ -59,7 +60,9 @@ export function CalendarMonth({
             ...new Set(dayStays.map((b) => b.requester_name).filter((n): n is string => !!n)),
           ];
           const isToday = d.iso === today;
-          const isPending = booking?.status === "PENDING";
+          // O-27: a request whose dates passed undecided is grey, not "Awaiting approval".
+          const isUndecidedStay = !!booking && isUndecided(booking, today);
+          const isPending = booking?.status === "PENDING" && !isUndecidedStay;
           const isConfirmed = booking?.status === "CONFIRMED";
           const isEndpoint = !!selection && (d.iso === selection.start || d.iso === selection.end);
           const inRange =
@@ -78,13 +81,15 @@ export function CalendarMonth({
                 ? "bg-primary text-primary-foreground font-extrabold"
                 : isPending
                   ? "bg-warn-soft text-warn-foreground"
-                  : isHighlighted
-                    ? "bg-primary-soft text-primary ring-2 ring-primary rounded-[14px]"
-                    : !d.inMonth
-                      ? "text-subtle"
-                      : d.iso < today
+                  : isUndecidedStay
+                    ? "bg-secondary text-muted-foreground"
+                    : isHighlighted
+                      ? "bg-primary-soft text-primary ring-2 ring-primary rounded-[14px]"
+                      : !d.inMonth
                         ? "text-subtle"
-                        : "text-foreground";
+                        : d.iso < today
+                          ? "text-subtle"
+                          : "text-foreground";
           const startBand =
             !!booking &&
             (d.iso === booking.start_date ||
@@ -219,7 +224,14 @@ export function MonthHeader({
   );
 }
 
-export function CalendarLegend({ picking = false }: { picking?: boolean }) {
+export function CalendarLegend({
+  picking = false,
+  undecided = false,
+}: {
+  picking?: boolean;
+  /** O-27: shown when the calendar holds a request whose dates passed undecided. */
+  undecided?: boolean;
+}) {
   const { t } = useLang();
   return (
     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] font-semibold text-muted-foreground">
@@ -231,6 +243,12 @@ export function CalendarLegend({ picking = false }: { picking?: boolean }) {
         <span className="size-3 rounded-[4px] border border-warn-border bg-warn-soft" />
         {t("Čeká na schválení", "Awaiting approval")}
       </span>
+      {undecided && (
+        <span className="flex items-center gap-1.5">
+          <span className="size-3 rounded-[4px] border border-border bg-secondary" />
+          {t("Nerozhodnuto", "Not decided")}
+        </span>
+      )}
       {picking && (
         <span className="flex items-center gap-1.5">
           <span className="size-3.5 rounded-full bg-card ring-[3px] ring-inset ring-primary" />

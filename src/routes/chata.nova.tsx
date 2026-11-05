@@ -83,7 +83,7 @@ function AddPropertyPage() {
       <div className={`mt-4 space-y-3 ${isAdmin ? "" : "hidden"}`}>
         <label className="block">
           <span className="label-text text-[16px]">
-            {t("Jak se vaše chata jmenuje?", "What's your chata called?")}
+            {t("Jak se vaše chata jmenuje?", "What's your cottage called?")}
           </span>
           <input className="field w-full" value={name} onChange={(e) => setName(e.target.value)} />
         </label>

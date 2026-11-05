@@ -225,13 +225,21 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
         ],
         paragraphs: [
           [`„${s(p.body)}“`, ""],
-          [
-            "Odpovězte v aplikaci nebo osobně; adresy si MyChata nesdílí.",
-            "Reply in the app or in person; MyChata doesn't share addresses.",
-          ],
+          // O-26 (0046): a message sent from a stay links to it; the admin decides there.
+          s(p.booking_id)
+            ? [
+                "Pobyt otevřete tlačítkem níže a schvalte nebo zamítněte ho. Adresy si MyChata nesdílí.",
+                "Open the stay with the button below to approve or decline it. MyChata doesn't share addresses.",
+              ]
+            : [
+                "Odpovězte osobně; adresy si MyChata nesdílí.",
+                "Reply in person; MyChata doesn't share addresses.",
+              ],
         ],
-        button: ["Otevřít MyChata", "Open MyChata"],
-        url: link("/upozorneni"),
+        button: s(p.booking_id)
+          ? ["Zobrazit pobyt", "View the stay"]
+          : ["Otevřít MyChata", "Open MyChata"],
+        url: s(p.booking_id) ? link(`/rezervace/${seg(p.booking_id)}`) : link("/upozorneni"),
       };
     case "debt_reminder":
       return {

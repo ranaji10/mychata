@@ -465,6 +465,41 @@ describe("messages and reminders", () => {
     ).rejects.toThrow(/rate_limited/);
   });
 
+  it("O-26 (0046): a message about a stay carries it; a stay of another account is refused", async () => {
+    const stayA = await val<string>(
+      "insert into public.bookings (property_id, requester_name, start_date, end_date) values ($1,'Jana', current_date + 60, current_date + 62) returning id",
+      [ids.propA],
+    );
+    const stayB = await val<string>(
+      "insert into public.bookings (property_id, requester_name, start_date, end_date) values ($1,'Bob', current_date + 60, current_date + 62) returning id",
+      [ids.propB],
+    );
+    await asCommitted(db, who("aSecond"), "select public.message_admins($1, 'O pobytu', $2)", [
+      ids.acctA,
+      stayA,
+    ]);
+    const rows = await notes("message_to_admin");
+    const mine = rows.find((x) => (x.payload as { body?: string }).body === "O pobytu");
+    expect(mine!.payload).toMatchObject({
+      booking_id: stayA,
+      from_member_id: ids.aSecond,
+      from_name: "Jana",
+    });
+    await expect(
+      as(db, who("aSecond"), (q) =>
+        q("select public.message_admins($1, 'x', $2)", [ids.acctA, stayB]),
+      ),
+    ).rejects.toThrow(/not_found/);
+    // Two arguments still work (the live app until it is published) and carry no stay.
+    await asCommitted(db, who("aSecond"), "select public.message_admins($1, 'Bez pobytu')", [
+      ids.acctA,
+    ]);
+    const plain = (await notes("message_to_admin")).find(
+      (x) => (x.payload as { body?: string }).body === "Bez pobytu",
+    );
+    expect(plain!.payload).not.toHaveProperty("booking_id");
+  });
+
   it("a reminder states what is owed, once a day per pair", async () => {
     const exp = await val<string>(
       "insert into public.expenses (property_id, amount, paid_by_member_id) values ($1, 900, $2) returning id",

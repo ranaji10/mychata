@@ -347,7 +347,7 @@ function AuthPage() {
       <section className="py-6">
         <h1 className="mt-1 text-[32px] font-extrabold leading-[1.12]">
           {mode === "main"
-            ? t("Společná chata, bez zmatků.", "One shared chata, no muddle.")
+            ? t("Společná chata, bez zmatků.", "One shared cottage, no muddle.")
             : mode === "institute"
               ? t("Registrace instituce", "Sign up as an institution")
               : t("Přihlaste se ke své chatě", "Sign in to your cottage")}

@@ -168,3 +168,69 @@ describe("cottage numbers", () => {
     );
   });
 });
+
+describe("PR #99 review: shares stay where they are, members stay in their account", () => {
+  it("a payer cannot move a share onto someone else's expense", async () => {
+    await as(db, who("petr"), async (q) => {
+      const [e] = await q<{ id: string }>(
+        "insert into public.expenses (property_id, amount, category, paid_by_member_id) values ($1,100,'supplies',$2) returning id",
+        [ids.prop, ids.petr],
+      );
+      const [s] = await q<{ id: string }>(
+        "insert into public.expense_splits (expense_id, member_id, amount_owed) values ($1,$2,999) returning id",
+        [e!.id, ids.owner],
+      );
+      await expect(
+        q("update public.expense_splits set expense_id = $2 where id = $1", [s!.id, ids.janaExp]),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        q("update public.expense_splits set amount_owed = 5 where id = $1", [s!.id]),
+      ).rejects.toThrow(/permission denied/);
+      // Marking a share repaid still works for the payer.
+      await q(
+        "update public.expense_splits set paid_back = true, paid_back_confirmed_by = $2 where id = $1",
+        [s!.id, ids.petr],
+      );
+    });
+  });
+
+  it("payers and shares must belong to the cottage's own account", async () => {
+    const otherUser = "59100000-0000-4000-8000-0000000000ee";
+    await admin(
+      db,
+      "insert into auth.users (id, email, email_confirmed_at) values ($1, $2, now())",
+      [otherUser, "cizi@example.org"],
+    );
+    await asCommitted(
+      db,
+      { role: "authenticated", userId: otherUser, email: "cizi@example.org" },
+      `select public.create_account_onboarding(_type => 'FAMILY', _account_name => 'Cizi',
+         _property_name => 'Cizi chata')`,
+    );
+    const stranger = await val<string>("select id from public.members where user_id = $1", [
+      otherUser,
+    ]);
+    await as(db, who("owner"), async (q) => {
+      await expect(
+        q(
+          "insert into public.expenses (property_id, amount, category, paid_by_member_id) values ($1,100,'supplies',$2)",
+          [ids.prop, stranger],
+        ),
+      ).rejects.toThrow(/row-level security/);
+      const [e] = await q<{ id: string }>(
+        "insert into public.expenses (property_id, amount, category, paid_by_member_id) values ($1,100,'supplies',$2) returning id",
+        [ids.prop, ids.owner],
+      );
+      await expect(
+        q(
+          "insert into public.expense_splits (expense_id, member_id, amount_owed) values ($1,$2,50)",
+          [e!.id, stranger],
+        ),
+      ).rejects.toThrow(/row-level security/);
+    });
+  });
+
+  it("large cottages keep their room count", async () => {
+    await admin(db, "update public.properties set rooms = 250 where id = $1", [ids.prop]);
+  });
+});

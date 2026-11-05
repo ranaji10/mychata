@@ -648,7 +648,8 @@ function OnboardingPage() {
                     <CottageFieldHint field="rooms" />
                     <input
                       className="field w-full"
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={1}
                       max={200}
                       step={1}
@@ -698,7 +699,8 @@ function OnboardingPage() {
               <span className="label-text">{t("Počet lidí", "Number of people")}</span>
               <input
                 className="field w-full"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 min={1}
                 max={500}
                 step={1}
@@ -778,7 +780,8 @@ function OnboardingPage() {
                     </span>
                     <input
                       className="field w-full"
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={1}
                       max={500}
                       step={1}

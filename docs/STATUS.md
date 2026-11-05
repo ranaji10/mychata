@@ -23,7 +23,7 @@ Brief: `docs/tasks/T-059-validation-and-payer.md`. From the live test of 5 Nov w
 - New booking: an arrival in the past typed into the date field is refused ("Arrival can't be in the past"); the day picker already greyed past days.
 - Members: addresses that already belong to a member (the admin's own included) are left out with a note, not invited. The "Email" invitation text is in the sender's app language only (Members and the Home invite offer).
 - Seasonal checklist: one warning when adding a checklist again, not two.
-- Migration 0042 (O-21): an expense is "paid by" the caller unless an admin enters it, also on edit; a share can be added only by the expense's payer or an admin. `properties.rooms` 1–200 and `overlap_max_guests` 1–500 are checked in the database (bad stored values become empty first). Tests: `supabase/tests/t059.test.ts`, `src/lib/t059.test.ts`.
+- Migration 0042 (O-21): an expense is "paid by" the caller unless an admin enters it, also on edit; a share can be added only by the expense's payer or an admin. payer and share members must belong to the cottage's account; a share can't be moved or re-priced after it exists (only `paid_back` / `paid_back_confirmed_by` are updatable). `properties.rooms` and `overlap_max_guests` must be at least 1 in the database (stored values below 1 become empty first; the 200 / 500 limits stay in the app). Count fields are text with a numeric keyboard, so anything typed is checked. Tests: `supabase/tests/t059.test.ts`, `src/lib/t059.test.ts`.
 
 ## Requested UI actions (3 Nov 2026, preview only)
 

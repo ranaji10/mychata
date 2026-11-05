@@ -40,6 +40,7 @@ import {
   type InvitationBatch,
   type InvitationRow,
 } from "@/lib/invites";
+import { cz } from "@/lib/cottage-details";
 
 export const Route = createFileRoute("/clenove")({
   staticData: { sitemap: false },
@@ -599,10 +600,15 @@ function MembersPage() {
           )}
           {alreadyMembers.length > 0 && (
             <p className="text-[16px] font-semibold text-warn-foreground">
-              {t(
-                `Už jsou členy, pozvánku nedostanou: ${alreadyMembers.join(", ")}`,
-                `Already members, so not invited: ${alreadyMembers.join(", ")}`,
-              )}
+              {alreadyMembers.length === 1
+                ? t(
+                    `Tato adresa už patří členovi, pozvánku nedostane: ${alreadyMembers[0]}`,
+                    `Already a member, not invited: ${alreadyMembers[0]}`,
+                  )
+                : t(
+                    `Tyto adresy už patří členům, pozvánku nedostanou: ${alreadyMembers.join(", ")}`,
+                    `Already members, not invited: ${alreadyMembers.join(", ")}`,
+                  )}
             </p>
           )}
           <div className="grid grid-cols-2 gap-2">
@@ -630,10 +636,10 @@ function MembersPage() {
             disabled={toInvite.length === 0 || parsed.invalid.length > 0 || invite.isPending}
             onClick={() => invite.mutate()}
           >
-            {parsed.valid.length > 1
+            {toInvite.length > 1
               ? t(
-                  `Vytvořit ${parsed.valid.length} pozvánky`,
-                  `Create ${parsed.valid.length} invitations`,
+                  `Vytvořit ${cz(toInvite.length, "pozvánku", "pozvánky", "pozvánek")}`,
+                  `Create ${toInvite.length} invitations`,
                 )
               : t("Vytvořit pozvánku", "Create invitation")}
           </Button>

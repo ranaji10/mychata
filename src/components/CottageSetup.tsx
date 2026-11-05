@@ -94,9 +94,15 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
     photo: t("hlavní fotka", "main photo"),
   };
   const roomsNumber = rooms ? Number(rooms) : (property.rooms ?? 0);
+  // The overlap question shows only when it was left open, or when the rooms just typed are
+  // more than 3. Its answer counts (and is sent) only while it is on screen (PR #99 review).
+  const overlapShown =
+    missing.includes("overlap") || (missing.includes("rooms") && roomsNumber > 3);
   // T-059: whole numbers only; a bad one is shown under its field and blocks Save.
   const badNumbers =
-    !countOk(rooms, 200) || !countOk(capacity, 500) || (!!overlapAllowed && !countOk(overlap, 500));
+    !countOk(rooms, 200) ||
+    !countOk(capacity, 500) ||
+    (overlapShown && !!overlapAllowed && !countOk(overlap, 500));
 
   const save = useMutation({
     mutationFn: async () => {
@@ -109,7 +115,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
         ...(seasons.length ? { _seasons: seasons } : {}),
       });
       if (error) throw error;
-      if (overlapAllowed !== null) {
+      if (overlapShown && overlapAllowed !== null) {
         const { error: overlapError } = await supabase.rpc("set_property_overlap", {
           _property_id: property.id,
           _allowed: overlapAllowed,
@@ -191,7 +197,8 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               <span className="label-text">{t("Počet pokojů", "Number of rooms")}</span>
               <input
                 className="field w-full"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 min={1}
                 max={200}
                 step={1}
@@ -214,7 +221,8 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               </span>
               <input
                 className="field w-full"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 min={1}
                 max={500}
                 step={1}
@@ -258,7 +266,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               </div>
             </div>
           )}
-          {(missing.includes("overlap") || (missing.includes("rooms") && roomsNumber > 3)) && (
+          {overlapShown && (
             <div className="space-y-2">
               <p className="text-[16px] font-bold">
                 {t("Mohou se pobyty překrývat?", "May stays overlap?")}
@@ -295,7 +303,8 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                   </span>
                   <input
                     className="field w-full"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     min={1}
                     max={500}
                     step={1}

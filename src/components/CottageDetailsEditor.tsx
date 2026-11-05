@@ -82,7 +82,7 @@ export function CottageDetailsEditor({
       <span className="label-text">{label}</span>
       <input
         className="field w-full bg-card"
-        type="number"
+        type="text"
         inputMode="numeric"
         min={1}
         max={max}

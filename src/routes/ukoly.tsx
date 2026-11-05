@@ -12,6 +12,7 @@ import { EmptyState, LoadingCards, PageHeader } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
+import { cz } from "@/lib/cottage-details";
 import { seasonalTemplates, todayISO, type Task } from "@/lib/data";
 import { translateTaskText } from "@/lib/task-translation.functions";
 
@@ -469,7 +470,7 @@ function TasksPage() {
                   {alreadyOpen(tpl.id) > 0 && (
                     <p className="text-[16px] font-semibold text-warn-foreground">
                       {t(
-                        `Z tohoto seznamu už máte ${alreadyOpen(tpl.id)} nesplněných úkolů. Přidat znovu?`,
+                        `Z tohoto seznamu už máte ${cz(alreadyOpen(tpl.id), "nesplněný úkol", "nesplněné úkoly", "nesplněných úkolů")}. Přidat znovu?`,
                         `You already have ${alreadyOpen(tpl.id)} open tasks from this checklist. Add again?`,
                       )}
                     </p>

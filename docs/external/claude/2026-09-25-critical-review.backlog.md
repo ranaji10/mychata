@@ -41,6 +41,7 @@ Open work that is not next yet. When a row becomes next, it moves to Now as an N
 | O-22 | Every tap on Settings → "Guest booking link" makes another valid link (5 Nov test: two taps, two links). Reuse the newest open link, and list or revoke old ones | Claude | Site check 2026-11-05 | To do |
 | O-23 | An admin tapping Settings → "Public calendar link" publishes the calendar at once, with no question. On a Mac the link then opens the system share sheet, so nothing shows in the page. Ask once before publishing? (your call) | You, Claude | Site check 2026-11-05 | To do |
 | O-24 | A stay may leave on its arrival day (0 nights), and the message says "Departure must be after arrival". Allow day visits on purpose, or block them? (your call) | You | Site check 2026-11-05 | To do |
+| O-25 | Since T-059 nobody, admins included, can add a stay in the past from the app (the database would still take one). Should admins be able to record a stay that already happened, e.g. for expenses? (your call) | You | PR #99 review, 2026-11-05 | To do |
 
 ## Standing routines
 

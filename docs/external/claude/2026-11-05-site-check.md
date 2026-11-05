@@ -36,6 +36,8 @@ The maintainer confirmed the sign-up confirmation e-mail arrived in English (N-2
 
 Fixed in T-059 (PR from `agent/claude/T-059-validation-and-payer`), with migration 0042 for O-21 (expense payer rule) and database checks for rooms and guests at once.
 
+Review of the fix: `2026-11-05-pr99-review.md` (all findings fixed but one product question, O-25).
+
 Not fixed, for the tracker: every tap on "Guest booking link" makes another valid link; tapping "Public calendar link" as an admin publishes the calendar without asking; a booking may end on its arrival day (0 nights).
 
 ## Test data left

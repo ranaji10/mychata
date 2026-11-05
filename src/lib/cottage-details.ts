@@ -30,7 +30,7 @@ export function missingCottageDetails(
 
 /** One line for the card: "6 people · 3 rooms · 5 beds · arrival from 15:00 · …". */
 /** Czech noun form for a count: 1 pokoj, 2–4 pokoje, 5+ pokojů. */
-const cz = (n: number, one: string, few: string, many: string) =>
+export const cz = (n: number, one: string, few: string, many: string) =>
   `${n} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`;
 /** English: 1 room, 2 rooms. */
 const en = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -52,9 +52,10 @@ export function cottageFactsLine(p: Property, t: (cs: string, en: string) => str
 }
 
 /**
- * A count typed into a number field (rooms, people, beds, guests): empty is fine (left out),
+ * A count typed into a count field (rooms, people, beds, guests): empty is fine (left out),
  * anything else must be a whole number from 1 to `max` (T-059: "-3 rooms" and "2.5 guests" got
- * through onboarding on 5 Nov 2026). A browser number field gives "" for text it can't read.
+ * through onboarding on 5 Nov 2026). The fields are text with a numeric keyboard, not
+ * type="number", which hands "" to the app for text it can't read ("2,5" in some browsers).
  */
 export function countOk(value: string, max: number): boolean {
   const v = value.trim();

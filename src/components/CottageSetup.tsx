@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import type { Property } from "@/lib/data";
-import { missingCottageDetails, type Missing } from "@/lib/cottage-details";
+import { countHint, countOk, missingCottageDetails, type Missing } from "@/lib/cottage-details";
 import { useLang } from "@/lib/i18n";
 import { CottageFieldHint } from "@/components/CottageFieldHint";
 import { friendlyError } from "@/lib/rpc-errors";
@@ -94,6 +94,15 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
     photo: t("hlavní fotka", "main photo"),
   };
   const roomsNumber = rooms ? Number(rooms) : (property.rooms ?? 0);
+  // The overlap question shows only when it was left open, or when the rooms just typed are
+  // more than 3. Its answer counts (and is sent) only while it is on screen (PR #99 review).
+  const overlapShown =
+    missing.includes("overlap") || (missing.includes("rooms") && roomsNumber > 3);
+  // T-059: whole numbers only; a bad one is shown under its field and blocks Save.
+  const badNumbers =
+    !countOk(rooms, 200) ||
+    !countOk(capacity, 500) ||
+    (overlapShown && !!overlapAllowed && !countOk(overlap, 500));
 
   const save = useMutation({
     mutationFn: async () => {
@@ -106,7 +115,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
         ...(seasons.length ? { _seasons: seasons } : {}),
       });
       if (error) throw error;
-      if (overlapAllowed !== null) {
+      if (overlapShown && overlapAllowed !== null) {
         const { error: overlapError } = await supabase.rpc("set_property_overlap", {
           _property_id: property.id,
           _allowed: overlapAllowed,
@@ -188,11 +197,20 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               <span className="label-text">{t("Počet pokojů", "Number of rooms")}</span>
               <input
                 className="field w-full"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 min={1}
+                max={200}
+                step={1}
+                aria-invalid={!countOk(rooms, 200)}
                 value={rooms}
                 onChange={(e) => setRooms(e.target.value)}
               />
+              {!countOk(rooms, 200) && (
+                <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                  {countHint(200, t)}
+                </span>
+              )}
               <CottageFieldHint field="rooms" />
             </label>
           )}
@@ -203,12 +221,20 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               </span>
               <input
                 className="field w-full"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 min={1}
                 max={500}
+                step={1}
+                aria-invalid={!countOk(capacity, 500)}
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
               />
+              {!countOk(capacity, 500) && (
+                <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                  {countHint(500, t)}
+                </span>
+              )}
               <CottageFieldHint field="capacity" />
             </label>
           )}
@@ -240,7 +266,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               </div>
             </div>
           )}
-          {(missing.includes("overlap") || (missing.includes("rooms") && roomsNumber > 3)) && (
+          {overlapShown && (
             <div className="space-y-2">
               <p className="text-[16px] font-bold">
                 {t("Mohou se pobyty překrývat?", "May stays overlap?")}
@@ -277,11 +303,20 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                   </span>
                   <input
                     className="field w-full"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     min={1}
+                    max={500}
+                    step={1}
+                    aria-invalid={!countOk(overlap, 500)}
                     value={overlap}
                     onChange={(e) => setOverlap(e.target.value)}
                   />
+                  {!countOk(overlap, 500) && (
+                    <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                      {countHint(500, t)}
+                    </span>
+                  )}
                 </label>
               )}
             </div>
@@ -291,7 +326,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               variant="fresh"
               size="fresh"
               className="btn-primary flex-1"
-              disabled={save.isPending}
+              disabled={save.isPending || badNumbers}
               onClick={() => save.mutate()}
             >
               {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}

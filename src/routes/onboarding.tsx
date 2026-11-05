@@ -21,6 +21,8 @@ import { AutoApproveChoice } from "@/components/AutoApproveChoice";
 import { CottageFieldHint } from "@/components/CottageFieldHint";
 import { HouseRulesEditor } from "@/components/HouseRulesEditor";
 import { bilingualRules } from "@/lib/cottage-content";
+import { countHint, countOk } from "@/lib/cottage-details";
+import { friendlyError, rpcErrorCode } from "@/lib/rpc-errors";
 
 export const Route = createFileRoute("/onboarding")({
   staticData: { sitemap: false },
@@ -344,9 +346,14 @@ function OnboardingPage() {
                 "Nemáte oprávnění správce pro tento účet.",
                 "You don't have admin rights for this account.",
               )
-            : t("Něco se nepodařilo. Zkuste to znovu.", "Something went wrong. Please try again."),
+            : rpcErrorCode(message)
+              ? friendlyError(message, t)
+              : t(
+                  "Něco se nepodařilo. Zkuste to znovu.",
+                  "Something went wrong. Please try again.",
+                ),
       );
-      console.error(e);
+      console.error("[onboarding] finish", code, message);
     } finally {
       setBusy(false);
     }
@@ -358,11 +365,14 @@ function OnboardingPage() {
         !institutionBlocked &&
         (addToCurrentAccount || accountName.trim().length > 1)
       : step === 1
-        ? chatas.every((c) => c.name.trim().length > 1) && !familyNameClash
-        : step === 3
-          ? (chatas.every((c) => !c.rooms || Number(c.rooms) <= 3) || overlapAllowed !== null) &&
-            (type !== "INSTITUTIONAL" || addToCurrentAccount || autoApprove !== null)
-          : true;
+        ? chatas.every((c) => c.name.trim().length > 1 && countOk(c.rooms, 200)) && !familyNameClash
+        : step === 2
+          ? countOk(peopleCount, 500)
+          : step === 3
+            ? (chatas.every((c) => !c.rooms || Number(c.rooms) <= 3) || overlapAllowed !== null) &&
+              (!overlapAllowed || countOk(overlapMaxGuests, 500)) &&
+              (type !== "INSTITUTIONAL" || addToCurrentAccount || autoApprove !== null)
+            : true;
 
   if (alreadySetUp && !done && !busy && !finished) {
     return (
@@ -620,7 +630,7 @@ function OnboardingPage() {
                     }
                   />
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 items-end gap-2">
                   <label className="block">
                     <span className="label-text">{t("Město", "City")}</span>
                     <input
@@ -638,8 +648,12 @@ function OnboardingPage() {
                     <CottageFieldHint field="rooms" />
                     <input
                       className="field w-full"
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={1}
+                      max={200}
+                      step={1}
+                      aria-invalid={!countOk(c.rooms, 200)}
                       value={c.rooms}
                       onChange={(e) =>
                         setChatas(
@@ -649,6 +663,12 @@ function OnboardingPage() {
                     />
                   </label>
                 </div>
+                {!countOk(c.rooms, 200) && (
+                  <p className="text-[16px] font-semibold text-warn-foreground">
+                    {t("Pokoje: ", "Rooms: ")}
+                    {countHint(200, t)}
+                  </p>
+                )}
               </div>
             ))}
             {familyNameClash && (
@@ -679,13 +699,20 @@ function OnboardingPage() {
               <span className="label-text">{t("Počet lidí", "Number of people")}</span>
               <input
                 className="field w-full"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 min={1}
+                max={500}
+                step={1}
+                aria-invalid={!countOk(peopleCount, 500)}
                 placeholder={t("Např. 8", "E.g. 8")}
                 value={peopleCount}
                 onChange={(e) => setPeopleCount(e.target.value)}
               />
             </label>
+            {!countOk(peopleCount, 500) && (
+              <p className="text-[16px] font-semibold text-warn-foreground">{countHint(500, t)}</p>
+            )}
             <p className="font-bold">{t("Máte rušná období?", "Any busy seasons?")}</p>
             <CottageFieldHint field="seasons" />
             <div className="flex flex-wrap gap-2">
@@ -753,11 +780,20 @@ function OnboardingPage() {
                     </span>
                     <input
                       className="field w-full"
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={1}
+                      max={500}
+                      step={1}
+                      aria-invalid={!countOk(overlapMaxGuests, 500)}
                       value={overlapMaxGuests}
                       onChange={(e) => setOverlapMaxGuests(e.target.value)}
                     />
+                    {!countOk(overlapMaxGuests, 500) && (
+                      <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                        {countHint(500, t)}
+                      </span>
+                    )}
                   </label>
                 )}
               </>

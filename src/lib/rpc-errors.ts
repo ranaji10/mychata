@@ -32,6 +32,18 @@ const KNOWN: Record<string, [string, string]> = {
     "Capacity must be a number from 1 to 500.",
   ],
   bad_beds: ["Počet lůžek musí být od 1 do 500.", "Beds must be from 1 to 500."],
+  // T-059: update_property_details() codes and the 0042 column checks.
+  bad_rooms: ["Počet pokojů musí být od 1 do 200.", "Rooms must be from 1 to 200."],
+  properties_rooms_check: ["Počet pokojů musí být od 1 do 200.", "Rooms must be from 1 to 200."],
+  bad_overlap: ["Počet hostů naráz musí být od 1 do 500.", "Guests at once must be from 1 to 500."],
+  properties_overlap_max_guests_check: [
+    "Počet hostů naráz musí být od 1 do 500.",
+    "Guests at once must be from 1 to 500.",
+  ],
+  "invalid input syntax for type integer": [
+    "Zadejte celé číslo, bez desetinné čárky.",
+    "Enter a whole number, without decimals.",
+  ],
   bad_time: ["Čas napište jako 15:00.", "Write the time like 15:00."],
   claim_not_found: ["Tato platba už není k vyřízení.", "This payment is no longer waiting."],
   already_decided: ["Už je rozhodnuto.", "This has already been decided."],

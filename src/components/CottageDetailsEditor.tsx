@@ -10,8 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Property } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { friendlyError } from "@/lib/rpc-errors";
+import { countHint, countOk } from "@/lib/cottage-details";
 
-// Whole numbers only; anything else is left out (the field keeps its value).
+// Whole numbers only. An empty field keeps the saved value; anything else that isn't a whole
+// number from 1 is shown under its field and blocks Save (T-059: "0 rooms" used to be dropped
+// while the app said "saved").
 const num = (v: string) => {
   const n = Number(v.trim());
   return v.trim() && Number.isInteger(n) && n >= 1 ? n : undefined;
@@ -37,6 +40,7 @@ export function CottageDetailsEditor({
   const [pets, setPets] = useState<boolean | null>(property.pets_allowed ?? null);
 
   const badTime = [checkIn, checkOut].some((v) => v.trim() && !TIME.test(v.trim()));
+  const badNumber = !countOk(rooms, 200) || !countOk(capacity, 500) || !countOk(beds, 500);
   const save = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc("update_property_details", {
@@ -72,18 +76,26 @@ export function CottageDetailsEditor({
     value: string,
     set: (v: string) => void,
     hint?: "rooms" | "capacity",
+    max = 500,
   ) => (
     <label className="block">
       <span className="label-text">{label}</span>
       <input
         className="field w-full bg-card"
-        type="number"
+        type="text"
         inputMode="numeric"
         min={1}
-        max={500}
+        max={max}
+        step={1}
+        aria-invalid={!countOk(value, max)}
         value={value}
         onChange={(e) => set(e.target.value)}
       />
+      {!countOk(value, max) && (
+        <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+          {countHint(max, t)}
+        </span>
+      )}
       {hint && <CottageFieldHint field={hint} />}
     </label>
   );
@@ -113,7 +125,7 @@ export function CottageDetailsEditor({
         setCapacity,
         "capacity",
       )}
-      {numberField(t("Počet pokojů", "Number of rooms"), rooms, setRooms, "rooms")}
+      {numberField(t("Počet pokojů", "Number of rooms"), rooms, setRooms, "rooms", 200)}
       {numberField(t("Počet lůžek", "Number of beds"), beds, setBeds)}
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
@@ -171,7 +183,7 @@ export function CottageDetailsEditor({
           variant="fresh"
           size="fresh"
           className="btn-primary flex-1"
-          disabled={save.isPending || badTime}
+          disabled={save.isPending || badTime || badNumber}
           onClick={() => save.mutate()}
         >
           {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}

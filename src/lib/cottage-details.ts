@@ -30,7 +30,7 @@ export function missingCottageDetails(
 
 /** One line for the card: "6 people · 3 rooms · 5 beds · arrival from 15:00 · …". */
 /** Czech noun form for a count: 1 pokoj, 2–4 pokoje, 5+ pokojů. */
-const cz = (n: number, one: string, few: string, many: string) =>
+export const cz = (n: number, one: string, few: string, many: string) =>
   `${n} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`;
 /** English: 1 room, 2 rooms. */
 const en = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -49,4 +49,22 @@ export function cottageFactsLine(p: Property, t: (cs: string, en: string) => str
   if (p.pets_allowed === true) parts.push(t("zvířata ano", "pets welcome"));
   if (p.pets_allowed === false) parts.push(t("bez zvířat", "no pets"));
   return parts.join(" · ");
+}
+
+/**
+ * A count typed into a count field (rooms, people, beds, guests): empty is fine (left out),
+ * anything else must be a whole number from 1 to `max` (T-059: "-3 rooms" and "2.5 guests" got
+ * through onboarding on 5 Nov 2026). The fields are text with a numeric keyboard, not
+ * type="number", which hands "" to the app for text it can't read ("2,5" in some browsers).
+ */
+export function countOk(value: string, max: number): boolean {
+  const v = value.trim();
+  if (!v) return true;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 1 && n <= max;
+}
+
+/** The message under a count field that fails countOk(). */
+export function countHint(max: number, t: (cs: string, en: string) => string): string {
+  return t(`Zadejte celé číslo od 1 do ${max}.`, `Enter a whole number from 1 to ${max}.`);
 }

@@ -100,7 +100,10 @@ function NewBooking() {
     peakGuests > 0 &&
     (property?.overlap_allowed === false ||
       (property?.overlap_max_guests != null && peakGuests + guests > property.overlap_max_guests));
-  const invalid = end < start;
+  // T-059: the day picker greys out past days, but a date typed into the field got through
+  // ("Booking confirmed" for last month, live test 5 Nov 2026).
+  const inPast = !!start && start < todayISO();
+  const invalid = end < start || inPast;
   // Same rule as booking_defaults (migration 0032): an organisation that hasn't said Yes to
   // auto booking approval, or a family cottage without auto-confirm, holds every member booking.
   const alwaysHeld =
@@ -271,7 +274,9 @@ function NewBooking() {
 
         {invalid && (
           <p className="rounded-2xl bg-destructive-soft p-3 text-[16px] font-semibold text-destructive">
-            {t("Odjezd musí být po příjezdu.", "Departure must be after arrival.")}
+            {inPast
+              ? t("Příjezd nemůže být v minulosti.", "Arrival can't be in the past.")
+              : t("Odjezd musí být po příjezdu.", "Departure must be after arrival.")}
           </p>
         )}
 

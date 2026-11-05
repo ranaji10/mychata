@@ -22,7 +22,27 @@ export function inviteLink(origin: string, token: string): string {
   return `${origin}/pozvanka/${token}`;
 }
 
-/** A mailto: link with a ready Czech + English message; opens the admin's mail app. */
+/**
+ * Emails from the paste that already belong to a member of the account (T-059: an admin could
+ * invite their own address). Compared case-insensitively; members without an email never match.
+ */
+export function splitExistingMembers(
+  emails: string[],
+  members: { email?: string | null }[],
+): { fresh: string[]; existing: string[] } {
+  const known = new Set(
+    members.map((m) => (m.email ?? "").trim().toLowerCase()).filter((e) => e.includes("@")),
+  );
+  const fresh: string[] = [];
+  const existing: string[] = [];
+  for (const e of emails) (known.has(e.trim().toLowerCase()) ? existing : fresh).push(e);
+  return { fresh, existing };
+}
+
+/**
+ * A mailto: link with a ready message in the admin's app language (T-059: every email follows
+ * the selected language, not Czech followed by English); opens the admin's mail app.
+ */
 export function inviteMailto(opts: {
   /** One address, or several (a batch with one shared link). */
   to: string | string[];
@@ -30,21 +50,24 @@ export function inviteMailto(opts: {
   chata: string;
   inviter?: string | null | undefined;
   admin: boolean;
+  /** The app language of the person sending it; Czech when not given. */
+  lang?: "cs" | "en";
 }): string {
-  const who = opts.inviter ? `${opts.inviter} vás zve` : "Zveme vás";
-  const whoEn = opts.inviter ? `${opts.inviter} invites you` : "You're invited";
-  const roleCs = opts.admin ? " jako správce" : "";
-  const roleEn = opts.admin ? " as an admin" : "";
-  const subject = `Pozvánka do chaty ${opts.chata} / Invitation to ${opts.chata}`;
-  const body = [
-    `${who}${roleCs} do chaty ${opts.chata} v aplikaci MyChata.`,
-    `Pozvánku přijmete zde (platí 7 dní):`,
-    opts.link,
-    "",
-    `${whoEn}${roleEn} to ${opts.chata} on MyChata.`,
-    `Accept here (valid for 7 days):`,
-    opts.link,
-  ].join("\n");
+  const en = opts.lang === "en";
+  const subject = en ? `Invitation to ${opts.chata}` : `Pozvánka do chaty ${opts.chata}`;
+  const body = (
+    en
+      ? [
+          `${opts.inviter ? `${opts.inviter} invites you` : "You're invited"}${opts.admin ? " as an admin" : ""} to ${opts.chata} on MyChata.`,
+          `Accept here (valid for 7 days):`,
+          opts.link,
+        ]
+      : [
+          `${opts.inviter ? `${opts.inviter} vás zve` : "Zveme vás"}${opts.admin ? " jako správce" : ""} do chaty ${opts.chata} v aplikaci MyChata.`,
+          `Pozvánku přijmete zde (platí 7 dní):`,
+          opts.link,
+        ]
+  ).join("\n");
   const q = `subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   const list = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean);
   // Several people: Bcc, so no one sees the others' addresses (personal data).

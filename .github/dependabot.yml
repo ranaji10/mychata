@@ -1,9 +1,51 @@
 version: 2
+# Dependabot opens its own pull requests; a maintainer merges one when CI ("check") is green.
+# Lovable syncs main through lovable-sync, and the next Lovable publish puts the update live.
+#
+# npm packages (T-063, 6 Nov 2026). Possible since bun.lock uses the default registry instead
+# of Lovable's private package cache (the cause of the failed npm runs on 2 and 9 Oct). If Lovable
+# writes its cache URLs into bun.lock again, CI still installs (it rewrites them) and Dependabot
+# only rewrites the lines it changes; see docs/runbooks/dependency-updates.md.
 updates:
-  # No npm block for now: bun.lock points at Lovable's private package registry, which
-  # Dependabot can't reach, so its weekly updates failed (2 Oct, 9 Oct). Bring the npm
-  # block back (weekly, minor and patch grouped) with own hosting, T-002, once the
-  # lockfile uses the public registry.
+  - package-ecosystem: bun
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Prague
+    # Same idea as minimumReleaseAge in bunfig.toml: skip versions younger than a few days,
+    # so a hijacked release is usually pulled before it reaches us.
+    cooldown:
+      default-days: 3
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    labels: ["dependencies"]
+    groups:
+      # One weekly pull request for all minor and patch updates instead of dozens.
+      minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+      # Security fixes come as soon as GitHub knows of them, grouped the same way.
+      security:
+        applies-to: security-updates
+        update-types: ["minor", "patch"]
+    ignore:
+      # Major versions change APIs; they are planned as a task, not merged on a green tick.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Lovable's platform packages and the framework set it upgrades together (TanStack Start,
+      # Router, Vite, Nitro): Lovable updates them as one, in its own pull request (e.g. PR #68).
+      - dependency-name: "@lovable.dev/*"
+      - dependency-name: "@tanstack/react-start"
+      - dependency-name: "@tanstack/react-router"
+      - dependency-name: "@tanstack/router-plugin"
+      - dependency-name: "vite"
+      - dependency-name: "nitro"
+
   - package-ecosystem: github-actions
     directory: "/"
     schedule: { interval: monthly }
+    commit-message:
+      prefix: "ci"

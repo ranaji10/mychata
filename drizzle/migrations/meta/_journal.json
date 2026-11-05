@@ -316,6 +316,13 @@
       "when": 1793918888911,
       "tag": "0044_public_calendar_day_visits",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793920670337,
+      "tag": "0045_0045_apply_journaled_0044",
+      "breakpoints": true
     }
   ]
 }

@@ -531,7 +531,8 @@ function TasksPage() {
                       ))}
                     </ul>
                   )}
-                  {duplicateOf === tpl.id && (
+                  {/* T-059: one warning is enough; the open-tasks line above already asks. */}
+                  {duplicateOf === tpl.id && alreadyOpen(tpl.id) === 0 && (
                     <p className="rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
                       {t(
                         "Tento seznam už letos máte. Opravdu ho přidat znovu?",

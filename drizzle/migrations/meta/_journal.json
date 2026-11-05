@@ -295,6 +295,13 @@
       "when": 1793717519025,
       "tag": "0041_0041_apply_journaled_0040",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793895130005,
+      "tag": "0042_expense_payer_and_cottage_numbers",
+      "breakpoints": true
     }
   ]
 }

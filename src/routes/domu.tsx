@@ -171,6 +171,7 @@ function HomePage() {
         chata: property?.name ?? "",
         inviter: currentMember?.name ?? null,
         admin: false,
+        lang,
       });
       toast.success(
         t(

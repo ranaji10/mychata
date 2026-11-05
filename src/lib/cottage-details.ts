@@ -50,3 +50,20 @@ export function cottageFactsLine(p: Property, t: (cs: string, en: string) => str
   if (p.pets_allowed === false) parts.push(t("bez zvířat", "no pets"));
   return parts.join(" · ");
 }
+
+/**
+ * A count typed into a number field (rooms, people, beds, guests): empty is fine (left out),
+ * anything else must be a whole number from 1 to `max` (T-059: "-3 rooms" and "2.5 guests" got
+ * through onboarding on 5 Nov 2026). A browser number field gives "" for text it can't read.
+ */
+export function countOk(value: string, max: number): boolean {
+  const v = value.trim();
+  if (!v) return true;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 1 && n <= max;
+}
+
+/** The message under a count field that fails countOk(). */
+export function countHint(max: number, t: (cs: string, en: string) => string): string {
+  return t(`Zadejte celé číslo od 1 do ${max}.`, `Enter a whole number from 1 to ${max}.`);
+}

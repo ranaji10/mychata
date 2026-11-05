@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import type { Property } from "@/lib/data";
-import { missingCottageDetails, type Missing } from "@/lib/cottage-details";
+import { countHint, countOk, missingCottageDetails, type Missing } from "@/lib/cottage-details";
 import { useLang } from "@/lib/i18n";
 import { CottageFieldHint } from "@/components/CottageFieldHint";
 import { friendlyError } from "@/lib/rpc-errors";
@@ -94,6 +94,9 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
     photo: t("hlavní fotka", "main photo"),
   };
   const roomsNumber = rooms ? Number(rooms) : (property.rooms ?? 0);
+  // T-059: whole numbers only; a bad one is shown under its field and blocks Save.
+  const badNumbers =
+    !countOk(rooms, 200) || !countOk(capacity, 500) || (!!overlapAllowed && !countOk(overlap, 500));
 
   const save = useMutation({
     mutationFn: async () => {
@@ -190,9 +193,17 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                 className="field w-full"
                 type="number"
                 min={1}
+                max={200}
+                step={1}
+                aria-invalid={!countOk(rooms, 200)}
                 value={rooms}
                 onChange={(e) => setRooms(e.target.value)}
               />
+              {!countOk(rooms, 200) && (
+                <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                  {countHint(200, t)}
+                </span>
+              )}
               <CottageFieldHint field="rooms" />
             </label>
           )}
@@ -206,9 +217,16 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                 type="number"
                 min={1}
                 max={500}
+                step={1}
+                aria-invalid={!countOk(capacity, 500)}
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
               />
+              {!countOk(capacity, 500) && (
+                <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                  {countHint(500, t)}
+                </span>
+              )}
               <CottageFieldHint field="capacity" />
             </label>
           )}
@@ -279,9 +297,17 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
                     className="field w-full"
                     type="number"
                     min={1}
+                    max={500}
+                    step={1}
+                    aria-invalid={!countOk(overlap, 500)}
                     value={overlap}
                     onChange={(e) => setOverlap(e.target.value)}
                   />
+                  {!countOk(overlap, 500) && (
+                    <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                      {countHint(500, t)}
+                    </span>
+                  )}
                 </label>
               )}
             </div>
@@ -291,7 +317,7 @@ function CottageForm({ property, missing }: { property: Property; missing: Missi
               variant="fresh"
               size="fresh"
               className="btn-primary flex-1"
-              disabled={save.isPending}
+              disabled={save.isPending || badNumbers}
               onClick={() => save.mutate()}
             >
               {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}

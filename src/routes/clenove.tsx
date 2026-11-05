@@ -36,6 +36,7 @@ import {
   inviteLink,
   inviteMailto,
   parseEmails,
+  splitExistingMembers,
   type InvitationBatch,
   type InvitationRow,
 } from "@/lib/invites";
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/clenove")({
 type Invitation = InvitationRow;
 
 function MembersPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [manualLink, setManualLink] = useState<{ token: string; url: string } | null>(null);
   const { account, property, members, currentMember } = useAccount();
   const queryClient = useQueryClient();
@@ -69,6 +70,8 @@ function MembersPage() {
   const [cancelling, setCancelling] = useState<InvitationBatch | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const parsed = parseEmails(emails);
+  // T-059: someone who is already a member (the admin included) is not invited again.
+  const { fresh: toInvite, existing: alreadyMembers } = splitExistingMembers(parsed.valid, members);
   const isAdminRole = (role: string) =>
     role.toUpperCase() === "ADMIN" || role.toUpperCase() === "OWNER";
 
@@ -134,7 +137,7 @@ function MembersPage() {
     return { count: rows.length, groupToken };
   };
   const invite = useMutation({
-    mutationFn: () => createBatch(parsed.valid, inviteRole),
+    mutationFn: () => createBatch(toInvite, inviteRole),
     onSuccess: ({ count }) => {
       track("invitation_sent", { result: count > 1 ? "batch" : "single" });
       setEmails("");
@@ -365,6 +368,7 @@ function MembersPage() {
       chata: property?.name ?? account?.name ?? "MyChata",
       inviter: currentMember?.name,
       admin: b.admin,
+      lang,
     });
 
   const renderBatch = (b: InvitationBatch) => {
@@ -593,6 +597,14 @@ function MembersPage() {
               )}
             </p>
           )}
+          {alreadyMembers.length > 0 && (
+            <p className="text-[16px] font-semibold text-warn-foreground">
+              {t(
+                `Už jsou členy, pozvánku nedostanou: ${alreadyMembers.join(", ")}`,
+                `Already members, so not invited: ${alreadyMembers.join(", ")}`,
+              )}
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="fresh"
@@ -615,7 +627,7 @@ function MembersPage() {
             variant="fresh"
             size="fresh"
             className="btn-primary w-full"
-            disabled={parsed.valid.length === 0 || parsed.invalid.length > 0 || invite.isPending}
+            disabled={toInvite.length === 0 || parsed.invalid.length > 0 || invite.isPending}
             onClick={() => invite.mutate()}
           >
             {parsed.valid.length > 1

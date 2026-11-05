@@ -58,11 +58,14 @@ export function StatCard({
   value,
   hint,
   tone,
+  icon: Icon,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
   tone?: "danger" | "ok" | undefined;
+  /** T-062: each card its own picture; all four on an organisation's Home were calendars. */
+  icon?: LucideIcon;
 }) {
   return (
     <div className="card h-full p-4 lg:p-5">
@@ -71,7 +74,9 @@ export function StatCard({
         <span
           className={`grid size-[34px] shrink-0 place-items-center rounded-full ${typeof value === "string" && value.includes("Kč") ? "bg-warn-soft text-cat-expenses" : "bg-primary-soft text-primary"}`}
         >
-          {typeof value === "string" && value.includes("Kč") ? (
+          {Icon ? (
+            <Icon className="size-[18px]" aria-hidden="true" />
+          ) : typeof value === "string" && value.includes("Kč") ? (
             <Wallet className="size-[18px]" />
           ) : (
             <CalendarDays className="size-[18px]" />

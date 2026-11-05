@@ -22,6 +22,7 @@ import {
   fmtDate,
   isoDateOrNull,
   pickRange,
+  stayLength,
   todayISO,
   type Booking,
   type DateRange,
@@ -53,7 +54,7 @@ function NewBooking() {
   const { account, property, currentMember } = useAccount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const search = Route.useSearch();
   const initialStart = search.start && search.start >= todayISO() ? search.start : todayISO();
@@ -176,12 +177,23 @@ function NewBooking() {
       <section className="card mt-4 p-4">
         <MonthHeader {...nav} />
         <p className="mt-2 text-[16px] font-semibold text-muted-foreground">
-          {!range.end
-            ? t("Teď klepněte na den odjezdu.", "Now tap your departure day.")
-            : t(
-                "Klepněte na den příjezdu a pak na den odjezdu.",
-                "Tap your arrival day, then your departure day.",
-              )}
+          {/* T-062: with both days picked (also when they came from the Calendar tab) the line
+              says which dates are chosen, not "tap your arrival day" again; with none picked
+              it no longer asks for the departure day first. */}
+          {range.start && range.end
+            ? t(
+                `Vybráno: ${fmtDate(range.start)} – ${fmtDate(range.end)}. Jiné dny? Klepněte na nový den příjezdu.`,
+                `Chosen: ${fmtDate(range.start)} – ${fmtDate(range.end)}. Other dates? Tap a new arrival day.`,
+              )
+            : range.start
+              ? t(
+                  "Teď klepněte na den odjezdu (stejný den = jednodenní návštěva).",
+                  "Now tap your departure day (the same day = a day visit).",
+                )
+              : t(
+                  "Klepněte na den příjezdu a pak na den odjezdu.",
+                  "Tap your arrival day, then your departure day.",
+                )}
         </p>
         <div className="mt-3">
           <CalendarMonth
@@ -242,6 +254,12 @@ function NewBooking() {
           </div>
         </div>
 
+        {stayLength(start, end, lang) && (
+          <p className="-mt-1 text-[16px] font-semibold text-muted-foreground" aria-live="polite">
+            {stayLength(start, end, lang)}
+          </p>
+        )}
+
         <div>
           <span className="label-text text-[16px]">{t("Počet hostů", "Number of guests")}</span>
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-2">
@@ -295,7 +313,7 @@ function NewBooking() {
                 )
               : inPast
                 ? t("Příjezd nemůže být v minulosti.", "Arrival can't be in the past.")
-                : t("Odjezd musí být po příjezdu.", "Departure must be after arrival.")}
+                : t("Odjezd nemůže být před příjezdem.", "Departure can't be before arrival.")}
           </p>
         )}
 

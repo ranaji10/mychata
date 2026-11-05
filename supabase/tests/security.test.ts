@@ -1701,6 +1701,8 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
       expect(await ask(q, ids.tokenB, 7, 5)).toBe("dates");
       expect(await ask(q, ids.tokenB, -3, 2)).toBe("dates");
       expect(await ask(q, ids.tokenB, 5, 7, 0)).toBe("guests");
+      // T-062 (O-24): a day visit, leaving on the arrival day, is a valid request.
+      expect(await ask(q, ids.tokenB, 40, 40)).toBe("ok");
     });
     await as(db, bAdmin, async (q) => {
       expect(await ask(q, ids.tokenB)).toBe("member");

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, Inbox, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarDays, Inbox, Loader2, Wrench } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -371,7 +371,9 @@ function HomePage() {
             sizes={mainPhoto ? undefined : defaultPhoto.sizes}
             alt={mainPhoto ? (property?.name ?? t("Chata", "Cottage")) : defaultPhoto.alt}
             className="aspect-[16/10] w-full object-cover object-[50%_42%] md:aspect-[21/9]"
-            loading="lazy"
+            // T-062: the first picture on Home; "lazy" held it back ~3 s (blank box on a phone).
+            loading="eager"
+            fetchPriority="high"
             width={1200}
             height={640}
           />
@@ -487,6 +489,7 @@ function HomePage() {
             <Link to="/zadosti">
               <StatCard
                 label={t("Čekající žádosti", "Pending requests")}
+                icon={Inbox}
                 value={pendingRequests.length}
                 hint={t("ke zpracování", "to process")}
                 tone={pendingRequests.length ? "danger" : undefined}
@@ -495,6 +498,7 @@ function HomePage() {
             <Link to="/zadosti">
               <StatCard
                 label={t("Kolize", "Conflicts")}
+                icon={AlertTriangle}
                 value={conflictRequests.length}
                 hint={t("vyžadují pozornost", "need attention")}
                 tone={conflictRequests.length ? "danger" : undefined}
@@ -506,6 +510,7 @@ function HomePage() {
           <Link to="/ukoly">
             <StatCard
               label={t("Po termínu", "Overdue")}
+              icon={Wrench}
               value={overdueTasks.length}
               hint={
                 overdueTasks.length

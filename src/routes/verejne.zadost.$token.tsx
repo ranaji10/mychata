@@ -5,7 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { findConflicts, fmtDate, isCompleteDate, todayISO, type Booking } from "@/lib/data";
+import {
+  findConflicts,
+  fmtDate,
+  isCompleteDate,
+  stayLength,
+  todayISO,
+  type Booking,
+} from "@/lib/data";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { useDefaultChataPhoto } from "@/lib/season";
 
@@ -30,7 +37,7 @@ export const Route = createFileRoute("/verejne/zadost/$token")({
 
 function PublicRequest() {
   const defaultPhoto = useDefaultChataPhoto();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   useBrand("institution");
   const { token } = Route.useParams();
   const router = useRouter();
@@ -117,8 +124,8 @@ function PublicRequest() {
           ? t("Dnes už bylo odesláno příliš mnoho žádostí.", "Too many requests today.")
           : result === "dates"
             ? t(
-                "Zkontrolujte termín: odjezd musí být po příjezdu a příjezd ne v minulosti.",
-                "Check the dates: departure must be after arrival, and not in the past.",
+                "Zkontrolujte termín: odjezd nemůže být před příjezdem a příjezd nemůže být v minulosti.",
+                "Check the dates: departure can't be before arrival, and arrival can't be in the past.",
               )
             : t(
                 "Žádost se nepodařilo odeslat. Zkontrolujte údaje.",
@@ -153,7 +160,8 @@ function PublicRequest() {
           sizes={defaultPhoto.sizes}
           alt={defaultPhoto.alt}
           className="aspect-[16/9] w-full object-cover object-[50%_42%]"
-          loading="lazy"
+          loading="eager"
+          fetchPriority="high"
           width={1024}
           height={576}
         />
@@ -283,6 +291,11 @@ function PublicRequest() {
               />
             </div>
           </div>
+          {stayLength(start, end, lang) && (
+            <p className="-mt-1 text-[16px] font-semibold text-muted-foreground" aria-live="polite">
+              {stayLength(start, end, lang)}
+            </p>
+          )}
 
           <div>
             <span className="mb-1 block label-text">{t("Počet hostů", "Number of guests")}</span>
@@ -333,10 +346,7 @@ function PublicRequest() {
                   )
                 : inPast
                   ? t("Příjezd nemůže být v minulosti.", "Arrival can't be in the past.")
-                  : t(
-                      "Odjezd musí být po příjezdu.",
-                      "The departure date must be after the arrival date.",
-                    )}
+                  : t("Odjezd nemůže být před příjezdem.", "Departure can't be before arrival.")}
             </p>
           )}
           {hasConflict && !invalid && (

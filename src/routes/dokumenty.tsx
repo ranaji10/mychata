@@ -395,7 +395,35 @@ function DocumentsPage() {
       {isLoading ? (
         <LoadingCards />
       ) : !visible.length ? (
-        <EmptyState icon={FileText} title={t("Žádné dokumenty.", "No documents.")} />
+        // T-062: an empty vault said only "No documents."; the add button was an icon-only "+".
+        <EmptyState
+          icon={FileText}
+          title={t("Žádné dokumenty.", "No documents.")}
+          hint={
+            documents?.length
+              ? t("Zkuste jiný název nebo kategorii.", "Try another title or category.")
+              : t(
+                  "Uložte sem smlouvy, pojistky, záruky a revize, ať je všichni najdou.",
+                  "Keep contracts, insurance, warranties and inspections here so everyone can find them.",
+                )
+          }
+          action={
+            isAdmin && !documents?.length ? (
+              <Button
+                variant="fresh"
+                size="fresh"
+                onClick={() => {
+                  closeForm();
+                  setAdding(true);
+                }}
+                className="btn-primary w-full"
+              >
+                <Plus className="size-5" />
+                {t("Přidat první dokument", "Add the first document")}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-3">
           {visible.map((document) => {

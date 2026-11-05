@@ -710,6 +710,21 @@ export function guestCount(n: number, lang: "cs" | "en"): string {
   return `${n} ${n === 1 ? "host" : n >= 2 && n <= 4 ? "hosté" : "hostů"}`;
 }
 
+/**
+ * Length of a stay in plain words: "Day visit (no overnight)" when departure is the arrival day
+ * (allowed since T-062, O-24), else "1 night", "3 nights" / "1 noc", "3 noci", "5 nocí".
+ * Null while a date is incomplete or departure is before arrival.
+ */
+export function stayLength(start: string, end: string, lang: "cs" | "en"): string | null {
+  if (!isCompleteDate(start) || !isCompleteDate(end) || end < start) return null;
+  const n = Math.round(
+    (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000,
+  );
+  if (n === 0) return lang === "en" ? "Day visit (no overnight)" : "Jednodenní návštěva (bez noci)";
+  if (lang === "en") return `${n} ${n === 1 ? "night" : "nights"}`;
+  return `${n} ${n === 1 ? "noc" : n >= 2 && n <= 4 ? "noci" : "nocí"}`;
+}
+
 /** House manual section categories, stored as codes ("wifi", "rules"); shown as words (T-038). */
 const MANUAL_CATEGORY: Record<string, [cs: string, en: string]> = {
   arrival: ["Příjezd a klíče", "Arrival and keys"],

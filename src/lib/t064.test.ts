@@ -92,3 +92,34 @@ describe("O-29: English says cottage", () => {
     expect([...sample.matchAll(pair)][0]![3]).toBe("Add a chata");
   });
 });
+
+describe("O-27: guest requests whose dates passed (PR #108 review)", () => {
+  it("Notifications no longer asks to decide them", async () => {
+    const { buildNotifications } = await import("@/lib/notification-list");
+    const base = { today: "2026-11-06", isAdmin: true } as Parameters<typeof buildNotifications>[0];
+    const g = (id: string, end_date: string) => ({
+      id,
+      guest_name: "Host",
+      start_date: "2026-10-26",
+      end_date,
+      created_at: "2026-10-20T10:00:00Z",
+      source: "public_calendar",
+    });
+    const keys = buildNotifications({
+      ...base,
+      guestRequests: [g("old", "2026-11-01"), g("now", "2026-11-08")],
+    }).map((n) => n.key);
+    expect(keys).toContain("guest:now");
+    expect(keys).not.toContain("guest:old");
+  });
+
+  it("Home offers only Decline for them; share pages keep their colours", () => {
+    const home = readFileSync("src/routes/domu.tsx", "utf8");
+    expect(home).toContain("const undecided = g.end_date < today;");
+    expect(home).toMatch(/\{!undecided && \(\s*<Button[\s\S]*?"Confirm stay"/);
+    for (const page of ["src/routes/verejne.kalendar.$token.tsx", "src/routes/host.$token.tsx"]) {
+      expect(readFileSync(page, "utf8")).not.toContain("greyUndecided");
+    }
+    expect(readFileSync("src/routes/kalendar.tsx", "utf8")).toContain("greyUndecided");
+  });
+});

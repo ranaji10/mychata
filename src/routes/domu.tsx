@@ -7,7 +7,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { LoadingCards, PillDanger, PillOk, PillWarn, StatCard } from "@/components/bits";
+import {
+  LoadingCards,
+  PillDanger,
+  PillNeutral,
+  PillOk,
+  PillWarn,
+  StatCard,
+} from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
@@ -581,80 +588,99 @@ function HomePage() {
         <section className="card mt-4 p-4">
           <h3 className="text-lg font-bold">{t("Žádosti o pobyt", "Booking requests")}</h3>
           <div className="mt-2 space-y-2.5">
-            {guestRequests.map((g) => (
-              <div key={g.id} className="border-b border-divider py-3 last:border-0">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-[16px] font-bold">{g.guest_name}</p>
-                  <PillWarn>{t("Čeká", "Pending")}</PillWarn>
-                </div>
-                <p className="text-[16px] text-muted-foreground">
-                  {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests}{" "}
-                  {guestsLabel(g.guests)} · {g.guest_email}
-                </p>
-                {/* The requester's note (26 Oct check: admins saw it only after approving). */}
-                {g.note && <p className="mt-1 text-[16px] italic text-foreground">„{g.note}“</p>}
-                {/* When and where it came from (T-043): the public calendar needs an account. */}
-                <p className="text-[14px] text-muted-foreground">
-                  {(g as { source?: string }).source === "public_calendar"
-                    ? t("Z veřejného kalendáře", "From the public calendar")
-                    : t("Z odkazu pro hosty", "From the guest link")}{" "}
-                  · {t("požádáno", "requested")} {fmtDateTime(g.created_at)}
-                </p>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {(() => {
-                    const busy = decideGuest.isPending && decideGuest.variables?.id === g.id;
-                    const busyApprove = busy && decideGuest.variables?.approve;
-                    return (
-                      <>
-                        <Button
-                          variant="fresh"
-                          size="fresh"
-                          className="btn-secondary disabled:opacity-50"
-                          disabled={decideGuest.isPending}
-                          onClick={() => decideGuest.mutate({ id: g.id, approve: false })}
-                        >
-                          {busy && !busyApprove ? (
-                            <>
-                              <Loader2 className="size-5 animate-spin" />
-                              {t("Odmítám…", "Declining…")}
-                            </>
-                          ) : (
-                            t("Odmítnout", "Decline")
+            {guestRequests.map((g) => {
+              // O-27: dates passed with nobody deciding. No Confirm (stays in the past are not
+              // added, O-25); Decline clears it.
+              const undecided = g.end_date < today;
+              return (
+                <div key={g.id} className="border-b border-divider py-3 last:border-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-[16px] font-bold">{g.guest_name}</p>
+                    {undecided ? (
+                      <PillNeutral>{t("Nerozhodnuto", "Not decided")}</PillNeutral>
+                    ) : (
+                      <PillWarn>{t("Čeká", "Pending")}</PillWarn>
+                    )}
+                  </div>
+                  <p className="text-[16px] text-muted-foreground">
+                    {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests}{" "}
+                    {guestsLabel(g.guests)} · {g.guest_email}
+                  </p>
+                  {/* The requester's note (26 Oct check: admins saw it only after approving). */}
+                  {g.note && <p className="mt-1 text-[16px] italic text-foreground">„{g.note}“</p>}
+                  {/* When and where it came from (T-043): the public calendar needs an account. */}
+                  <p className="text-[14px] text-muted-foreground">
+                    {(g as { source?: string }).source === "public_calendar"
+                      ? t("Z veřejného kalendáře", "From the public calendar")
+                      : t("Z odkazu pro hosty", "From the guest link")}{" "}
+                    · {t("požádáno", "requested")} {fmtDateTime(g.created_at)}
+                  </p>
+                  <div className={`mt-2 grid gap-2 ${undecided ? "grid-cols-1" : "grid-cols-2"}`}>
+                    {(() => {
+                      const busy = decideGuest.isPending && decideGuest.variables?.id === g.id;
+                      const busyApprove = busy && decideGuest.variables?.approve;
+                      return (
+                        <>
+                          <Button
+                            variant="fresh"
+                            size="fresh"
+                            className="btn-secondary disabled:opacity-50"
+                            disabled={decideGuest.isPending}
+                            onClick={() => decideGuest.mutate({ id: g.id, approve: false })}
+                          >
+                            {busy && !busyApprove ? (
+                              <>
+                                <Loader2 className="size-5 animate-spin" />
+                                {t("Odmítám…", "Declining…")}
+                              </>
+                            ) : (
+                              t("Odmítnout", "Decline")
+                            )}
+                          </Button>
+                          {!undecided && (
+                            <Button
+                              variant="fresh"
+                              size="fresh"
+                              className="btn-primary disabled:opacity-50"
+                              disabled={decideGuest.isPending}
+                              aria-busy={busyApprove}
+                              onClick={() =>
+                                decideGuest.mutate({
+                                  id: g.id,
+                                  approve: true,
+                                  visitor:
+                                    (g as { source?: string }).source === "public_calendar" &&
+                                    g.guest_email
+                                      ? { email: g.guest_email, name: g.guest_name }
+                                      : null,
+                                })
+                              }
+                            >
+                              {busyApprove ? (
+                                <>
+                                  <Loader2 className="size-5 animate-spin" />
+                                  {t("Potvrzuji…", "Confirming…")}
+                                </>
+                              ) : (
+                                t("Potvrdit pobyt", "Confirm stay")
+                              )}
+                            </Button>
                           )}
-                        </Button>
-                        <Button
-                          variant="fresh"
-                          size="fresh"
-                          className="btn-primary disabled:opacity-50"
-                          disabled={decideGuest.isPending}
-                          aria-busy={busyApprove}
-                          onClick={() =>
-                            decideGuest.mutate({
-                              id: g.id,
-                              approve: true,
-                              visitor:
-                                (g as { source?: string }).source === "public_calendar" &&
-                                g.guest_email
-                                  ? { email: g.guest_email, name: g.guest_name }
-                                  : null,
-                            })
-                          }
-                        >
-                          {busyApprove ? (
-                            <>
-                              <Loader2 className="size-5 animate-spin" />
-                              {t("Potvrzuji…", "Confirming…")}
-                            </>
-                          ) : (
-                            t("Potvrdit pobyt", "Confirm stay")
-                          )}
-                        </Button>
-                      </>
-                    );
-                  })()}
+                        </>
+                      );
+                    })()}
+                  </div>
+                  {undecided && (
+                    <p className="mt-2 text-[16px] text-muted-foreground">
+                      {t(
+                        "Termín uplynul a nikdo o žádosti nerozhodl.",
+                        "The dates passed and nobody decided on this request.",
+                      )}
+                    </p>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

@@ -267,6 +267,7 @@ function CalendarPage() {
               bookings={calendarStays}
               selection={range}
               onPickDay={onPickDay}
+              greyUndecided
             />
           )}
         </div>

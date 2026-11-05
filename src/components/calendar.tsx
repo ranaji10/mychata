@@ -26,6 +26,7 @@ export function CalendarMonth({
   onPickDay,
   minDate,
   highlight,
+  greyUndecided = false,
 }: {
   year: number;
   month: number;
@@ -37,6 +38,8 @@ export function CalendarMonth({
   minDate?: string;
   /** Free days worth pointing out (e.g. the next free weekend on the public calendar). */
   highlight?: string[] | undefined;
+  /** O-27: draw requests whose dates passed undecided grey (members' Calendar, with its legend). */
+  greyUndecided?: boolean;
 }) {
   const { lang, t } = useLang();
   const days = monthGrid(year, month);
@@ -61,7 +64,7 @@ export function CalendarMonth({
           ];
           const isToday = d.iso === today;
           // O-27: a request whose dates passed undecided is grey, not "Awaiting approval".
-          const isUndecidedStay = !!booking && isUndecided(booking, today);
+          const isUndecidedStay = greyUndecided && !!booking && isUndecided(booking, today);
           const isPending = booking?.status === "PENDING" && !isUndecidedStay;
           const isConfirmed = booking?.status === "CONFIRMED";
           const isEndpoint = !!selection && (d.iso === selection.start || d.iso === selection.end);

@@ -20,7 +20,7 @@ As of 2026-11-06. Update this file in every PR that changes behaviour.
 Brief: `docs/tasks/T-064-messages-stale-cottage.md`.
 
 - O-26: "Message the admin" on a waiting stay carries the stay (migration 0046). The admin's notification and e-mail open that stay, where they approve or decline it. Older messages still open Notifications.
-- O-27: a stay request whose departure day passed with nobody deciding is "Not decided": grey on the calendar (own legend entry), listed under "Requests not decided" on the Calendar, and its detail offers no Approve and no "Message the admin"; an admin can still decline it, the booker withdraw it.
+- O-27: a stay request whose departure day passed with nobody deciding is "Not decided": grey on the calendar (own legend entry), listed under "Requests not decided" on the Calendar, and its detail offers no Approve and no "Message the admin"; an admin can still decline it, the booker withdraw it. Guest requests whose dates passed: "Not decided" on Home with Decline only, out of Notifications.
 - O-29: English says "cottage" everywhere, except in the brand name MyChata (`docs/product/design.md`, guarded by `src/lib/t064.test.ts`).
 
 ## UX round, O-23 and O-24 (T-062, 5 Nov 2026, live since `149736b`)

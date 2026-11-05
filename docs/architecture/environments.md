@@ -39,10 +39,12 @@ See `../runbooks/local-dev.md`. Short version: `.env.local` with the publishable
 
 ## The lockfile quirk
 
-Lovable writes URLs of its private package cache (`*-npm.pkg.dev/lovable-core-prod/...`) into `bun.lock`. Outside Lovable those return 403. The same tarballs with the same integrity hashes are on the public registry, so CI rewrites the URLs before installing:
+Lovable writes URLs of its private package cache (`*-npm.pkg.dev/lovable-core-prod/...`) into `bun.lock` for the packages it adds. Outside Lovable those return 403. The same tarballs with the same integrity hashes are on the public registry.
+
+Since T-063 (6 Nov 2026) the committed `bun.lock` names no registry (`""`, the default), like the other 550 entries: bun then uses whatever registry the machine is set up for (npm for us and for Dependabot, Lovable's cache inside Lovable). When Lovable adds packages it may write cache URLs again; that is harmless, and CI still rewrites them before installing:
 
 ```
 sed -i -E 's#https://[a-z0-9-]+-npm\.pkg\.dev/lovable-core-prod/[a-z-]+/#https://registry.npmjs.org/#g' bun.lock
 ```
 
-Don't commit the rewritten lockfile; Lovable would rewrite it back.
+To clean them in a pull request, replace each whole cache URL with `""` (see `../runbooks/dependency-updates.md`). Updates themselves: Dependabot, same runbook.

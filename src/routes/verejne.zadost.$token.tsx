@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useCanGoBack, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Minus, Plus } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { findConflicts, fmtDate, isCompleteDate, todayISO, type Booking } from "@/lib/data";
@@ -33,6 +33,10 @@ function PublicRequest() {
   const { t } = useLang();
   useBrand("institution");
   const { token } = Route.useParams();
+  const router = useRouter();
+  // An admin opens this form from Settings and had no way back (5 Nov). Staff who come from a
+  // shared link have no app page to return to, so the arrow shows only when there is one.
+  const canGoBack = useCanGoBack();
   // Each institution shares its own link: /verejne/zadost/<property share token> (migration 0012).
   const {
     data: property,
@@ -128,7 +132,17 @@ function PublicRequest() {
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[420px] page-fresh px-5 py-4 pb-8 md:max-w-[640px] md:py-8">
-      <div className="mb-2 flex justify-end">
+      <div className={`mb-2 flex ${canGoBack ? "justify-between" : "justify-end"}`}>
+        {canGoBack && (
+          <button
+            type="button"
+            onClick={() => router.history.back()}
+            aria-label={t("Zpět", "Back")}
+            className="grid size-11 place-items-center rounded-full bg-card text-foreground shadow-sm ring-1 ring-border"
+          >
+            <ArrowLeft className="size-5" />
+          </button>
+        )}
         <LanguageToggle />
       </div>
 

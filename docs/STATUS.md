@@ -15,6 +15,10 @@ As of 2026-11-05. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-020 document vault search (re-planned in T-044), T-001–T-013 as listed below. T-055 and T-057 in review (PR). Done: T-014–T-019, T-021–T-052.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
+## Back arrow on the public request form (T-061, 5 Nov 2026, in review)
+
+Brief: `docs/tasks/T-061-request-form-back.md`. Settings → Public request form (organisations) had no way back; it now has a Back arrow when there is an app page to return to (not for staff who open the shared link).
+
 ## Date fields, drafts and small checks (T-060, 5 Nov 2026, live since `4ab7af5`)
 
 Brief: `docs/tasks/T-060-date-fields-and-drafts.md`. From the evening bug hunt on `957a75c` (`docs/external/claude/2026-11-05-site-check-2.md`):

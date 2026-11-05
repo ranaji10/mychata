@@ -17,6 +17,7 @@ import {
 } from "@/components/calendar";
 import {
   findConflicts,
+  isCompleteDate,
   overlapPeakGuests,
   fmtDate,
   isoDateOrNull,
@@ -87,7 +88,8 @@ function NewBooking() {
     },
   });
 
-  const conflicts = findConflicts(start, end, bookings ?? []);
+  const conflicts =
+    isCompleteDate(start) && isCompleteDate(end) ? findConflicts(start, end, bookings ?? []) : [];
   const overlaps = conflicts.filter((c) => c.kind === "hard");
   const changeovers = conflicts.filter((c) => c.kind === "same-day");
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
@@ -102,8 +104,10 @@ function NewBooking() {
       (property?.overlap_max_guests != null && peakGuests + guests > property.overlap_max_guests));
   // T-059: the day picker greys out past days, but a date typed into the field got through
   // ("Booking confirmed" for last month, live test 5 Nov 2026).
-  const inPast = !!start && start < todayISO();
-  const invalid = end < start || inPast;
+  // T-060: a cleared or half-typed date field gives "" or "0002-…" (the page used to crash).
+  const datesIncomplete = !isCompleteDate(start) || !isCompleteDate(end);
+  const inPast = !datesIncomplete && start < todayISO();
+  const invalid = datesIncomplete || end < start || inPast;
   // Same rule as booking_defaults (migration 0032): an organisation that hasn't said Yes to
   // auto booking approval, or a family cottage without auto-confirm, holds every member booking.
   const alwaysHeld =
@@ -204,8 +208,14 @@ function NewBooking() {
               value={start}
               min={todayISO()}
               onChange={(e) => {
-                setStart(e.target.value);
-                setRange({ start: e.target.value, end: end >= e.target.value ? end : null });
+                const value = e.target.value;
+                setStart(value);
+                // The day picker only gets whole dates; a half-typed one shows as no selection.
+                setRange(
+                  isCompleteDate(value)
+                    ? { start: value, end: isCompleteDate(end) && end >= value ? end : null }
+                    : { start: null, end: null },
+                );
               }}
               className="field"
             />
@@ -220,8 +230,12 @@ function NewBooking() {
               value={end}
               min={start}
               onChange={(e) => {
-                setEnd(e.target.value);
-                setRange({ start, end: e.target.value });
+                const value = e.target.value;
+                setEnd(value);
+                setRange({
+                  start: isCompleteDate(start) ? start : null,
+                  end: isCompleteDate(start) && isCompleteDate(value) ? value : null,
+                });
               }}
               className="field"
             />
@@ -274,9 +288,14 @@ function NewBooking() {
 
         {invalid && (
           <p className="rounded-2xl bg-destructive-soft p-3 text-[16px] font-semibold text-destructive">
-            {inPast
-              ? t("Příjezd nemůže být v minulosti.", "Arrival can't be in the past.")
-              : t("Odjezd musí být po příjezdu.", "Departure must be after arrival.")}
+            {datesIncomplete
+              ? t(
+                  "Vyplňte celé datum příjezdu i odjezdu.",
+                  "Enter the full arrival and departure dates.",
+                )
+              : inPast
+                ? t("Příjezd nemůže být v minulosti.", "Arrival can't be in the past.")
+                : t("Odjezd musí být po příjezdu.", "Departure must be after arrival.")}
           </p>
         )}
 

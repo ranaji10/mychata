@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { findConflicts, fmtDate, todayISO, type Booking } from "@/lib/data";
+import { findConflicts, fmtDate, isCompleteDate, todayISO, type Booking } from "@/lib/data";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { useDefaultChataPhoto } from "@/lib/season";
 
@@ -80,9 +80,12 @@ function PublicRequest() {
   const [saving, setSaving] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const conflicts = findConflicts(start, end, bookings ?? []);
+  // T-060: an emptied or past arrival went to the server and came back as "Could not send".
+  const datesIncomplete = !isCompleteDate(start) || !isCompleteDate(end);
+  const inPast = !datesIncomplete && start < todayISO();
+  const conflicts = datesIncomplete ? [] : findConflicts(start, end, bookings ?? []);
   const hasConflict = conflicts.length > 0;
-  const invalid = end < start;
+  const invalid = datesIncomplete || inPast || end < start;
   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 
   const [failure, setFailure] = useState<string | null>(null);
@@ -108,10 +111,15 @@ function PublicRequest() {
       setFailure(
         result === "rate"
           ? t("Dnes už bylo odesláno příliš mnoho žádostí.", "Too many requests today.")
-          : t(
-              "Žádost se nepodařilo odeslat. Zkontrolujte údaje.",
-              "Could not send. Please check the details.",
-            ),
+          : result === "dates"
+            ? t(
+                "Zkontrolujte termín: odjezd musí být po příjezdu a příjezd ne v minulosti.",
+                "Check the dates: departure must be after arrival, and not in the past.",
+              )
+            : t(
+                "Žádost se nepodařilo odeslat. Zkontrolujte údaje.",
+                "Could not send. Please check the details.",
+              ),
       );
       return;
     }
@@ -304,10 +312,17 @@ function PublicRequest() {
 
           {invalid && (
             <p className="rounded-2xl bg-destructive-soft p-3 text-[16px] font-semibold text-destructive">
-              {t(
-                "Odjezd musí být po příjezdu.",
-                "The departure date must be after the arrival date.",
-              )}
+              {datesIncomplete
+                ? t(
+                    "Vyplňte celé datum příjezdu i odjezdu.",
+                    "Enter the full arrival and departure dates.",
+                  )
+                : inPast
+                  ? t("Příjezd nemůže být v minulosti.", "Arrival can't be in the past.")
+                  : t(
+                      "Odjezd musí být po příjezdu.",
+                      "The departure date must be after the arrival date.",
+                    )}
             </p>
           )}
           {hasConflict && !invalid && (

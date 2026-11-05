@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtDate, fmtDateTime, pickRange, type Booking, type DateRange } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
+import { countHint, countOk } from "@/lib/cottage-details";
 import { LIVE_REFRESH_MS } from "@/lib/guest-requests";
 import {
   RETURN_CALENDAR_META,
@@ -61,6 +62,7 @@ export function PublicBookingRequest({
   const [open, setOpen] = useState(false);
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const [guests, setGuests] = useState("2");
+  const guestsOk = guests.trim() !== "" && countOk(guests, 200);
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -96,7 +98,8 @@ export function PublicBookingRequest({
 
   const send = useMutation({
     mutationFn: async () => {
-      const n = Number.parseInt(guests, 10);
+      // countOk() below keeps the button off for "2.5" or "-3"; parseInt read "2.5" as 2 (T-060).
+      const n = Number(guests.trim());
       const { data, error } = await supabase.rpc("request_public_booking", {
         _token: token,
         _start: range.start!,
@@ -221,13 +224,17 @@ export function PublicBookingRequest({
             <span className="text-[16px] font-bold">{t("Počet hostů", "Number of guests")}</span>
             <input
               className="field mt-1 w-full"
-              type="number"
+              type="text"
               inputMode="numeric"
-              min={1}
-              max={200}
+              aria-invalid={!guestsOk}
               value={guests}
               onChange={(e) => setGuests(e.target.value)}
             />
+            {!guestsOk && (
+              <span className="mt-1 block text-[16px] font-semibold text-warn-foreground">
+                {countHint(200, t)}
+              </span>
+            )}
           </label>
           <label className="block">
             <span className="label-text">
@@ -253,7 +260,7 @@ export function PublicBookingRequest({
               variant="fresh"
               size="fresh"
               className="btn-primary flex-1"
-              disabled={send.isPending || !range.start || !range.end}
+              disabled={send.isPending || !range.start || !range.end || !guestsOk}
               onClick={() => send.mutate()}
             >
               {send.isPending ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}

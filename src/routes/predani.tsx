@@ -53,26 +53,38 @@ function HandoverPage() {
   const [note, setNote] = useState("");
   const [issue, setIssue] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  // The draft is kept per cottage. Switching cottage used to keep the first cottage's ticks and
+  // notes on screen and then save them as the second cottage's draft (T-060); storage that the
+  // browser blocks no longer throws.
+  const propertyId = property?.id;
+  const [draftFor, setDraftFor] = useState<string | null>(null);
   useEffect(() => {
-    if (!property) return;
+    if (!propertyId) return;
+    let draft: { checked?: boolean[]; note?: string; issue?: string } = {};
     try {
-      const saved = localStorage.getItem(`mychata.handover.${property.id}`);
-      if (!saved) return;
-      const draft = JSON.parse(saved) as { checked?: boolean[]; note?: string; issue?: string };
-      if (draft.checked?.length === items.length) setChecked(draft.checked);
-      setNote(draft.note ?? "");
-      setIssue(draft.issue ?? "");
+      const saved = localStorage.getItem(`mychata.handover.${propertyId}`);
+      if (saved) draft = JSON.parse(saved) as typeof draft;
     } catch {
-      /* ignore invalid local draft */
+      /* ignore an unreadable or blocked local draft */
     }
-  }, [property?.id, items.length]);
+    setChecked(draft.checked?.length === items.length ? draft.checked : items.map(() => false));
+    setNote(draft.note ?? "");
+    setIssue(draft.issue ?? "");
+    setDraftFor(propertyId);
+    // items only matter through their count; a new array each render must not reset the draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyId, items.length]);
   useEffect(() => {
-    if (!property) return;
-    localStorage.setItem(
-      `mychata.handover.${property.id}`,
-      JSON.stringify({ checked, note, issue }),
-    );
-  }, [property?.id, checked, note, issue]);
+    if (!propertyId || draftFor !== propertyId) return;
+    try {
+      localStorage.setItem(
+        `mychata.handover.${propertyId}`,
+        JSON.stringify({ checked, note, issue }),
+      );
+    } catch {
+      /* private mode or full storage: the draft just isn't kept */
+    }
+  }, [propertyId, draftFor, checked, note, issue]);
 
   const { data: activeBooking } = useQuery({
     queryKey: ["handover-booking", property?.id, currentMember?.id],
@@ -165,7 +177,11 @@ function HandoverPage() {
       return handover.id;
     },
     onSuccess: async (handoverId) => {
-      if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
+      try {
+        if (property) localStorage.removeItem(`mychata.handover.${property.id}`);
+      } catch {
+        /* blocked storage: nothing was kept anyway */
+      }
       const { data: recipients, error } = await supabase.rpc("handover_next_recipient", {
         _handover_id: handoverId,
       });

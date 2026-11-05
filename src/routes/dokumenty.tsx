@@ -326,6 +326,8 @@ function DocumentsPage() {
       setDeleting(null);
     }
   };
+  // T-060: an expiry before the issue date was saved without a word.
+  const datesWrong = !!form.issueDate && !!form.expiryDate && form.expiryDate < form.issueDate;
   const daysUntil = (date: string) =>
     Math.ceil(
       (new Date(`${date}T00:00:00`).getTime() - new Date(`${todayISO()}T00:00:00`).getTime()) /
@@ -531,7 +533,7 @@ function DocumentsPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              save.mutate();
+              if (!datesWrong) save.mutate();
             }}
             className="w-full max-w-[400px] max-h-[90vh] space-y-3 overflow-auto rounded-[28px] bg-card p-5 shadow-2xl"
           >
@@ -591,6 +593,14 @@ function DocumentsPage() {
                 className="field mt-1"
               />
             </label>
+            {datesWrong && (
+              <p className="text-[16px] font-semibold text-warn-foreground">
+                {t(
+                  "Platnost nemůže skončit před datem vystavení.",
+                  "The expiry date can't be before the issue date.",
+                )}
+              </p>
+            )}
             <label className="block">
               <span className="label-text">{t("Kdo dokument uvidí", "Who can see it")}</span>
               <select
@@ -627,7 +637,7 @@ function DocumentsPage() {
                 variant="fresh"
                 size="fresh"
                 className="btn-primary flex-1"
-                disabled={save.isPending}
+                disabled={save.isPending || datesWrong}
               >
                 {save.isPending ? t("Ukládám…", "Saving…") : t("Uložit", "Save")}
               </Button>

@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
 import { cz } from "@/lib/cottage-details";
-import { seasonalTemplates, todayISO, type Task } from "@/lib/data";
+import { isCompleteDate, seasonalTemplates, todayISO, type Task } from "@/lib/data";
 import { translateTaskText } from "@/lib/task-translation.functions";
 
 export const Route = createFileRoute("/ukoly")({
@@ -170,7 +170,8 @@ function TasksPage() {
       category: "other",
       urgency: "LOW",
       assignee_member_id: chosenAssignee || null,
-      due_date: due,
+      // An emptied date field is "no due date", not a database error (T-060).
+      due_date: due || null,
       status: "OPEN",
       created_by: currentMember.name,
     });
@@ -403,8 +404,18 @@ function TasksPage() {
                 type="date"
                 value={due}
                 onChange={(e) => setDue(e.target.value)}
+                min="2000-01-01"
+                max="2100-12-31"
                 className="field"
               />
+              {!!due && !isCompleteDate(due) && (
+                <p className="mt-1 text-[16px] font-semibold text-warn-foreground">
+                  {t(
+                    "Doplňte celé datum, nebo pole vymažte.",
+                    "Finish the date, or clear the field.",
+                  )}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex gap-2">
@@ -412,7 +423,7 @@ function TasksPage() {
               variant="fresh"
               size="fresh"
               onClick={addTask}
-              disabled={adding || !title.trim()}
+              disabled={adding || !title.trim() || (!!due && !isCompleteDate(due))}
               className="btn-primary flex-1 disabled:opacity-40"
             >
               {adding ? t("Ukládám…", "Saving…") : t("Přidat úkol", "Add task")}

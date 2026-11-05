@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, ClipboardList, FileBadge, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -22,6 +22,8 @@ import { useLang } from "@/lib/i18n";
 import { TaskNotes } from "@/components/TaskNotes";
 import {
   fmtDate,
+  isCompleteDate,
+  isUuid,
   taskCategoryLabel,
   taskTitle,
   todayISO,
@@ -68,6 +70,8 @@ function TaskDetail() {
   } = useQuery({
     queryKey: ["task", id],
     queryFn: async () => {
+      // A malformed id (a link cut short) is "not found" at once, not 10 s of retries (T-060).
+      if (!isUuid(id)) return null;
       const { data, error } = await supabase.from("tasks").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
       return (data as Task | null) ?? null;
@@ -240,12 +244,10 @@ function TaskDetail() {
               <p className="text-[16px] font-semibold text-muted-foreground">
                 {t("Termín", "Due date")}
               </p>
-              <input
-                type="date"
-                value={task.due_date ?? ""}
-                onChange={(e) => update.mutate({ due_date: e.target.value || null })}
-                className="field mt-1 font-semibold"
-                aria-label={t("Termín", "Due date")}
+              <DueDateField
+                saved={task.due_date ?? ""}
+                label={t("Termín", "Due date")}
+                onSave={(value) => update.mutate({ due_date: value || null })}
               />
             </div>
           </div>
@@ -332,5 +334,68 @@ function TaskDetail() {
       )}
       <TaskNotes taskId={task.id} focus={!!focusNote} />
     </AppShell>
+  );
+}
+
+/**
+ * The due date on the task page. It used to save on every keystroke, so typing 20112026 saved
+ * the year 0002 and the reload threw away the rest of the typing (T-060, 5 Nov 2026). Now it
+ * saves a finished date (year 2000–2100) when the person leaves the field or stops typing for a
+ * moment, and an emptied field as "no due date" when they leave it.
+ */
+function DueDateField({
+  saved,
+  label,
+  onSave,
+}: {
+  saved: string;
+  label: string;
+  onSave: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(saved);
+  const focused = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A change from elsewhere (another member, a refetch) shows unless the person is typing.
+  useEffect(() => {
+    if (!focused.current) setDraft(saved);
+  }, [saved]);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  const commit = (value: string) => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    if (value === saved) return;
+    if (!value || isCompleteDate(value)) onSave(value);
+  };
+  return (
+    <input
+      type="date"
+      value={draft}
+      min="2000-01-01"
+      max="2100-12-31"
+      onFocus={() => {
+        focused.current = true;
+      }}
+      onChange={(e) => {
+        const value = e.target.value;
+        setDraft(value);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = isCompleteDate(value) ? setTimeout(() => commit(value), 1500) : null;
+      }}
+      onBlur={() => {
+        focused.current = false;
+        if (draft && !isCompleteDate(draft)) {
+          setDraft(saved);
+          return;
+        }
+        commit(draft);
+      }}
+      className="field mt-1 font-semibold"
+      aria-label={label}
+    />
   );
 }

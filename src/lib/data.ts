@@ -376,6 +376,9 @@ export function overlapPeakGuests(
   end: string,
   others: { start_date: string; end_date: string; guests?: number | null; status: string }[],
 ): number {
+  // A date field being typed or cleared gives "" or "0002-11-20" for a moment; the page
+  // crashed on new Date("").toISOString() (T-060, 5 Nov 2026).
+  if (!isoDateOrNull(start) || !isoDateOrNull(end)) return 0;
   const nights: string[] = [];
   const d = new Date(`${start}T00:00:00Z`);
   const last = end > start ? end : addDaysIso(start, 1);
@@ -430,6 +433,25 @@ export function isoDateOrNull(value: unknown): string | null {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const d = new Date(`${value}T00:00:00Z`); // UTC, so the check works in every time zone
   return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value ? null : value;
+}
+
+/**
+ * A date the person has finished typing: a real YYYY-MM-DD in 2000–2100. While the year is typed
+ * digit by digit a date field reports 0002, 0020, 0202 (T-060: a task saved 20.11.0002).
+ */
+export function isCompleteDate(value: unknown): value is string {
+  const iso = isoDateOrNull(value);
+  if (!iso) return false;
+  const year = Number(iso.slice(0, 4));
+  return year >= 2000 && year <= 2100;
+}
+
+/** An id from the address that can be a row id; anything else is "not found" at once (T-060). */
+export function isUuid(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  );
 }
 
 // ---------- Calendar helpers ----------

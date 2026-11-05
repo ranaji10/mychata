@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-11-03
+updated: 2026-11-05
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Now
@@ -12,9 +12,9 @@ tab: Now
 
 # MyChata tracker
 
-3 Nov 2026 · Tuik
+5 Nov 2026 · Tuik
 
-**Live:** `62006a2` (T-053 to T-057: notifications by e-mail, e-mails in the recipient's own language, "I paid" claims, cottage facts, house rules members-only; migrations 0038 and 0040), checked 3 Nov 16:00–17:30 (`docs/external/claude/2026-11-03-site-check-4.md`); release `release-2026-11-03b`. Before it `4915d17` (PR #86). **Waiting on you:** merge PR #98 (T-058, Czech plurals "6 osob") and publish (N-31); N-29 steps 1–2; one Gmail setting (N-32); whether to delete Lovable's temporary test cottage (N-33); in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Approving each cottage for family is deferred (your call, 3 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `7e4dec6` (PR #98, T-058 Czech plurals; built 3 Nov 15:31 UTC). Tested 5 Nov with a fresh English sign-up in Chrome and Test 3 at phone width (`docs/external/claude/2026-11-05-site-check.md`): 7 bugs, all fixed in PR #99 (T-059), which also closes O-21. Before it `62006a2` (T-053 to T-057). **Waiting on you:** merge PR #99, Lovable applies migration 0042, publish (N-34); N-29 step 1 (sign-in before confirming) and step 2; one Gmail setting (N-32); whether to delete Lovable's temporary test cottage (N-33); in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Approving each cottage for family is deferred (your call, 3 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
@@ -22,10 +22,10 @@ tab: Now
 | --- | --- | --- | --- | --- |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
 | N-23 | **GA key events still to star:** `sign_up`, `booking_request_sent`, `invitation_accepted` (`booking_created` starred 26 Oct). Checked again 3 Nov 02:35 in GA (Recent events, 28 days): still none of the three has arrived; key events are booking_created and onboarding_completed. You run the test round (steps sent in chat 26 Oct: one new address signs up from the test public calendar, sends a request, then accepts an invitation; Chrome, analytics allowed), then star them, or add them by name under Admin → Key events → New key event. The scheduled task (27 Oct 09:47 UTC) also checks; its text still says N-14 (Claude couldn't edit it) | Claude (scheduled) | Waiting |  |
-| N-29 | **E-mail tests with a real inbox, steps 1–2 left** (3 and 4 passed 3 Nov: reset mails arrive from MyChata in the account's language and open "Nové heslo"; a mail to podpora@ reached Gmail and the reply as "MyChata podpora" arrived, not in spam). 1) sign up with a fresh non-Gmail address you own: the mail comes from MyChata <no-reply@notify.mychata.cz> in the language you chose, and the account can't sign in before confirming (F-07); 2) public calendar of a test cottage → "Požádat o termín" → sign up → open the confirmation link in another browser (F-24). Tell Claude the results | You | To do | F-07, F-23, F-24 |
-| N-31 | **Merge PR #98 and publish** (T-058: "6 osob · 3 pokoje · 5 lůžek" instead of "6 osoby"; adds site-check-4). CI green, no migration. A small publish: no release needed (your rule: a release only when something significant changes) | You | To do | |
+| N-29 | **E-mail tests with a real inbox, steps 1–2 left** (3 and 4 passed 3 Nov: reset mails arrive from MyChata in the account's language and open "Nové heslo"; a mail to podpora@ reached Gmail and the reply as "MyChata podpora" arrived, not in spam). 1) a fresh non-Gmail sign-up got its confirmation in English (your test, 5 Nov). Still to note: the mail comes from MyChata <no-reply@notify.mychata.cz> in the language you chose, and the account can't sign in before confirming (F-07); 2) public calendar of a test cottage → "Požádat o termín" → sign up → open the confirmation link in another browser (F-24). Tell Claude the results | You | To do | F-07, F-23, F-24 |
 | N-32 | **Gmail: reply from podpora@ by default.** Settings → Accounts and Import → "When replying to a message" → "Reply from the same address the message was sent to". Today Gmail starts replies to podpora@ mail from ranaji.deb@gmail.com | You | To do | |
 | N-33 | **Lovable left "Lovable dočasná chata (test)" on production** during its 0040 work. Delete it (Manage cottages) or tell Claude to | You | To do | |
+| N-34 | **Merge PR #99 (T-059), Lovable applies migration 0042, publish.** Fixes from the 5 Nov test: whole numbers only for rooms, people, beds and guests at once; no bookings in the past; no invitations to existing members; invitation e-mail text in one language; one checklist warning. 0042 = O-21 (only the payer or an admin enters an expense or its shares) plus database checks on rooms. Lovable prompt: prompts/2026-11-05/26-L-apply-migration-0042.md. Then tell Claude: it rechecks (site-check file, last section) | You, Lovable | To do | O-21 |
 
 ## Decisions waiting on you
 

@@ -14,7 +14,7 @@ tab: Now
 
 5 Nov 2026 · Tuik
 
-**Live:** `957a75c` (PR #99, T-059, with migration 0042 applied; build-sha checked 5 Nov 18:00). The T-059 recheck passed; an evening bug hunt in Chrome (Test 5) and the built-in browser (Test 3, 375 px) found 11 bugs, all fixed in PR #101 (T-060) (`docs/external/claude/2026-11-05-site-check-2.md`). Before it `7e4dec6` (T-058). **Waiting on you:** merge PR #101 and publish (N-35); O-23, O-24, O-25 (your calls, Backlog); N-29 step 1 (sign-in before confirming) and step 2; one Gmail setting (N-32); whether to delete Lovable's temporary test cottage (N-33); in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Approving each cottage for family is deferred (your call, 3 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `4ab7af5` (PR #101, T-060; build-sha checked 5 Nov 20:20). The T-060 recheck passed: all 11 bugs from the 5 Nov evening hunt are fixed live (`docs/external/claude/2026-11-05-site-check-2.md`). Before it `957a75c` (T-059 with migration 0042). **Waiting on you:** O-23, O-24, O-25 (your calls, Backlog); N-29 step 1 (sign-in before confirming) and step 2; one Gmail setting (N-32); whether to delete Lovable's temporary test cottage (N-33); in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Approving each cottage for family is deferred (your call, 3 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
@@ -25,7 +25,6 @@ tab: Now
 | N-29 | **E-mail tests with a real inbox, steps 1–2 left** (3 and 4 passed 3 Nov: reset mails arrive from MyChata in the account's language and open "Nové heslo"; a mail to podpora@ reached Gmail and the reply as "MyChata podpora" arrived, not in spam). 1) a fresh non-Gmail sign-up got its confirmation in English (your test, 5 Nov). Still to note: the mail comes from MyChata <no-reply@notify.mychata.cz> in the language you chose, and the account can't sign in before confirming (F-07); 2) public calendar of a test cottage → "Požádat o termín" → sign up → open the confirmation link in another browser (F-24). Tell Claude the results | You | To do | F-07, F-23, F-24 |
 | N-32 | **Gmail: reply from podpora@ by default.** Settings → Accounts and Import → "When replying to a message" → "Reply from the same address the message was sent to". Today Gmail starts replies to podpora@ mail from ranaji.deb@gmail.com | You | To do | |
 | N-33 | **Lovable left "Lovable dočasná chata (test)" on production** during its 0040 work. Delete it (Manage cottages) or tell Claude to | You | To do | |
-| N-35 | **Merge PR #101 (T-060), publish.** Fixes from the 5 Nov evening bug hunt: New booking crash on a cleared or typed date; task due date saved as year 0002; Checkout Tasks drafts mixed between cottages; past dates on the public request form; count fields taking 1e2; amounts to the heller; guest link reused (O-22). No migration. Then tell Claude "published": it rechecks (docs/external/claude/2026-11-05-site-check-2.md, last section) | You | To do | O-22 |
 
 ## Decisions waiting on you
 

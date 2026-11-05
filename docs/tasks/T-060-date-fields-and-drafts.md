@@ -1,6 +1,6 @@
 # T-060 Date fields, drafts and small checks (bug hunt of 5 Nov 2026, evening)
 
-Owner: Claude (cloud session) · Status: review
+Owner: Claude (cloud session) · Status: done
 
 Goal: fix what the evening bug hunt on live build `957a75c` found (report: `docs/external/claude/2026-11-05-site-check-2.md`), and close O-22.
 

@@ -176,15 +176,32 @@ function MorePage() {
     toast.success(t("Veřejný kalendář je vypnutý.", "The public calendar is switched off."));
   };
 
+  // O-22 (T-060): every tap used to make another valid link. Reuse the cottage's newest open link
+  // (not revoked, not expired, the same test as public_guest_link) and make one only when none is.
   const createGuestLink = async () => {
     if (!property || !currentMemberId) return;
-    const token = crypto.randomUUID();
-    const { error } = await supabase
+    const { data: open, error: readError } = await supabase
       .from("guest_links")
-      .insert({ property_id: property.id, token, created_by_member_id: currentMemberId });
-    if (error) {
-      toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
+      .select("token")
+      .eq("property_id", property.id)
+      .is("revoked_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (readError) {
+      toast.error(t("Odkaz se nepodařilo načíst.", "Could not load the link."));
       return;
+    }
+    let token = open?.[0]?.token ?? null;
+    if (!token) {
+      token = crypto.randomUUID();
+      const { error } = await supabase
+        .from("guest_links")
+        .insert({ property_id: property.id, token, created_by_member_id: currentMemberId });
+      if (error) {
+        toast.error(t("Odkaz se nepodařilo vytvořit.", "Could not create the link."));
+        return;
+      }
     }
     await shareLink(`${window.location.origin}/host/${token}`, "guest");
   };

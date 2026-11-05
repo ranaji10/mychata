@@ -22,7 +22,7 @@ import {
   expenseCategoryLabel,
   expenseSettlement,
   fmtDate,
-  fmtKc,
+  fmtKcExact,
   parseAmount,
   todayISO,
 } from "@/lib/data";
@@ -216,7 +216,7 @@ function ExpensesPage() {
 
       {!isEmpty && (
         <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] lg:gap-4">
-          <StatCard label={t("Celkem", "Total")} value={fmtKc(total)} />
+          <StatCard label={t("Celkem", "Total")} value={fmtKcExact(total)} />
         </div>
       )}
 
@@ -261,7 +261,7 @@ function ExpensesPage() {
                 </p>
               </div>
               <div className="flex w-full flex-wrap items-center justify-between gap-2 text-right sm:w-auto sm:flex-col sm:items-end [&_.pill]:whitespace-normal">
-                <p className="text-[16px] font-bold">{fmtKc(Number(e.amount))}</p>
+                <p className="text-[16px] font-bold">{fmtKcExact(Number(e.amount))}</p>
                 {splits &&
                   (() => {
                     const status = expenseSettlement(splitsOf(e.id));
@@ -448,12 +448,12 @@ function ExpensesPage() {
                     ? t("Rozděleno přesně.", "Split exactly.")
                     : remaining > 0
                       ? t(
-                          `Zbývá rozdělit ${fmtKc(remaining)}.`,
-                          `${fmtKc(remaining)} left to assign.`,
+                          `Zbývá rozdělit ${fmtKcExact(remaining)}.`,
+                          `${fmtKcExact(remaining)} left to assign.`,
                         )
                       : t(
-                          `O ${fmtKc(-remaining)} víc než výdaj.`,
-                          `${fmtKc(-remaining)} more than the expense.`,
+                          `O ${fmtKcExact(-remaining)} víc než výdaj.`,
+                          `${fmtKcExact(-remaining)} more than the expense.`,
                         )}
               </p>
             </div>
@@ -471,7 +471,7 @@ function ExpensesPage() {
                         ? ` (${t("vy, platíte", "you, paying")})`
                         : ""}
                     </span>
-                    <span className="font-semibold">{fmtKc(shares[index] ?? 0)}</span>
+                    <span className="font-semibold">{fmtKcExact(shares[index] ?? 0)}</span>
                   </li>
                 ))}
               </ul>

@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PillNeutral, PillOk, PillWarn, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, fmtDateTime, todayISO, type Booking } from "@/lib/data";
+import { fmtDate, fmtDateTime, isUuid, todayISO, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { friendlyError } from "@/lib/rpc-errors";
 
@@ -73,13 +73,15 @@ function BookingDetail() {
     queryKey: bookingKey,
     enabled: !!account,
     queryFn: async () => {
+      // A malformed id (a link cut short) is "not found" at once, not 10 s of retries (T-060).
+      if (!isUuid(id)) return null;
       const { data, error } = await supabase
         .from("bookings")
         .select("*")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return data as Booking;
+      return data as Booking | null;
     },
   });
 

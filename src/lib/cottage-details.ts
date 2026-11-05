@@ -60,8 +60,10 @@ export function cottageFactsLine(p: Property, t: (cs: string, en: string) => str
 export function countOk(value: string, max: number): boolean {
   const v = value.trim();
   if (!v) return true;
+  // Digits only: Number() also reads "1e2", "0x10", "+5" and "5.0" as whole numbers (T-060).
+  if (!/^\d+$/.test(v)) return false;
   const n = Number(v);
-  return Number.isInteger(n) && n >= 1 && n <= max;
+  return n >= 1 && n <= max;
 }
 
 /** The message under a count field that fails countOk(). */

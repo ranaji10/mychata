@@ -14,7 +14,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { useLang } from "@/lib/i18n";
-import { fmtKc, type Expense, type ExpenseSplit } from "@/lib/data";
+import { fmtKcExact, type Expense, type ExpenseSplit } from "@/lib/data";
 import { expenseDataKey } from "@/lib/expenses";
 import { canCoverExpense } from "@/lib/ui-action-rules";
 import { friendlyError } from "@/lib/rpc-errors";
@@ -75,8 +75,8 @@ export function ExpenseDetail({
       // expense's share, so say so (L-3 review, Low 8).
       toast.success(
         t(
-          `Připomenutí posláno: ${name(memberId)}. Celkem vám dluží ${fmtKc(Number(data))}.`,
-          `Reminder sent to ${name(memberId)}. In total they owe you ${fmtKc(Number(data))}.`,
+          `Připomenutí posláno: ${name(memberId)}. Celkem vám dluží ${fmtKcExact(Number(data))}.`,
+          `Reminder sent to ${name(memberId)}. In total they owe you ${fmtKcExact(Number(data))}.`,
         ),
       );
     } catch (error) {
@@ -149,7 +149,7 @@ export function ExpenseDetail({
             </SheetTitle>
             <SheetDescription className="text-[16px]">
               {t("Zaplatil(a)", "Paid by")}: {name(expense.paid_by_member_id)} ·{" "}
-              {fmtKc(Number(expense.amount))}
+              {fmtKcExact(Number(expense.amount))}
             </SheetDescription>
           </SheetHeader>
           <Button
@@ -165,7 +165,7 @@ export function ExpenseDetail({
             <li className="flex flex-wrap justify-between gap-2 py-3 text-[16px]">
               <span>{name(expense.paid_by_member_id)}</span>
               <span>
-                {fmtKc(payerShare)} · {t("Zaplaceno", "Paid")}
+                {fmtKcExact(payerShare)} · {t("Zaplaceno", "Paid")}
               </span>
             </li>
             {splits.map((split) => (
@@ -173,7 +173,7 @@ export function ExpenseDetail({
                 <div className="flex flex-wrap justify-between gap-2 text-[16px]">
                   <span>{name(split.member_id)}</span>
                   <span>
-                    {fmtKc(Number(split.amount_owed))} ·{" "}
+                    {fmtKcExact(Number(split.amount_owed))} ·{" "}
                     {split.paid_back ? t("Vyrovnáno", "Settled") : t("Dluží", "Owes")}
                   </span>
                 </div>

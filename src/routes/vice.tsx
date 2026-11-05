@@ -90,6 +90,8 @@ function MorePage() {
     members.find((m) => m.id === currentMemberId)?.name ||
     "";
   const [stopOpen, setStopOpen] = useState(false);
+  // O-23 (T-062): an admin's first tap used to publish the calendar with no question.
+  const [publishAsk, setPublishAsk] = useState(false);
   const [stopping, setStopping] = useState(false);
 
   // Share a link: the phone's share sheet when available, otherwise copy to the clipboard.
@@ -136,7 +138,13 @@ function MorePage() {
       await shareLink(`${window.location.origin}/verejne/kalendar/${token}`, "calendar");
       return;
     }
-    // Publishing the calendar is an explicit admin action; the link uses the share token.
+    // Publishing the calendar is an explicit admin action, asked once (O-23); once it is
+    // published the row only shares the link again.
+    if (!property.public_calendar_enabled && !publishAsk) {
+      setPublishAsk(true);
+      return;
+    }
+    setPublishAsk(false);
     const { data: publicToken, error: publishError } = await supabase.rpc("set_public_calendar", {
       _property_id: property.id,
       _enabled: true,
@@ -147,6 +155,9 @@ function MorePage() {
       );
       return;
     }
+    // Not awaited: on an iPhone the share sheet needs the tap's permission, which a refetch
+    // in between would use up (PR #104 review).
+    void queryClient.invalidateQueries({ queryKey: ["properties"] });
     await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`, "calendar");
   };
 
@@ -384,6 +395,18 @@ function MorePage() {
           }}
         />
       </section>
+      <ConfirmDialog
+        open={publishAsk}
+        onOpenChange={setPublishAsk}
+        tone="primary"
+        title={t("Zveřejnit kalendář chaty?", "Publish the cottage calendar?")}
+        description={t(
+          "Kdo dostane odkaz, uvidí obsazené a volné dny (bez jmen) a může po přihlášení požádat o termín. Vypnout ho můžete kdykoli v Nastavení.",
+          "Anyone with the link sees which days are booked or free (no names) and, once signed in, can ask for dates. You can switch it off at any time in Settings.",
+        )}
+        confirmLabel={t("Zveřejnit a sdílet", "Publish and share")}
+        onConfirm={() => void copyPublicLink()}
+      />
       <ConfirmDialog
         open={stopOpen}
         onOpenChange={setStopOpen}

@@ -68,8 +68,10 @@ export function CalendarMonth({
             d.iso > selection.start &&
             d.iso < selection.end;
           const isHighlighted = !booking && !!highlight?.includes(d.iso);
+          // T-062: your arrival and departure are an outlined circle, not the solid colour of a
+          // confirmed stay (5 Nov test: a picked day looked booked; only the corners differed).
           const stateClass = isEndpoint
-            ? "bg-primary text-primary-foreground rounded-full font-extrabold"
+            ? "bg-card text-primary rounded-full font-extrabold ring-[3px] ring-inset ring-primary"
             : inRange
               ? "bg-primary-soft text-primary"
               : isConfirmed
@@ -220,7 +222,7 @@ export function MonthHeader({
 export function CalendarLegend({ picking = false }: { picking?: boolean }) {
   const { t } = useLang();
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-semibold text-muted-foreground">
+    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] font-semibold text-muted-foreground">
       <span className="flex items-center gap-1.5">
         <span className="size-3 rounded-[4px] bg-primary" />
         {t("Potvrzeno", "Confirmed")}
@@ -231,7 +233,7 @@ export function CalendarLegend({ picking = false }: { picking?: boolean }) {
       </span>
       {picking && (
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-full bg-primary" />
+          <span className="size-3.5 rounded-full bg-card ring-[3px] ring-inset ring-primary" />
           {t("Váš výběr", "Your dates")}
         </span>
       )}

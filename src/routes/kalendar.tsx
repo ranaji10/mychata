@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ManualCopyLink } from "@/components/ManualCopyLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -121,8 +122,15 @@ function CalendarPage() {
     });
   };
 
+  // O-23 (T-062): ask once before an admin's tap publishes the calendar.
+  const [publishAsk, setPublishAsk] = useState(false);
   const copyPublicLink = async () => {
     setManualLink(null);
+    if (isAdmin && !property?.public_calendar_enabled && !publishAsk) {
+      setPublishAsk(true);
+      return;
+    }
+    setPublishAsk(false);
     // Publishing the calendar is an explicit admin action; the link uses the share token.
     // A member only passes on a link that is already published (T-038: it used to fail with 403).
     // Its cached flag can be out of date, so the member path re-reads it (PR #52 review).
@@ -152,6 +160,7 @@ function CalendarPage() {
       );
       return;
     }
+    if (isAdmin) void queryClient.invalidateQueries({ queryKey: ["properties"] });
     const url = `${window.location.origin}/verejne/kalendar/${publicToken}`;
     try {
       await navigator.clipboard.writeText(url);
@@ -341,13 +350,25 @@ function CalendarPage() {
               </p>
               <p className="text-[16px] text-muted-foreground">
                 {t(
-                  "Pro členy bez aplikace — pouze ke čtení",
-                  "For members without the app — read only",
+                  "Obsazené a volné dny pro kohokoli s odkazem; po přihlášení může požádat o termín",
+                  "Booked and free days for anyone with the link; once signed in, they can ask for dates",
                 )}
               </p>
             </div>
           </Button>
           <ManualCopyLink url={manualLink} />
+          <ConfirmDialog
+            open={publishAsk}
+            onOpenChange={setPublishAsk}
+            tone="primary"
+            title={t("Zveřejnit kalendář chaty?", "Publish the cottage calendar?")}
+            description={t(
+              "Kdo dostane odkaz, uvidí obsazené a volné dny (bez jmen) a může po přihlášení požádat o termín. Vypnout ho můžete kdykoli v Nastavení.",
+              "Anyone with the link sees which days are booked or free (no names) and, once signed in, can ask for dates. You can switch it off at any time in Settings.",
+            )}
+            confirmLabel={t("Zveřejnit a sdílet", "Publish and share")}
+            onConfirm={() => void copyPublicLink()}
+          />
         </>
       )}
     </AppShell>

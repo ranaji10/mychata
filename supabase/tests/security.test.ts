@@ -1701,6 +1701,8 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
       expect(await ask(q, ids.tokenB, 7, 5)).toBe("dates");
       expect(await ask(q, ids.tokenB, -3, 2)).toBe("dates");
       expect(await ask(q, ids.tokenB, 5, 7, 0)).toBe("guests");
+      // T-062 (O-24): a day visit, leaving on the arrival day, is a valid request.
+      expect(await ask(q, ids.tokenB, 40, 40)).toBe("ok");
     });
     await as(db, bAdmin, async (q) => {
       expect(await ask(q, ids.tokenB)).toBe("member");
@@ -1728,6 +1730,28 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
       });
     } finally {
       await admin(db, "delete from public.bookings where requester_name = 'Obsazeno'");
+    }
+  });
+
+  it("a confirmed day visit takes its day (T-062, PR #104 review)", async () => {
+    await admin(
+      db,
+      "insert into public.bookings (property_id, requester_name, start_date, end_date, status) values ($1,'Den', current_date + 80, current_date + 80, 'CONFIRMED')",
+      [ids.propB],
+    );
+    try {
+      await as(db, visitor, async (q) => {
+        const ask = (s: number, e: number) =>
+          q(
+            `select public.request_public_booking($1, current_date + ${s}, current_date + ${e}, 2) as r`,
+            [ids.tokenB],
+          ).then((rows) => rows[0]!["r"]);
+        expect(await ask(80, 80)).toBe("busy"); // a second day visit on the same day
+        expect(await ask(80, 82)).toBe("busy"); // a stay that starts on that day
+        expect(await ask(78, 80)).toBe("ok"); // leaving on that day: changeover
+      });
+    } finally {
+      await admin(db, "delete from public.bookings where requester_name = 'Den'");
     }
   });
 

@@ -92,8 +92,8 @@ export function publicRequestMessage(result: string): [cs: string, en: string] {
       ];
     case "dates":
       return [
-        "Zkontrolujte termín: odjezd musí být po příjezdu a příjezd ne v minulosti.",
-        "Check the dates: departure must be after arrival, and not in the past.",
+        "Zkontrolujte termín: odjezd nemůže být před příjezdem a příjezd nemůže být v minulosti.",
+        "Check the dates: departure can't be before arrival, and arrival can't be in the past.",
       ];
     case "guests":
       return ["Zkontrolujte počet hostů.", "Check the number of guests."];

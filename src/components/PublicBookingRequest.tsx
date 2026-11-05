@@ -6,7 +6,14 @@ import { CalendarPlus, Check, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CalendarLegend, CalendarMonth, MonthHeader, useMonthNav } from "@/components/calendar";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtDate, fmtDateTime, pickRange, type Booking, type DateRange } from "@/lib/data";
+import {
+  fmtDate,
+  fmtDateTime,
+  pickRange,
+  stayLength,
+  type Booking,
+  type DateRange,
+} from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { countHint, countOk } from "@/lib/cottage-details";
@@ -219,6 +226,9 @@ export function PublicBookingRequest({
           <p className="text-[16px] font-semibold">
             {t("Příjezd", "Arrival")}: {range.start ? fmtDate(range.start) : "—"} ·{" "}
             {t("Odjezd", "Departure")}: {range.end ? fmtDate(range.end) : "—"}
+            {range.start && range.end && stayLength(range.start, range.end, lang) && (
+              <> · {stayLength(range.start, range.end, lang)}</>
+            )}
           </p>
           <label className="block">
             <span className="text-[16px] font-bold">{t("Počet hostů", "Number of guests")}</span>

@@ -7,7 +7,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf
 describe("stay length in plain words (T-062, O-24)", () => {
   it("names a day visit and counts nights in both languages", () => {
     expect(stayLength("2026-11-13", "2026-11-13", "en")).toBe("Day visit (no overnight)");
-    expect(stayLength("2026-11-13", "2026-11-13", "cs")).toBe("Jednodenní návštěva (bez noci)");
+    expect(stayLength("2026-11-13", "2026-11-13", "cs")).toBe("Jednodenní návštěva (bez přespání)");
     expect(stayLength("2026-11-13", "2026-11-14", "en")).toBe("1 night");
     expect(stayLength("2026-11-13", "2026-11-16", "cs")).toBe("3 noci");
     expect(stayLength("2026-11-13", "2026-11-18", "cs")).toBe("5 nocí");

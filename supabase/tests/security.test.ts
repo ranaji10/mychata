@@ -1733,6 +1733,28 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
     }
   });
 
+  it("a confirmed day visit takes its day (T-062, PR #104 review)", async () => {
+    await admin(
+      db,
+      "insert into public.bookings (property_id, requester_name, start_date, end_date, status) values ($1,'Den', current_date + 80, current_date + 80, 'CONFIRMED')",
+      [ids.propB],
+    );
+    try {
+      await as(db, visitor, async (q) => {
+        const ask = (s: number, e: number) =>
+          q(
+            `select public.request_public_booking($1, current_date + ${s}, current_date + ${e}, 2) as r`,
+            [ids.tokenB],
+          ).then((rows) => rows[0]!["r"]);
+        expect(await ask(80, 80)).toBe("busy"); // a second day visit on the same day
+        expect(await ask(80, 82)).toBe("busy"); // a stay that starts on that day
+        expect(await ask(78, 80)).toBe("ok"); // leaving on that day: changeover
+      });
+    } finally {
+      await admin(db, "delete from public.bookings where requester_name = 'Den'");
+    }
+  });
+
   it("goes to the admins, records who decided, and the visitor sees it", async () => {
     await asCommitted(
       db,

@@ -155,7 +155,9 @@ function MorePage() {
       );
       return;
     }
-    await queryClient.invalidateQueries({ queryKey: ["properties"] });
+    // Not awaited: on an iPhone the share sheet needs the tap's permission, which a refetch
+    // in between would use up (PR #104 review).
+    void queryClient.invalidateQueries({ queryKey: ["properties"] });
     await shareLink(`${window.location.origin}/verejne/kalendar/${publicToken}`, "calendar");
   };
 

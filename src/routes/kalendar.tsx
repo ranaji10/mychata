@@ -350,8 +350,8 @@ function CalendarPage() {
               </p>
               <p className="text-[16px] text-muted-foreground">
                 {t(
-                  "Pro členy bez aplikace — pouze ke čtení",
-                  "For members without the app — read only",
+                  "Obsazené a volné dny pro kohokoli s odkazem; po přihlášení může požádat o termín",
+                  "Booked and free days for anyone with the link; once signed in, they can ask for dates",
                 )}
               </p>
             </div>

@@ -720,7 +720,8 @@ export function stayLength(start: string, end: string, lang: "cs" | "en"): strin
   const n = Math.round(
     (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000,
   );
-  if (n === 0) return lang === "en" ? "Day visit (no overnight)" : "Jednodenní návštěva (bez noci)";
+  if (n === 0)
+    return lang === "en" ? "Day visit (no overnight)" : "Jednodenní návštěva (bez přespání)";
   if (lang === "en") return `${n} ${n === 1 ? "night" : "nights"}`;
   return `${n} ${n === 1 ? "noc" : n >= 2 && n <= 4 ? "noci" : "nocí"}`;
 }

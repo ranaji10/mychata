@@ -1962,7 +1962,7 @@ export type Database = {
       leave_account: { Args: { _account_id: string }; Returns: string }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
       message_admins: {
-        Args: { _account_id: string; _body: string; _booking_id?: string }
+        Args: { _account_id: string; _body: string }
         Returns: number
       }
       my_cottages: {

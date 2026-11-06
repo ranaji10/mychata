@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { trackOAuthReturn } from "@/lib/analytics";
 import { isAuthRetryableFetchError, type User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +76,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     return () => data.subscription.unsubscribe();
   }, []);
 
+  // Back from Google sign-in: count it as sign_up or login (N-23, T-067).
+  useEffect(() => {
+    if (user) trackOAuthReturn(user.created_at);
+  }, [user]);
+
   // The language this person chose is saved on their profile, so e-mails reach them in it
   // (T-057). Written only when it changed since the last save from this browser.
   const { lang } = useLang();
@@ -116,6 +122,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     isLoading: loadingIdentity,
     isSuccess: identityLoaded,
     error: identityError,
+    fetchStatus: identityFetchStatus,
     refetch: refetchIdentity,
   } = useQuery({
     queryKey: ["identity-members", user?.id],
@@ -191,6 +198,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     data: accounts,
     isLoading: loadingAccounts,
     error: accountsError,
+    fetchStatus: accountsFetchStatus,
     refetch: refetchAccounts,
   } = useQuery({
     queryKey: ["accounts", user?.id],
@@ -223,6 +231,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     data: properties,
     isLoading: loadingProperties,
     error: propertiesError,
+    fetchStatus: propertiesFetchStatus,
     refetch: refetchProperties,
   } = useQuery({
     queryKey: ["properties", account?.id],
@@ -250,6 +259,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     data: members,
     isLoading: loadingMembers,
     error: membersError,
+    fetchStatus: membersFetchStatus,
     refetch: refetchMembers,
   } = useQuery({
     queryKey: ["members", account?.id],
@@ -311,20 +321,25 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     currentMemberId: identityMember?.id ?? null,
     profile: profile ?? null,
     needsOnboarding,
-    identityError: !memberships?.length && identityError ? identityError : null,
+    // A memberships read paused offline with nothing cached (a first start offline) counts as
+    // an error too; before, it opened an empty app (PR #113 review, O-20).
+    identityError: firstLoadError([
+      [identityError, !memberships?.length, identityFetchStatus === "paused" && !memberships],
+    ]),
     retryIdentity: () => void refetchIdentity(),
     // A read after the memberships that failed with nothing cached to show (T-052, O-19).
     // Before, a failed accounts read left an empty Home, and failed cottages or members reads a
     // half-empty app, all with no "Try again".
+    // A read paused offline with nothing cached counts too (O-20).
     loadError: firstLoadError([
-      [accountsError, !!identityMember && !accounts],
-      [propertiesError, !!account && !properties],
-      [membersError, !!account && !members],
+      [accountsError, !!identityMember && !accounts, accountsFetchStatus === "paused"],
+      [propertiesError, !!account && !properties, propertiesFetchStatus === "paused"],
+      [membersError, !!account && !members, membersFetchStatus === "paused"],
     ]),
     retryLoad: () => {
-      if (accountsError) void refetchAccounts();
-      if (propertiesError) void refetchProperties();
-      if (membersError) void refetchMembers();
+      if (accountsError || accountsFetchStatus === "paused") void refetchAccounts();
+      if (propertiesError || propertiesFetchStatus === "paused") void refetchProperties();
+      if (membersError || membersFetchStatus === "paused") void refetchMembers();
     },
     user,
   };

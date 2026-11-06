@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { track } from "@/lib/analytics";
+import { markOAuthStart, track } from "@/lib/analytics";
 import { useBrand } from "@/lib/brand";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Home, LogIn, Mail } from "lucide-react";
@@ -174,7 +174,9 @@ function AuthPage() {
   const signInGoogle = async () => {
     setBusy(true);
     setError("");
-    track("login_start", { method: "google", source: returnCalendar ? "public_calendar" : "app" });
+    const source = returnCalendar ? "public_calendar" : "app";
+    track("login_start", { method: "google", source });
+    markOAuthStart(source);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
     });

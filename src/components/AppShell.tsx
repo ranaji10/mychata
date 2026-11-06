@@ -1,3 +1,4 @@
+import { shellScreen } from "@/lib/shell-screen";
 import { Button } from "@/components/ui/button";
 import { setAnalyticsContext, setAnalyticsUserId, setUserProperties } from "@/lib/analytics";
 import { useConsent } from "@/lib/consent";
@@ -168,11 +169,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!loading && user && needsOnboarding) navigate({ to: "/onboarding", replace: true });
   }, [loading, user, needsOnboarding, navigate]);
 
-  if ((loading && !retrying) || !user || needsOnboarding) {
+  const screen = shellScreen({
+    loading,
+    signedIn: !!user,
+    needsOnboarding,
+    error: !!identityError,
+    retrying,
+  });
+  if (screen === "loading") {
     return <LoadingScreen slow={slow && loading} />;
   }
 
-  if (identityError || retrying) {
+  if (screen === "error") {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4">
         <div role="alert" className="card w-full max-w-[420px] p-5 text-center">

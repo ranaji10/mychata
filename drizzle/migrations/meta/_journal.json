@@ -337,6 +337,13 @@
       "when": 1793923619318,
       "tag": "0047_0047_apply_journaled_0046",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793982801535,
+      "tag": "0048_day_visit_overlap_rule",
+      "breakpoints": true
     }
   ]
 }

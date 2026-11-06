@@ -407,7 +407,8 @@ export function overlapPeakGuests(
       if (
         (o.status === "CONFIRMED" || o.status === "PENDING") &&
         o.start_date <= night &&
-        night < o.end_date
+        // A day visit (departure on the arrival day) takes its whole day (0044, 0048, O-30).
+        night < (o.end_date > o.start_date ? o.end_date : addDaysIso(o.start_date, 1))
       ) {
         sum += o.guests ?? 1;
       }

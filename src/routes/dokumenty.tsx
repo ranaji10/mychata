@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { fmtDate, todayISO } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
+import { serverErrorText } from "@/lib/form-checks";
 import { readDocumentText } from "@/lib/manual-qa.functions";
 
 export const Route = createFileRoute("/dokumenty")({
@@ -275,7 +276,8 @@ function DocumentsPage() {
     },
     onError: (e) => {
       console.error("[dokumenty] read text", e);
-      toast.error(t(`Čtení se nepodařilo: ${e.message}`, `Reading failed: ${e.message}`));
+      const why = serverErrorText(e, t);
+      toast.error(t(`Čtení se nepodařilo: ${why}`, `Reading failed: ${why}`));
     },
   });
 

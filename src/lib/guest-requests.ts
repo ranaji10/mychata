@@ -6,7 +6,8 @@ export const LIVE_REFRESH_MS = 30_000;
 
 /**
  * Guest requests waiting for an admin's decision (from the guest link, T-021).
- * Home lists them with Approve/Decline; the Calendar draws them as "Awaiting approval"
+ * Home lists them with Approve/Decline (only Decline once their dates passed, O-27); the
+ * Calendar draws them as "Awaiting approval" (grey "Not decided" once their dates passed)
  * (T-026). One hook, so both pages share one cache entry with one shape.
  */
 export function usePendingGuestRequests(propertyId: string | undefined, isAdmin: boolean) {

@@ -18,7 +18,15 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { publishedCalendarToken } from "@/lib/public-calendar";
 import { useAccount } from "@/lib/account";
-import { fmtDate, guestCount, pickRange, todayISO, type Booking, type DateRange } from "@/lib/data";
+import {
+  fmtDate,
+  guestCount,
+  isUndecided,
+  pickRange,
+  todayISO,
+  type Booking,
+  type DateRange,
+} from "@/lib/data";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { useLang } from "@/lib/i18n";
 
@@ -172,6 +180,11 @@ function CalendarPage() {
   };
 
   const upcoming = (bookings ?? []).filter((b) => b.end_date >= todayISO());
+  // O-27 (T-064): requests whose dates passed with nobody deciding. They were only a yellow
+  // band on the calendar, in no list; now they are listed, grey, with a way to the stay.
+  const undecided = (bookings ?? []).filter((b) => isUndecided(b)).reverse();
+  const anyUndecided =
+    undecided.length > 0 || (guestRequests ?? []).some((g) => g.end_date < todayISO());
 
   return (
     <AppShell>
@@ -254,13 +267,14 @@ function CalendarPage() {
               bookings={calendarStays}
               selection={range}
               onPickDay={onPickDay}
+              greyUndecided
             />
           )}
         </div>
 
         {/* Organisations book from the calendar too (bug 17): the legend, the overlap notice and
             "Continue to booking" were still family-only, so picked days led nowhere (T-041). */}
-        <CalendarLegend picking={!!range.start} />
+        <CalendarLegend picking={!!range.start} undecided={anyUndecided} />
         <OverlapNotice selection={range} bookings={calendarStays} />
 
         {range.start && (
@@ -332,6 +346,43 @@ function CalendarPage() {
           </div>
         )}
       </section>
+
+      {undecided.length > 0 && (
+        <section className="mt-4" aria-labelledby="undecided-heading">
+          <h3 id="undecided-heading" className="mb-1 text-lg font-bold">
+            {t("Nerozhodnuté žádosti", "Requests not decided")}
+          </h3>
+          <p className="mb-2 text-[16px] text-muted-foreground">
+            {t(
+              "Termín uplynul a nikdo o nich nerozhodl.",
+              "Their dates passed and nobody decided on them.",
+            )}
+          </p>
+          <div className="space-y-2.5">
+            {undecided.map((b) => (
+              <Link
+                key={b.id}
+                to="/rezervace/$id"
+                params={{ id: b.id }}
+                className="card flex items-center gap-3 rounded-[20px] p-[14px] active:scale-[0.99]"
+              >
+                <span className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-secondary font-extrabold text-muted-foreground">
+                  {Number(b.start_date.slice(8))}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[16px] font-bold">{b.requester_name}</p>
+                  <p className="text-[16px] text-muted-foreground">
+                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)} · {guestCount(b.guests, lang)}
+                  </p>
+                </div>
+                <span className="pill bg-secondary text-muted-foreground">
+                  {t("Nerozhodnuto", "Not decided")}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {isFamily && (isAdmin || property?.public_calendar_enabled) && (
         <>

@@ -115,7 +115,7 @@ export function uploadErrorMessage(kind: PhotoErrorKind, t: T, detail?: string):
     case "permission":
       return t(
         "Nemáte oprávnění přidávat fotky k této chatě. Zkuste se odhlásit a přihlásit, nebo se obraťte na správce.",
-        "You don't have permission to add photos to this chata. Try signing out and in again, or ask an admin.",
+        "You don't have permission to add photos to this cottage. Try signing out and in again, or ask an admin.",
       );
     case "network":
       return t(

@@ -587,7 +587,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Plus className="size-5" />{" "}
               {currentMember?.role === "ADMIN" || currentMember?.role === "OWNER"
-                ? t("Přidat chatu", "Add a chata")
+                ? t("Přidat chatu", "Add a cottage")
                 : t("Založit vlastní chatu", "Start my own cottage")}
             </Link>
           </div>

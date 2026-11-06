@@ -153,10 +153,16 @@ export function LoadingCards() {
               aria-busy={busy}
               onClick={() => {
                 setBusy(true);
+                // Offline, a paused read's refetch settles only once the connection is back:
+                // never leave the button disabled for good (PR #113 review).
+                const id = window.setTimeout(() => setBusy(false), 20000);
                 void queryClient
                   .refetchQueries({ type: "active" })
                   .catch((error: unknown) => console.error("[loading] refetch", error))
-                  .finally(() => setBusy(false));
+                  .finally(() => {
+                    window.clearTimeout(id);
+                    setBusy(false);
+                  });
               }}
               className="btn-primary min-h-[44px] rounded-full px-5 text-[15px] font-semibold"
             >

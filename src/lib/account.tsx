@@ -116,6 +116,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     isLoading: loadingIdentity,
     isSuccess: identityLoaded,
     error: identityError,
+    fetchStatus: identityFetchStatus,
     refetch: refetchIdentity,
   } = useQuery({
     queryKey: ["identity-members", user?.id],
@@ -314,7 +315,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     currentMemberId: identityMember?.id ?? null,
     profile: profile ?? null,
     needsOnboarding,
-    identityError: !memberships?.length && identityError ? identityError : null,
+    // A memberships read paused offline with nothing cached (a first start offline) counts as
+    // an error too; before, it opened an empty app (PR #113 review, O-20).
+    identityError: firstLoadError([
+      [identityError, !memberships?.length, identityFetchStatus === "paused" && !memberships],
+    ]),
     retryIdentity: () => void refetchIdentity(),
     // A read after the memberships that failed with nothing cached to show (T-052, O-19).
     // Before, a failed accounts read left an empty Home, and failed cottages or members reads a

@@ -6,7 +6,7 @@ Goal: the two backlog items with no dependency on a maintainer, from the call of
 
 Non-goals: request_public_booking and decide_guest_request (0044 already treats a day visit as its whole day); O-25 past stays (deferred); O-28 tab label size (design call); the offline banner.
 
-Files allowed: `drizzle/migrations/0048_day_visit_overlap_rule.sql`, `drizzle/migrations/meta/_journal.json`, `drizzle/migrations/meta/0048_snapshot.json`, `supabase/tests/security.test.ts`, `src/lib/data.ts`, `src/lib/load-error.ts`, `src/lib/shell-screen.ts` (new), `src/lib/use-slow.ts` (new), `src/lib/account.tsx`, `src/components/AppShell.tsx`, `src/components/bits.tsx`, `src/lib/t067.test.ts` (new), `docs/generated/`, `docs/STATUS.md`, tracker copies, this brief.
+Files allowed: `drizzle/migrations/0048_day_visit_overlap_rule.sql`, `drizzle/migrations/meta/_journal.json`, `drizzle/migrations/meta/0048_snapshot.json`, `supabase/tests/security.test.ts`, `src/lib/data.ts`, `src/lib/load-error.ts`, `src/lib/shell-screen.ts` (new), `src/lib/use-slow.ts` (new), `src/lib/account.tsx`, `src/components/AppShell.tsx`, `src/components/bits.tsx`, `src/lib/t067.test.ts` (new), `docs/generated/`, `docs/STATUS.md`, tracker copies, `docs/external/claude/2026-11-06-pr113-review.md` and its README row, this brief.
 
 Invariants touched (AGENTS.md): 1 (definer function unchanged in reach: internal, no grants), 2 (new migration 0048), 5 (all text through `t()`), 6 (refetch failures logged).
 

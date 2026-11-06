@@ -74,6 +74,34 @@ describe("a read paused offline with nothing cached is an error (O-20)", () => {
     client.unmount();
     client.clear();
   });
+
+  it("a first start offline (memberships read paused, nothing cached) shows the card, not the app", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { networkMode: "offlineFirst", retry: 0 } },
+    });
+    client.mount();
+    onlineManager.setOnline(false);
+    const observer = new QueryObserver<string[]>(client, {
+      queryKey: ["identity-members", "u"],
+      queryFn: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      retry: 1,
+      retryDelay: 1,
+    });
+    const unsubscribe = observer.subscribe(() => {});
+    await new Promise((r) => setTimeout(r, 50));
+    const r = observer.getCurrentResult();
+    // As account.tsx computes them: not loading, not loaded, no error of its own.
+    const identityError = firstLoadError([
+      [r.error, !r.data?.length, r.fetchStatus === "paused" && !r.data],
+    ]);
+    expect(identityError).toBe(OFFLINE_LOAD_ERROR);
+    expect(shellScreen({ ...base, loading: r.isLoading, error: !!identityError })).toBe("error");
+    unsubscribe();
+    client.unmount();
+    client.clear();
+  });
 });
 
 describe("the booking screen counts others' day visits (O-30)", () => {

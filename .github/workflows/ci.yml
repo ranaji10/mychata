@@ -8,6 +8,13 @@ on:
       e2e_base_url:
         description: "Run smoke tests against this URL (e.g. staging)"
         required: false
+      changed_only:
+        # The sync workflow starts CI this way for its lovable-sync PR (T-066): its own PRs
+        # start no workflows. Formatting then answers only for the changed files, as on a PR.
+        description: "Check formatting only for files changed against main (as on a PR)"
+        type: boolean
+        required: false
+        default: false
 
 # Nothing here writes to the repository.
 permissions:
@@ -40,7 +47,7 @@ jobs:
       # changes, and on main the full check warns instead of failing. `bun run check` on your
       # own computer and a manual run of this workflow still check everything strictly.
       - name: Formatting of the files this pull request changes
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || inputs.changed_only
         run: |
           # NUL-separated, so names with spaces or a "$" (src/routes/verejne.zadost.$token.tsx)
           # reach Prettier untouched. Deleted files are left out (ACMR). Prettier skips what it
@@ -71,7 +78,7 @@ jobs:
             echo "All files are formatted."
           fi
       - name: Formatting of everything (strict, manual run)
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && !inputs.changed_only
         run: bun run format:check
       - name: Unit, database security and policy-lint tests
         run: bun run test

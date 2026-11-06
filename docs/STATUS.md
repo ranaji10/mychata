@@ -15,6 +15,13 @@ As of 2026-11-06. Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-020 document vault search (re-planned in T-044), T-001–T-013 as listed below. T-055 and T-057 in review (PR). Done: T-014–T-019, T-021–T-052.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
+## Clear form errors, Lovable PRs opened automatically (T-066, 6 Nov 2026, in review)
+
+Brief: `docs/tasks/T-066-sync-pr-and-o32.md`.
+
+- O-32: the organisation's shared request form (guest link) checks name, e-mail (zod's rule), guests and note length before sending and says which to fix; a refused or failed send shows a message and the button no longer stays busy. Fields have length limits. The House manual box stops at 500 characters; a refused question or document read is said in words, not raw JSON.
+- The sync workflow opens the "lovable-sync → main" PR by itself when Lovable pushes commits not on `main`, keeps merging `main` into `lovable-sync` meanwhile, and starts CI on it (`docs/runbooks/two-person-workflow.md`).
+
 ## Messages about a stay, undecided requests, "cottage" in English (T-064, 6 Nov 2026, live since `afca307`)
 
 Brief: `docs/tasks/T-064-messages-stale-cottage.md`.

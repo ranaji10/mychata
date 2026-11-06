@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays } from "lucide-react";
 import { getGuestLinkInfo, submitGuestRequest } from "@/lib/guest.functions";
+import { GUEST_LIMITS, guestRequestProblem, isInputRefusal } from "@/lib/form-checks";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { fmtDate, pickRange, todayISO, type DateRange } from "@/lib/data";
 import { CalendarMonth, CalendarLegend, MonthHeader, useMonthNav } from "@/components/calendar";
@@ -96,24 +97,6 @@ function GuestBookingPage() {
   const upcomingAvailability = data.availability.filter((b) => b.end_date >= today);
 
   const submit = async () => {
-    setBusy(true);
-    const res = await submitGuestRequest({
-      data: {
-        token,
-        name,
-        email,
-        startDate: start,
-        endDate: end,
-        guests: Number(guests),
-        note: note || undefined,
-        company: company || undefined,
-      },
-    });
-    setBusy(false);
-    if (res.ok) {
-      setDone(true);
-      return;
-    }
     const messages: Record<string, string> = {
       link: t("Tento odkaz už neplatí.", "This link is no longer valid."),
       dates: t("Zkontrolujte prosím termín.", "Please check the dates."),
@@ -124,11 +107,51 @@ function GuestBookingPage() {
         "Dnes už bylo odesláno příliš mnoho žádostí. Zkuste to zítra.",
         "Too many requests today. Please try again tomorrow.",
       ),
+      note: t(
+        `Poznámka je příliš dlouhá (nejvýš ${GUEST_LIMITS.note} znaků).`,
+        `The note is too long (${GUEST_LIMITS.note} characters at most).`,
+      ),
+      form: t(
+        "Něco ve formuláři neodpovídá. Zkontrolujte jméno, e-mail a poznámku.",
+        "Something in the form doesn't fit. Please check the name, email and note.",
+      ),
       save: t("Žádost se nepodařilo odeslat.", "The request could not be sent."),
     };
-    setFailure(
-      messages[res.error] ?? t("Žádost se nepodařilo odeslat.", "The request could not be sent."),
-    );
+    // O-32 (T-066): say what the server would refuse before sending (it used to throw, and
+    // the button stayed busy with no message, e.g. for "jan@seznam").
+    const problem = guestRequestProblem({ name, email, guests: Number(guests), note });
+    if (problem) {
+      setFailure(messages[problem] ?? null);
+      return;
+    }
+    setFailure(null);
+    setBusy(true);
+    try {
+      const res = await submitGuestRequest({
+        data: {
+          token,
+          name: name.trim(),
+          email: email.trim(),
+          startDate: start,
+          endDate: end,
+          guests: Number(guests),
+          note: note || undefined,
+          company: company || undefined,
+        },
+      });
+      if (res.ok) {
+        setDone(true);
+        return;
+      }
+      setFailure(
+        messages[res.error] ?? t("Žádost se nepodařilo odeslat.", "The request could not be sent."),
+      );
+    } catch (error) {
+      console.error("[host] request failed", error);
+      setFailure(isInputRefusal(error) ? messages["form"]! : messages["save"]!);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -185,6 +208,8 @@ function GuestBookingPage() {
               <span className="label-text">{t("Vaše jméno", "Your name")}</span>
               <input
                 className="field w-full"
+                maxLength={GUEST_LIMITS.name}
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -194,6 +219,8 @@ function GuestBookingPage() {
               <input
                 className="field w-full"
                 type="email"
+                maxLength={GUEST_LIMITS.email}
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -258,9 +285,15 @@ function GuestBookingPage() {
               <span className="label-text">{t("Poznámka (nepovinné)", "Note (optional)")}</span>
               <textarea
                 className="field min-h-20 w-full"
+                maxLength={GUEST_LIMITS.note}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
+              {note.length > GUEST_LIMITS.note - 100 && (
+                <span className="mt-1 block text-[15px] text-muted-foreground">
+                  {note.length} / {GUEST_LIMITS.note}
+                </span>
+              )}
             </label>
             <input
               className="hidden"
@@ -274,7 +307,7 @@ function GuestBookingPage() {
               variant="fresh"
               size="fresh"
               className="btn-primary w-full"
-              disabled={busy || name.trim().length < 2 || !email.includes("@") || !start || !end}
+              disabled={busy || name.trim().length < 2 || !email.trim() || !start || !end}
               onClick={submit}
             >
               {busy ? t("Odesílám…", "Sending…") : t("Odeslat žádost", "Send request")}

@@ -3,6 +3,7 @@ import { track } from "@/lib/analytics";
 import { BookOpen, FileText, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
+import { QUESTION_MAX, serverErrorText } from "@/lib/form-checks";
 import { MAX_EARLIER_TURNS } from "@/lib/manual-answers";
 import { askManual, type AskManualResult } from "@/lib/manual-qa.functions";
 
@@ -48,7 +49,8 @@ export function AskBox({
       track("manual_question", { result: result.reason ?? "answered", step: earlier.length + 1 });
     } catch (e) {
       console.error("[ask] failed", e);
-      const failed = (e as { message?: string } | null)?.message ?? String(e);
+      // O-32 (T-066): a refused input is said in words, not shown as raw JSON.
+      const failed = serverErrorText(e, t);
       setThread((items) => [...items, { question: q, result: null, failed }]);
       // Give the question back so it can be sent again.
       setQuestion((current) => current || q);
@@ -122,6 +124,7 @@ export function AskBox({
           placeholder={thread.length ? t("Další otázka…", "Ask a follow-up…") : placeholder}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
+          maxLength={QUESTION_MAX}
           aria-label={title}
           enterKeyHint="send"
         />

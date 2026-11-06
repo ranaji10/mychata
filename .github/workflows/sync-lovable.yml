@@ -1,42 +1,41 @@
 name: Keep lovable-sync current
 # Lovable works from the branch lovable-sync (it can't push to main: the ruleset refuses it).
-# After every merge into main, move lovable-sync up to main so Lovable's next round starts
-# from the latest code. Only a fast-forward: if lovable-sync has Lovable commits that are not
-# on main yet, nothing is pushed and the run ends with a warning (merge Lovable's PR first).
+# This workflow keeps lovable-sync and main together, so neither side waits on the other:
+#
+# - lovable-sync behind main (the usual case after a merge): fast-forward it to main.
+# - lovable-sync has Lovable commits that are not on main (e.g. a migration marker, T-066):
+#   1. if main also moved, merge main into lovable-sync (a merge commit, never a rewrite), so
+#      Lovable still gets every merge; on a conflict nothing is pushed and the run warns;
+#   2. make sure a PR "lovable-sync -> main" is open (opened here if there is none), so the
+#      maintainers only have to merge it;
+#   3. run CI on lovable-sync: pushes and PRs made with this workflow's token start no other
+#      workflows, so the PR would otherwise wait for its required "check" forever.
+#
+# Needs the repository setting Settings -> Actions -> General -> Workflow permissions ->
+# "Allow GitHub Actions to create and approve pull requests" (for step 2).
 on:
   push:
-    branches: [main]
+    branches: [main, lovable-sync]
   workflow_dispatch:
 
-# Only this workflow writes, and only to lovable-sync.
 permissions:
-  contents: write
+  contents: write # move or merge into lovable-sync, and nothing else
+  pull-requests: write # open the lovable-sync -> main PR
+  actions: write # start CI on lovable-sync
 
 concurrency:
   group: sync-lovable
   cancel-in-progress: false
 
 jobs:
-  fast-forward:
+  sync:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Fast-forward lovable-sync to main
-        run: |
-          git fetch origin main lovable-sync
-          main=$(git rev-parse origin/main)
-          sync=$(git rev-parse origin/lovable-sync)
-          if [ "$main" = "$sync" ]; then
-            echo "lovable-sync is already at main (${main:0:7})." | tee -a "$GITHUB_STEP_SUMMARY"
-          elif git merge-base --is-ancestor "$sync" "$main"; then
-            git push origin "$main:refs/heads/lovable-sync"
-            echo "lovable-sync moved from ${sync:0:7} to ${main:0:7}. Lovable picks it up on its next sync." | tee -a "$GITHUB_STEP_SUMMARY"
-          else
-            ahead=$(git rev-list --count "$main..$sync")
-            msg="lovable-sync has $ahead Lovable commit(s) that are not on main, so it was not moved. Open or merge the PR from lovable-sync into main; this workflow then moves it on the next merge."
-            echo "::warning title=lovable-sync not moved::$msg"
-            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
-          fi
+      - name: Bring lovable-sync and main together
+        run: bash scripts/sync-lovable.sh

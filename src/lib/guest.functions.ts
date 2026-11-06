@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
-import { z } from "zod";
+import { guestLinkInput, guestRequestInput } from "@/lib/input-schemas";
 import type { Database } from "@/integrations/supabase/types";
 
 // Guest links let someone without an account see busy dates and ask for a stay.
@@ -19,7 +19,7 @@ function publicClient() {
 }
 
 export const getGuestLinkInfo = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ token: z.string().min(16).max(64) }).parse(data))
+  .inputValidator((data) => guestLinkInput.parse(data))
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: link, error } = await supabase.rpc("public_guest_link", { _token: data.token });
@@ -49,21 +49,7 @@ export type GuestRequestResult =
   | { ok: false; error: "link" | "dates" | "guests" | "name" | "email" | "rate" | "save" };
 
 export const submitGuestRequest = createServerFn({ method: "POST" })
-  .inputValidator((data) =>
-    z
-      .object({
-        token: z.string().min(16).max(64),
-        name: z.string().min(2).max(120),
-        email: z.string().email().max(200),
-        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        guests: z.number().int().min(1).max(50),
-        note: z.string().max(1000).optional(),
-        // Honeypot: must stay empty; bots fill it.
-        company: z.string().max(0).optional(),
-      })
-      .parse(data),
-  )
+  .inputValidator((data) => guestRequestInput.parse(data))
   .handler(async ({ data: input }): Promise<GuestRequestResult> => {
     if (input.company) return { ok: true }; // silently drop bots
     if (input.endDate < input.startDate) return { ok: false, error: "dates" };

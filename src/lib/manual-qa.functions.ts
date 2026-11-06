@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { z } from "zod";
+import { askManualInput, documentInput, propertyInput } from "@/lib/input-schemas";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { AI_DAILY_LIMITS } from "@/lib/limits";
@@ -8,7 +8,6 @@ import {
   bestExcerpt,
   buildContext,
   earlierMessages,
-  MAX_EARLIER_TURNS,
   retrievalQuery,
   docxXmlToText,
   fileKind,
@@ -71,7 +70,7 @@ const toVector = (v: number[]) => `[${v.join(",")}]`;
 /** Re-embeds only the manual sections whose text changed. Admins only (enforced by RLS). */
 export const rebuildManualChunks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ propertyId: z.string().uuid() }).parse(data))
+  .inputValidator((data) => propertyInput.parse(data))
   .handler(async ({ data, context }) => {
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { ok: false, reason: "no_key" as const, embedded: 0, failed: 0 };
@@ -333,7 +332,7 @@ type SupabaseLike = SupabaseClient<Database>;
 /** Reads an uploaded document's text now (after upload, or "Read again"). Admins only. */
 export const readDocumentText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ documentId: z.string().uuid() }).parse(data))
+  .inputValidator((data) => documentInput.parse(data))
   .handler(async ({ data, context }) => {
     const { data: enabled, error: flagError } = await context.supabase.rpc("feature_enabled", {
       _key: "ai_documents",
@@ -377,20 +376,7 @@ export type AskManualResult = {
 /** Answers a question from the cottage's manual and documents, inside the caller's rights. */
 export const askManual = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) =>
-    z
-      .object({
-        propertyId: z.string().uuid(),
-        question: z.string().min(2).max(500),
-        lang: z.enum(["cs", "en"]),
-        // The same box's earlier questions and answers, so a follow-up has its context (T-041).
-        earlier: z
-          .array(z.object({ question: z.string().max(500), answer: z.string().max(2000) }))
-          .max(MAX_EARLIER_TURNS)
-          .optional(),
-      })
-      .parse(data),
-  )
+  .inputValidator((data) => askManualInput.parse(data))
   .handler(async ({ data, context }): Promise<AskManualResult> => {
     const { data: enabled, error: flagError } = await context.supabase.rpc("feature_enabled", {
       _key: "ai_manual",

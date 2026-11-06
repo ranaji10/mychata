@@ -32,6 +32,10 @@ Brief: `docs/tasks/T-062-ux-round-o23-o24.md`; report `docs/external/claude/2026
 - New booking says which dates are chosen instead of asking for them again; picked days are an outlined circle, confirmed stays solid; legend 15 px.
 - Home of an organisation: own icon per card. Home and the organisation form load their picture at once. Maintenance filters wrap on a phone. An empty Document Vault offers "Add the first document".
 
+## zod 4 (T-065, 6 Nov 2026, in review)
+
+Brief: `docs/tasks/T-065-zod-4.md`. zod 3 → 4 (O-31, advisory GHSA-mrhx-c7xc-m3w5). The server functions' inputs live in `src/lib/input-schemas.ts` and accept exactly what they did; each is tested in `src/lib/t065.test.ts`. No change for users.
+
 ## Back arrow on the public request form (T-061, 5 Nov 2026, live since `c3d1112`)
 
 Brief: `docs/tasks/T-061-request-form-back.md`. Settings → Public request form (organisations) had no way back; it now has a Back arrow when there is an app page to return to (not for staff who open the shared link).

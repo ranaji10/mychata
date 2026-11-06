@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PillNeutral, PillOk, PillWarn, Skeleton } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { fmtDate, fmtDateTime, isUuid, todayISO, type Booking } from "@/lib/data";
+import { fmtDate, fmtDateTime, isUndecided, isUuid, todayISO, type Booking } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { friendlyError } from "@/lib/rpc-errors";
 
@@ -48,6 +48,8 @@ function BookingDetail() {
       const { error } = await supabase.rpc("message_admins", {
         _account_id: account.id,
         _body: message.trim(),
+        // O-26 (0046): the admin's notification opens this stay.
+        _booking_id: id,
       });
       if (error) throw error;
       toast.success(t("Zpráva správci poslána.", "Message sent to the admin."));
@@ -160,6 +162,9 @@ function BookingDetail() {
   }
 
   const pending = booking.status === "PENDING";
+  // O-27 (T-064): the dates passed and nobody decided. No Approve (stays in the past are not
+  // added, O-25) and no "Message the admin"; an admin can still decline it, the booker withdraw it.
+  const undecided = isUndecided(booking);
   // Who may cancel: the person who booked it, or an admin (the database policy says the same).
   // A stay that has already ended stays in the history (T-026: anyone saw "Cancel stay" on
   // every stay, past ones included, and one tap deleted it).
@@ -197,7 +202,9 @@ function BookingDetail() {
       <section className="card mt-4 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">{booking.requester_name}</h2>
-          {pending ? (
+          {undecided ? (
+            <PillNeutral>{t("Nerozhodnuto", "Not decided")}</PillNeutral>
+          ) : pending ? (
             <PillWarn>{t("Čeká na schválení", "Awaiting approval")}</PillWarn>
           ) : (
             <PillOk>{t("Potvrzeno", "Confirmed")}</PillOk>
@@ -255,7 +262,16 @@ function BookingDetail() {
           })()}
       </section>
 
-      {pending && (
+      {undecided && (
+        <p className="mt-4 text-[16px] font-semibold">
+          {t(
+            "Termín uplynul a nikdo o žádosti nerozhodl.",
+            "The dates passed and nobody decided on this request.",
+          )}
+        </p>
+      )}
+
+      {pending && !undecided && (
         <section
           className="mt-4 space-y-2 text-[16px]"
           aria-label={t("Schválení pobytu", "Stay approval")}
@@ -280,7 +296,7 @@ function BookingDetail() {
         </section>
       )}
 
-      {pending && !isAdmin && (
+      {pending && !undecided && !isAdmin && (
         <section className="mt-4 space-y-3">
           <Button
             variant="fresh"
@@ -337,14 +353,16 @@ function BookingDetail() {
 
       {pending && isAdmin && (
         <div className="mt-4 flex gap-2">
-          <Button
-            variant="fresh"
-            size="fresh"
-            onClick={() => confirm.mutate()}
-            className="btn-dark flex-1"
-          >
-            {t("Schválit", "Approve")}
-          </Button>
+          {!undecided && (
+            <Button
+              variant="fresh"
+              size="fresh"
+              onClick={() => confirm.mutate()}
+              className="btn-dark flex-1"
+            >
+              {t("Schválit", "Approve")}
+            </Button>
+          )}
           <Button
             variant="fresh"
             size="fresh"
@@ -392,7 +410,7 @@ function BookingDetail() {
         onConfirm={() => remove.mutate({ withdrawn: withdraw })}
       />
 
-      {pending && !isAdmin && (
+      {pending && !undecided && !isAdmin && (
         <p className="mt-4 text-center text-[16px] font-semibold text-muted-foreground">
           <PillNeutral>
             {t("Schválit může pouze správce.", "Only an admin can approve.")}

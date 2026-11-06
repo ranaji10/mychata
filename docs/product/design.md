@@ -8,16 +8,16 @@ Users are mostly 45–68, mostly on phones, some on tablets and computers. Plain
 
 ## Fixed rules (unchanged)
 
-| Rule            | Value                                                                                                                                                                        | Where it is set                                      |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Language        | Czech default, English second; every string through `t("česky", "English")`                                                                                                  | `src/lib/i18n.tsx`                                   |
-| Dates and money | `DD.MM.YYYY`; `1 234 Kč`                                                                                                                                                     | `fmtDate`, `fmtKc` in `src/lib/data.ts`              |
-| Body text       | At least 16px (root stays 17px). Only tab-bar labels, legends and pills may be 12–13px                                                                                       | `src/styles.css`                                     |
-| Tap targets     | At least 44 × 44 px                                                                                                                                                          | buttons, `size-11` icons                             |
-| Contrast        | Text at least 4.5:1 against its background                                                                                                                                   | check with DevTools                                  |
-| Colour scheme   | Light only. No dark mode. No purple or indigo gradients                                                                                                                      | `src/styles.css`                                     |
-| Layout          | Mobile-first. Phone: one column, sticky bottom tab bar. Tablet (`md`, 768px+): same column, 720px wide. Desktop (`lg`, 1024px+): tabs in a left sidebar, content up to 820px | `src/components/AppShell.tsx`                        |
-| Width           | App shell 420px on phones, 720px from `md`, sidebar + 820px from `lg`. Public pages 640–720px from `md`; sign-in and onboarding forms stay narrow (480–560px)                | each route's `<main>`; `src/components/AppShell.tsx` |
+| Rule            | Value                                                                                                                                                                            | Where it is set                                      |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Language        | Czech default, English second; every string through `t("česky", "English")`. English says "cottage", never "chata", except in the brand name MyChata (decision 6 Nov 2026, O-29) | `src/lib/i18n.tsx`                                   |
+| Dates and money | `DD.MM.YYYY`; `1 234 Kč`                                                                                                                                                         | `fmtDate`, `fmtKc` in `src/lib/data.ts`              |
+| Body text       | At least 16px (root stays 17px). Only tab-bar labels, legends and pills may be 12–13px                                                                                           | `src/styles.css`                                     |
+| Tap targets     | At least 44 × 44 px                                                                                                                                                              | buttons, `size-11` icons                             |
+| Contrast        | Text at least 4.5:1 against its background                                                                                                                                       | check with DevTools                                  |
+| Colour scheme   | Light only. No dark mode. No purple or indigo gradients                                                                                                                          | `src/styles.css`                                     |
+| Layout          | Mobile-first. Phone: one column, sticky bottom tab bar. Tablet (`md`, 768px+): same column, 720px wide. Desktop (`lg`, 1024px+): tabs in a left sidebar, content up to 820px     | `src/components/AppShell.tsx`                        |
+| Width           | App shell 420px on phones, 720px from `md`, sidebar + 820px from `lg`. Public pages 640–720px from `md`; sign-in and onboarding forms stay narrow (480–560px)                    | each route's `<main>`; `src/components/AppShell.tsx` |
 
 ## 1. Two brands, one design
 
@@ -188,7 +188,7 @@ Whenever a cottage has no main photo (`usePrimaryPhotoUrl` returns null), and on
 
 - Seasons are meteorological (whole months), decided by the date in `Europe/Prague`, so the picture changes automatically on 1 March, 1 June, 1 September and 1 December.
 - The season is worked out from the current date each time a page renders (on the server and in the browser). No timer or polling: someone who opens or reloads a page on 1 December gets the winter picture.
-- Code: `src/lib/season.ts` exports `seasonFor(date = new Date()): "spring" | "summer" | "autumn" | "winter"` (month from `Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Prague", month: "numeric" })`), and `useDefaultChataPhoto()` returning `{ src, alt }`. Alt text: "Chata na jaře" / "The chata in spring", "Chata v létě" / "…in summer", "Chata na podzim" / "…in autumn", "Chata v zimě" / "…in winter".
+- Code: `src/lib/season.ts` exports `seasonFor(date = new Date()): "spring" | "summer" | "autumn" | "winter"` (month from `Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Prague", month: "numeric" })`), and `useDefaultChataPhoto()` returning `{ src, alt }`. Alt text: "Chata na jaře" / "The cottage in spring", "Chata v létě" / "…in summer", "Chata na podzim" / "…in autumn", "Chata v zimě" / "…in winter".
 - Used in: `/` (landing), `/auth` (sign-in hero), `/verejne/zadost/$token`, and `/domu` as the fallback (`mainPhoto ?? defaultPhoto.src`). Any new place that needs a stock cottage picture uses the hook too. `src/assets/chata.jpg` is deleted once nothing imports it.
 - The four images are ordinary files committed in the repo at the paths above and imported directly (`import spring from "@/assets/seasons/chata-spring.webp"`), so the build bundles them with hashed names and long caching, and they work on any hosting, local dev included. Do not use Lovable's asset storage (`*.asset.json` / `/__l5e/` URLs) for them.
 - A cottage's own main photo always wins over the seasonal picture.
@@ -196,8 +196,8 @@ Whenever a cottage has no main photo (`usePrimaryPhotoUrl` returns null), and on
 
 ## 7. Content patterns from the design
 
-- Home headline: a one-line status built from data the page already has, e.g. "Chata je volná až do pátku." / "The chata is free until Friday." or "Dnes přijíždí Jana." / "Jana arrives today.". If there is no data to say something true, use "Dobrý den, {jméno}".
-- Sign-in headline: "Společná chata, bez zmatků." / "One shared chata, no muddle." with the subline "Kalendář, úkoly, výdaje a návod k chatě na jednom místě." / "Calendar, tasks, expenses and the house manual in one place.". Institution sign-up keeps its own form copy.
+- Home headline: a one-line status built from data the page already has, e.g. "Chata je volná až do pátku." / "The cottage is free until Friday." or "Dnes přijíždí Jana." / "Jana arrives today.". If there is no data to say something true, use "Dobrý den, {jméno}".
+- Sign-in headline: "Společná chata, bez zmatků." / "One shared cottage, no muddle." with the subline "Kalendář, úkoly, výdaje a návod k chatě na jednom místě." / "Calendar, tasks, expenses and the house manual in one place.". Institution sign-up keeps its own form copy.
 - Don't invent features to match the mock-ups: where a mock-up shows something the app doesn't have (notification bell, occupancy chart), leave it out.
 
 ## Reference

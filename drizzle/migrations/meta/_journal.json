@@ -323,6 +323,13 @@
       "when": 1793920670337,
       "tag": "0045_0045_apply_journaled_0044",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793921991810,
+      "tag": "0046_message_admins_stay",
+      "breakpoints": true
     }
   ]
 }

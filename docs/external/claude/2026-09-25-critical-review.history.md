@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-11-05
+updated: 2026-11-06
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Done & history
@@ -136,6 +136,7 @@ Everything finished, oldest first. Details are in the repo: `docs/STATUS.md`, `d
 | 5 Nov, 18:00–18:30 | N-34 done: PR #99 (T-059) merged, Lovable applied 0042 (marker 0043), published; live 957a75c. You confirmed a new account's e-mails show the sender as MyChata. Claude rechecked all five T-059 steps (pass), then hunted bugs in Chrome (Test 5, English) and the built-in browser (Test 3, Czech, 375 px) plus code review: 11 bugs (New booking crash on a cleared or typed date, task due date saved as year 0002, Checkout Tasks drafts mixed between cottages, no past-date check on the public request form, 1e2 accepted as a count, 2.5 guests sent as 2, rounded expense amounts, expiry before issue, broken task/stay links blaming the connection, empty task date failing, a new guest link per tap). All fixed in PR #101 (T-060), which also does O-22's reuse part. | docs/external/claude/2026-11-05-site-check-2.md, PR #101 |
 | 5 Nov, 20:20 | N-35 done: PR #101 (T-060) merged and published, live 4ab7af5 (build-sha checked). Claude's recheck passed all six steps: no crash on a cleared or typed booking date, task due date typed with the keyboard saves as 20.11.2026, past dates refused on the public request form, amounts to the heller, one guest link for two taps, broken task links say "not found". | docs/external/claude/2026-11-05-site-check-2.md, PR #101 |
 | 5 Nov, 23:00 – 6 Nov, 01:00 | T-061 (PR #103) published, live c3d1112: back arrow passes. O-22 done: two taps give one guest link (list/revoke dropped by you: only test data). Your calls: O-23 ask before publishing, O-24 allow 0-night stays for families and organisations, O-25 deferred. UX round on every signed-in screen (Test 3 at 375 px in English and Czech, Test 5 desktop): 10 findings, U-1 to U-6 fixed with O-23 and O-24 in PR #104 (T-062, migration 0044; fresh review, fixes applied), U-7 to U-10 became O-26 to O-29. Dependencies: Claude makes the update, Lovable only takes it over; PR #105 (T-063) clears 28 npm advisories to 6 and turns on Dependabot npm PRs (weekly group, security group). Lovable prompts 27 and 28 written. | docs/external/claude/2026-11-05-ux-round.md, 2026-11-05-pr104-review.md, PR #104, PR #105 |
+| 6 Nov, 00:35 – 02:00 | You merged PR #104 and #105 and published: live 149736b (Lovable applied 0044 with marker 0045; PR #107 brings the marker to main). T-062 recheck: steps 1, 2, 5, 6 pass; steps 3–4 left (switching Test 5's public calendar off was blocked as a settings change). N-36 and N-37 done. Your calls: O-27 build it, O-29 "cottage" everywhere in English except MyChata, O-31 now. PR #108 (T-064): O-26 messages open their stay (migration 0046), O-27 "Not decided", O-29; fresh review, two findings fixed. PR #109 (T-065): zod 4, every server-function input tested; fresh review, no blocking findings, two older issues became O-32. Lovable prompts 29 and 30 written. | PR #107, #108, #109; docs/external/claude/2026-11-06-pr108-review.md, 2026-11-06-pr109-review.md |
 
 ## GitHub settings check (found 4 Oct, done 12 Oct)
 

@@ -29,10 +29,10 @@ export function useDefaultChataPhoto() {
   const photos = { spring, summer, autumn, winter };
   const small = { spring: spring800, summer: summer800, autumn: autumn800, winter: winter800 };
   const alt = {
-    spring: t("Chata na jaře", "The chata in spring"),
-    summer: t("Chata v létě", "The chata in summer"),
-    autumn: t("Chata na podzim", "The chata in autumn"),
-    winter: t("Chata v zimě", "The chata in winter"),
+    spring: t("Chata na jaře", "The cottage in spring"),
+    summer: t("Chata v létě", "The cottage in summer"),
+    autumn: t("Chata na podzim", "The cottage in autumn"),
+    winter: t("Chata v zimě", "The cottage in winter"),
   };
   return {
     src: photos[season],

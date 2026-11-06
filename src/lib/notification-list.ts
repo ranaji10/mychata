@@ -92,7 +92,15 @@ export interface NotificationInput {
     | undefined;
   bookings?: Booking[] | null | undefined;
   guestRequests?:
-    | { id: string; guest_name: string; start_date: string; created_at: string; source?: string }[]
+    | {
+        id: string;
+        guest_name: string;
+        start_date: string;
+        /** O-27: a request whose dates passed undecided is no longer "to decide". */
+        end_date?: string;
+        created_at: string;
+        source?: string;
+      }[]
     | null
     | undefined;
   /** Booking requests decided in the last two weeks, with who decided (T-043). */
@@ -280,6 +288,7 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
       });
     }
     for (const g of input.guestRequests ?? []) {
+      if (g.end_date && g.end_date < input.today) continue;
       out.push({
         key: `guest:${g.id}`,
         kind: "guest_request",
@@ -587,7 +596,11 @@ export function storedItem(
           tone: "action",
           title: [`Zpráva od: ${str(p.from_name)}`, `Message from ${str(p.from_name)}`],
           detail: [`„${str(p.body)}“`, `“${str(p.body)}”`],
-          to: "/upozorneni",
+          // O-26 (0046): a message sent from a stay opens that stay, where the admin decides.
+          // Older messages carry no stay and stay on Notifications.
+          ...(str(p.booking_id)
+            ? { to: "/rezervace/$id", params: { id: str(p.booking_id) } }
+            : { to: "/upozorneni" }),
         },
       };
     case "debt_reminder": {

@@ -77,6 +77,18 @@ export interface Booking {
   approved_at?: string | null;
 }
 
+/**
+ * O-27 (T-064): a stay request nobody decided before its departure day passed. It is not
+ * "Awaiting approval" any more: the calendar draws it grey as "Not decided", the stay detail
+ * says so and offers no Approve (stays in the past are not added, O-25), only Decline.
+ */
+export function isUndecided(
+  b: Pick<Booking, "status" | "end_date">,
+  today: string = todayISO(),
+): boolean {
+  return b.status === "PENDING" && b.end_date < today;
+}
+
 export interface InstitutionalRequest {
   id: string;
   property_id: string;

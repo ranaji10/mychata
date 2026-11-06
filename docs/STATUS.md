@@ -20,6 +20,7 @@ As of 2026-11-06. Update this file in every PR that changes behaviour.
 Brief: `docs/tasks/T-067-day-visit-hold-and-loading.md`.
 
 - O-30 (migration 0048): a member's booking on a day someone has a day visit is held for the admin when the cottage said "No" to overlaps or the guest limit is passed; two day visits on one day meet. The booking screen counts the same way.
+- N-23: Google sign-ups and sign-ins are counted in GA (`sign_up` / `login`, method google) when the person comes back from Google; before, only email sign-ups were, so `sign_up` never arrived to be marked a key event.
 - O-20: offline with nothing cached, the app shows "Jste offline. / Zkusit znovu" instead of opening empty; a page still loading after 10 s offers "Zkusit znovu" and "Načíst stránku znovu"; the shell's screen choice and React Query's offline pause are tested as behaviour.
 
 ## Clear form errors, Lovable PRs opened automatically (T-066, 6 Nov 2026, live since `548f382`)

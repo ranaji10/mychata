@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { trackOAuthReturn } from "@/lib/analytics";
 import { isAuthRetryableFetchError, type User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +75,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     });
     return () => data.subscription.unsubscribe();
   }, []);
+
+  // Back from Google sign-in: count it as sign_up or login (N-23, T-067).
+  useEffect(() => {
+    if (user) trackOAuthReturn(user.created_at);
+  }, [user]);
 
   // The language this person chose is saved on their profile, so e-mails reach them in it
   // (T-057). Written only when it changed since the last save from this browser.

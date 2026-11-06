@@ -1,5 +1,6 @@
 import { QueryClient, QueryObserver, onlineManager } from "@tanstack/react-query";
 import { afterEach, describe, expect, it } from "vitest";
+import { oauthReturnEvent } from "./analytics";
 import { overlapPeakGuests } from "./data";
 import { OFFLINE_LOAD_ERROR, firstLoadError } from "./load-error";
 import { shellScreen } from "./shell-screen";
@@ -123,5 +124,20 @@ describe("the booking screen counts others' day visits (O-30)", () => {
     expect(
       overlapPeakGuests("2026-11-19", "2026-11-21", [{ ...dayVisit, status: "DECLINED" }]),
     ).toBe(0);
+  });
+});
+
+describe("Google sign-in counted on return (N-23)", () => {
+  const at = Date.parse("2026-11-06T17:00:00Z");
+  const marker = { method: "google" as const, source: "app", at };
+  it("a sign-in created after the tap is a sign_up", () => {
+    expect(oauthReturnEvent(marker, "2026-11-06T17:00:20Z", at + 30_000)).toBe("sign_up");
+  });
+  it("an older sign-in is a login", () => {
+    expect(oauthReturnEvent(marker, "2026-10-01T10:00:00Z", at + 30_000)).toBe("login");
+  });
+  it("no marker, or one older than 30 minutes, sends nothing", () => {
+    expect(oauthReturnEvent(null, "2026-11-06T17:00:20Z", at)).toBeNull();
+    expect(oauthReturnEvent(marker, "2026-11-06T17:00:20Z", at + 31 * 60_000)).toBeNull();
   });
 });

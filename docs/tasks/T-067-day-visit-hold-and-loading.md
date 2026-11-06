@@ -6,7 +6,7 @@ Goal: the two backlog items with no dependency on a maintainer, from the call of
 
 Non-goals: request_public_booking and decide_guest_request (0044 already treats a day visit as its whole day); O-25 past stays (deferred); O-28 tab label size (design call); the offline banner.
 
-Files allowed: `drizzle/migrations/0048_day_visit_overlap_rule.sql`, `drizzle/migrations/meta/_journal.json`, `drizzle/migrations/meta/0048_snapshot.json`, `supabase/tests/security.test.ts`, `src/lib/data.ts`, `src/lib/load-error.ts`, `src/lib/shell-screen.ts` (new), `src/lib/use-slow.ts` (new), `src/lib/account.tsx`, `src/components/AppShell.tsx`, `src/components/bits.tsx`, `src/lib/t067.test.ts` (new), `docs/generated/`, `docs/STATUS.md`, tracker copies, `docs/external/claude/2026-11-06-pr113-review.md` and its README row, this brief.
+Files allowed: `drizzle/migrations/0048_day_visit_overlap_rule.sql`, `drizzle/migrations/meta/_journal.json`, `drizzle/migrations/meta/0048_snapshot.json`, `supabase/tests/security.test.ts`, `src/lib/data.ts`, `src/lib/load-error.ts`, `src/lib/shell-screen.ts` (new), `src/lib/use-slow.ts` (new), `src/lib/account.tsx`, `src/components/AppShell.tsx`, `src/components/bits.tsx`, `src/lib/analytics.ts`, `src/routes/auth.tsx`, `src/lib/t067.test.ts` (new), `docs/generated/`, `docs/STATUS.md`, tracker copies, `docs/external/claude/2026-11-06-pr113-review.md` and its README row, this brief.
 
 Invariants touched (AGENTS.md): 1 (definer function unchanged in reach: internal, no grants), 2 (new migration 0048), 5 (all text through `t()`), 6 (refetch failures logged).
 
@@ -16,7 +16,8 @@ Invariants touched (AGENTS.md): 1 (definer function unchanged in reach: internal
 2. Booking screen (`overlapPeakGuests`): the same rule, so "will wait for the admin" matches the database.
 3. `firstLoadError` takes whether a read is paused; the account context passes `fetchStatus === "paused"` for accounts, cottages and members, so offline with nothing cached shows "Jste offline. / Zkusit znovu" instead of an empty app; "Zkusit znovu" refetches paused reads too.
 4. `LoadingCards` (the skeleton of Home, Calendar lists, Expenses, Tasks, Documents, Manual, Requests, Approvals, Handover, Notifications, public manual): after 10 s, "Načítání trvá déle než obvykle." with "Zkusit znovu" (refetches the page's active reads) and "Načíst stránku znovu".
-5. The shell's screen choice is a pure function (`shell-screen.ts`), tested as behaviour; a test drives a real React Query client offline and back online.
+5. N-23 (found while starring GA key events on 6 Nov): Google sign-in leaves the page through Lovable's broker, so it never sent `sign_up` or `login`; only email did, and `sign_up` never reached GA. The tap now stores a marker in the tab; the first signed-in load after it sends `sign_up` (sign-in created after the tap) or `login`, `method: "google"`.
+6. The shell's screen choice is a pure function (`shell-screen.ts`), tested as behaviour; a test drives a real React Query client offline and back online.
 
 ## Acceptance
 

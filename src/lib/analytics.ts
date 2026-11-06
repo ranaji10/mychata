@@ -104,3 +104,51 @@ export function trackPageView(path: string, title?: string) {
   }
   track("page_view", { page_path, ...(title ? { page_title: title } : {}), page_location });
 }
+
+/**
+ * Google sign-in leaves the page and comes back through Lovable's broker, so neither `sign_up`
+ * nor `login` was ever sent for it: only email sign-ups and sign-ins were counted, and GA never
+ * saw a `sign_up` to mark as a key event (tracker N-23, T-067). The tap stores a marker in this
+ * tab; the first signed-in load after it sends `sign_up` when the sign-in was created after the
+ * tap (a new person), else `login`.
+ */
+const OAUTH_KEY = "mychata.analytics.oauth";
+const OAUTH_MAX_AGE_MS = 30 * 60 * 1000;
+
+export type OAuthMarker = { method: "google"; source: string; at: number };
+
+export function markOAuthStart(source: string) {
+  try {
+    const marker: OAuthMarker = { method: "google", source, at: Date.now() };
+    sessionStorage.setItem(OAUTH_KEY, JSON.stringify(marker));
+  } catch {
+    /* blocked storage: the return is simply not counted */
+  }
+}
+
+/** Which event a return from Google sign-in is, or null when it isn't one. */
+export function oauthReturnEvent(
+  marker: OAuthMarker | null,
+  userCreatedAt: string | undefined,
+  now: number,
+): "sign_up" | "login" | null {
+  if (!marker || typeof marker.at !== "number" || now - marker.at > OAUTH_MAX_AGE_MS) return null;
+  const created = userCreatedAt ? Date.parse(userCreatedAt) : NaN;
+  // A minute's slack for clock differences between this device and the server.
+  return Number.isFinite(created) && created >= marker.at - 60_000 ? "sign_up" : "login";
+}
+
+export function trackOAuthReturn(userCreatedAt: string | undefined) {
+  if (typeof window === "undefined") return;
+  let marker: OAuthMarker | null = null;
+  try {
+    const raw = sessionStorage.getItem(OAUTH_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(OAUTH_KEY);
+    marker = JSON.parse(raw) as OAuthMarker;
+  } catch {
+    return;
+  }
+  const event = oauthReturnEvent(marker, userCreatedAt, Date.now());
+  if (event && marker) track(event, { method: marker.method, source: marker.source });
+}

@@ -7,7 +7,9 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
+import { useSlowFlag } from "@/lib/use-slow";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -120,9 +122,56 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-[22px] bg-secondary ${className}`} />;
 }
 
+// A page's own read that never answers kept the page on these skeletons for good (PR #82
+// review, O-20). After 10 s, say so and offer to read again, as the app shell does for the
+// account load (T-052). "Zkusit znovu" refetches the page's active reads; "Načíst znovu"
+// reloads the page.
+const PAGE_SLOW_AFTER_MS = 10000;
+
 export function LoadingCards() {
+  const { t } = useLang();
+  const queryClient = useQueryClient();
+  const slow = useSlowFlag(true, PAGE_SLOW_AFTER_MS);
+  const [busy, setBusy] = useState(false);
   return (
     <div className="space-y-4 pt-2">
+      {slow && (
+        <div role="status" className="card p-4">
+          <p className="text-[16px] font-semibold">
+            {t("Načítání trvá déle než obvykle.", "This is taking longer than usual.")}
+          </p>
+          <p className="mt-1 text-[15px] text-muted-foreground">
+            {t(
+              "Zkontrolujte připojení. Můžete to zkusit znovu.",
+              "Check your connection. You can try again.",
+            )}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              aria-busy={busy}
+              onClick={() => {
+                setBusy(true);
+                void queryClient
+                  .refetchQueries({ type: "active" })
+                  .catch((error: unknown) => console.error("[loading] refetch", error))
+                  .finally(() => setBusy(false));
+              }}
+              className="btn-primary min-h-[44px] rounded-full px-5 text-[15px] font-semibold"
+            >
+              {busy ? t("Zkouším znovu…", "Trying again…") : t("Zkusit znovu", "Try again")}
+            </button>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="min-h-[44px] rounded-full border border-border px-5 text-[15px] font-semibold"
+            >
+              {t("Načíst stránku znovu", "Reload the page")}
+            </button>
+          </div>
+        </div>
+      )}
       <Skeleton className="h-40" />
       <div className="grid grid-cols-2 gap-3">
         <Skeleton className="h-24" />

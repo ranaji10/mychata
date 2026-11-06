@@ -1114,6 +1114,46 @@ describe("release check of 17 Oct (T-036, migration 0028)", () => {
     );
   });
 
+  it("a day visit counts in the overlap rule; its day after and the day before it don't (O-30)", async () => {
+    await admin(db, "update public.properties set overlap_allowed = false where id = $1", [
+      ids.propA,
+    ]);
+    // Anna's seeded stay is current_date + 10 .. + 12; day 20 is free. Each block rolls back.
+    await as(db, aMember, async (q) => {
+      expect(await bookAsMember(q, 20, 20)).toEqual([{ status: "CONFIRMED" }]);
+      // Before 0048 the day visit was on no night, so both of these were confirmed.
+      expect(await bookAsMember(q, 19, 21)).toEqual([{ status: "PENDING" }]);
+      expect(await bookAsMember(q, 20, 20)).toEqual([{ status: "PENDING" }]);
+    });
+    await as(db, aMember, async (q) => {
+      expect(await bookAsMember(q, 20, 20)).toEqual([{ status: "CONFIRMED" }]);
+      // Leaving on the day visit's day, or arriving the day after it, is no clash.
+      expect(await bookAsMember(q, 18, 20)).toEqual([{ status: "CONFIRMED" }]);
+      expect(await bookAsMember(q, 21, 23)).toEqual([{ status: "CONFIRMED" }]);
+    });
+    await as(db, aMember, async (q) => {
+      // A day visit on the day another stay runs was already held; on its departure day it is not.
+      expect(await bookAsMember(q, 11, 11)).toEqual([{ status: "PENDING" }]);
+      expect(await bookAsMember(q, 12, 12)).toEqual([{ status: "CONFIRMED" }]);
+    });
+    await admin(
+      db,
+      "update public.properties set overlap_allowed = true, overlap_max_guests = 5 where id = $1",
+      [ids.propA],
+    );
+    await as(db, aMember, async (q) => {
+      // The guest limit counts a day visit's guests on its day.
+      expect(await bookAsMember(q, 20, 20, 3)).toEqual([{ status: "CONFIRMED" }]);
+      expect(await bookAsMember(q, 19, 21, 3)).toEqual([{ status: "PENDING" }]);
+      expect(await bookAsMember(q, 21, 22, 3)).toEqual([{ status: "CONFIRMED" }]);
+    });
+    await admin(
+      db,
+      "update public.properties set overlap_allowed = null, overlap_max_guests = null where id = $1",
+      [ids.propA],
+    );
+  });
+
   it("only the account's founder converts it to an organisation, not another admin", async () => {
     await admin(db, "update public.members set role = 'ADMIN' where id = $1", [ids.memberAMember]);
     await as(db, aMember, async (q) => {

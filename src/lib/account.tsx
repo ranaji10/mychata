@@ -191,6 +191,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     data: accounts,
     isLoading: loadingAccounts,
     error: accountsError,
+    fetchStatus: accountsFetchStatus,
     refetch: refetchAccounts,
   } = useQuery({
     queryKey: ["accounts", user?.id],
@@ -223,6 +224,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     data: properties,
     isLoading: loadingProperties,
     error: propertiesError,
+    fetchStatus: propertiesFetchStatus,
     refetch: refetchProperties,
   } = useQuery({
     queryKey: ["properties", account?.id],
@@ -250,6 +252,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     data: members,
     isLoading: loadingMembers,
     error: membersError,
+    fetchStatus: membersFetchStatus,
     refetch: refetchMembers,
   } = useQuery({
     queryKey: ["members", account?.id],
@@ -316,15 +319,16 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     // A read after the memberships that failed with nothing cached to show (T-052, O-19).
     // Before, a failed accounts read left an empty Home, and failed cottages or members reads a
     // half-empty app, all with no "Try again".
+    // A read paused offline with nothing cached counts too (O-20).
     loadError: firstLoadError([
-      [accountsError, !!identityMember && !accounts],
-      [propertiesError, !!account && !properties],
-      [membersError, !!account && !members],
+      [accountsError, !!identityMember && !accounts, accountsFetchStatus === "paused"],
+      [propertiesError, !!account && !properties, propertiesFetchStatus === "paused"],
+      [membersError, !!account && !members, membersFetchStatus === "paused"],
     ]),
     retryLoad: () => {
-      if (accountsError) void refetchAccounts();
-      if (propertiesError) void refetchProperties();
-      if (membersError) void refetchMembers();
+      if (accountsError || accountsFetchStatus === "paused") void refetchAccounts();
+      if (propertiesError || propertiesFetchStatus === "paused") void refetchProperties();
+      if (membersError || membersFetchStatus === "paused") void refetchMembers();
     },
     user,
   };

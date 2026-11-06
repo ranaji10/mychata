@@ -330,6 +330,13 @@
       "when": 1793921991810,
       "tag": "0046_message_admins_stay",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793923619318,
+      "tag": "0047_0047_apply_journaled_0046",
+      "breakpoints": true
     }
   ]
 }

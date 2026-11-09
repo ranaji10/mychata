@@ -15,6 +15,7 @@ import {
 } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
+import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { declineReasons, fmtDate, fmtDateTime, type InstitutionalRequest } from "@/lib/data";
 import { useLang } from "@/lib/i18n";
 import { useInstitutionOnly } from "@/lib/use-institution-only";
@@ -38,6 +39,10 @@ function RequestsPage() {
   const { t, lang } = useLang();
   const { property, currentMember } = useAccount();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+  // T-069: booking requests from the public calendar are decided on Home; say so here, or
+  // the admin who follows the "Pending requests" tile finds an empty page.
+  const { data: guestRequests } = usePendingGuestRequests(property?.id, isAdmin);
+  const guestPending = guestRequests?.length ?? 0;
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string[]>([]);
   const [declining, setDeclining] = useState<InstitutionalRequest[]>([]);
@@ -183,6 +188,22 @@ function RequestsPage() {
         title={t("Žádosti o pobyt", "Stay requests")}
         subtitle={t("Schvalujte žádosti zaměstnanců.", "Approve employee requests.")}
       />
+
+      {guestPending > 0 && (
+        <Link
+          to="/domu"
+          data-testid="guest-requests-pointer"
+          className="card mb-4 flex items-center gap-3 p-4 active:scale-[0.99]"
+        >
+          <Inbox className="size-5 shrink-0 text-primary" />
+          <span className="flex-1 text-[15px] font-semibold">
+            {t(
+              `Žádosti z veřejného kalendáře: ${guestPending}. Vyřídíte je na Domů.`,
+              `Requests from the public calendar: ${guestPending}. Decide them on Home.`,
+            )}
+          </span>
+        </Link>
+      )}
 
       {isLoading ? (
         <LoadingCards />

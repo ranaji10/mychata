@@ -128,6 +128,8 @@ function HomePage() {
 
   const { data: expenseData } = useExpenseData(property?.id, isFamily);
 
+  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
+  const { data: guestRequests } = usePendingGuestRequests(property?.id, isAdmin);
   const { data: requests } = useQuery({
     queryKey: ["requests", property?.id],
     // New requests come from the public form: never treat a restored offline copy as fresh.
@@ -144,9 +146,6 @@ function HomePage() {
       return data as InstitutionalRequest[];
     },
   });
-
-  const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
-  const { data: guestRequests } = usePendingGuestRequests(property?.id, isAdmin);
 
   // One admin-only database step writes the booking and the decision together (T-021).
   // The card shows progress and disappears as soon as the database confirms.
@@ -306,6 +305,9 @@ function HomePage() {
     currentMember?.id,
   );
   const pendingRequests = requests?.filter((r) => r.status === "PENDING") ?? [];
+  // T-069: requests from the public calendar wait too (listed below as "Booking requests");
+  // the tile said 0 while one was pending.
+  const pendingTotal = pendingRequests.length + (guestRequests?.length ?? 0);
   const conflictRequests = pendingRequests.filter((r) => r.has_conflict);
 
   const guestsLabel = (n: number) => {
@@ -497,9 +499,9 @@ function HomePage() {
               <StatCard
                 label={t("Čekající žádosti", "Pending requests")}
                 icon={Inbox}
-                value={pendingRequests.length}
+                value={pendingTotal}
                 hint={t("ke zpracování", "to process")}
-                tone={pendingRequests.length ? "danger" : undefined}
+                tone={pendingTotal ? "danger" : undefined}
               />
             </Link>
             <Link to="/zadosti">

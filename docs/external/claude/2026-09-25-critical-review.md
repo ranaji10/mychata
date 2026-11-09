@@ -14,12 +14,13 @@ tab: Now
 
 9 Nov 2026 · Tuik
 
-**Live:** `7f39d87` (unchanged since 6 Nov; main since then is docs only; build-sha checked 9 Nov). 9 Nov: N-23, N-29 and N-33 done; F-07, F-09, F-23, F-24 closed (Done & history). **Merge PR #117 (T-068, sign-out) before Dependabot's #116**, then publish. The 8 Nov nightly check failure was GitHub failing to download Bun (504), not the site. **Waiting on you:** decline the N-29 test request (Institutní chata (test), 24–26 Nov, Home as Test 3; the built-in browser went offline before Claude could); D-34; in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Deferred by you: approving each cottage for family (3 Nov), past stays by admins O-25 (5 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `cc8212e` (PRs #116 and #117 published 9 Nov 19:18; main since then is docs only). Unit, database, lint, typecheck and build all pass on the new versions. **Next:** merge T-069 (F-34) and publish; then N-42. **Waiting on you:** N-42 (decline the N-29 test request); D-35; D-34; in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Watch the 10 Nov nightly check: first run on Playwright 1.65. Deferred by you: approving each cottage for family (3 Nov), past stays by admins O-25 (5 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
+| N-42 | **After T-069 is published**, as Test 3 on Institutní chata (test): the Home tile shows 1 pending, Requests shows the "Requests from the public calendar" card, Settings shows "Switch off the public calendar". Then **decline** the N-29 test request (24–26 Nov) on Home | You (decline), Claude (checks) | To do | F-34 |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
 
 ## Decisions waiting on you
@@ -35,6 +36,7 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | D-19 | Founding offer: Rodina Plus at 990 Kč a year, locked for 3 years, for the first 100 accounts? | Gemini's "forever" price can never be raised; a 3-year lock can. Sets P-4 | 16 Oct | |
 | D-20 | Institution pilots: free until 30 Sep 2027 for the first 3, in return for a named contact, monthly feedback and list price afterwards? | Sets P-3's backfill and what existing institutional accounts (D-08) are told | 16 Oct | |
 | D-21 | Who sells: you, Rajat, or a company you both own (O-11)? | No invoice, terms or payment account without a seller; it also decides VAT status and the business split | 16 Oct | |
+| D-35 | Should institution cottages have a public calendar at all? | The database serves one (blue page, up to 200 guests) and Institutní chata (test) has it on, but since 29 Sep the app never offers to switch it on. Its link is the request-form link with `kalendar` instead of `zadost`, so anyone with the form link can see the calendar and ask for dates. Recommended: **no** for now: switch off the test cottage's calendar after N-42, and later block it in the database | 9 Nov | |
 | D-34 | Ask visitors for advertising consent, or accept GA's "0 % consent rate" warning (F-21)? | Recommended: accept. MyChata runs no Google Ads; the warning only affects ad measurement and remarketing. Asking would add a second banner choice for 45–68-year-olds for no feature | 9 Nov | |
 | D-31 | Fix Google sign-in on Brave (F-05) with our own Google Cloud OAuth client (Lovable → Users → Google → "Your own credentials")? | Google's consent screen would then say MyChata, not Lovable, and Brave stops failing. Costs: a Google Cloud project with an OAuth consent screen (Google may review it), and a code change away from Lovable's broker (cloud-auth-js) that Claude would test first | 26 Oct | |
 
@@ -44,6 +46,7 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | --- | --- | --- | --- | --- |
 | F-01 | Not yet tested on a real iPhone: clipboard, Document Vault "Open", avatar upload | Needs an iPhone; all pass in Chromium's emulation | N-3 | Waiting |
 | F-05 | B-004: Google sign-in fails on Brave | In Lovable's sign-in broker. Lovable → More → Users → Settings → Google offers "Your own credentials" (a Google Cloud OAuth client) | D-31 | To do |
+| F-34 | Institution cottages: a public calendar left on cannot be seen or switched off by the admin; its requests were missing from the "Pending requests" tile (showed 0) and from Requests | Found in the N-29 test (9 Nov). Fixed in T-069 (branch `agent/claude/T-069-institution-public-calendar`, not yet merged) | N-42, D-35 | Fix ready |
 | F-21 | Google Analytics: "Urgent: 0% consent rate" and "analytics consent signals inactive" | Diagnosed 9 Nov: not a code defect. The live tag sets the EEA defaults before any hit and the banner's update arrives: a consenting visitor's page_view carries `gcs=G101` (analytics granted, ads denied). The 0 % is the ad signals, which MyChata never asks for, so every visitor is "denied" by design. Only asking for ad consent would change it (D-34) | D-34 | Waiting |
 
 ## How to use this doc

@@ -320,6 +320,17 @@ function MorePage() {
             )}
           </>
         )}
+        {/* T-069: Settings offers institutions no public calendar, but one switched on earlier
+            (or by hand) stays reachable with the request-form token and accepts booking
+            requests. Its admin must at least be able to switch it off. */}
+        {!isFamily && isAdmin && property?.public_calendar_enabled && (
+          <SettingsRow
+            icon={Link2Off}
+            tone="danger"
+            label={t("Vypnout veřejný kalendář", "Switch off the public calendar")}
+            onClick={() => setStopOpen(true)}
+          />
+        )}
         {!isFamily && (
           <Link
             to="/verejne/zadost/$token"
@@ -422,10 +433,17 @@ function MorePage() {
         open={stopOpen}
         onOpenChange={setStopOpen}
         title={t("Vypnout veřejný kalendář?", "Switch off the public calendar?")}
-        description={t(
-          "Odkaz, který jste sdíleli, přestane fungovat. Kdykoli ho můžete znovu zapnout tlačítkem Veřejný odkaz na kalendář.",
-          "The link you shared will stop working. You can switch it on again at any time with Public calendar link.",
-        )}
+        description={
+          isFamily
+            ? t(
+                "Odkaz, který jste sdíleli, přestane fungovat. Kdykoli ho můžete znovu zapnout tlačítkem Veřejný odkaz na kalendář.",
+                "The link you shared will stop working. You can switch it on again at any time with Public calendar link.",
+              )
+            : t(
+                "Kalendář přestane být vidět a přes něj už nepůjde žádat o termín. Veřejný formulář žádosti funguje dál.",
+                "The calendar will no longer be visible and nobody can ask for dates through it. The public request form keeps working.",
+              )
+        }
         confirmLabel={t("Vypnout", "Switch off")}
         onConfirm={stopPublicCalendar}
         busy={stopping}

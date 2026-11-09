@@ -23,7 +23,14 @@ export async function signOutHere(
   if (!global.error) return { error: null };
   console.error(`[${where}] sign out on the server`, global.error.message);
   // `local` removes this browser's session before it asks the server anything.
-  const local = await auth.signOut({ scope: "local" });
+  // From 2.119 a local sign-out rethrows an error thrown by a SIGNED_OUT listener, after it
+  // has removed the session (T-069): treat it like a returned error, then check the session.
+  let local: { error: { message: string } | null };
+  try {
+    local = await auth.signOut({ scope: "local" });
+  } catch (thrown) {
+    local = { error: { message: thrown instanceof Error ? thrown.message : String(thrown) } };
+  }
   if (local.error) console.error(`[${where}] sign out on this device`, local.error.message);
   const { data } = await auth.getSession();
   if (data.session) return { error: local.error ?? global.error };

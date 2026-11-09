@@ -66,6 +66,45 @@ describe("T-069: every booking request on Requests, public ones marked", () => {
     expect(s).not.toMatch(/!isFamily && isAdmin && property\?\.public_calendar_enabled/);
   });
 
+  it("review: held stays count on Home only for families", () => {
+    expect(read("src/routes/domu.tsx")).toContain(
+      "{isAdmin && ((isFamily && heldBookings.length > 0) || publicPending > 0) && (",
+    );
+  });
+
+  it("review: the employee form reads taken dates without the public calendar", () => {
+    const s = read("src/routes/verejne.zadost.$token.tsx");
+    expect(s).toContain('supabase.rpc("public_request_availability"');
+    expect(s).not.toContain('supabase.rpc("public_calendar"');
+  });
+
+  it("review: the stay-to-approve email opens the stay", async () => {
+    const { renderNotificationEmail } = await import("./notification-email");
+    const mail = renderNotificationEmail({
+      id: "n1",
+      kind: "booking_awaiting_approval",
+      payload: { booking_id: "b1", property_name: "Chata Alfa", requester_name: "Petr" },
+    } as Parameters<typeof renderNotificationEmail>[0]);
+    expect(mail?.url).toBe("https://mychata.cz/rezervace/b1");
+  });
+
+  it("review: sign-out survives a global sign-out that throws", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    let session: object | null = { user: "u1" };
+    const auth = {
+      async signOut(o?: { scope?: "global" | "local" | "others" }) {
+        if ((o?.scope ?? "global") === "global") throw new Error("listener failed");
+        session = null;
+        return { error: null };
+      },
+      async getSession() {
+        return { data: { session } };
+      },
+    };
+    expect(await signOutHere("test", auth)).toEqual({ error: null });
+    err.mockRestore();
+  });
+
   it("sign-out survives a local sign-out that throws (auth-js 2.119)", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
     let session: object | null = { user: "u1" };

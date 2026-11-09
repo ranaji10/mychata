@@ -17,7 +17,7 @@ As of 2026-11-09 (evening). Update this file in every PR that changes behaviour.
 
 ## One list for every booking request; public calendar for families only (T-069, 9 Nov 2026, not yet live)
 
-- Migration 0050 (Lovable must apply it): the public calendar is for family cottages only; institution cottages' flags switched off, and the public functions treat them as off (ADR-0014).
+- Migration 0050 (Lovable must apply it): the public calendar is for family cottages only (ADR-0014). Onboarding used to switch it on for every institution; a trigger now keeps it off, and the employee request form reads taken dates through `public_request_availability`. The "stay to approve" email opens the stay.
 - Requests (`/zadosti`) lists every booking request, for family admins too: public requests (guest link, public calendar) first in violet with a "Public request" badge, then members' held stays (families) or employee requests (institutions). Home shows a "Booking requests (N)" card; the institution tile counts public requests too; their notifications open Requests.
 - `signOutHere()` also handles a local sign-out that throws (auth-js 2.119).
 

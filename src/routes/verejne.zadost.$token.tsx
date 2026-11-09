@@ -63,7 +63,8 @@ function PublicRequest() {
     queryKey: ["public-bookings", token],
     enabled: !!property,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("public_calendar", { _token: token });
+      // T-069: dates only, independent of the public calendar (families only since 0050).
+      const { data, error } = await supabase.rpc("public_request_availability", { _token: token });
       if (error) throw error;
       return (data ?? []).map((booking, i) => ({
         id: `public-${i}`,

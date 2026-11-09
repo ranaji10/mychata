@@ -19,7 +19,14 @@ export async function signOutHere(
   where: string,
   auth: SignOutAuth = supabase.auth,
 ): Promise<{ error: { message: string } | null }> {
-  const global = await auth.signOut();
+  // A SIGNED_OUT listener that throws makes signOut() reject (auth-js 2.119), on this path too;
+  // the session is checked below either way (T-069 review).
+  let global: { error: { message: string } | null };
+  try {
+    global = await auth.signOut();
+  } catch (thrown) {
+    global = { error: { message: thrown instanceof Error ? thrown.message : String(thrown) } };
+  }
   if (!global.error) return { error: null };
   console.error(`[${where}] sign out on the server`, global.error.message);
   // `local` removes this browser's session before it asks the server anything.

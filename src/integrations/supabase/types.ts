@@ -2068,6 +2068,14 @@ export type Database = {
           status: string
         }[]
       }
+      public_request_availability: {
+        Args: { _token: string }
+        Returns: {
+          end_date: string
+          start_date: string
+          status: string
+        }[]
+      }
       public_guest_link: {
         Args: { _token: string }
         Returns: {

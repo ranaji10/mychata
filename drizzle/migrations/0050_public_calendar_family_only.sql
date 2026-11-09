@@ -1,15 +1,57 @@
--- 0050: the public calendar is for family cottages only (T-069, tracker F-34, decided 9 Nov 2026).
--- Since 29 Sep the app offers the public calendar to families only, but the database still served
--- it for institutions: an institution cottage with the flag on showed its calendar to anyone with
--- the request-form token (same token, /verejne/kalendar/ instead of /verejne/zadost/) and took
--- booking requests its admin could neither see in Settings nor switch off. Decision: remove it for
--- institutions; it can come back if institutions ask for it.
--- 1. Switch the flag off on every institution cottage (the token is kept: the request form uses it).
--- 2. set_public_calendar refuses to switch it on for an institution ('family_only').
--- 3. public_calendar, public_property and request_public_booking treat an institution cottage as
---    switched off even if the flag is set again by a direct table write.
--- The institution request form (public_property's is_institution, submit_institutional_request)
--- is unchanged.
+-- 0050: the public calendar is for family cottages only (T-069, tracker F-34, decided 9 Nov 2026,
+-- ADR-0014). Since 29 Sep the app offers the public calendar to families only, but the database
+-- still served it for institutions, and onboarding (0040) even switched the flag ON for every new
+-- institution because the employee request form read its taken dates through public_calendar. So
+-- an institution's request-form token also opened its calendar (/verejne/kalendar/ instead of
+-- /verejne/zadost/) and took booking requests its admin could neither see nor switch off.
+-- Decision: no public calendar for institutions; it can come back if institutions ask for it.
+-- 1. public_request_availability(token): dates and status only, for the institution request form,
+--    so the form keeps its "these dates are partly taken" warning without the calendar flag.
+-- 2. A trigger keeps the flag off on institution cottages (onboarding, account-type changes,
+--    direct writes); then the flag is switched off on every existing institution cottage (the
+--    token is kept: the request form uses it).
+-- 3. set_public_calendar refuses to switch it on for an institution ('family_only').
+-- 4. public_calendar, public_property and request_public_booking treat an institution cottage as
+--    switched off whatever the flag says.
+-- The previous app keeps working: its request form reads public_calendar, which now returns no
+-- dates for institutions, so until publish the form shows no taken-dates warning (the admin
+-- still sees has_conflict).
+create or replace function public.public_request_availability(_token text)
+returns table (start_date date, end_date date, status text)
+language sql stable security definer set search_path = public as $$
+  select b.start_date, b.end_date, b.status
+  from public.properties p
+  join public.accounts a on a.id = p.account_id and a.type = 'INSTITUTIONAL'
+  join public.bookings b on b.property_id = p.id and b.status in ('CONFIRMED', 'PENDING')
+  where p.public_token = _token
+    and b.end_date >= current_date - 1
+  order by b.start_date
+$$;
+--> statement-breakpoint
+revoke execute on function public.public_request_availability(text) from public;
+--> statement-breakpoint
+grant execute on function public.public_request_availability(text) to anon, authenticated;
+--> statement-breakpoint
+create or replace function public.calendar_family_only()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.public_calendar_enabled
+     and exists (select 1 from public.accounts a
+                 where a.id = new.account_id and a.type = 'INSTITUTIONAL') then
+    new.public_calendar_enabled := false;
+  end if;
+  return new;
+end;
+$$;
+--> statement-breakpoint
+revoke execute on function public.calendar_family_only() from public, anon, authenticated;
+--> statement-breakpoint
+drop trigger if exists properties_calendar_family_only on public.properties;
+--> statement-breakpoint
+create trigger properties_calendar_family_only
+  before insert or update of public_calendar_enabled, account_id on public.properties
+  for each row execute function public.calendar_family_only();
+--> statement-breakpoint
 update public.properties p set public_calendar_enabled = false
 from public.accounts a
 where a.id = p.account_id and a.type = 'INSTITUTIONAL' and p.public_calendar_enabled;

@@ -20,7 +20,8 @@
     "is_property_admin": "Caller-scoped helper; false for anon",
     "audit_decisions": "Trigger function; cannot be called directly",
     "guard_public_form": "Trigger function; cannot be called directly",
-    "invitation_preview": "Invitation page; token check, returns names, role and a masked email only"
+    "invitation_preview": "Invitation page; token check, returns names, role and a masked email only",
+    "public_request_availability": "Institution request form; token check, dates and status only (T-069)"
   },
   "definerFunctionsWithoutCallerCheck": {
     "public_calendar": "Scoped by share token",
@@ -51,7 +52,8 @@
     "forward_leaving_checklist_to": "Internal helper of notify_on_booking; no execute grant to anon or authenticated",
     "notify_enqueue": "Internal helper of the 0038 triggers and functions; no execute grant to anon or authenticated (revoked in 0038, proven in t053-rls.test.ts)",
     "email_lang": "Executable by service_role only (sign-in e-mail hook); returns 'cs', 'en' or null for an address, nothing else (T-057)",
-    "close_settled_claims": "Trigger function on expense_splits; cannot be called directly (T-057)"
+    "close_settled_claims": "Trigger function on expense_splits; cannot be called directly (T-057)",
+    "public_request_availability": "Scoped by share token"
   },
   "anonTablePrivileges": {
     "consent_log:INSERT": "Cookie banner logs the choice before sign-in",

@@ -419,7 +419,7 @@ function HomePage() {
 
       {/* T-069: every booking request is decided on Requests; Home only says how many wait.
           Institutions also have the tile above and the Requests tab. */}
-      {isAdmin && (heldBookings.length > 0 || publicPending > 0) && (
+      {isAdmin && ((isFamily && heldBookings.length > 0) || publicPending > 0) && (
         <Link
           to="/zadosti"
           data-testid="home-requests-card"

@@ -1709,6 +1709,10 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
   // request flow, so cottage B (an institution in the shared fixtures) is a family meanwhile.
   beforeAll(async () => {
     await admin(db, "update public.accounts set type = 'FAMILY' where id = $1", [ids.acctB]);
+    // The 0050 trigger kept the fixture's flag off while B was an institution.
+    await admin(db, "update public.properties set public_calendar_enabled = true where id = $1", [
+      ids.propB,
+    ]);
   });
   afterAll(async () => {
     await admin(db, "update public.accounts set type = 'INSTITUTIONAL' where id = $1", [ids.acctB]);
@@ -2366,6 +2370,42 @@ describe("the public calendar is for family cottages only (T-069, migration 0050
       expect(
         await q("select public_calendar_enabled from public.properties where id = $1", [ids.propB]),
       ).toEqual([{ public_calendar_enabled: false }]);
+    });
+  });
+
+  it("the flag cannot be switched on for an institution, also not by a direct write", async () => {
+    const rows = await admin(
+      db,
+      "update public.properties set public_calendar_enabled = true where id = $1 returning public_calendar_enabled",
+      [ids.propB],
+    );
+    expect(rows).toEqual([{ public_calendar_enabled: false }]);
+    // Onboarding a new institution used to switch it on (0040).
+    const [created] = await asCommitted<{ id: string }>(
+      db,
+      visitor,
+      "select public.create_account_onboarding(_type => 'INSTITUTIONAL', _account_name => 'Skola T69', _property_name => 'Chata T69', _booking_auto_approve => true) as id",
+    );
+    const flag = await admin(
+      db,
+      "select public_calendar_enabled from public.properties where id = $1",
+      [created!.id],
+    );
+    expect(flag).toEqual([{ public_calendar_enabled: false }]);
+  });
+
+  it("the request form still sees taken dates, and only for institutions", async () => {
+    await as(db, anon, async (q) => {
+      const rows = await q(
+        "select start_date, end_date, status from public.public_request_availability($1)",
+        [ids.tokenB],
+      );
+      expect(rows.length).toBeGreaterThan(0); // includes the T069 stay
+      expect(Object.keys(rows[0]!).sort()).toEqual(["end_date", "start_date", "status"]);
+      expect(await q("select * from public.public_request_availability($1)", [ids.tokenA])).toEqual(
+        [],
+      );
+      expect(await q("select * from public.public_request_availability('nope')")).toEqual([]);
     });
   });
 

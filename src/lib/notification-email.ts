@@ -113,7 +113,9 @@ export function renderNotificationEmail(row: NotificationRow): RenderedEmail | n
           ],
         ],
         button: ["Schválit nebo zamítnout", "Approve or decline"],
-        url: link("/schvalovani"),
+        // The stay itself: any admin decides there. /schvalovani sent families to the calendar
+        // (T-069 review).
+        url: s(p.booking_id) ? link(`/rezervace/${seg(p.booking_id)}`) : link("/upozorneni"),
       };
     case "booking_decided": {
       const ok = p.approved === true;

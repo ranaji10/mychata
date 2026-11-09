@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-11-06. Update this file in every PR that changes behaviour.
+As of 2026-11-09. Update this file in every PR that changes behaviour.
 
 ## Where things are
 
@@ -14,6 +14,10 @@ As of 2026-11-06. Update this file in every PR that changes behaviour.
 | Open bugs                | See "Open defects" below. B-006–B-010 (T-017) and B-011–B-017 (T-019) are merged and live.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-020 document vault search (re-planned in T-044), T-001–T-013 as listed below. T-055 and T-057 in review (PR). Done: T-014–T-019, T-021–T-052.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+
+## Sign-out when the server fails (T-068, 9 Nov 2026, not yet live)
+
+- Every "Odhlásit se" goes through `signOutHere()` (`src/lib/sign-out.ts`): global sign-out, and if the server fails, this device is signed out anyway. Needed before Dependabot's PR #116 (supabase-js 2.119 keeps the session when a global sign-out fails). A failure that leaves a session shows "Odhlášení se nepodařilo. Zkuste to znovu." instead of opening sign-in while still signed in.
 
 ## Day visits in the overlap rule, no endless loading (T-067, 6 Nov 2026, live since `7f39d87`; 0048 applied)
 

@@ -10,6 +10,7 @@ import { AccountTypeCard } from "@/components/AccountTypeCard";
 import { InstitutionSetup } from "@/components/InstitutionSetup";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutHere } from "@/lib/sign-out";
 import { useAccount } from "@/lib/account";
 import {
   accountNameFromEmail,
@@ -129,7 +130,11 @@ function ProfilePage() {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await signOutHere("profile");
+    if (error) {
+      toast.error(t("Odhlášení se nepodařilo. Zkuste to znovu.", "Could not sign out. Try again."));
+      return;
+    }
     queryClient.clear();
     try {
       localStorage.removeItem("mychata.offline-cache");

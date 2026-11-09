@@ -6,6 +6,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Home, LogIn, LogOut, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { signOutHere } from "@/lib/sign-out";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import {
   clearPendingInvite,
@@ -80,7 +82,11 @@ function InvitePage() {
 
   const switchAccount = async () => {
     savePendingInvite(token);
-    await supabase.auth.signOut();
+    const { error } = await signOutHere("invitation");
+    if (error) {
+      toast.error(t("Odhlášení se nepodařilo. Zkuste to znovu.", "Could not sign out. Try again."));
+      return;
+    }
     queryClient.clear();
     navigate({ to: "/auth" });
   };

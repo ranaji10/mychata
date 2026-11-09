@@ -24,6 +24,7 @@ import { avatarSource } from "@/lib/account-label";
 import { COTTAGE_PAGES } from "@/lib/settings-nav";
 import { useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutHere } from "@/lib/sign-out";
 import { publishedCalendarToken } from "@/lib/public-calendar";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -387,9 +388,19 @@ function MorePage() {
           icon={LogOut}
           label={t("Odhlásit se", "Sign out")}
           onClick={() => {
-            supabase.auth.signOut().then(() => {
+            void signOutHere("more").then(({ error }) => {
+              if (error) {
+                toast.error(
+                  t("Odhlášení se nepodařilo. Zkuste to znovu.", "Could not sign out. Try again."),
+                );
+                return;
+              }
               queryClient.clear();
-              localStorage.removeItem("mychata.offline-cache");
+              try {
+                localStorage.removeItem("mychata.offline-cache");
+              } catch {
+                /* storage blocked: nothing was saved either */
+              }
               navigate({ to: "/auth", replace: true });
             });
           }}

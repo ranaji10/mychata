@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutHere } from "@/lib/sign-out";
 import { useAccount } from "@/lib/account";
 import { LanguageToggle, useLang } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
@@ -152,9 +153,8 @@ function OnboardingPage() {
   const alreadySetUp = (setUpElsewhere || memberships.length > 0) && !search.fresh && !search.kind;
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await signOutHere("onboarding");
     if (error) {
-      console.error("[onboarding] sign out", error);
       toast.error(t("Odhlášení se nepodařilo.", "Could not sign out."));
       return;
     }

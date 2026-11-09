@@ -58,6 +58,6 @@ describe("T-047: a way out of onboarding", () => {
     const s = src("src/routes/onboarding.tsx");
     expect(s).toContain('t("Odhlásit se", "Sign out")');
     expect(s).toContain('t("Zrušit", "Cancel")');
-    expect(s).toMatch(/const \{ error \} = await supabase\.auth\.signOut\(\);\s+if \(error\)/);
+    expect(s).toMatch(/const \{ error \} = await signOutHere\("onboarding"\);\s+if \(error\)/);
   });
 });

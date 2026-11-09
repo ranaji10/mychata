@@ -7,9 +7,10 @@
 -- Decision: no public calendar for institutions; it can come back if institutions ask for it.
 -- 1. public_request_availability(token): dates and status only, for the institution request form,
 --    so the form keeps its "these dates are partly taken" warning without the calendar flag.
--- 2. A trigger keeps the flag off on institution cottages (onboarding, account-type changes,
---    direct writes); then the flag is switched off on every existing institution cottage (the
---    token is kept: the request form uses it).
+-- 2. A trigger keeps the flag off when an institution cottage is created or its flag written
+--    (onboarding, Settings, direct writes); then the flag is switched off on every existing
+--    institution cottage (the token is kept: the request form uses it). A family that becomes an
+--    institution (change_account_type) keeps its flag, but step 4 ignores it.
 -- 3. set_public_calendar refuses to switch it on for an institution ('family_only').
 -- 4. public_calendar, public_property and request_public_booking treat an institution cottage as
 --    switched off whatever the flag says.

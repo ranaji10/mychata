@@ -113,8 +113,9 @@ describe("O-27: guest requests whose dates passed (PR #108 review)", () => {
     expect(keys).not.toContain("guest:old");
   });
 
-  it("Home offers only Decline for them; share pages keep their colours", () => {
-    const home = readFileSync("src/routes/domu.tsx", "utf8");
+  it("Requests offers only Decline for them; share pages keep their colours", () => {
+    // T-069: public requests moved from Home to Requests (src/components/PublicRequests.tsx).
+    const home = readFileSync("src/components/PublicRequests.tsx", "utf8");
     expect(home).toContain("const undecided = g.end_date < today;");
     expect(home).toMatch(/\{!undecided && \(\s*<Button[\s\S]*?"Confirm stay"/);
     for (const page of ["src/routes/verejne.kalendar.$token.tsx", "src/routes/host.$token.tsx"]) {

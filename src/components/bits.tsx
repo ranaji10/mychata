@@ -197,6 +197,10 @@ export function PillWarn({ children }: { children: ReactNode }) {
 export function PillDanger({ children }: { children: ReactNode }) {
   return <span className="pill bg-destructive-soft text-destructive">{children}</span>;
 }
+/** Requests from people outside the cottage (T-069). */
+export function PillPublic({ children }: { children: ReactNode }) {
+  return <span className="pill bg-public text-white">{children}</span>;
+}
 export function PillNeutral({ children }: { children: ReactNode }) {
   return <span className="pill bg-secondary text-muted-foreground">{children}</span>;
 }

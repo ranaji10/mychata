@@ -15,9 +15,11 @@ As of 2026-11-09 (evening). Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-020 document vault search (re-planned in T-044), T-001–T-013 as listed below. T-055 and T-057 in review (PR). Done: T-014–T-019, T-021–T-052.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
-## Public-calendar requests on institution cottages (T-069, 9 Nov 2026, not yet live)
+## One list for every booking request; public calendar for families only (T-069, 9 Nov 2026, not yet live)
 
-- Institution admins can switch off a public calendar that is on (Settings); they still cannot switch one on (D-35 open). The Home "Pending requests" tile counts public-calendar requests too, and Requests links to Home while any wait. `signOutHere()` also handles a local sign-out that throws (auth-js 2.119).
+- Migration 0050 (Lovable must apply it): the public calendar is for family cottages only; institution cottages' flags switched off, and the public functions treat them as off (ADR-0014).
+- Requests (`/zadosti`) lists every booking request, for family admins too: public requests (guest link, public calendar) first in violet with a "Public request" badge, then members' held stays (families) or employee requests (institutions). Home shows a "Booking requests (N)" card; the institution tile counts public requests too; their notifications open Requests.
+- `signOutHere()` also handles a local sign-out that throws (auth-js 2.119).
 
 ## Sign-out when the server fails (T-068, 9 Nov 2026, not yet live)
 

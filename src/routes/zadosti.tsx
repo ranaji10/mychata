@@ -16,9 +16,16 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
-import { declineReasons, fmtDate, fmtDateTime, type InstitutionalRequest } from "@/lib/data";
+import {
+  declineReasons,
+  fmtDate,
+  fmtDateTime,
+  todayISO,
+  type Booking,
+  type InstitutionalRequest,
+} from "@/lib/data";
 import { useLang } from "@/lib/i18n";
-import { useInstitutionOnly } from "@/lib/use-institution-only";
+import { PublicRequests } from "@/components/PublicRequests";
 
 export const Route = createFileRoute("/zadosti")({
   staticData: { sitemap: false },
@@ -27,9 +34,9 @@ export const Route = createFileRoute("/zadosti")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { title: "Žádosti — MyChata" },
-      { name: "description", content: "Employee cottage stay requests awaiting approval." },
+      { name: "description", content: "Cottage stay requests awaiting approval." },
       { property: "og:title", content: "Žádosti — MyChata" },
-      { property: "og:description", content: "Employee cottage stay requests awaiting approval." },
+      { property: "og:description", content: "Cottage stay requests awaiting approval." },
     ],
   }),
   component: RequestsPage,
@@ -37,17 +44,39 @@ export const Route = createFileRoute("/zadosti")({
 
 function RequestsPage() {
   const { t, lang } = useLang();
-  const { property, currentMember } = useAccount();
+  const { account, property, currentMember } = useAccount();
   const isAdmin = currentMember?.role === "ADMIN" || currentMember?.role === "OWNER";
-  // T-069: booking requests from the public calendar are decided on Home; say so here, or
-  // the admin who follows the "Pending requests" tile finds an empty page.
+  const isFamily = account?.type === "FAMILY";
+  // T-069: every booking request is listed here, for families too (reached from Home and
+  // Notifications; their tab bar is unchanged). Public ones (guest link, public calendar) come
+  // first in their own look; then members' stays held for approval (families) or employee
+  // requests from the public form (institutions).
   const { data: guestRequests } = usePendingGuestRequests(property?.id, isAdmin);
-  const guestPending = guestRequests?.length ?? 0;
+  const publicCount = guestRequests?.length ?? 0;
+  const today = todayISO();
+  const {
+    data: heldBookings,
+    isError: heldError,
+    refetch: refetchHeld,
+  } = useQuery({
+    // Same cache as Home and the calendar; filtered here.
+    queryKey: ["bookings", property?.id],
+    enabled: !!property && isFamily && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("*")
+        .eq("property_id", property!.id)
+        .order("start_date");
+      if (error) throw error;
+      return data as Booking[];
+    },
+    select: (rows) => rows.filter((b) => b.status === "PENDING" && b.end_date >= today),
+  });
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string[]>([]);
   const [declining, setDeclining] = useState<InstitutionalRequest[]>([]);
   const [declineReason, setDeclineReason] = useState("");
-  const hidden = useInstitutionOnly();
 
   // Newest first here; Home and the export keep the start-date order under ["requests", id].
   const {
@@ -57,7 +86,7 @@ function RequestsPage() {
     refetch,
   } = useQuery({
     queryKey: ["requests", property?.id, "newest"],
-    enabled: !!property && !hidden && isAdmin,
+    enabled: !!property && !isFamily && isAdmin,
     // Requests arrive from the public form, outside this app: always ask again when the page
     // opens. "always" covers moving between pages; staleTime 0 covers a reload, where the
     // offline copy is restored first and a minute-old copy counted as fresh (re-check of 18 Oct).
@@ -163,8 +192,6 @@ function RequestsPage() {
   const pending = requests?.filter((r) => r.status === "PENDING") ?? [];
   const processed = requests?.filter((r) => r.status !== "PENDING") ?? [];
 
-  if (hidden) return null;
-
   // Only admins read and decide stay requests (0036, D-16); members book in the calendar.
   if (currentMember && !isAdmin) {
     return (
@@ -186,218 +213,283 @@ function RequestsPage() {
     <AppShell>
       <PageHeader
         title={t("Žádosti o pobyt", "Stay requests")}
-        subtitle={t("Schvalujte žádosti zaměstnanců.", "Approve employee requests.")}
+        subtitle={
+          isFamily
+            ? t(
+                "Žádosti hostů a pobyty členů ke schválení.",
+                "Guest requests and members' stays awaiting approval.",
+              )
+            : t("Schvalujte žádosti o pobyt.", "Approve stay requests.")
+        }
       />
 
-      {guestPending > 0 && (
-        <Link
-          to="/domu"
-          data-testid="guest-requests-pointer"
-          className="card mb-4 flex items-center gap-3 p-4 active:scale-[0.99]"
-        >
-          <Inbox className="size-5 shrink-0 text-primary" />
-          <span className="flex-1 text-[15px] font-semibold">
-            {t(
-              `Žádosti z veřejného kalendáře: ${guestPending}. Vyřídíte je na Domů.`,
-              `Requests from the public calendar: ${guestPending}. Decide them on Home.`,
-            )}
-          </span>
-        </Link>
-      )}
+      <PublicRequests />
 
-      {isLoading ? (
-        <LoadingCards />
-      ) : isError && !requests ? (
-        <div role="alert" className="card p-4">
-          <p className="font-bold">
-            {t("Žádosti se nepodařilo načíst.", "Could not load the requests.")}
-          </p>
-          <Button
-            variant="fresh"
-            size="fresh"
-            onClick={() => void refetch()}
-            className="btn-secondary mt-3 w-full"
-          >
-            {t("Zkusit znovu", "Try again")}
-          </Button>
-        </div>
-      ) : pending.length === 0 && processed.length === 0 ? (
-        <EmptyState
-          icon={Inbox}
-          title={t("Žádné žádosti.", "No requests.")}
-          hint={t(
-            "Nové žádosti z veřejného formuláře se objeví zde.",
-            "New requests from the public form will appear here.",
-          )}
-        />
+      {isFamily ? (
+        heldError && !heldBookings ? (
+          <div role="alert" className="card mt-4 p-4">
+            <p className="font-bold">
+              {t(
+                "Pobyty ke schválení se nepodařilo načíst.",
+                "Could not load the stays awaiting approval.",
+              )}
+            </p>
+            <Button
+              variant="fresh"
+              size="fresh"
+              onClick={() => void refetchHeld()}
+              className="btn-secondary mt-3 w-full"
+            >
+              {t("Zkusit znovu", "Try again")}
+            </Button>
+          </div>
+        ) : heldBookings?.length ? (
+          <section className="mt-5">
+            <h2 className="mb-2 text-lg font-bold">
+              {t("Pobyty členů ke schválení", "Members' stays awaiting approval")} (
+              {heldBookings.length})
+            </h2>
+            <div className="space-y-2">
+              {heldBookings.map((b) => (
+                <Link
+                  key={b.id}
+                  to="/rezervace/$id"
+                  params={{ id: b.id }}
+                  className="card flex min-h-14 items-center gap-3 p-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[16px] font-bold">{b.requester_name}</p>
+                    <p className="text-[16px] text-muted-foreground">
+                      {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
+                    </p>
+                  </div>
+                  <PillWarn>{t("Rozhodnout", "Decide")}</PillWarn>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : (
+          heldBookings &&
+          publicCount === 0 && (
+            <EmptyState
+              icon={Inbox}
+              title={t("Žádné žádosti.", "No requests.")}
+              hint={t(
+                "Žádosti z odkazu pro hosty, z veřejného kalendáře a pobyty členů ke schválení se objeví zde.",
+                "Requests from the guest link and the public calendar, and members' stays awaiting approval, will appear here.",
+              )}
+            />
+          )
+        )
       ) : (
         <>
-          {pending.length > 0 && (
-            <section>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <h3 className="text-lg font-bold">
-                  {t("Čekající", "Pending")} ({pending.length})
-                </h3>
-                <Button
-                  variant="fresh"
-                  size="fresh"
-                  onClick={() =>
-                    setSelected(
-                      selected.length === pending.length
-                        ? []
-                        : pending.map((request) => request.id),
-                    )
-                  }
-                  className="min-h-11 text-[16px] font-bold text-primary"
-                >
-                  {selected.length === pending.length
-                    ? t("Zrušit výběr", "Clear")
-                    : t("Vybrat vše", "Select all")}
-                </Button>
-              </div>
-              {selected.length > 0 && (
-                <div className="card mb-3 grid grid-cols-2 gap-2 p-3">
-                  <Button
-                    variant="fresh"
-                    size="fresh"
-                    onClick={() =>
-                      decide.mutate({
-                        requests: pending.filter((request) => selected.includes(request.id)),
-                        approve: true,
-                      })
-                    }
-                    disabled={decide.isPending}
-                    className="btn-dark disabled:opacity-50"
-                  >
-                    {decide.isPending
-                      ? t("Ukládám…", "Saving…")
-                      : t("Schválit vybrané", "Approve selected")}
-                  </Button>
-                  <Button
-                    variant="fresh"
-                    size="fresh"
-                    onClick={() =>
-                      setDeclining(pending.filter((request) => selected.includes(request.id)))
-                    }
-                    className="btn-secondary"
-                  >
-                    {t("Zamítnout vybrané", "Decline selected")}
-                  </Button>
-                </div>
-              )}
-              <div className="space-y-3">
-                {pending.map((r) => (
-                  <article key={r.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
-                    <div className="flex items-start justify-between gap-2">
-                      <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={selected.includes(r.id)}
-                          onChange={() =>
-                            setSelected((ids) =>
-                              ids.includes(r.id) ? ids.filter((id) => id !== r.id) : [...ids, r.id],
-                            )
-                          }
-                          className="mt-1 size-5 accent-primary"
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-bold">{r.requester_name}</p>
-                          <p className="text-[16px] text-muted-foreground">{r.requester_email}</p>
-                        </div>
-                      </label>
-                      {r.has_conflict && (
-                        <span className="pill bg-warn-soft text-warn-foreground">
-                          <AlertTriangle className="size-3.5" /> {t("Kolize", "Conflict")}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2 space-y-1 text-[16px]">
-                      <p>
-                        <span className="font-bold">{t("Termín:", "Dates:")}</span>{" "}
-                        {fmtDate(r.start_date)} – {fmtDate(r.end_date)}
-                      </p>
-                      <p>
-                        <span className="font-bold">{t("Hostů:", "Guests:")}</span> {r.guests}
-                      </p>
-                      {r.affiliation && (
-                        <p>
-                          <span className="font-bold">{t("Oddělení:", "Department:")}</span>{" "}
-                          {r.affiliation}
-                        </p>
-                      )}
-                      {r.note && <p className="rounded-2xl bg-background p-2.5">„{r.note}“</p>}
-                      <p className="text-[16px] text-muted-foreground">
-                        {t("Odesláno", "Sent")} {fmtDateTime(r.created_at)}
-                      </p>
-                    </div>
-                    {r.has_conflict && (
-                      <div className="mt-2 rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
-                        <p>
-                          {t(
-                            "Termín se překrývá s jiným pobytem:",
-                            "These dates overlap with another stay:",
-                          )}
-                        </p>
-                        {r.conflict_note && <p className="mt-1">{r.conflict_note}</p>}
-                      </div>
-                    )}
-                    <div className="mt-3 flex gap-2">
+          {publicCount > 0 && pending.length + processed.length > 0 && (
+            <h2 className="mb-2 mt-5 text-lg font-bold">
+              {t("Žádosti zaměstnanců", "Employee requests")}
+            </h2>
+          )}
+          {isLoading ? (
+            <LoadingCards />
+          ) : isError && !requests ? (
+            <div role="alert" className="card p-4">
+              <p className="font-bold">
+                {t("Žádosti se nepodařilo načíst.", "Could not load the requests.")}
+              </p>
+              <Button
+                variant="fresh"
+                size="fresh"
+                onClick={() => void refetch()}
+                className="btn-secondary mt-3 w-full"
+              >
+                {t("Zkusit znovu", "Try again")}
+              </Button>
+            </div>
+          ) : pending.length === 0 && processed.length === 0 ? (
+            publicCount > 0 ? null : (
+              <EmptyState
+                icon={Inbox}
+                title={t("Žádné žádosti.", "No requests.")}
+                hint={t(
+                  "Nové žádosti z veřejného formuláře se objeví zde.",
+                  "New requests from the public form will appear here.",
+                )}
+              />
+            )
+          ) : (
+            <>
+              {pending.length > 0 && (
+                <section>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h3 className="text-lg font-bold">
+                      {t("Čekající", "Pending")} ({pending.length})
+                    </h3>
+                    <Button
+                      variant="fresh"
+                      size="fresh"
+                      onClick={() =>
+                        setSelected(
+                          selected.length === pending.length
+                            ? []
+                            : pending.map((request) => request.id),
+                        )
+                      }
+                      className="min-h-11 text-[16px] font-bold text-primary"
+                    >
+                      {selected.length === pending.length
+                        ? t("Zrušit výběr", "Clear")
+                        : t("Vybrat vše", "Select all")}
+                    </Button>
+                  </div>
+                  {selected.length > 0 && (
+                    <div className="card mb-3 grid grid-cols-2 gap-2 p-3">
                       <Button
                         variant="fresh"
                         size="fresh"
-                        onClick={() => decide.mutate({ requests: [r], approve: true })}
+                        onClick={() =>
+                          decide.mutate({
+                            requests: pending.filter((request) => selected.includes(request.id)),
+                            approve: true,
+                          })
+                        }
                         disabled={decide.isPending}
-                        className="btn-dark flex-1 disabled:opacity-50"
+                        className="btn-dark disabled:opacity-50"
                       >
-                        {decide.isPending && decide.variables?.requests.some((x) => x.id === r.id)
+                        {decide.isPending
                           ? t("Ukládám…", "Saving…")
-                          : t("Schválit", "Approve")}
+                          : t("Schválit vybrané", "Approve selected")}
                       </Button>
                       <Button
                         variant="fresh"
                         size="fresh"
-                        onClick={() => setDeclining([r])}
-                        disabled={decide.isPending}
-                        className="btn-secondary flex-1 disabled:opacity-50"
+                        onClick={() =>
+                          setDeclining(pending.filter((request) => selected.includes(request.id)))
+                        }
+                        className="btn-secondary"
                       >
-                        {t("Zamítnout", "Decline")}
+                        {t("Zamítnout vybrané", "Decline selected")}
                       </Button>
                     </div>
-                  </article>
-                ))}
-              </div>
-            </section>
+                  )}
+                  <div className="space-y-3">
+                    {pending.map((r) => (
+                      <article key={r.id} className="rounded-[20px] bg-card p-[14px] shadow-chip">
+                        <div className="flex items-start justify-between gap-2">
+                          <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={selected.includes(r.id)}
+                              onChange={() =>
+                                setSelected((ids) =>
+                                  ids.includes(r.id)
+                                    ? ids.filter((id) => id !== r.id)
+                                    : [...ids, r.id],
+                                )
+                              }
+                              className="mt-1 size-5 accent-primary"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-lg font-bold">{r.requester_name}</p>
+                              <p className="text-[16px] text-muted-foreground">
+                                {r.requester_email}
+                              </p>
+                            </div>
+                          </label>
+                          {r.has_conflict && (
+                            <span className="pill bg-warn-soft text-warn-foreground">
+                              <AlertTriangle className="size-3.5" /> {t("Kolize", "Conflict")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-2 space-y-1 text-[16px]">
+                          <p>
+                            <span className="font-bold">{t("Termín:", "Dates:")}</span>{" "}
+                            {fmtDate(r.start_date)} – {fmtDate(r.end_date)}
+                          </p>
+                          <p>
+                            <span className="font-bold">{t("Hostů:", "Guests:")}</span> {r.guests}
+                          </p>
+                          {r.affiliation && (
+                            <p>
+                              <span className="font-bold">{t("Oddělení:", "Department:")}</span>{" "}
+                              {r.affiliation}
+                            </p>
+                          )}
+                          {r.note && <p className="rounded-2xl bg-background p-2.5">„{r.note}“</p>}
+                          <p className="text-[16px] text-muted-foreground">
+                            {t("Odesláno", "Sent")} {fmtDateTime(r.created_at)}
+                          </p>
+                        </div>
+                        {r.has_conflict && (
+                          <div className="mt-2 rounded-2xl bg-warn-soft p-3 text-[16px] font-semibold text-warn-foreground">
+                            <p>
+                              {t(
+                                "Termín se překrývá s jiným pobytem:",
+                                "These dates overlap with another stay:",
+                              )}
+                            </p>
+                            {r.conflict_note && <p className="mt-1">{r.conflict_note}</p>}
+                          </div>
+                        )}
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            variant="fresh"
+                            size="fresh"
+                            onClick={() => decide.mutate({ requests: [r], approve: true })}
+                            disabled={decide.isPending}
+                            className="btn-dark flex-1 disabled:opacity-50"
+                          >
+                            {decide.isPending &&
+                            decide.variables?.requests.some((x) => x.id === r.id)
+                              ? t("Ukládám…", "Saving…")
+                              : t("Schválit", "Approve")}
+                          </Button>
+                          <Button
+                            variant="fresh"
+                            size="fresh"
+                            onClick={() => setDeclining([r])}
+                            disabled={decide.isPending}
+                            className="btn-secondary flex-1 disabled:opacity-50"
+                          >
+                            {t("Zamítnout", "Decline")}
+                          </Button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {processed.length > 0 && (
+                <section className="mt-5">
+                  <h3 className="mb-2 text-lg font-bold">{t("Vyřízené", "Processed")}</h3>
+                  <div className="space-y-2.5">
+                    {processed.map((r) => (
+                      <div key={r.id} className="card flex items-center gap-3 p-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[16px] font-bold">{r.requester_name}</p>
+                          <p className="text-[16px] text-muted-foreground">
+                            {fmtDate(r.start_date)} – {fmtDate(r.end_date)}
+                          </p>
+                        </div>
+                        {r.status === "APPROVED" ? (
+                          <PillOk>{t("Schváleno", "Approved")}</PillOk>
+                        ) : (
+                          <PillNeutral>{t("Zamítnuto", "Declined")}</PillNeutral>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
           )}
 
-          {processed.length > 0 && (
-            <section className="mt-5">
-              <h3 className="mb-2 text-lg font-bold">{t("Vyřízené", "Processed")}</h3>
-              <div className="space-y-2.5">
-                {processed.map((r) => (
-                  <div key={r.id} className="card flex items-center gap-3 p-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[16px] font-bold">{r.requester_name}</p>
-                      <p className="text-[16px] text-muted-foreground">
-                        {fmtDate(r.start_date)} – {fmtDate(r.end_date)}
-                      </p>
-                    </div>
-                    {r.status === "APPROVED" ? (
-                      <PillOk>{t("Schváleno", "Approved")}</PillOk>
-                    ) : (
-                      <PillNeutral>{t("Zamítnuto", "Declined")}</PillNeutral>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          <Link to="/export" className="btn-secondary mt-4 w-full">
+            {t("Export využití", "Usage export")}
+            <PillWarn>CSV</PillWarn>
+          </Link>
         </>
       )}
-
-      <Link to="/export" className="btn-secondary mt-4 w-full">
-        {t("Export využití", "Usage export")}
-        <PillWarn>CSV</PillWarn>
-      </Link>
 
       {declining.length > 0 && (
         <div className="fixed inset-0 z-50 grid place-items-end bg-foreground/35 p-4 sm:place-items-center">

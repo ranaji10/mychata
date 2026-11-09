@@ -75,7 +75,7 @@ describe("T-046: ADR-0012, no embeddings on save", () => {
 });
 
 describe("T-046: admins see the requester's note before deciding", () => {
-  it("Home's request card shows the note", () => {
-    expect(src("src/routes/domu.tsx")).toContain("{g.note && ");
+  it("the public request card shows the note (on Requests since T-069)", () => {
+    expect(src("src/components/PublicRequests.tsx")).toContain("{g.note && ");
   });
 });

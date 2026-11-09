@@ -1,20 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { track } from "@/lib/analytics";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, CalendarDays, Inbox, Loader2, Wrench } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, ArrowRight, CalendarDays, Inbox, Wrench } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
-import {
-  LoadingCards,
-  PillDanger,
-  PillNeutral,
-  PillOk,
-  PillWarn,
-  StatCard,
-} from "@/components/bits";
+import { LoadingCards, PillDanger, PillOk, PillWarn, StatCard } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
 import {
@@ -34,7 +23,6 @@ import {
 } from "@/lib/data";
 import { usePendingGuestRequests } from "@/lib/guest-requests";
 import { useLang } from "@/lib/i18n";
-import { inviteLink, inviteMailto } from "@/lib/invites";
 import { useDefaultChataPhoto } from "@/lib/season";
 import { usePrimaryPhotoUrl } from "@/lib/use-primary-photo";
 import { useExpenseData } from "@/lib/expenses";
@@ -147,138 +135,6 @@ function HomePage() {
     },
   });
 
-  // One admin-only database step writes the booking and the decision together (T-021).
-  // The card shows progress and disappears as soon as the database confirms.
-  const queryClient = useQueryClient();
-  // D-30: after approving a visitor from the public calendar, offer to invite them as a member
-  // so they book in the app next time. Never automatic: members see more than a visitor.
-  const [inviteOffer, setInviteOffer] = useState<{ email: string; name: string } | null>(null);
-  const inviteVisitor = useMutation({
-    mutationFn: async (visitor: { email: string; name: string }) => {
-      const token = crypto.randomUUID();
-      const { error } = await supabase.from("invitations").insert({
-        account_id: account!.id,
-        property_id: property?.id ?? null,
-        email: visitor.email.toLowerCase(),
-        role: "MEMBER",
-        token,
-        created_by_member_id: currentMember?.id ?? null,
-      });
-      if (error) throw error;
-      return { token, visitor };
-    },
-    onSuccess: ({ token, visitor }) => {
-      track("invitation_sent", { result: "single", source: "public_calendar" });
-      setInviteOffer(null);
-      void queryClient.invalidateQueries({ queryKey: ["invitations"] });
-      const mailto = inviteMailto({
-        to: visitor.email,
-        link: inviteLink(window.location.origin, token),
-        chata: property?.name ?? "",
-        inviter: currentMember?.name ?? null,
-        admin: false,
-        lang,
-      });
-      toast.success(
-        t(
-          `Pozvánka pro ${visitor.name} vytvořena. Najdete ji i v Členech a oprávněních.`,
-          `Invitation for ${visitor.name} created. It is also listed in Members & permissions.`,
-        ),
-        {
-          duration: 15000,
-          action: {
-            label: t("Poslat e-mailem", "Send by email"),
-            onClick: () => {
-              window.location.href = mailto;
-            },
-          },
-        },
-      );
-    },
-    onError: (error) => {
-      console.error("[domu] invite visitor", error);
-      setInviteOffer(null);
-      toast.error(
-        t(
-          `Pozvánku se nepodařilo vytvořit: ${error.message}`,
-          `The invitation could not be created: ${error.message}`,
-        ),
-      );
-    },
-  });
-
-  const decideGuest = useMutation({
-    mutationFn: async ({
-      id,
-      approve,
-    }: {
-      id: string;
-      approve: boolean;
-      visitor?: { email: string; name: string } | null;
-    }) => {
-      const { error } = await supabase.rpc("decide_guest_request", {
-        _request_id: id,
-        _approve: approve,
-      });
-      if (error) throw error;
-    },
-    onSuccess: async (_d, { approve, visitor }) => {
-      if (approve && visitor?.email && account) {
-        // Only offer when they are neither a member nor already invited (25 Oct review).
-        const email = visitor.email.toLowerCase();
-        const [{ data: invited, error: invErr }, { data: member, error: memErr }] =
-          await Promise.all([
-            supabase
-              .from("invitations")
-              .select("id")
-              .eq("account_id", account.id)
-              .ilike("email", email)
-              .eq("status", "PENDING")
-              .limit(1),
-            supabase
-              .from("members")
-              .select("id")
-              .eq("account_id", account.id)
-              .ilike("email", email)
-              .limit(1),
-          ]);
-        if (invErr || memErr) console.error("[domu] invite check", invErr ?? memErr);
-        else if (!invited?.length && !member?.length) setInviteOffer(visitor);
-      }
-      track("booking_decided", {
-        result: approve ? "approved" : "declined",
-        source: "guest_request",
-      });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["guest-requests", property?.id] }),
-        queryClient.invalidateQueries({ queryKey: ["guest-requests-decided", property?.id] }),
-        queryClient.invalidateQueries({ queryKey: ["bookings", property?.id] }),
-      ]);
-      toast.success(
-        approve
-          ? t("Pobyt potvrzen a zapsán do kalendáře.", "Stay confirmed and added to the calendar.")
-          : t("Žádost odmítnuta.", "Request declined."),
-      );
-    },
-    onError: (error) => {
-      console.error("[domu] decide guest request", error);
-      const m = error.message;
-      toast.error(
-        m.includes("Admin role required")
-          ? t("Žádosti hostů vyřizuje jen správce.", "Only an admin can decide guest requests.")
-          : m.includes("already_decided")
-            ? t("O této žádosti už bylo rozhodnuto.", "This request has already been decided.")
-            : m.includes("dates_taken")
-              ? t(
-                  "Tyto dny už jsou mezitím obsazené. Žádost můžete zamítnout.",
-                  "These days have been booked in the meantime. You can decline the request.",
-                )
-              : t(`Akce se nepodařila: ${m}`, `That didn't work: ${m}`),
-      );
-      void queryClient.invalidateQueries({ queryKey: ["guest-requests", property?.id] });
-    },
-  });
-
   const { data: mainPhoto } = usePrimaryPhotoUrl(property?.id);
 
   if (loading || lb || lt) {
@@ -305,9 +161,12 @@ function HomePage() {
     currentMember?.id,
   );
   const pendingRequests = requests?.filter((r) => r.status === "PENDING") ?? [];
-  // T-069: requests from the public calendar wait too (listed below as "Booking requests");
-  // the tile said 0 while one was pending.
-  const pendingTotal = pendingRequests.length + (guestRequests?.length ?? 0);
+  // T-069: public requests (guest link, public calendar) wait too; the tile said 0 while one
+  // was pending. All are decided on Requests.
+  const publicPending = guestRequests?.length ?? 0;
+  const pendingTotal = pendingRequests.length + publicPending;
+  // Families: members' held stays (overlap rule) and public requests; institutions: the tile.
+  const requestsWaiting = (isFamily ? heldBookings.length : pendingRequests.length) + publicPending;
   const conflictRequests = pendingRequests.filter((r) => r.has_conflict);
 
   const guestsLabel = (n: number) => {
@@ -558,133 +417,27 @@ function HomePage() {
         </Link>
       )}
 
-      {/* Family: members' stays held for the admin by the overlap rule (T-036, T-038) */}
-      {isFamily && isAdmin && heldBookings.length > 0 && (
-        <section className="card mt-4 p-4">
-          <h3 className="text-lg font-bold">
-            {t("Pobyty ke schválení", "Stays awaiting approval")}
-          </h3>
-          <div className="mt-2 space-y-2">
-            {heldBookings.map((b) => (
-              <Link
-                key={b.id}
-                to="/rezervace/$id"
-                params={{ id: b.id }}
-                className="flex min-h-14 items-center gap-3 rounded-2xl bg-secondary p-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[16px] font-bold">{b.requester_name}</p>
-                  <p className="text-[16px] text-muted-foreground">
-                    {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
-                  </p>
-                </div>
-                <PillWarn>{t("Rozhodnout", "Decide")}</PillWarn>
-              </Link>
-            ))}
+      {/* T-069: every booking request is decided on Requests; Home only says how many wait.
+          Institutions also have the tile above and the Requests tab. */}
+      {isAdmin && (heldBookings.length > 0 || publicPending > 0) && (
+        <Link
+          to="/zadosti"
+          data-testid="home-requests-card"
+          className="card mt-4 flex min-h-14 items-center gap-3 p-4 active:scale-[0.99]"
+        >
+          <Inbox className="size-6 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[16px] font-bold">
+              {t("Žádosti o pobyt", "Booking requests")} ({requestsWaiting})
+            </p>
+            {publicPending > 0 && (
+              <p className="text-[15px] font-semibold text-public">
+                {t(`Veřejné: ${publicPending}`, `Public: ${publicPending}`)}
+              </p>
+            )}
           </div>
-        </section>
-      )}
-
-      {/* Guest booking requests (no-account guests) */}
-      {isAdmin && !!guestRequests?.length && (
-        <section className="card mt-4 p-4">
-          <h3 className="text-lg font-bold">{t("Žádosti o pobyt", "Booking requests")}</h3>
-          <div className="mt-2 space-y-2.5">
-            {guestRequests.map((g) => {
-              // O-27: dates passed with nobody deciding. No Confirm (stays in the past are not
-              // added, O-25); Decline clears it.
-              const undecided = g.end_date < today;
-              return (
-                <div key={g.id} className="border-b border-divider py-3 last:border-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-[16px] font-bold">{g.guest_name}</p>
-                    {undecided ? (
-                      <PillNeutral>{t("Nerozhodnuto", "Not decided")}</PillNeutral>
-                    ) : (
-                      <PillWarn>{t("Čeká", "Pending")}</PillWarn>
-                    )}
-                  </div>
-                  <p className="text-[16px] text-muted-foreground">
-                    {fmtDate(g.start_date)} – {fmtDate(g.end_date)} · {g.guests}{" "}
-                    {guestsLabel(g.guests)} · {g.guest_email}
-                  </p>
-                  {/* The requester's note (26 Oct check: admins saw it only after approving). */}
-                  {g.note && <p className="mt-1 text-[16px] italic text-foreground">„{g.note}“</p>}
-                  {/* When and where it came from (T-043): the public calendar needs an account. */}
-                  <p className="text-[14px] text-muted-foreground">
-                    {(g as { source?: string }).source === "public_calendar"
-                      ? t("Z veřejného kalendáře", "From the public calendar")
-                      : t("Z odkazu pro hosty", "From the guest link")}{" "}
-                    · {t("požádáno", "requested")} {fmtDateTime(g.created_at)}
-                  </p>
-                  <div className={`mt-2 grid gap-2 ${undecided ? "grid-cols-1" : "grid-cols-2"}`}>
-                    {(() => {
-                      const busy = decideGuest.isPending && decideGuest.variables?.id === g.id;
-                      const busyApprove = busy && decideGuest.variables?.approve;
-                      return (
-                        <>
-                          <Button
-                            variant="fresh"
-                            size="fresh"
-                            className="btn-secondary disabled:opacity-50"
-                            disabled={decideGuest.isPending}
-                            onClick={() => decideGuest.mutate({ id: g.id, approve: false })}
-                          >
-                            {busy && !busyApprove ? (
-                              <>
-                                <Loader2 className="size-5 animate-spin" />
-                                {t("Odmítám…", "Declining…")}
-                              </>
-                            ) : (
-                              t("Odmítnout", "Decline")
-                            )}
-                          </Button>
-                          {!undecided && (
-                            <Button
-                              variant="fresh"
-                              size="fresh"
-                              className="btn-primary disabled:opacity-50"
-                              disabled={decideGuest.isPending}
-                              aria-busy={busyApprove}
-                              onClick={() =>
-                                decideGuest.mutate({
-                                  id: g.id,
-                                  approve: true,
-                                  visitor:
-                                    (g as { source?: string }).source === "public_calendar" &&
-                                    g.guest_email
-                                      ? { email: g.guest_email, name: g.guest_name }
-                                      : null,
-                                })
-                              }
-                            >
-                              {busyApprove ? (
-                                <>
-                                  <Loader2 className="size-5 animate-spin" />
-                                  {t("Potvrzuji…", "Confirming…")}
-                                </>
-                              ) : (
-                                t("Potvrdit pobyt", "Confirm stay")
-                              )}
-                            </Button>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                  {undecided && (
-                    <p className="mt-2 text-[16px] text-muted-foreground">
-                      {t(
-                        "Termín uplynul a nikdo o žádosti nerozhodl.",
-                        "The dates passed and nobody decided on this request.",
-                      )}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+          <ArrowRight className="size-5 text-muted-foreground" />
+        </Link>
       )}
 
       <div className="lg:grid lg:grid-cols-2 lg:gap-5">
@@ -794,22 +547,6 @@ function HomePage() {
           </p>
         </div>
       )}
-      <ConfirmDialog
-        open={!!inviteOffer}
-        onOpenChange={(open) => !open && setInviteOffer(null)}
-        title={t(
-          `Pozvat ${inviteOffer?.name ?? ""} do chaty jako člena?`,
-          `Invite ${inviteOffer?.name ?? ""} to the cottage as a member?`,
-        )}
-        description={t(
-          `Pobyt je potvrzený. Jako člen si ${inviteOffer?.name ?? ""} příště zapíše pobyt sám v aplikaci, ale uvidí i kalendář, výdaje a manuál chaty. Pozvánka půjde na ${inviteOffer?.email ?? ""}.`,
-          `The stay is confirmed. As a member, ${inviteOffer?.name ?? ""} can book in the app next time, but will also see the cottage's calendar, expenses and manual. The invitation goes to ${inviteOffer?.email ?? ""}.`,
-        )}
-        confirmLabel={t("Pozvat", "Invite")}
-        tone="primary"
-        busy={inviteVisitor.isPending}
-        onConfirm={() => inviteOffer && inviteVisitor.mutate(inviteOffer)}
-      />
     </AppShell>
   );
 }

@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-11-06
+updated: 2026-11-09
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Now
@@ -12,18 +12,15 @@ tab: Now
 
 # MyChata tracker
 
-6 Nov 2026 · Tuik
+9 Nov 2026 · Tuik
 
-**Live:** `7f39d87` (PR #113 T-067, PR #114 Lovable's marker 0049 for 0048; build-sha checked 6 Nov 18:35). The sync workflow opened Lovable's PR #114 by itself: T-066 works. Rechecked: O-30 passes as a plain member of Chata Alfa (test), both the booking screen and the database (a stay over a day visit was held for approval); no test data left (`docs/external/claude/2026-11-06-site-check-3.md`). O-20 and the Google sign-up count are covered by tests only. **Waiting on you:** prompt 32 for Lovable's temporary cottage (N-33); N-29 steps 1–2; in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Deferred by you: approving each cottage for family (3 Nov), past stays by admins O-25 (5 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `7f39d87` (unchanged since 6 Nov; main since then is docs only; build-sha checked 9 Nov). 9 Nov: N-23, N-29 and N-33 done; F-07, F-09, F-23, F-24 closed (Done & history). **Merge PR #117 (T-068, sign-out) before Dependabot's #116**, then publish. The 8 Nov nightly check failure was GitHub failing to download Bun (504), not the site. **Waiting on you:** decline the N-29 test request (Institutní chata (test), 24–26 Nov, Home as Test 3; the built-in browser went offline before Claude could); D-34; in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Deferred by you: approving each cottage for family (3 Nov), past stays by admins O-25 (5 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
-| N-23 | **GA key event still to star: `sign_up`.** `booking_request_sent` and `invitation_accepted` arrived and were starred 6 Nov (with `booking_created` and `onboarding_completed`). `sign_up` never arrived because Google sign-ups never sent it (only email did); PR #113 fixes that. GA's new Events screen has no "add by name", so star `sign_up` under Admin → Events → Recent events once it shows, after the next Google sign-up with analytics allowed. The scheduled task also checks | Claude (scheduled) | Waiting |  |
-| N-29 | **E-mail tests with a real inbox, steps 1–2 left** (3 and 4 passed 3 Nov: reset mails arrive from MyChata in the account's language and open "Nové heslo"; a mail to podpora@ reached Gmail and the reply as "MyChata podpora" arrived, not in spam). 1) a fresh non-Gmail sign-up got its confirmation in English (your test, 5 Nov). Still to note: the mail comes from MyChata <no-reply@notify.mychata.cz> in the language you chose, and the account can't sign in before confirming (F-07); 2) public calendar of a test cottage → "Požádat o termín" → sign up → open the confirmation link in another browser (F-24). Tell Claude the results | You | To do | F-07, F-23, F-24 |
-| N-33 | **Lovable left "Lovable dočasná chata (test)" on production** during its 0040 work. It can't be removed from the app: there is no "delete cottage" action and no delete permission on cottages, and it sits in Lovable's own account. Send prompt `32-L-delete-temp-cottage.md` (prompts/2026-11-06): Lovable checks it is empty and in its own account, then deletes that one row | You | To do | |
 
 ## Decisions waiting on you
 
@@ -38,6 +35,7 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | D-19 | Founding offer: Rodina Plus at 990 Kč a year, locked for 3 years, for the first 100 accounts? | Gemini's "forever" price can never be raised; a 3-year lock can. Sets P-4 | 16 Oct | |
 | D-20 | Institution pilots: free until 30 Sep 2027 for the first 3, in return for a named contact, monthly feedback and list price afterwards? | Sets P-3's backfill and what existing institutional accounts (D-08) are told | 16 Oct | |
 | D-21 | Who sells: you, Rajat, or a company you both own (O-11)? | No invoice, terms or payment account without a seller; it also decides VAT status and the business split | 16 Oct | |
+| D-34 | Ask visitors for advertising consent, or accept GA's "0 % consent rate" warning (F-21)? | Recommended: accept. MyChata runs no Google Ads; the warning only affects ad measurement and remarketing. Asking would add a second banner choice for 45–68-year-olds for no feature | 9 Nov | |
 | D-31 | Fix Google sign-in on Brave (F-05) with our own Google Cloud OAuth client (Lovable → Users → Google → "Your own credentials")? | Google's consent screen would then say MyChata, not Lovable, and Brave stops failing. Costs: a Google Cloud project with an OAuth consent screen (Google may review it), and a code change away from Lovable's broker (cloud-auth-js) that Claude would test first | 26 Oct | |
 
 ## Open defects
@@ -46,11 +44,7 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | --- | --- | --- | --- | --- |
 | F-01 | Not yet tested on a real iPhone: clipboard, Document Vault "Open", avatar upload | Needs an iPhone; all pass in Chromium's emulation | N-3 | Waiting |
 | F-05 | B-004: Google sign-in fails on Brave | In Lovable's sign-in broker. Lovable → More → Users → Settings → Google offers "Your own credentials" (a Google Cloud OAuth client) | D-31 | To do |
-| F-07 | "Confirm email" for password sign-ups not verified | Someone could claim a relative's seat by e-mail match; public-calendar requests rely on it too | N-29, prompt `05` | Waiting |
-| F-09 | B-005: slow CORS / HTTP/3 errors on Supabase hosting (Firefox) | Three other B-005 items fixed in PR #21 | Watch; T-002 | Waiting |
-| F-21 | Google Analytics tag diagnostics: "0 % consent rate" | Ad consent is always denied by design. 3 Nov: Consent settings now say "Urgent: 0% consent rate" and "analytics consent signals inactive"; the code sends analytics_storage from the banner choice, so this is the ad signals plus low traffic. Stream receiving traffic | Watch; recheck when weekly users pass ~50 | Waiting |
-| F-23 | Public-calendar requests: the 20-a-day cottage limit can be used up by throwaway accounts while "Confirm email" is off (PR #66 review) | Low; closes with F-07 (confirmation is on since 3 Nov) | N-29 | Waiting |
-| F-24 | After sign-up, returning to the calendar when the confirmation link is opened in another browser is untested | The rest of the request flow passed 26 Oct (N-14); with "Confirm email" off there is no link to open yet | Prompt `05`, "After" step 2 | Waiting |
+| F-21 | Google Analytics: "Urgent: 0% consent rate" and "analytics consent signals inactive" | Diagnosed 9 Nov: not a code defect. The live tag sets the EEA defaults before any hit and the banner's update arrives: a consenting visitor's page_view carries `gcs=G101` (analytics granted, ads denied). The 0 % is the ad signals, which MyChata never asks for, so every visitor is "denied" by design. Only asking for ad consent would change it (D-34) | D-34 | Waiting |
 
 ## How to use this doc
 

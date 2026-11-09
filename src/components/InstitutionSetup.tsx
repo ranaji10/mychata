@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutHere } from "@/lib/sign-out";
 import { useAccount } from "@/lib/account";
 import { accountTypeChangeError } from "@/lib/account-type";
 import { useLang } from "@/lib/i18n";
@@ -70,7 +71,7 @@ export function InstitutionSetup() {
 
   const startInstitutionSignup = async () => {
     rememberPersonalEmail(email, cleanInstEmail);
-    const { error } = await supabase.auth.signOut();
+    const { error } = await signOutHere("institution-setup");
     if (error) {
       toast.error(t("Odhlášení se nepodařilo.", "Could not sign out."));
       return;

@@ -15,6 +15,18 @@ As of 2026-11-10 (morning). Update this file in every PR that changes behaviour.
 | Not yet tested live      | Tested live on 13 Oct (T-024): guest request and approval, promote/demote, invitations, Settle debts, PDF and photo questions, checklists, clipboard fallback. Passed on 14 Oct (site check 2): public pages, Czech titles, seasonal photo from `/assets/`. Still open: the signed-in release checks and two-person checks, the five onboarding steps for a family and an institution sign-up, blue screens with real data (no institutional test account), L-5c guest/invitation/manual/request states, and the cookie banner seen from an EU address (the check ran from the US, where the banner is not shown). |
 | Open tasks               | T-020 document vault search (re-planned in T-044), T-001–T-013 as listed below. T-055 and T-057 in review (PR). Done: T-014–T-019, T-021–T-052.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
+## Processed requests for families (T-070, 10 Nov 2026, in review)
+
+Brief: `docs/tasks/T-070-family-processed-requests.md`.
+
+- A family admin's Requests page keeps a "Processed" list under what waits, as institutions have: the 20 latest decided public requests (Approved/Declined, where they came from) and members' held stays an admin approved (they open the stay). Declined members' stays are deleted, so they are not listed. The empty state shows only when nothing waits and nothing was decided. No schema change.
+
+## Lovable scope check (T-071, 10 Nov 2026, in review)
+
+Brief: `docs/tasks/T-071-lovable-scope-check.md`.
+
+- CI job `lovable-scope` runs on every "lovable-sync → main" PR and flags every file Lovable changed that the prompt's scope (`.github/lovable-scope.json` on `main`) did not ask for: app files as "Not asked for", Lovable's own platform files apart. Not a required check. How to set the scope: `docs/runbooks/two-person-workflow.md`, "Lovable's scope check".
+
 ## One list for every booking request; public calendar for families only (T-069, 9 Nov 2026, live since `1bca47f`; 0050 applied)
 
 - Migration 0050 (Lovable must apply it): the public calendar is for family cottages only (ADR-0014). Onboarding used to switch it on for every institution; a trigger now keeps it off, and the employee request form reads taken dates through `public_request_availability`. The "stay to approve" email opens the stay.

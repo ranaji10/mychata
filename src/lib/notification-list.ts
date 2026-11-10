@@ -302,10 +302,10 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
               ]
             : [`Žádost hosta: ${g.guest_name}`, `Guest request: ${g.guest_name}`],
         detail: [
-          `Od ${fmtDate(g.start_date)}. Rozhodněte na Domů.`,
-          `From ${fmtDate(g.start_date)}. Decide on Home.`,
+          `Od ${fmtDate(g.start_date)}. Rozhodněte v Žádostech.`,
+          `From ${fmtDate(g.start_date)}. Decide in Requests.`,
         ],
-        to: "/domu",
+        to: "/zadosti",
       });
     }
     for (const g of input.decidedGuestRequests ?? []) {
@@ -328,7 +328,7 @@ export function buildNotifications(input: NotificationInput): AppNotification[] 
               `${whoEn} declined ${g.guest_name}'s request`,
             ],
         detail: [`Od ${fmtDate(g.start_date)}`, `From ${fmtDate(g.start_date)}`],
-        to: approved ? "/kalendar" : "/domu",
+        to: approved ? "/kalendar" : "/zadosti",
       });
     }
   }

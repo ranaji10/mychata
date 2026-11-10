@@ -351,6 +351,13 @@
       "when": 1793984687267,
       "tag": "0049_0049_apply_journaled_0048",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794255174593,
+      "tag": "0050_public_calendar_family_only",
+      "breakpoints": true
     }
   ]
 }

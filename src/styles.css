@@ -50,6 +50,8 @@
   --color-ok-soft: var(--ok-soft);
   --color-cat-tasks: var(--cat-tasks);
   --color-cat-expenses: var(--cat-expenses);
+  --color-public: var(--public);
+  --color-public-soft: var(--public-soft);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
@@ -99,6 +101,10 @@
   --ok-soft: oklch(0.95267925 0.01741554 153.563634); /* #E7F3EA */
   --cat-tasks: oklch(0.49492112 0.12437227 253.152133); /* #2563A6 */
   --cat-expenses: oklch(0.53104508 0.11903406 65.117766); /* #9A5B00 */
+  /* T-069: requests from people outside the cottage (guest link, public calendar). Violet from
+     the branch palette, darkened for text contrast; same in both brands. */
+  --public: #5b3fa6;
+  --public-soft: #f1ecfa;
   --muted: var(--secondary);
   --accent: var(--secondary);
   --accent-foreground: var(--foreground);

@@ -3,7 +3,7 @@
  * Postgres, then acts as anon / members / admins of two accounts and checks what each
  * can see and change. Each test is rolled back, so tests don't affect each other.
  */
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { admin, as, asCommitted, freshDb, type Db } from "./harness";
 
 const U = {
@@ -1705,6 +1705,18 @@ describe("booking requests from the public calendar (T-043, migration 0034)", ()
       [visitor.userId, visitor.email, unconfirmed.userId, unconfirmed.email],
     );
   });
+  // Since 0050 the public calendar is for family cottages only; these tests are about the
+  // request flow, so cottage B (an institution in the shared fixtures) is a family meanwhile.
+  beforeAll(async () => {
+    await admin(db, "update public.accounts set type = 'FAMILY' where id = $1", [ids.acctB]);
+    // The 0050 trigger kept the fixture's flag off while B was an institution.
+    await admin(db, "update public.properties set public_calendar_enabled = true where id = $1", [
+      ids.propB,
+    ]);
+  });
+  afterAll(async () => {
+    await admin(db, "update public.accounts set type = 'INSTITUTIONAL' where id = $1", [ids.acctB]);
+  });
 
   it("anonymous callers cannot request or list", async () => {
     await as(db, anon, async (q) => {
@@ -2297,6 +2309,122 @@ describe("owner, account type changes, institution requests (T-045, migration 00
       expect(danaMember).toBeTruthy();
     } finally {
       await admin(db, "delete from public.institutional_requests where id = $1", [reqId]);
+    }
+  });
+});
+
+describe("the public calendar is for family cottages only (T-069, migration 0050)", () => {
+  const visitor = {
+    role: "authenticated" as const,
+    userId: "10000000-0000-4000-8000-0000000000f9",
+    email: "host69@example.org",
+  };
+  beforeAll(async () => {
+    await admin(
+      db,
+      "insert into auth.users (id, email, email_confirmed_at) values ($1,$2, now()) on conflict do nothing",
+      [visitor.userId, visitor.email],
+    );
+    // Institution B's flag is on in the fixtures, as Institutní chata (test) was live.
+    await admin(db, "update public.properties set public_calendar_enabled = true where id = $1", [
+      ids.propB,
+    ]);
+    await admin(
+      db,
+      "insert into public.bookings (property_id, requester_name, start_date, end_date, status) values ($1,'T069', current_date + 3, current_date + 5, 'CONFIRMED')",
+      [ids.propB],
+    );
+  });
+  afterAll(async () => {
+    await admin(db, "delete from public.bookings where requester_name = 'T069'");
+  });
+
+  it("an institution's calendar shows nothing and says it is switched off", async () => {
+    await as(db, anon, async (q) => {
+      expect(await q("select * from public.public_calendar($1)", [ids.tokenB])).toEqual([]);
+      // The request form keeps working with the same token.
+      expect(
+        await q("select calendar_enabled, is_institution from public.public_property($1)", [
+          ids.tokenB,
+        ]),
+      ).toEqual([{ calendar_enabled: false, is_institution: true }]);
+    });
+  });
+
+  it("an institution's calendar takes no booking requests", async () => {
+    await as(db, visitor, async (q) => {
+      const r = await q(
+        "select public.request_public_booking($1, current_date + 20, current_date + 22, 2) as r",
+        [ids.tokenB],
+      );
+      expect(r[0]!["r"]).toBe("link");
+    });
+  });
+
+  it("an institution admin cannot switch it on, but can switch it off", async () => {
+    await as(db, bAdmin, async (q) => {
+      await expect(q("select public.set_public_calendar($1, true)", [ids.propB])).rejects.toThrow(
+        /family_only/,
+      );
+      await q("select public.set_public_calendar($1, false)", [ids.propB]);
+      expect(
+        await q("select public_calendar_enabled from public.properties where id = $1", [ids.propB]),
+      ).toEqual([{ public_calendar_enabled: false }]);
+    });
+  });
+
+  it("the flag cannot be switched on for an institution, also not by a direct write", async () => {
+    const rows = await admin(
+      db,
+      "update public.properties set public_calendar_enabled = true where id = $1 returning public_calendar_enabled",
+      [ids.propB],
+    );
+    expect(rows).toEqual([{ public_calendar_enabled: false }]);
+    // Onboarding a new institution used to switch it on (0040).
+    const [created] = await asCommitted<{ id: string }>(
+      db,
+      visitor,
+      "select public.create_account_onboarding(_type => 'INSTITUTIONAL', _account_name => 'Skola T69', _property_name => 'Chata T69', _booking_auto_approve => true) as id",
+    );
+    const flag = await admin(
+      db,
+      "select public_calendar_enabled from public.properties where id = $1",
+      [created!.id],
+    );
+    expect(flag).toEqual([{ public_calendar_enabled: false }]);
+  });
+
+  it("the request form still sees taken dates, and only for institutions", async () => {
+    await as(db, anon, async (q) => {
+      const rows = await q(
+        "select start_date, end_date, status from public.public_request_availability($1)",
+        [ids.tokenB],
+      );
+      expect(rows.length).toBeGreaterThan(0); // includes the T069 stay
+      expect(Object.keys(rows[0]!).sort()).toEqual(["end_date", "start_date", "status"]);
+      expect(await q("select * from public.public_request_availability($1)", [ids.tokenA])).toEqual(
+        [],
+      );
+      expect(await q("select * from public.public_request_availability('nope')")).toEqual([]);
+    });
+  });
+
+  it("a family's published calendar still works", async () => {
+    await admin(db, "update public.properties set public_calendar_enabled = true where id = $1", [
+      ids.propA,
+    ]);
+    try {
+      await as(db, anon, async (q) => {
+        expect(
+          await q("select calendar_enabled from public.public_property($1)", [ids.tokenA]),
+        ).toEqual([{ calendar_enabled: true }]);
+      });
+    } finally {
+      await admin(
+        db,
+        "update public.properties set public_calendar_enabled = false where id = $1",
+        [ids.propA],
+      );
     }
   });
 });

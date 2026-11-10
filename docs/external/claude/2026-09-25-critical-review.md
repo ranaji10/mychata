@@ -2,7 +2,7 @@
 source: claude
 model: claude-opus-5-5
 date: 2026-09-25
-updated: 2026-11-09
+updated: 2026-11-10
 status: reviewed
 artifact: https://claude.ai/code/artifact/de927c20-385c-481b-946a-49c085e87bf1
 tab: Now
@@ -12,15 +12,16 @@ tab: Now
 
 # MyChata tracker
 
-9 Nov 2026 · Tuik
+10 Nov 2026 · Tuik
 
-**Live:** `cc8212e` (PRs #116 and #117 published 9 Nov 19:18; main since then is docs only). Unit, database, lint, typecheck and build all pass on the new versions. **Next:** merge T-069 (F-34), Lovable applies migration 0050, publish; then N-42. **Waiting on you:** D-34; in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Watch the 10 Nov nightly check: first run on Playwright 1.65. Deferred by you: approving each cottage for family (3 Nov), past stays by admins O-25 (5 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
+**Live:** `1bca47f` (PR #119 T-069 and PR #120, Lovable's marker 0051 for 0050, published 10 Nov ~09:35). N-42 passed (site check 10 Nov); F-34 closed. **In review:** PR for T-070 (Processed list for families), PR for T-071 (CI flags files Lovable changes beyond its prompt). **Waiting on you:** D-34; in Brave, "Odhlásit se" on onboarding step 1; D-31; pricing D-18 to D-21. Watch the 10 Nov nightly check (not run yet at 09:50): first run on Playwright 1.65. Deferred by you: approving each cottage for family (3 Nov), past stays by admins O-25 (5 Nov). Every row has an ID: **N** next step, **D** decision, **F** defect, **O** backlog.
 
 ## Next up
 
 | ID | Step | Owner | Status | Unblocks |
 | --- | --- | --- | --- | --- |
-| N-42 | **After T-069 is published** (Lovable applies 0050 first): Claude checks Test 3's calendar link says "switched off" and its request form works; as Test 5, a public request shows in violet on Requests, Home links there, Notifications opens Requests; Test 5's calendar still works | Claude | To do | F-34 | Institution cottages: a public calendar left on could not be seen or switched off by the admin; its requests were missing from the "Pending requests" tile (showed 0) and from Requests | Fixed in T-069 as decided 9 Nov: public calendar for families only (migration 0050), every booking request on Requests with public ones in violet (ADR-0014). Not yet merged | N-42 | Fix ready |
+| N-43 | **After T-070 is published:** Claude checks Test 5's Requests shows "Processed" with the two declined test requests (from the public calendar) and an approved member's stay opens its page; the empty state only when nothing waits or was decided | Claude | To do | T-070 |
+| N-44 | **When the next Lovable prompt goes out (after T-071 is merged):** its PR sets `.github/lovable-scope.json`; check the `lovable-scope` job on Lovable's PR lists only what the prompt did not ask for | Claude | To do | T-071 |
 | N-3 | **Remaining iPhone checks** on a real iPhone: clipboard, Document Vault "Open", avatar upload, a HEIC photo in Firefox (F-08's converter is live since 25 Oct). All pass in Chromium's iPhone emulation | You, Rajat | To do | F-01 |
 
 ## Decisions waiting on you
@@ -45,7 +46,6 @@ Pick a Decision. "Ignore" rows are removed at the next update; "Focus later" row
 | --- | --- | --- | --- | --- |
 | F-01 | Not yet tested on a real iPhone: clipboard, Document Vault "Open", avatar upload | Needs an iPhone; all pass in Chromium's emulation | N-3 | Waiting |
 | F-05 | B-004: Google sign-in fails on Brave | In Lovable's sign-in broker. Lovable → More → Users → Settings → Google offers "Your own credentials" (a Google Cloud OAuth client) | D-31 | To do |
-| F-34 | Institution cottages: a public calendar left on could not be seen or switched off by the admin; its requests were missing from the "Pending requests" tile (showed 0) and from Requests | Fixed in T-069 as decided 9 Nov: public calendar for families only (migration 0050), every booking request on Requests with public ones in violet (ADR-0014). Not yet merged | N-42 | Fix ready |
 | F-21 | Google Analytics: "Urgent: 0% consent rate" and "analytics consent signals inactive" | Diagnosed 9 Nov: not a code defect. The live tag sets the EEA defaults before any hit and the banner's update arrives: a consenting visitor's page_view carries `gcs=G101` (analytics granted, ads denied). The 0 % is the ad signals, which MyChata never asks for, so every visitor is "denied" by design. Only asking for ad consent would change it (D-34) | D-34 | Waiting |
 
 ## How to use this doc

@@ -287,7 +287,10 @@ function RequestsPage() {
                 </div>
               </section>
             ) : (
+              // Wait for the processed list too (review of PR #122): no "No requests." flash
+              // before it arrives, and none beside its error message.
               heldBookings &&
+              decidedGuests &&
               publicCount === 0 &&
               familyDone.length === 0 && (
                 <EmptyState

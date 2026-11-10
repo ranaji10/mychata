@@ -74,7 +74,9 @@ describe("T-070: processed requests for families", () => {
   it("the family page shows the list and hides the empty state while it has rows", () => {
     const s = readFileSync("src/routes/zadosti.tsx", "utf8");
     expect(s).toContain('data-testid="family-processed"');
-    expect(s).toMatch(/familyDone\.length === 0 && \(\s*<EmptyState/);
+    expect(s).toMatch(
+      /decidedGuests &&\s*publicCount === 0 &&\s*familyDone\.length === 0 && \(\s*<EmptyState/,
+    );
     expect(s).toContain('t("pobyt člena", "member\'s stay")');
   });
 });

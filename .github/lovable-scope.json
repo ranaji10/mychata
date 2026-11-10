@@ -1,0 +1,5 @@
+{
+  "prompt": null,
+  "note": "Set by the PR that adds a Lovable prompt (T-071): the prompt's id and the files it asks Lovable to change. The check on the lovable-sync PR flags every other file. Set prompt back to null once that round is merged.",
+  "allow": []
+}

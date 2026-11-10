@@ -84,6 +84,14 @@ These can't be set from a pull request. They need the owner's account, in the Gi
 - **Force pushes on `lovable-sync` (D-14):** `main` blocks them ("main - protect" and the classic protection). `lovable-sync - keep` blocks deletion and, since 25 Oct, force pushes too (Settings → Rules → Rulesets). The sync workflow only fast-forwards, so it is not affected. If Lovable later fails to push (it would need a force push only after a history rewrite on its side), untick it and tell Claude.
 - **Generated docs (D-17):** the pre-commit hook regenerates `docs/generated/` when a commit touches `drizzle/migrations/` or `src/routes/` (needs `git config core.hooksPath .githooks`, O-01). Lovable's commits skip hooks, so CI's check still catches those: run `bun run docs:gen` on the PR branch.
 
+## Lovable's scope check (T-071)
+
+Lovable sometimes changes more than its prompt asks (3 Nov: app screens and `roadmap.md` while asked for UI actions; 10 Nov: `previewAuthStorage.ts` while asked only to apply 0050). The job **lovable-scope** in CI flags that on every "lovable-sync → main" PR:
+
+1. **Set the scope when you add a prompt.** The PR that adds a Lovable prompt also sets `.github/lovable-scope.json`: `prompt` = its id (e.g. `33-L`) and `allow` = globs of the files the prompt asks Lovable to change (`*` within a folder, `**` any depth). A migration marker prompt allows its marker file, its snapshot, `meta/_journal.json` and usually `src/integrations/supabase/types.ts`. Send the prompt only after that PR is merged: the check reads the scope from `main`, so Lovable can't widen it.
+2. **Read the flag before merging.** Every file the PR changes outside `allow` fails the job and is listed in its summary and as annotations: "Not asked for" (review it, or ask Lovable to undo it) and "Lovable platform files" (usually accepted, see below; say so in the PR and the tracker). The job is not the required check, so it flags without blocking.
+3. **Close the round.** After merging, set `prompt` back to `null` and `allow` to `[]` (in the next tracker or task PR), so a stray Lovable push is flagged as unasked.
+
 ## Lovable platform updates
 
 Lovable sometimes changes its own files in the same round as a prompt (17 Oct: `@lovable.dev/vite-tanstack-config` 2.25.3 → 2.26.5 with `bun.lock`, and `src/integrations/supabase/previewAuthStorage.ts`, while applying migration 0026). These are Lovable's platform files, so accept them, but keep them apart from our changes:

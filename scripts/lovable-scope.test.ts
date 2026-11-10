@@ -95,6 +95,8 @@ describe("T-071: Lovable scope check", () => {
     const ci = readFileSync(".github/workflows/ci.yml", "utf8");
     expect(ci).toMatch(/\n {2}lovable-scope:\n {4}if: github\.head_ref == 'lovable-sync'/);
     expect(ci).toContain("bun scripts/check-lovable-scope.ts origin/main");
-    expect(parseScope(readFileSync(".github/lovable-scope.json", "utf8")).prompt).toBeNull();
+    // The scope file must stay valid JSON whatever prompt it names (never assert its contents:
+    // the PR that adds a prompt changes them, and this test runs in the required check).
+    expect(() => parseScope(readFileSync(".github/lovable-scope.json", "utf8"))).not.toThrow();
   });
 });

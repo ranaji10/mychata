@@ -35,17 +35,21 @@ const scope = parseScope(scopeJson);
 
 // Every file this PR changes against main: what Lovable's branch brings, merges included (a
 // merge can carry changes of its own). Main's own changes merged into the branch are not in it.
-const changed = git("diff", "--name-only", `${base}...HEAD`).split("\n").filter(Boolean);
+const changed = git("diff", "--name-only", "--no-renames", `${base}...HEAD`)
+  .split("\n")
+  .filter(Boolean);
 
-// The commits that touched each file, to name them in the report.
-const shas = git("log", "--format=%H%x09%an%x09%s", `${base}..HEAD`)
+// The commits that touched each file, to name them in the report. Merges are left out (on a
+// pull_request run HEAD is GitHub's test merge; a merge from main would be credited with every
+// file); a file only a merge changed is listed under "(merge)" below.
+const shas = git("log", "--no-merges", "--format=%H%x09%an%x09%s", `${base}..HEAD`)
   .split("\n")
   .filter(Boolean)
   .map((line) => line.split("\t"));
 const commits: LovableCommit[] = shas.map(([sha, , subject]) => ({
   sha: sha!,
   subject: subject ?? "",
-  files: git("diff-tree", "--no-commit-id", "--name-only", "-r", "-m", sha!)
+  files: git("diff-tree", "--no-commit-id", "--name-only", "--no-renames", "-r", sha!)
     .split("\n")
     .filter((f) => changed.includes(f)),
 }));

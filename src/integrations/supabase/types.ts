@@ -2101,6 +2101,14 @@ export type Database = {
           property_name: string
         }[]
       }
+      public_request_availability: {
+        Args: { _token: string }
+        Returns: {
+          end_date: string
+          start_date: string
+          status: string
+        }[]
+      }
       remind_debt: {
         Args: { _member_id: string; _property_id: string }
         Returns: number

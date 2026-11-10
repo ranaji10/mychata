@@ -15,7 +15,11 @@ import {
 } from "@/components/bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
-import { usePendingGuestRequests } from "@/lib/guest-requests";
+import {
+  familyProcessed,
+  useDecidedGuestRequests,
+  usePendingGuestRequests,
+} from "@/lib/guest-requests";
 import {
   declineReasons,
   fmtDate,
@@ -54,6 +58,15 @@ function RequestsPage() {
   const { data: guestRequests } = usePendingGuestRequests(property?.id, isAdmin);
   const publicCount = guestRequests?.length ?? 0;
   const today = todayISO();
+  const loadBookings = async () => {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("property_id", property!.id)
+      .order("start_date");
+    if (error) throw error;
+    return data as Booking[];
+  };
   const {
     data: heldBookings,
     isError: heldError,
@@ -62,17 +75,20 @@ function RequestsPage() {
     // Same cache as Home and the calendar; filtered here.
     queryKey: ["bookings", property?.id],
     enabled: !!property && isFamily && isAdmin,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("property_id", property!.id)
-        .order("start_date");
-      if (error) throw error;
-      return data as Booking[];
-    },
+    queryFn: loadBookings,
     select: (rows) => rows.filter((b) => b.status === "PENDING" && b.end_date >= today),
   });
+  // T-070: what a family admin already decided, so a request does not vanish once handled.
+  const { data: allBookings } = useQuery({
+    queryKey: ["bookings", property?.id],
+    enabled: !!property && isFamily && isAdmin,
+    queryFn: loadBookings,
+  });
+  const { data: decidedGuests, isError: decidedError } = useDecidedGuestRequests(
+    isFamily ? property?.id : undefined,
+    isAdmin,
+  );
+  const familyDone = isFamily ? familyProcessed(decidedGuests ?? [], allBookings ?? []) : [];
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string[]>([]);
   const [declining, setDeclining] = useState<InstitutionalRequest[]>([]);
@@ -243,43 +259,100 @@ function RequestsPage() {
               {t("Zkusit znovu", "Try again")}
             </Button>
           </div>
-        ) : heldBookings?.length ? (
-          <section className="mt-5">
-            <h2 className="mb-2 text-lg font-bold">
-              {t("Pobyty členů ke schválení", "Members' stays awaiting approval")} (
-              {heldBookings.length})
-            </h2>
-            <div className="space-y-2">
-              {heldBookings.map((b) => (
-                <Link
-                  key={b.id}
-                  to="/rezervace/$id"
-                  params={{ id: b.id }}
-                  className="card flex min-h-14 items-center gap-3 p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[16px] font-bold">{b.requester_name}</p>
-                    <p className="text-[16px] text-muted-foreground">
-                      {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
-                    </p>
-                  </div>
-                  <PillWarn>{t("Rozhodnout", "Decide")}</PillWarn>
-                </Link>
-              ))}
-            </div>
-          </section>
         ) : (
-          heldBookings &&
-          publicCount === 0 && (
-            <EmptyState
-              icon={Inbox}
-              title={t("Žádné žádosti.", "No requests.")}
-              hint={t(
-                "Žádosti z odkazu pro hosty, z veřejného kalendáře a pobyty členů ke schválení se objeví zde.",
-                "Requests from the guest link and the public calendar, and members' stays awaiting approval, will appear here.",
-              )}
-            />
-          )
+          <>
+            {heldBookings?.length ? (
+              <section className="mt-5">
+                <h2 className="mb-2 text-lg font-bold">
+                  {t("Pobyty členů ke schválení", "Members' stays awaiting approval")} (
+                  {heldBookings.length})
+                </h2>
+                <div className="space-y-2">
+                  {heldBookings.map((b) => (
+                    <Link
+                      key={b.id}
+                      to="/rezervace/$id"
+                      params={{ id: b.id }}
+                      className="card flex min-h-14 items-center gap-3 p-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[16px] font-bold">{b.requester_name}</p>
+                        <p className="text-[16px] text-muted-foreground">
+                          {fmtDate(b.start_date)} – {fmtDate(b.end_date)}
+                        </p>
+                      </div>
+                      <PillWarn>{t("Rozhodnout", "Decide")}</PillWarn>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : (
+              heldBookings &&
+              publicCount === 0 &&
+              familyDone.length === 0 && (
+                <EmptyState
+                  icon={Inbox}
+                  title={t("Žádné žádosti.", "No requests.")}
+                  hint={t(
+                    "Žádosti z odkazu pro hosty, z veřejného kalendáře a pobyty členů ke schválení se objeví zde.",
+                    "Requests from the guest link and the public calendar, and members' stays awaiting approval, will appear here.",
+                  )}
+                />
+              )
+            )}
+            {decidedError && !decidedGuests ? (
+              <p role="alert" className="mt-5 text-[16px] text-muted-foreground">
+                {t(
+                  "Vyřízené žádosti se nepodařilo načíst.",
+                  "Could not load the processed requests.",
+                )}
+              </p>
+            ) : (
+              familyDone.length > 0 && (
+                <section className="mt-5" data-testid="family-processed">
+                  <h3 className="mb-2 text-lg font-bold">{t("Vyřízené", "Processed")}</h3>
+                  <div className="space-y-2.5">
+                    {familyDone.map((r) => {
+                      const body = (
+                        <>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[16px] font-bold">{r.name}</p>
+                            <p className="text-[16px] text-muted-foreground">
+                              {fmtDate(r.start_date)} – {fmtDate(r.end_date)} ·{" "}
+                              {r.origin === "member"
+                                ? t("pobyt člena", "member's stay")
+                                : r.origin === "public_calendar"
+                                  ? t("z veřejného kalendáře", "from the public calendar")
+                                  : t("z odkazu pro hosty", "from the guest link")}
+                            </p>
+                          </div>
+                          {r.status === "APPROVED" ? (
+                            <PillOk>{t("Schváleno", "Approved")}</PillOk>
+                          ) : (
+                            <PillNeutral>{t("Zamítnuto", "Declined")}</PillNeutral>
+                          )}
+                        </>
+                      );
+                      return r.bookingId ? (
+                        <Link
+                          key={r.id}
+                          to="/rezervace/$id"
+                          params={{ id: r.bookingId }}
+                          className="card flex min-h-14 items-center gap-3 p-4"
+                        >
+                          {body}
+                        </Link>
+                      ) : (
+                        <div key={r.id} className="card flex min-h-14 items-center gap-3 p-4">
+                          {body}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )
+            )}
+          </>
         )
       ) : (
         <>
